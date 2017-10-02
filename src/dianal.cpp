@@ -1,4 +1,4 @@
-// pcap4dns.cpp : Defines the entry point for the console application.
+// dianal.cpp : Defines the entry point for the console application.
 //
 
 #ifdef WINDOWS
