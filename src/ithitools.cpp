@@ -19,7 +19,7 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-// diana.cpp : Defines the entry point for the console application.
+// ithitools.cpp : Defines the entry point for the console application.
 //
 
 #ifdef _WINDOWS
@@ -35,8 +35,8 @@
 
 void usage()
 {
-    fprintf(stderr, "DIANA -- a tool for ITHI data extraction and metric computation.\n");
-    fprintf(stderr, "Usage: diana <options> <input-files>\n");
+    fprintf(stderr, "ITHITOOLS -- a tool for ITHI data extraction and metric computation.\n");
+    fprintf(stderr, "Usage: ithitools <options> <input-files>\n");
     fprintf(stderr, "Options:\n");
     fprintf(stderr, "  -c                 process capture files in PCAP format.\n");
     fprintf(stderr, "  -s                 process summary files, from previous captures.\n");
@@ -66,6 +66,7 @@ int main(int argc, char ** argv)
     int exec_mode = 0; /* capture extraction= 0, summary aggregation = 1 */
     int nb_records_read = 0;
     int nb_extracted = 0;
+    bool do_address_filtering = false;
     bool found_v4 = false;
     bool found_v6 = false;
     DnsStats stats;
@@ -99,15 +100,19 @@ int main(int argc, char ** argv)
             break;
         case 'r':
             root_address_file = optarg;
+            fprintf(stderr, "The root addresses redefinition option is not yet implemented.\n");
             break;
         case 'a':
             allowed_addr_file = optarg;
+            fprintf(stderr, "The allowed address option is not yet implemented.\n");
             break;
         case 'x':
             excluded_addr_file = optarg;
+            fprintf(stderr, "The excluded address option is not yet implemented.\n");
             break;
         case 'v':
             table_version_addr_file = optarg;
+            fprintf(stderr, "The table redefinition option is not yet implemented.\n");
             break;
         case 'n':
             if ((nb_names_in_m4 = atoi(optarg)) <= 0)
@@ -123,8 +128,16 @@ int main(int argc, char ** argv)
                 usage();
             }
             break;
+        case 'f':
+            do_address_filtering = true;
+            fprintf(stderr, "The address filtering option is not yet implemented.\n");
+            break;
         case 'h':
             usage();
+            break;
+        case 's':
+            exec_mode = 1;
+            fprintf(stderr, "The summary_aggregation option is not yet implemented.\n");
             break;
         }
     }

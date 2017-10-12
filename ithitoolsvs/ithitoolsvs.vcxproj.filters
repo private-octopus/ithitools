@@ -30,7 +30,7 @@
     <ClCompile Include="..\lib\PcapCsvMerge.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\diana.cpp">
+    <ClCompile Include="..\src\ithitools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\getopt.c">

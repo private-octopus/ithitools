@@ -22,9 +22,9 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{8EBE8A68-3B93-4121-92D8-BB3E336139A6}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>diana</RootNamespace>
+    <RootNamespace>ithitools</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
-    <ProjectName>dianavs</ProjectName>
+    <ProjectName>ithitoolsvs</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -76,7 +76,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <TargetName>diana</TargetName>
+    <TargetName>ithitools</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -152,7 +152,7 @@
     <ClCompile Include="..\lib\PcapCsvReader.cpp" />
     <ClCompile Include="..\lib\pcap_reader.cpp" />
     <ClCompile Include="..\lib\UsefulTransaction.cpp" />
-    <ClCompile Include="..\src\diana.cpp" />
+    <ClCompile Include="..\src\ithitools.cpp" />
     <ClCompile Include="..\src\getopt.c" />
   </ItemGroup>
   <ItemGroup>
