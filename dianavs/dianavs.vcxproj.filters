@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\dianal.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\lib\DnsStatHash.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -31,6 +28,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\PcapCsvMerge.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diana.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\getopt.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -57,6 +60,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\PcapCsvMerge.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\getopt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

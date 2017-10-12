@@ -151,6 +151,7 @@
     <ClCompile Include="..\lib\PcapCsvReader.cpp" />
     <ClCompile Include="..\lib\pcap_reader.cpp" />
     <ClCompile Include="..\src\diana.cpp" />
+    <ClCompile Include="..\src\getopt.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\DnsStatHash.h" />
@@ -160,6 +161,7 @@
     <ClInclude Include="..\lib\PcapCsvMerge.h" />
     <ClInclude Include="..\lib\PcapCsvReader.h" />
     <ClInclude Include="..\lib\pcap_reader.h" />
+    <ClInclude Include="..\src\getopt.h" />
     <ClInclude Include="..\src\targetver.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

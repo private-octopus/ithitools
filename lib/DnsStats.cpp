@@ -2897,7 +2897,7 @@ bool CompareRegistryEntries(dns_registry_entry_t * x, dns_registry_entry_t * y)
     return ret;
 }
 
-bool DnsStats::ExportToCsv(char * fileName)
+bool DnsStats::ExportToCsv(char const * fileName)
 {
     FILE* F;
     dns_registry_entry_t *entry;

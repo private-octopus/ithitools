@@ -60,7 +60,7 @@ pcap_reader::~pcap_reader()
     }
 }
 
-bool pcap_reader::Open(char * f_name, char * f_extract_name)
+bool pcap_reader::Open(char const * f_name, char * f_extract_name)
 {
     bool ret = true;
 

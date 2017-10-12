@@ -56,7 +56,7 @@ public:
 
     void SubmitPacket(uint8_t * packet, uint32_t length);
 
-    bool ExportToCsv(char* fileName);
+    bool ExportToCsv(char const * fileName);
 
     int record_count; 
     int query_count;

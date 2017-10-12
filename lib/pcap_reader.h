@@ -63,7 +63,7 @@ public:
     bool is_fragment;
     int fragment_length;
 
-    bool Open(char * f_name, char * f_extract_name);
+    bool Open(char const * f_name, char * f_extract_name);
 
     bool ReadNext();
     bool WriteExtract();

@@ -4,13 +4,13 @@ RM=rm -f
 CPPFLAGS=-g 
 LDFLAGS=-g
 
-SRCS=pcap4dns.cpp DnsStats.cpp pcap_reader.cpp DnsStatHash.cpp
+SRCS=diana.cpp
 OBJS=$(patsubst %.cpp,%.o,$(SRCS))
 DEPEND=DnsStats.h pcap_reader.h linktype.h DnsStatHash.h
 
-all: pcap4dns
+all: diana
 
-pcap4dns: $(OBJS)
+diana: $(OBJS)
 	$(CXX) $(LDFLAGS) -o pcap4dns $(OBJS)
  
 clean:
