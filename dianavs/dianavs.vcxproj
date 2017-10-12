@@ -145,22 +145,27 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\lib\AddressFilter.cpp" />
     <ClCompile Include="..\lib\DnsStatHash.cpp" />
     <ClCompile Include="..\lib\DnsStats.cpp" />
     <ClCompile Include="..\lib\PcapCsvMerge.cpp" />
     <ClCompile Include="..\lib\PcapCsvReader.cpp" />
     <ClCompile Include="..\lib\pcap_reader.cpp" />
+    <ClCompile Include="..\lib\UsefulTransaction.cpp" />
     <ClCompile Include="..\src\diana.cpp" />
     <ClCompile Include="..\src\getopt.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\lib\AddressFilter.h" />
     <ClInclude Include="..\lib\DnsStatHash.h" />
     <ClInclude Include="..\lib\DnsStats.h" />
     <ClInclude Include="..\lib\DnsTypes.h" />
+    <ClInclude Include="..\lib\HashWriteOnceGeneric.h" />
     <ClInclude Include="..\lib\linktype.h" />
     <ClInclude Include="..\lib\PcapCsvMerge.h" />
     <ClInclude Include="..\lib\PcapCsvReader.h" />
     <ClInclude Include="..\lib\pcap_reader.h" />
+    <ClInclude Include="..\lib\UsefulTransaction.h" />
     <ClInclude Include="..\src\getopt.h" />
     <ClInclude Include="..\src\targetver.h" />
   </ItemGroup>

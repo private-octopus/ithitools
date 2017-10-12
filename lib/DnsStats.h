@@ -1,3 +1,24 @@
+/*
+* Author: Christian Huitema
+* Copyright (c) 2017, Private Octopus, Inc.
+* All rights reserved.
+*
+* Permission to use, copy, modify, and distribute this software for any
+* purpose with or without fee is hereby granted, provided that the above
+* copyright notice and this permission notice appear in all copies.
+*
+* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+* DISCLAIMED. IN NO EVENT SHALL Private Octopus, Inc. BE LIABLE FOR ANY
+* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #ifndef DNSSTAT_H
 #define DNSSTAT_H
 
@@ -35,6 +56,7 @@
 #define	REGISTRY_DNS_error_flag 24
 #define	REGISTRY_TLD_error_class 25
 #define	REGISTRY_DNS_txt_underline 26
+#define REGISTRY_DNS_root_QR 27
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
 #define DNS_REGISTRY_ERROR_RRCLASS (1<<1)
@@ -46,6 +68,10 @@
 #define DNS_REGISTRY_ERROR_LABEL (1<<7)
 #define DNS_REGISTRY_ERROR_FORMAT (1<<8)
 
+#define DNS_OPCODE_QUERY 0
+#define DNS_RCODE_NOERROR 0
+#define DNS_RCODE_NXDOMAIN 3
+
 class DnsStats
 {
 public:
@@ -54,7 +80,7 @@ public:
 
     DnsStatHash hashTable;
 
-    void SubmitPacket(uint8_t * packet, uint32_t length);
+    void SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header);
 
     bool ExportToCsv(char const * fileName);
 

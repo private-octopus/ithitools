@@ -1,3 +1,24 @@
+/*
+* Author: Christian Huitema
+* Copyright (c) 2017, Private Octopus, Inc.
+* All rights reserved.
+*
+* Permission to use, copy, modify, and distribute this software for any
+* purpose with or without fee is hereby granted, provided that the above
+* copyright notice and this permission notice appear in all copies.
+*
+* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+* DISCLAIMED. IN NO EVENT SHALL Private Octopus, Inc. BE LIABLE FOR ANY
+* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -47,7 +68,8 @@ static char const * RegistryNameById[] = {
     "Z-R-TLD",
     "Z-Error Flags",
     "TLD Error Class",
-    "Underlined part"
+    "Underlined part",
+    "root-QR"
 };
 
 static uint32_t RegistryNameByIdNb = sizeof(RegistryNameById) / sizeof(char const*);
@@ -2742,7 +2764,7 @@ bool DnsStats::CheckTld(uint32_t length, uint8_t * lower_case_tld)
 +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 */
 
-void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length)
+void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header)
 {
     bool is_response;
     bool has_header = true;
@@ -2785,6 +2807,14 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length)
 
         SubmitRegistryNumber(REGISTRY_DNS_OpCodes, opcode);
         CheckOpCode(opcode);
+
+        if (is_response && opcode == DNS_OPCODE_QUERY)
+        {
+            if (rcode == DNS_RCODE_NOERROR || rcode == DNS_RCODE_NXDOMAIN)
+            {
+                SubmitRegistryNumber(REGISTRY_DNS_root_QR, rcode);
+            }
+        }
 
         for (uint32_t i = 0; i < 7; i++)
         {
