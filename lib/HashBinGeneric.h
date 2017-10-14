@@ -106,6 +106,7 @@ public:
         {
             *pPrevious = retKey->HashNext;
             retKey->HashNext = NULL;
+            tableCount--;
         }
 
         return retKey;
@@ -344,7 +345,7 @@ private:
 
             if (key->LessRecentKey != NULL)
             {
-                key->LessRecentKey->MoreRecentKey = key->LessRecentKey;
+                key->LessRecentKey->MoreRecentKey = key->MoreRecentKey;
             }
             else
             {
