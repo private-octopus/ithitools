@@ -49,9 +49,19 @@ public:
     AddressFilter();
     ~AddressFilter();
 
+    bool SetList(char const * fname);
+    void SetList(char const ** addr_list, size_t nb_names);
+
+    void AddToList(char const * addrText);
+
     void AddToList(uint8_t * addr, size_t len);
 
     bool IsInList(uint8_t * addr, size_t len);
+
+    uint32_t GetCount()
+    {
+        return table.GetCount();
+    }
 
     HashWriteOnce<IPAsKey> table;
 };

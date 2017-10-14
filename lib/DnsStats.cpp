@@ -32,7 +32,9 @@ DnsStats::DnsStats()
     :
     record_count(0),
     query_count(0),
-    response_count(0)
+    response_count(0),
+    max_query_usage_count(0x1000),
+    max_tld_leakage_count(0x80)
 {
 }
 
@@ -40,6 +42,40 @@ DnsStats::DnsStats()
 DnsStats::~DnsStats()
 {
 }
+
+static char const * DefaultRootAddresses[] = {
+    "192.12.94.30",
+    "192.26.92.30",
+    "192.31.80.30",
+    "192.33.4.12",
+    "192.33.14.30",
+    "192.35.51.30",
+    "192.42.93.30",
+    "192.43.172.30",
+    "192.48.79.30",
+    "192.5.6.30",
+    "192.52.178.30",
+    "192.54.112.30",
+    "192.41.162.30",
+    "192.228.79.201",
+    "198.41.0.4",
+    "2001:500:856e::30",
+    "2001:502:1ca1::30",
+    "2001:502:7094::30",
+    "2001:502:8cc::30",
+    "2001:503:231d::2:30",
+    "2001:503:39c1::30",
+    "2001:503:83eb::30",
+    "2001:503:a83e::2:30",
+    "2001:503:d2d::30",
+    "2001:503:d414::30",
+    "2001:503:eea3::30",
+    "2001:500:d937::30",
+    "2001:500:200::b",
+    "2001:500:2::c",
+    "2001:503:ba3e::2:30",
+    "2001::500:84::c"
+};
 
 static char const * RegistryNameById[] = {
     "0",
@@ -69,7 +105,10 @@ static char const * RegistryNameById[] = {
     "Z-Error Flags",
     "TLD Error Class",
     "Underlined part",
-    "root-QR"
+    "root-QR",
+    "LeakByLength",
+    "LeakedTLD",
+    "UsefulQueries"
 };
 
 static uint32_t RegistryNameByIdNb = sizeof(RegistryNameById) / sizeof(char const*);
@@ -265,6 +304,8 @@ static char const * common_bad_tld[] = {
 };
 
 const uint32_t nb_common_bad_tld = sizeof(common_bad_tld) / sizeof(char const *);
+
+
 
 int DnsStats::SubmitName(uint8_t * packet, uint32_t length, uint32_t start, uint32_t registryId)
 {
@@ -480,13 +521,13 @@ void DnsStats::SubmitRegistryNumber(uint32_t registry_id, uint32_t number)
     (void)hashTable.InsertOrAdd(&key);
 }
 
-void DnsStats::SubmitRegistryString(uint32_t registry_id, uint32_t length, uint8_t * value)
+void DnsStats::SubmitRegistryStringAndCount(uint32_t registry_id, uint32_t length, uint8_t * value, uint32_t count)
 {
     dns_registry_entry_t key;
 
     if (length < 64)
     {
-        key.count = 1;
+        key.count = count;
         key.registry_id = registry_id;
         key.key_length = length;
         key.key_type = 1; /* string */
@@ -495,6 +536,11 @@ void DnsStats::SubmitRegistryString(uint32_t registry_id, uint32_t length, uint8
 
         (void)hashTable.InsertOrAdd(&key);
     }
+}
+
+void DnsStats::SubmitRegistryString(uint32_t registry_id, uint32_t length, uint8_t * value)
+{
+    SubmitRegistryStringAndCount(registry_id, length, value, 1);
 }
 
 static char const *  rrtype_1_62[] = {
@@ -1058,6 +1104,79 @@ int DnsStats::CheckForUnderline(uint8_t * packet, uint32_t length, uint32_t star
     return start;
 }
 
+int DnsStats::GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t * offset)
+{
+    int ret = 0;
+    uint32_t l = 0;
+    uint32_t previous = 0;
+    uint32_t name_start = start;
+
+    while (start < length)
+    {
+        l = packet[start];
+
+        if (l == 0)
+        {
+            /* end of parsing*/
+
+            if (previous != 0)
+            {
+                *offset = previous;
+            }
+            else
+            {
+                ret = -1;
+            }
+            break;
+        }
+        else if ((l & 0xC0) == 0xC0)
+        {
+            /* Name compression */
+            if ((start + 2) > length)
+            {
+                ret = -1;
+                break;
+            }
+            else
+            {
+                uint32_t new_start = ((l & 63) << 8) + packet[start + 1];
+                
+                if (new_start < name_start)
+                {
+                    ret = GetTLD(packet, length, new_start, offset);
+                }
+                else
+                {
+                    ret = -1;
+                }
+                break;
+            }
+        }
+        else if (l > 0x3F)
+        {
+            /* Unexpected name part */
+            ret = -1;
+            break;
+        }
+        else
+        {
+            if (start + l + 1 > length)
+            {
+                /* malformed name part */
+                ret = -1;
+                break;
+            }
+            else
+            {
+                previous = start;
+                start += l + 1;
+            }
+        }
+    }
+
+    return start;
+}
+
 void DnsStats::NormalizeNamePart(uint32_t length, uint8_t * value,
     uint8_t * normalized, uint32_t * flags)
 {
@@ -1128,6 +1247,90 @@ void DnsStats::NormalizeNamePart(uint32_t length, uint8_t * value,
         if (has_dash)
         {
             *flags += 256;
+        }
+    }
+}
+
+void DnsStats::GetSourceAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length)
+{
+    if (ip_type == 4)
+    {
+        *addr = ip_header + 12;
+        *addr_length = 4;
+    }
+    else
+    {
+        *addr = ip_header + 8;
+        *addr_length = 16;
+    }
+}
+
+void DnsStats::GetDestAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length)
+{
+    if (ip_type == 4)
+    {
+        *addr = ip_header + 16;
+        *addr_length = 4;
+    }
+    else
+    {
+        *addr = ip_header + 24;
+        *addr_length = 16;
+    }
+}
+
+bool CompareTldEntries(TldAsKey * x, TldAsKey * y)
+{
+    bool ret = x->count >  y->count;
+
+    if (x->count == y->count)
+    {
+        for (size_t i = 0; i < x->tld_len; i++)
+        {
+            if (x->tld[i] != x->tld[i])
+            {
+                ret = x->tld[i] < x->tld[i];
+                break;
+            }
+        }
+    }
+
+    return ret;
+}
+
+
+void DnsStats::ExportLeakedDomains()
+{
+    TldAsKey *tld_entry;
+    std::vector<TldAsKey *> lines(tldLeakage.GetCount());
+    int vector_index = 0;
+    uint32_t export_count = 0;
+
+    for (uint32_t i = 0; i < tldLeakage.GetSize(); i++)
+    {
+        tld_entry = tldLeakage.GetEntry(i);
+
+        while (tld_entry != NULL)
+        {
+            lines[vector_index] = tld_entry;
+            vector_index++;
+            tld_entry = tld_entry->HashNext;
+        }
+        std::sort(lines.begin(), lines.end(), CompareTldEntries);
+    }
+
+    /* Retain the N most interesting values */
+    for (TldAsKey * &entry : lines)
+    {
+        if (export_count < max_tld_leakage_count)
+        {
+            SubmitRegistryStringAndCount(REGISTRY_DNS_LeakedTLD, 
+                entry->tld_len, entry->tld, entry->count);
+            export_count++;
+        }
+        else
+        {
+            break;
         }
     }
 }
@@ -2767,6 +2970,11 @@ bool DnsStats::CheckTld(uint32_t length, uint8_t * lower_case_tld)
 void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header)
 {
     bool is_response;
+    uint8_t * source_addr;
+    size_t source_addr_length;
+    uint8_t * dest_addr;
+    size_t dest_addr_length;
+
     bool has_header = true;
     uint32_t flags = 0;
     uint32_t opcode = 0;
@@ -2782,6 +2990,11 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
 
     error_flags = 0;
 
+    if (rootAddresses.GetCount() == 0)
+    {
+        rootAddresses.SetList(DefaultRootAddresses, sizeof(DefaultRootAddresses) / sizeof(char const *));
+    }
+
     if (length < 12)
     {
         error_flags |= DNS_REGISTRY_ERROR_FORMAT;
@@ -2791,11 +3004,18 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
     else
     {
         is_response = ((packet[2] & 128) != 0);
+        GetSourceAddress(ip_type, ip_header, &source_addr, &source_addr_length);
+        GetDestAddress(ip_type, ip_header, &dest_addr, &dest_addr_length);
+
 
         if (is_response)
+        {
             response_count++;
+        }
         else
+        {
             query_count++;
+        }
 
         flags = ((packet[2] & 7) << 4) | ((packet[3] & 15) >> 4);
         opcode = (packet[2] >> 3) & 15;
@@ -2808,11 +3028,59 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
         SubmitRegistryNumber(REGISTRY_DNS_OpCodes, opcode);
         CheckOpCode(opcode);
 
-        if (is_response && opcode == DNS_OPCODE_QUERY)
+        if (is_response && opcode == DNS_OPCODE_QUERY 
+            && rootAddresses.IsInList(source_addr, source_addr_length))
         {
+            uint32_t tld_offset = 0;
+            int gotTld = GetTLD(packet, length, 12, &tld_offset);
+
             if (rcode == DNS_RCODE_NOERROR || rcode == DNS_RCODE_NXDOMAIN)
             {
                 SubmitRegistryNumber(REGISTRY_DNS_root_QR, rcode);
+            }
+
+            if (gotTld)
+            {
+                if (rcode == DNS_RCODE_NXDOMAIN)
+                {
+                    /* Analysis of domain leakage */
+                    TldAsKey key(packet + tld_offset + 1, packet[tld_offset]);
+                    bool stored = false;
+
+                    (void)tldLeakage.InsertOrAdd(&key, true, &stored);
+                    /* TODO: If full enough, remove the LRU and add it to per-length stats */
+                    if (tldLeakage.GetCount() > max_tld_leakage_count)
+                    {
+                        TldAsKey * removed = tldLeakage.RemoveLRU();
+                        delete removed;
+                    }
+
+                    /* In all cases, tabulate the lengths of leaked TLD */
+                    SubmitRegistryNumber(REGISTRY_DNS_LeakByLength, packet[tld_offset]);
+                }
+                else if (rcode == DNS_RCODE_NOERROR)
+                {
+                    /* Analysis of useless traffic to the root */
+                    TldAddressAsKey key(dest_addr, dest_addr_length, packet + tld_offset + 1, packet[tld_offset]);
+
+                    if (queryUsage.GetCount() >= max_query_usage_count)
+                    {
+                        /* Table is full. Just keep counting the transactions that are present */
+                        TldAddressAsKey * present = queryUsage.Retrieve(&key);
+                        if (present != NULL)
+                        {
+                            present->count++;
+                            SubmitRegistryNumber(REGISTRY_DNS_UsefulQueries, 0);
+                        }
+                    }
+                    else
+                    {
+                        bool stored = false;
+                        (void)queryUsage.InsertOrAdd(&key, true, &stored);
+
+                        SubmitRegistryNumber(REGISTRY_DNS_UsefulQueries, (stored)?1:0);
+                    }
+                }
             }
         }
 
@@ -2931,7 +3199,6 @@ bool DnsStats::ExportToCsv(char const * fileName)
 {
     FILE* F;
     dns_registry_entry_t *entry;
-    std::vector<dns_registry_entry_t *> lines(hashTable.GetCount());
 #ifdef _WINDOWS
     errno_t err = fopen_s(&F, fileName, "w");
     bool ret = (err == 0);
@@ -2944,7 +3211,15 @@ bool DnsStats::ExportToCsv(char const * fileName)
 
     if (ret)
     {
+        /* Get the ordered list of leaked domain into the main hash */
+        ExportLeakedDomains();
+    }
+
+    if (ret)
+    {
         int vector_index = 0;
+
+        std::vector<dns_registry_entry_t *> lines(hashTable.GetCount());
 
         for (uint32_t i = 0; i < hashTable.GetSize(); i++)
         {
@@ -2956,10 +3231,7 @@ bool DnsStats::ExportToCsv(char const * fileName)
             }
         }
         std::sort(lines.begin(), lines.end(), CompareRegistryEntries);
-    }
-
-    if (ret)
-    {
+    
         for (dns_registry_entry_t * &entry : lines)
         {
             if (entry->registry_id < RegistryNameByIdNb)
@@ -3040,3 +3312,148 @@ bool DnsStats::ExportToCsv(char const * fileName)
     return ret;
 }
 
+TldAsKey::TldAsKey(uint8_t * tld, size_t tld_len)
+    :
+    HashNext(NULL),
+    MoreRecentKey(NULL),
+    LessRecentKey(NULL),
+    count(1),
+    hash(0)
+{
+    CanonicCopy(this->tld, sizeof(this->tld) - 1, &this->tld_len, tld, tld_len);
+}
+
+TldAsKey::~TldAsKey()
+{
+}
+
+bool TldAsKey::IsSameKey(TldAsKey * key)
+{
+    bool ret = (this->tld_len == key->tld_len &&
+        memcmp(this->tld, key->tld, this->tld_len) == 0);
+
+    return ret;
+}
+
+uint32_t TldAsKey::Hash()
+{
+    if (hash == 0)
+    {
+        hash = 0xBABAC001;
+
+        for (size_t i = 0; i < tld_len; i++)
+        {
+            hash = hash * 101 + tld[i];
+        }
+    }
+
+    return hash;
+}
+
+TldAsKey * TldAsKey::CreateCopy()
+{
+    TldAsKey * ret = new TldAsKey(this->tld, this->tld_len);
+
+    if (ret != NULL)
+    {
+        ret->count = count;
+    }
+
+    return ret;
+}
+
+void TldAsKey::Add(TldAsKey * key)
+{
+    this->count += key->count;
+}
+
+void TldAsKey::CanonicCopy(uint8_t * tldDest, size_t tldDestMax, size_t * tldDestLength, 
+    uint8_t * tldSrce, size_t tldSrceLength)
+{
+    size_t i = 0;
+
+    for (; i < tldSrceLength && i < tldDestMax; i++)
+    {
+        int c = tldSrce[i];
+
+        if (c >= 'a' && c <= 'z')
+        {
+            c += 'A' - 'a';
+        }
+
+        tldDest[i] = c;
+    }
+
+    *tldDestLength = i;
+
+    tldDest[i] = 0;
+}
+
+
+TldAddressAsKey::TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len)
+    :
+    HashNext(NULL),
+    count(1),
+    hash(0)
+{
+    if (addr_len > 16)
+    {
+        addr_len = 16;
+    }
+
+    memcpy(this->addr, addr, addr_len);
+    this->addr_len = addr_len;
+
+    TldAsKey::CanonicCopy(this->tld, sizeof(this->tld) - 1, &this->tld_len, tld, tld_len);
+}
+
+TldAddressAsKey::~TldAddressAsKey()
+{
+}
+
+bool TldAddressAsKey::IsSameKey(TldAddressAsKey * key)
+{
+    bool ret = (this->tld_len == key->tld_len &&
+        memcmp(this->tld, key->tld, this->tld_len) == 0 &&
+        this->addr_len == key->addr_len &&
+        memcmp(this->addr, key->addr, this->addr_len) == 0);
+
+    return ret;
+}
+
+uint32_t TldAddressAsKey::Hash()
+{
+    if (hash == 0)
+    {
+        hash = 0xCACAB0B0;
+
+        for (size_t i = 0; i < tld_len; i++)
+        {
+            hash = hash * 101 + tld[i];
+        }
+
+        for (size_t i = 0; i < addr_len; i++)
+        {
+            hash = hash * 101 + addr[i];
+        }
+    }
+
+    return hash;
+}
+
+TldAddressAsKey * TldAddressAsKey::CreateCopy()
+{
+    TldAddressAsKey* ret = new TldAddressAsKey(addr, addr_len, tld, tld_len);
+
+    if (ret != NULL)
+    {
+        ret->count = count;
+    }
+
+    return ret;
+}
+
+void TldAddressAsKey::Add(TldAddressAsKey * key)
+{
+    this->count += key->count;
+}

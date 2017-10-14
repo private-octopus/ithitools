@@ -25,6 +25,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "DnsStatHash.h"
+#include "AddressFilter.h"
+#include "HashBinGeneric.h"
 
 /*
  * List of registry definitions 
@@ -57,6 +59,9 @@
 #define	REGISTRY_TLD_error_class 25
 #define	REGISTRY_DNS_txt_underline 26
 #define REGISTRY_DNS_root_QR 27
+#define REGISTRY_DNS_LeakByLength 28
+#define REGISTRY_DNS_LeakedTLD 29
+#define REGISTRY_DNS_UsefulQueries 30
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
 #define DNS_REGISTRY_ERROR_RRCLASS (1<<1)
@@ -72,6 +77,51 @@
 #define DNS_RCODE_NOERROR 0
 #define DNS_RCODE_NXDOMAIN 3
 
+class TldAsKey
+{
+public:
+    TldAsKey(uint8_t * tld, size_t tld_len);
+    ~TldAsKey();
+
+    bool IsSameKey(TldAsKey* key);
+    uint32_t Hash();
+    TldAsKey* CreateCopy();
+    void Add(TldAsKey* key);
+
+    TldAsKey * HashNext;
+    TldAsKey * MoreRecentKey;
+    TldAsKey * LessRecentKey;
+
+    size_t tld_len;
+    uint8_t tld[65];
+    uint32_t count;
+    uint32_t hash;
+
+    static void CanonicCopy(uint8_t * tldDest, size_t tldDestMax, size_t * tldDestLength, 
+        uint8_t * tldSrce, size_t tldSrceLength);
+};
+
+class TldAddressAsKey
+{
+public:
+    TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len);
+    ~TldAddressAsKey();
+
+    bool IsSameKey(TldAddressAsKey* key);
+    uint32_t Hash();
+    TldAddressAsKey* CreateCopy();
+    void Add(TldAddressAsKey* key);
+
+    TldAddressAsKey * HashNext; 
+
+    size_t addr_len;
+    uint8_t addr[16];
+    size_t tld_len;
+    uint8_t tld[65];
+    uint32_t count;
+    uint32_t hash;
+};
+
 class DnsStats
 {
 public:
@@ -79,11 +129,16 @@ public:
     ~DnsStats();
 
     DnsStatHash hashTable;
+    AddressFilter rootAddresses;
+    LruHash<TldAsKey> tldLeakage;
+    BinHash<TldAddressAsKey> queryUsage;
 
     void SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header);
 
     bool ExportToCsv(char const * fileName);
 
+    uint32_t max_tld_leakage_count;
+    uint32_t max_query_usage_count;
     int record_count; 
     int query_count;
     int response_count;
@@ -101,6 +156,7 @@ private:
     void SubmitDSRecord(uint8_t * content, uint32_t length);
 
     void SubmitRegistryNumber(uint32_t registry_id, uint32_t number);
+    void SubmitRegistryStringAndCount(uint32_t registry_id, uint32_t length, uint8_t * value, uint32_t count);
     void SubmitRegistryString(uint32_t registry_id, uint32_t length, uint8_t * value);
 
     void PrintRRType(FILE* F, uint32_t rrtype);
@@ -123,7 +179,15 @@ private:
     bool CheckTld(uint32_t length, uint8_t * lower_case_tld);
     int CheckForUnderline(uint8_t * packet, uint32_t length, uint32_t start);
 
+    int GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t *offset);
+
     void NormalizeNamePart(uint32_t length, uint8_t * value, uint8_t * normalized, uint32_t * flags);
+
+    void GetSourceAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
+    void GetDestAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
+
+    void ExportLeakedDomains();
+
 };
 
 #endif /* DNSTAT_H */

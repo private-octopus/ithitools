@@ -22,6 +22,56 @@
 #include "AddressFilter.h"
 #include <string.h>
 
+#ifdef _WINDOWS
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#include <assert.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <WinSock2.h>
+#include <iphlpapi.h>
+#include <ws2tcpip.h>
+
+#ifndef SOCKET_TYPE 
+#define SOCKET_TYPE SOCKET
+#endif
+#ifndef SOCKET_CLOSE
+#define SOCKET_CLOSE(x) closesocket(x)
+#endif
+#ifndef WSA_START_DATA
+#define WSA_START_DATA WSADATA
+#endif
+#ifndef WSA_START
+#define WSA_START(x, y) WSAStartup((x), (y))
+#endif
+#ifndef WSA_LAST_ERROR
+#define WSA_LAST_ERROR(x)  WSAGetLastError()
+#endif
+#ifndef socklen_t
+#define socklen_t int
+#endif
+
+#else  /* Linux */
+
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+/* #include <unistd.h> */
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+
+#ifndef __USE_XOPEN2K
+#define __USE_XOPEN2K
+#endif
+#ifndef __USE_POSIX
+#define __USE_POSIX
+#endif
+
+#endif /* _WINDOWS or Linux*/
+
 IPAsKey::IPAsKey(uint8_t * addr, size_t addr_len)
     :
     count(1),
@@ -48,7 +98,7 @@ bool IPAsKey::IsSameKey(IPAsKey * key)
 
 uint32_t IPAsKey::Hash()
 {
-    if (hash != 0)
+    if (hash == 0)
     {
         hash = 0xDEADBEEF;
         for (size_t i = 0; i < addr_len; i++)
@@ -85,13 +135,82 @@ AddressFilter::~AddressFilter()
 {
 }
 
+bool AddressFilter::SetList(char const * fname)
+{
+    bool ret = true;
+    FILE * F = NULL;
+    char line[256];
+
+#ifdef WIN32
+    if (fopen_s(&F, fname, "r") != 0) {
+        ret = false;
+    }
+#else
+    F = fopen(fname, "r");
+    if (F == NULL) {
+        ret = false;
+    }
+#endif
+
+    while (ret && fgets(line, sizeof(line), F) != NULL)
+    {
+        if (line[0] != '#')
+        {
+            AddToList(line);
+        }
+    }
+
+
+    if (F != NULL)
+    {
+        fclose(F);
+    }
+
+    return ret;
+}
+
+void AddressFilter::SetList(char const ** addr_list, size_t nb_names)
+{
+    for (size_t i = 0; i < nb_names; i++)
+    {
+        AddToList(addr_list[i]);
+    }
+}
+
+void AddressFilter::AddToList(char const * addrText)
+{
+    uint8_t * addr_bin = NULL;
+    size_t addr_len = 0;
+    struct in_addr ipv4_addr;
+    struct in6_addr ipv6_addr;
+    bool ret = 0;
+
+    if (inet_pton(AF_INET, addrText, &ipv4_addr) == 1)
+    {
+        /* Valid IPv4 address */
+        addr_bin = (uint8_t *)&ipv4_addr;
+        addr_len = sizeof(struct in_addr);
+    }
+    else  if (inet_pton(AF_INET6, addrText, &ipv6_addr) == 1)
+    {
+        /* Valid IPv6 address */
+        addr_bin = (uint8_t *)&ipv6_addr;
+        addr_len = sizeof(struct in6_addr);
+    }
+
+    if (addr_len > 0)
+    {
+        AddToList(addr_bin, addr_len);
+    }
+}
+
 void AddressFilter::AddToList(uint8_t * addr, size_t len)
 {
     IPAsKey * x = new IPAsKey(addr, len);
 
     if (x != NULL)
     {
-        if (!table.InsertOrAdd(x, false))
+        if (!table.InsertOrAdd(x, true))
         {
             delete x;
         }
