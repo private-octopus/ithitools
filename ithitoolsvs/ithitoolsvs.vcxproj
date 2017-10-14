@@ -161,6 +161,7 @@
     <ClInclude Include="..\lib\DnsStatHash.h" />
     <ClInclude Include="..\lib\DnsStats.h" />
     <ClInclude Include="..\lib\DnsTypes.h" />
+    <ClInclude Include="..\lib\HashBinGeneric.h" />
     <ClInclude Include="..\lib\HashWriteOnceGeneric.h" />
     <ClInclude Include="..\lib\linktype.h" />
     <ClInclude Include="..\lib\PcapCsvMerge.h" />

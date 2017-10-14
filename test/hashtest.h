@@ -8,8 +8,8 @@ public:
 
     bool DoTest();
 private:
-    bool DoBinHashTest();
-    bool DoLruHashTest();
+    bool DoBinHashTest(char const ** hash_input, size_t nb_input);
+    bool DoLruHashTest(char const ** hash_input, size_t nb_input);
     bool LruCheck(void * vtable);
 };
 

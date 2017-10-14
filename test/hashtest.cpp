@@ -4,7 +4,7 @@
 #include "hashtest.h"
 
 /* List of test strings */
-char const * to_hash[] = {
+static char const * to_hash[] = {
     "local",
     "home",
     "ip",
@@ -22,9 +22,9 @@ char const * to_hash[] = {
     "corp"
 };
 
-const size_t size_to_hash = sizeof(to_hash) / sizeof(char const *);
+static const size_t size_to_hash = sizeof(to_hash) / sizeof(char const *);
 
-char const * to_not_hash[] = {
+static char const * to_not_hash[] = {
     "comg",
     "homestation",
     "backnet",
@@ -34,7 +34,290 @@ char const * to_not_hash[] = {
     "pk5001z"
 };
 
-const size_t size_to_not_hash = sizeof(to_not_hash) / sizeof(char const *);
+static const size_t size_to_not_hash = sizeof(to_not_hash) / sizeof(char const *);
+
+static char const * to_hash_long[] = {
+    "aaa",
+    "aarp",
+    "abarth",
+    "abb",
+    "abbott",
+    "abbvie",
+    "abc",
+    "able",
+    "abogado",
+    "abudhabi",
+    "ac",
+    "academy",
+    "accenture",
+    "accountant",
+    "accountants",
+    "aco",
+    "active",
+    "actor",
+    "ad",
+    "adac",
+    "ads",
+    "adult",
+    "ae",
+    "aeg",
+    "aero",
+    "aetna",
+    "af",
+    "afamilycompany",
+    "afl",
+    "africa",
+    "ag",
+    "agakhan",
+    "agency",
+    "ai",
+    "aig",
+    "aigo",
+    "airbus",
+    "airforce",
+    "airtel",
+    "akdn",
+    "al",
+    "alfaromeo",
+    "alibaba",
+    "alipay",
+    "allfinanz",
+    "allstate",
+    "ally",
+    "alsace",
+    "alstom",
+    "am",
+    "americanexpress",
+    "americanfamily",
+    "amex",
+    "amfam",
+    "amica",
+    "amsterdam",
+    "analytics",
+    "android",
+    "anquan",
+    "anz",
+    "ao",
+    "aol",
+    "apartments",
+    "app",
+    "apple",
+    "aq",
+    "aquarelle",
+    "ar",
+    "aramco",
+    "archi",
+    "army",
+    "arpa",
+    "art",
+    "arte",
+    "as",
+    "asda",
+    "asia",
+    "associates",
+    "at",
+    "athleta",
+    "attorney",
+    "au",
+    "auction",
+    "audi",
+    "audible",
+    "audio",
+    "auspost",
+    "author",
+    "auto",
+    "autos",
+    "avianca",
+    "aw",
+    "aws",
+    "ax",
+    "axa",
+    "az",
+    "azure",
+    "ba",
+    "baby",
+    "baidu",
+    "banamex",
+    "bananarepublic",
+    "band",
+    "bank",
+    "bar",
+    "barcelona",
+    "barclaycard",
+    "barclays",
+    "barefoot",
+    "bargains",
+    "baseball",
+    "basketball",
+    "bauhaus",
+    "bayern",
+    "bb",
+    "bbc",
+    "bbt",
+    "bbva",
+    "bcg",
+    "bcn",
+    "bd",
+    "be",
+    "beats",
+    "beauty",
+    "beer",
+    "bentley",
+    "berlin",
+    "best",
+    "bestbuy",
+    "bet",
+    "bf",
+    "bg",
+    "bh",
+    "bharti",
+    "bi",
+    "bible",
+    "bid",
+    "bike",
+    "bind",
+    "bing",
+    "bingo",
+    "bio",
+    "biz",
+    "bj",
+    "black",
+    "blackfriday",
+    "blanco",
+    "blockbuster",
+    "blog",
+    "bloomberg",
+    "blue",
+    "bm",
+    "bms",
+    "bmw",
+    "bn",
+    "bnl",
+    "bnpparibas",
+    "bo",
+    "boats",
+    "boehringer",
+    "bofa",
+    "bom",
+    "bond",
+    "boo",
+    "book",
+    "booking",
+    "boots",
+    "bosch",
+    "bostik",
+    "boston",
+    "bot",
+    "boutique",
+    "box",
+    "br",
+    "bradesco",
+    "bridgestone",
+    "broadway",
+    "broker",
+    "brother",
+    "brussels",
+    "bs",
+    "bt",
+    "budapest",
+    "bugatti",
+    "build",
+    "builders",
+    "business",
+    "buy",
+    "buzz",
+    "bv",
+    "bw",
+    "by",
+    "bz",
+    "bzh",
+    "ca",
+    "cab",
+    "cafe",
+    "cal",
+    "call",
+    "calvinklein",
+    "cam",
+    "camera",
+    "camp",
+    "cancerresearch",
+    "canon",
+    "capetown",
+    "capital",
+    "capitalone",
+    "car",
+    "caravan",
+    "cards",
+    "care",
+    "career",
+    "careers",
+    "cars",
+    "cartier",
+    "casa",
+    "caseih",
+    "cash",
+    "casino",
+    "cat",
+    "catering",
+    "catholic",
+    "cba",
+    "cbn",
+    "cbre",
+    "cbs",
+    "cc",
+    "cd",
+    "ceb",
+    "center",
+    "ceo",
+    "cern",
+    "cf",
+    "cfa",
+    "cfd",
+    "cg",
+    "ch",
+    "chanel",
+    "channel",
+    "chase",
+    "chat",
+    "cheap",
+    "chintai",
+    "chloe",
+    "christmas",
+    "chrome",
+    "chrysler",
+    "church",
+    "ci",
+    "cipriani",
+    "circle",
+    "cisco",
+    "citadel",
+    "citi",
+    "citic",
+    "city",
+    "cityeats",
+    "ck",
+    "cl",
+    "claims",
+    "cleaning",
+    "click",
+    "clinic",
+    "clinique",
+    "clothing",
+    "cloud",
+    "club",
+    "clubmed",
+    "cm",
+    "cn",
+    "co",
+    "coach",
+    "codes",
+    "coffee",
+    "college",
+    "cologne",
+    "com"
+};
+
+const size_t size_to_hash_long = sizeof(to_hash_long) / sizeof(char const *);
 
 class hashTestKey
 {
@@ -118,15 +401,15 @@ hashtest::~hashtest()
 {
 }
 
-bool hashtest::DoBinHashTest()
+bool hashtest::DoBinHashTest(char const ** hash_input, size_t nb_input)
 {
     BinHash<hashTestKey> hashTable;
     bool ret = true;
 
     /* Enter all the data in the input table */
-    for (size_t i = 0; ret && i < size_to_hash; i++)
+    for (size_t i = 0; ret && i < nb_input; i++)
     {
-        hashTestKey key((uint8_t const *)to_hash[i], strlen(to_hash[i]), i);
+        hashTestKey key((uint8_t const *)hash_input[i], strlen(hash_input[i]), i);
         bool stored;
 
         hashTestKey * retKey = hashTable.InsertOrAdd(&key, true, &stored);
@@ -141,15 +424,15 @@ bool hashtest::DoBinHashTest()
         }
     }
 
-    if (ret && hashTable.GetCount() != size_to_hash)
+    if (ret && hashTable.GetCount() != nb_input)
     {
         ret = false;
     }
 
     /* Verify that all the data can be rewritten without creating new entries */
-    for (size_t i = 0; ret && i < size_to_hash; i++)
+    for (size_t i = 0; ret && i < nb_input; i++)
     {
-        hashTestKey key((uint8_t const *)to_hash[i], strlen(to_hash[i]), i);
+        hashTestKey key((uint8_t const *)hash_input[i], strlen(hash_input[i]), i);
         bool stored;
 
         hashTestKey * retKey = hashTable.InsertOrAdd(&key, true, &stored);
@@ -169,9 +452,9 @@ bool hashtest::DoBinHashTest()
     }
 
     /* Verify that all the data can be retrieved */
-    for (size_t i = 0; ret && i < size_to_hash; i++)
+    for (size_t i = 0; ret && i < nb_input; i++)
     {
-        hashTestKey key((uint8_t const *)to_hash[i], strlen(to_hash[i]), i);
+        hashTestKey key((uint8_t const *)hash_input[i], strlen(hash_input[i]), i);
 
         hashTestKey * retKey = hashTable.Retrieve(&key);
 
@@ -260,18 +543,23 @@ bool hashtest::LruCheck(void * vtable)
     return ret;
 }
 
-bool hashtest::DoLruHashTest()
+bool hashtest::DoLruHashTest(char const ** hash_input, size_t nb_input)
 {
     LruHash<hashTestKey> hashTable;
     bool ret = true;
 
     /* Enter all the data in the input table */
-    for (size_t i = 0; ret && i < size_to_hash; i++)
+    for (size_t i = 0; ret && i < nb_input; i++)
     {
-        hashTestKey key((uint8_t const *)to_hash[i], strlen(to_hash[i]), i);
+        hashTestKey key((uint8_t const *)hash_input[i], strlen(hash_input[i]), i);
         bool stored;
 
         hashTestKey * retKey = hashTable.InsertOrAdd(&key, true, &stored);
+
+        if (i == 0x41)
+        {
+            ret = LruCheck((void*)&hashTable);
+        }
 
         if (retKey == NULL)
         {
@@ -283,7 +571,7 @@ bool hashtest::DoLruHashTest()
         }
     }
 
-    if (ret && hashTable.GetCount() != size_to_hash)
+    if (ret && hashTable.GetCount() != nb_input)
     {
         ret = false;
     }
@@ -294,9 +582,9 @@ bool hashtest::DoLruHashTest()
     }
 
     /* Verify that all the data can be rewritten without creating new entries */
-    for (size_t i = 0; ret && i < size_to_hash; i++)
+    for (size_t i = 0; ret && i < nb_input; i++)
     {
-        hashTestKey key((uint8_t const *)to_hash[i], strlen(to_hash[i]), i);
+        hashTestKey key((uint8_t const *)hash_input[i], strlen(hash_input[i]), i);
         bool stored;
 
         hashTestKey * retKey = hashTable.InsertOrAdd(&key, true, &stored);
@@ -321,9 +609,9 @@ bool hashtest::DoLruHashTest()
     }
 
     /* Verify that all the data can be retrieved */
-    for (size_t i = 0; ret && i < size_to_hash; i++)
+    for (size_t i = 0; ret && i < nb_input; i++)
     {
-        hashTestKey key((uint8_t const *)to_hash[i], strlen(to_hash[i]), i);
+        hashTestKey key((uint8_t const *)hash_input[i], strlen(hash_input[i]), i);
 
         hashTestKey * retKey = hashTable.Retrieve(&key);
 
@@ -371,12 +659,21 @@ bool hashtest::DoLruHashTest()
 
 bool hashtest::DoTest()
 {
-    bool ret = DoBinHashTest();
+    bool ret = DoBinHashTest(to_hash, size_to_hash);
 
     if (ret)
     {
-        ret = DoLruHashTest();
+        ret = DoBinHashTest(to_hash_long, size_to_hash_long);
     }
 
+    if (ret)
+    {
+        ret = DoLruHashTest(to_hash, size_to_hash);
+    }
+
+    if (ret)
+    {
+        ret = DoLruHashTest(to_hash_long, size_to_hash_long);
+    }
     return ret;
 }
