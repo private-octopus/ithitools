@@ -654,7 +654,7 @@ bool hashtest::DoLruHashTest(char const ** hash_input, size_t nb_input)
         ret = LruCheck((void*)&hashTable);
     }
 
-    /* TODO: Delete some random object, then check the table */
+    /* Delete some random object, then check the table */
     if (ret)
     {
         size_t i = nb_input / 2;
@@ -681,8 +681,29 @@ bool hashtest::DoLruHashTest(char const ** hash_input, size_t nb_input)
         }
     }
 
-    /* TODO: Delete the LRU object, then check the table */
+    /* Delete the LRU object, then check the table */
+    if (ret)
+    {
+        hashTestKey * retKey = hashTable.RemoveLRU();
 
+        if (retKey == NULL)
+        {
+            ret = false;
+        }
+        else
+        {
+            delete retKey;
+
+            if (hashTable.GetCount() != nb_input - 2)
+            {
+                ret = false;
+            }
+            else
+            {
+                ret = LruCheck((void*)&hashTable);
+            }
+        }
+    }
     return ret;
 }
 

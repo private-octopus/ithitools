@@ -33,7 +33,7 @@ DnsStats::DnsStats()
     record_count(0),
     query_count(0),
     response_count(0),
-    max_query_usage_count(0x1000),
+    max_query_usage_count(0x8000),
     max_tld_leakage_count(0x80)
 {
 }
@@ -108,6 +108,7 @@ static char const * RegistryNameById[] = {
     "root-QR",
     "LeakByLength",
     "LeakedTLD",
+    "RFC6761-TLD",
     "UsefulQueries"
 };
 
@@ -1191,7 +1192,6 @@ void DnsStats::NormalizeNamePart(uint32_t length, uint8_t * value,
         uint8_t c = value[i];
         if (c >= 'A' && c <= 'Z')
         {
-            c += 'a' - 'A';
             has_letter = true;
         }
         else if (c >= 'a' && c <= 'z')
@@ -1316,8 +1316,9 @@ void DnsStats::ExportLeakedDomains()
             vector_index++;
             tld_entry = tld_entry->HashNext;
         }
-        std::sort(lines.begin(), lines.end(), CompareTldEntries);
     }
+
+    std::sort(lines.begin(), lines.end(), CompareTldEntries);
 
     /* Retain the N most interesting values */
     for (TldAsKey * &entry : lines)
@@ -1331,6 +1332,57 @@ void DnsStats::ExportLeakedDomains()
         else
         {
             break;
+        }
+    }
+}
+
+static char const * rfc6761_tld[] = {
+    "EXAMPLE",
+    "INVALID",
+    "LOCAL",
+    "LOCALHOST",
+    "ONION",
+    "TEST"
+};
+
+const uint32_t nb_rfc6771_tld = sizeof(rfc6761_tld) / sizeof(char const *);
+
+bool DnsStats::IsRfc6761Tld(uint8_t * tld, size_t length)
+{
+    bool ret = false;
+
+    for (uint32_t i = 0; i < nb_rfc6771_tld; i++)
+    {
+        size_t j = 0;
+        uint8_t * x = (uint8_t *)rfc6761_tld[i];
+
+        for (; j < length; j++)
+        {
+            if (x[j] != tld[j] && (x[j] - 'A' + 'a') != tld[j])
+            {
+                break;
+            }
+        }
+
+        if (j == length && x[j] == 0)
+        {
+            ret = true;
+            break;
+        }
+    }
+    return ret;
+}
+
+void DnsStats::SetToUpperCase(uint8_t * domain, size_t length)
+{
+    for (size_t i = 0; i < length; i++)
+    {
+        int c = domain[i];
+
+        if (c >= 'a' && c <= 'z')
+        {
+            c += 'A' - 'a';
+            domain[i] = (uint8_t)c;
         }
     }
 }
@@ -3034,29 +3086,38 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
             uint32_t tld_offset = 0;
             int gotTld = GetTLD(packet, length, 12, &tld_offset);
 
-            if (rcode == DNS_RCODE_NOERROR || rcode == DNS_RCODE_NXDOMAIN)
+            if (gotTld)
             {
-                SubmitRegistryNumber(REGISTRY_DNS_root_QR, rcode);
+                SetToUpperCase(packet + tld_offset + 1, packet[tld_offset]);
             }
+            
+            SubmitRegistryNumber(REGISTRY_DNS_root_QR, rcode);
 
             if (gotTld)
             {
                 if (rcode == DNS_RCODE_NXDOMAIN)
                 {
                     /* Analysis of domain leakage */
-                    TldAsKey key(packet + tld_offset + 1, packet[tld_offset]);
-                    bool stored = false;
-
-                    (void)tldLeakage.InsertOrAdd(&key, true, &stored);
-                    /* TODO: If full enough, remove the LRU and add it to per-length stats */
-                    if (tldLeakage.GetCount() > max_tld_leakage_count)
+                    if (IsRfc6761Tld(packet + tld_offset + 1, packet[tld_offset]))
                     {
-                        TldAsKey * removed = tldLeakage.RemoveLRU();
-                        delete removed;
+                        SubmitRegistryString(REGISTRY_DNS_RFC6761TLD, packet[tld_offset], packet + tld_offset + 1);
                     }
+                    else
+                    {
+                        TldAsKey key(packet + tld_offset + 1, packet[tld_offset]);
+                        bool stored = false;
 
-                    /* In all cases, tabulate the lengths of leaked TLD */
-                    SubmitRegistryNumber(REGISTRY_DNS_LeakByLength, packet[tld_offset]);
+                        (void)tldLeakage.InsertOrAdd(&key, true, &stored);
+                        /* TODO: If full enough, remove the LRU and add it to per-length stats */
+                        if (tldLeakage.GetCount() > max_tld_leakage_count)
+                        {
+                            TldAsKey * removed = tldLeakage.RemoveLRU();
+                            delete removed;
+                        }
+
+                        /* In all cases, tabulate the lengths of leaked TLD */
+                        SubmitRegistryNumber(REGISTRY_DNS_LeakByLength, packet[tld_offset]);
+                    }
                 }
                 else if (rcode == DNS_RCODE_NOERROR)
                 {
@@ -3252,7 +3313,35 @@ bool DnsStats::ExportToCsv(char const * fileName)
             }
             else
             {
-                fprintf(F, """%s"",", entry->key_value);
+                /* Check that the value is printable */
+                bool printable = true;
+                for (uint32_t i = 0; i < entry->key_length; i++)
+                {
+                    int x = entry->key_value[i];
+
+                    if (x >= ' ' && x < 127 && x != '"')
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        printable = false;
+                        break;
+                    }
+                }
+                if (!printable)
+                {
+                    fprintf(F, """_0x");
+                    for (uint32_t i = 0; i < entry->key_length; i++)
+                    {
+                        fprintf(F, "%02x", entry->key_value[i]);
+                    }
+                    fprintf(F, """,");
+                }
+                else
+                {
+                    fprintf(F, """%s"",", entry->key_value);
+                }
             }
 
             if (entry->registry_id == REGISTRY_DNS_RRType ||

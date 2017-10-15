@@ -158,6 +158,7 @@
     <ClInclude Include="..\lib\pcap_reader.h" />
     <ClInclude Include="..\lib\UsefulTransaction.h" />
     <ClInclude Include="..\test\hashtest.h" />
+    <ClInclude Include="..\test\testRfc6761.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
@@ -170,6 +171,7 @@
     <ClCompile Include="..\lib\pcap_reader.cpp" />
     <ClCompile Include="..\lib\UsefulTransaction.cpp" />
     <ClCompile Include="..\test\hashtest.cpp" />
+    <ClCompile Include="..\test\testRfc6761.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

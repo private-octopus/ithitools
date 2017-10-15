@@ -61,7 +61,8 @@
 #define REGISTRY_DNS_root_QR 27
 #define REGISTRY_DNS_LeakByLength 28
 #define REGISTRY_DNS_LeakedTLD 29
-#define REGISTRY_DNS_UsefulQueries 30
+#define REGISTRY_DNS_RFC6761TLD 30
+#define REGISTRY_DNS_UsefulQueries 31
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
 #define DNS_REGISTRY_ERROR_RRCLASS (1<<1)
@@ -144,6 +145,10 @@ public:
     int response_count;
     uint32_t error_flags;
 
+
+    static bool IsRfc6761Tld(uint8_t * tld, size_t length);
+    static void SetToUpperCase(uint8_t * domain, size_t length);
+
 private:
     int SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start, bool is_response);
     int SubmitRecord(uint8_t * packet, uint32_t length, uint32_t start, 
@@ -187,7 +192,6 @@ private:
     void GetDestAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
 
     void ExportLeakedDomains();
-
 };
 
 #endif /* DNSTAT_H */

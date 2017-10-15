@@ -57,6 +57,9 @@
     <ClInclude Include="..\test\hashtest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\test\testRfc6761.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -87,6 +90,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\test\hashtest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\test\testRfc6761.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
