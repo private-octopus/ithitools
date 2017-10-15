@@ -28,13 +28,16 @@
 #include "DnsStats.h"
 
 
+
 DnsStats::DnsStats()
     :
     record_count(0),
     query_count(0),
     response_count(0),
+    dnsstat_flags(0),
     max_query_usage_count(0x8000),
-    max_tld_leakage_count(0x80)
+    max_tld_leakage_count(0x80),
+    max_tld_leakage_table_count(0x8000)
 {
 }
 
@@ -120,8 +123,10 @@ int DnsStats::SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start, boo
     int rrtype = 0;
     uint32_t name_start = start;
 
+#if 0
     start = SubmitName(packet, length, start,
         (!is_response && query_count < 10000)?REGISTRY_TLD_query:0);
+#endif
 
     if (start + 4 <= length)
     {
@@ -130,13 +135,19 @@ int DnsStats::SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start, boo
         start += 4;
         CheckRRClass(rrclass);
         CheckRRType(rrtype);
-        SubmitRegistryNumber(REGISTRY_DNS_Q_CLASSES, rrclass);
-        SubmitRegistryNumber(REGISTRY_DNS_Q_RRType, rrtype);
-
-        if (rrtype == DnsRtype_TXT)
+        if (dnsstat_flags&dnsStateFlagCountQueryParms)
         {
-            SubmitRegistryString(REGISTRY_DNS_txt_underline, 3, (uint8_t *) "TXT");
-            CheckForUnderline(packet, length, name_start);
+            SubmitRegistryNumber(REGISTRY_DNS_Q_CLASSES, rrclass);
+            SubmitRegistryNumber(REGISTRY_DNS_Q_RRType, rrtype);
+        }
+
+        if (dnsstat_flags&dnsStateFlagCountUnderlinedNames)
+        {
+            if (rrtype == DnsRtype_TXT)
+            {
+                SubmitRegistryString(REGISTRY_DNS_txt_underline, 3, (uint8_t *) "TXT");
+                CheckForUnderline(packet, length, name_start);
+            }
         }
     }
     else
@@ -194,7 +205,7 @@ int DnsStats::SubmitRecord(uint8_t * packet, uint32_t length, uint32_t start,
                         SubmitRegistryNumber(REGISTRY_DNS_CLASSES, rrclass);
                         (void)SubmitName(packet, length, name_start, REGISTRY_TLD_response);
                     }
-                    else
+                    else if (dnsstat_flags&dnsStateFlagCountQueryParms)
                     {
                         SubmitRegistryNumber(REGISTRY_DNS_Q_CLASSES, rrclass);
                     }
@@ -212,7 +223,7 @@ int DnsStats::SubmitRecord(uint8_t * packet, uint32_t length, uint32_t start,
                 {
                     SubmitRegistryNumber(REGISTRY_DNS_RRType, rrtype);
                 }
-                else
+                else if (dnsstat_flags&dnsStateFlagCountQueryParms)
                 {
                     SubmitRegistryNumber(REGISTRY_DNS_Q_RRType, rrtype);
                 }
@@ -305,8 +316,6 @@ static char const * common_bad_tld[] = {
 };
 
 const uint32_t nb_common_bad_tld = sizeof(common_bad_tld) / sizeof(char const *);
-
-
 
 int DnsStats::SubmitName(uint8_t * packet, uint32_t length, uint32_t start, uint32_t registryId)
 {
@@ -509,17 +518,22 @@ void DnsStats::SubmitDSRecord(uint8_t * content, uint32_t length)
     }
 }
 
-void DnsStats::SubmitRegistryNumber(uint32_t registry_id, uint32_t number)
+void DnsStats::SubmitRegistryNumberAndCount(uint32_t registry_id, uint32_t number, uint32_t count)
 {
     dns_registry_entry_t key;
 
-    key.count = 1;
+    key.count = count;
     key.registry_id = registry_id;
     key.key_length = sizeof(uint32_t);
     key.key_type = 0; /* number */
     key.key_number = number;
 
     (void)hashTable.InsertOrAdd(&key);
+}
+
+void DnsStats::SubmitRegistryNumber(uint32_t registry_id, uint32_t number)
+{
+    SubmitRegistryNumberAndCount(registry_id, number, 1);
 }
 
 void DnsStats::SubmitRegistryStringAndCount(uint32_t registry_id, uint32_t length, uint8_t * value, uint32_t count)
@@ -1331,7 +1345,8 @@ void DnsStats::ExportLeakedDomains()
         }
         else
         {
-            break;
+            SubmitRegistryNumberAndCount(REGISTRY_DNS_LeakByLength,
+                entry->tld_len, entry->count);
         }
     }
 }
@@ -3109,14 +3124,16 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
 
                         (void)tldLeakage.InsertOrAdd(&key, true, &stored);
                         /* TODO: If full enough, remove the LRU and add it to per-length stats */
-                        if (tldLeakage.GetCount() > max_tld_leakage_count)
+                        if (tldLeakage.GetCount() > max_tld_leakage_table_count)
                         {
                             TldAsKey * removed = tldLeakage.RemoveLRU();
-                            delete removed;
+                            if (removed != NULL)
+                            {
+                                SubmitRegistryNumberAndCount(REGISTRY_DNS_LeakByLength,
+                                    removed->tld_len, removed->count);
+                                delete removed;
+                            }
                         }
-
-                        /* In all cases, tabulate the lengths of leaked TLD */
-                        SubmitRegistryNumber(REGISTRY_DNS_LeakByLength, packet[tld_offset]);
                     }
                 }
                 else if (rcode == DNS_RCODE_NOERROR)

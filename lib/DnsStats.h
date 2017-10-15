@@ -78,6 +78,15 @@
 #define DNS_RCODE_NOERROR 0
 #define DNS_RCODE_NXDOMAIN 3
 
+
+enum DnsStatsFlags
+{
+    dnsStateFlagFilterLargeUsers = 1,
+    dnsStateFlagCountTld = 2,
+    dnsStateFlagCountQueryParms = 4,
+    dnsStateFlagCountUnderlinedNames = 8,
+};
+
 class TldAsKey
 {
 public:
@@ -138,8 +147,10 @@ public:
 
     bool ExportToCsv(char const * fileName);
 
-    uint32_t max_tld_leakage_count;
+    uint32_t max_tld_leakage_count; 
+    uint32_t max_tld_leakage_table_count;
     uint32_t max_query_usage_count;
+    uint32_t dnsstat_flags;
     int record_count; 
     int query_count;
     int response_count;
@@ -160,6 +171,7 @@ private:
     void SubmitRRSIGRecord(uint8_t * content, uint32_t length);
     void SubmitDSRecord(uint8_t * content, uint32_t length);
 
+    void SubmitRegistryNumberAndCount(uint32_t registry_id, uint32_t number, uint32_t count);
     void SubmitRegistryNumber(uint32_t registry_id, uint32_t number);
     void SubmitRegistryStringAndCount(uint32_t registry_id, uint32_t length, uint8_t * value, uint32_t count);
     void SubmitRegistryString(uint32_t registry_id, uint32_t length, uint8_t * value);

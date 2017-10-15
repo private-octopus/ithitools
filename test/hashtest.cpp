@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 #include "HashBinGeneric.h"
 #include "hashtest.h"
 
@@ -546,6 +547,7 @@ bool hashtest::LruCheck(void * vtable)
 bool hashtest::DoLruHashTest(char const ** hash_input, size_t nb_input)
 {
     LruHash<hashTestKey> hashTable;
+    size_t target_size = nb_input;
     bool ret = true;
 
     /* Enter all the data in the input table */
@@ -571,7 +573,7 @@ bool hashtest::DoLruHashTest(char const ** hash_input, size_t nb_input)
         }
     }
 
-    if (ret && hashTable.GetCount() != nb_input)
+    if (ret && hashTable.GetCount() != target_size)
     {
         ret = false;
     }
@@ -659,7 +661,6 @@ bool hashtest::DoLruHashTest(char const ** hash_input, size_t nb_input)
     {
         size_t i = nb_input / 2;
         hashTestKey key((uint8_t const *)hash_input[i], strlen(hash_input[i]), i);
-
         hashTestKey * retKey = hashTable.Remove(&key);
 
         if (retKey == NULL)
@@ -669,22 +670,24 @@ bool hashtest::DoLruHashTest(char const ** hash_input, size_t nb_input)
         else
         {
             delete retKey;
+            target_size--;
 
-            if (hashTable.GetCount() != nb_input -1)
+            if (hashTable.GetCount() != target_size)
             {
                 ret = false;
             }
             else
             {
                 ret = LruCheck((void*)&hashTable);
-            }
+            }     
         }
     }
 
     /* Delete the LRU object, then check the table */
-    if (ret)
+    while (ret && hashTable.GetCount() > 0)
     {
         hashTestKey * retKey = hashTable.RemoveLRU();
+        target_size--;
 
         if (retKey == NULL)
         {
@@ -694,7 +697,7 @@ bool hashtest::DoLruHashTest(char const ** hash_input, size_t nb_input)
         {
             delete retKey;
 
-            if (hashTable.GetCount() != nb_input - 2)
+            if (hashTable.GetCount() != target_size)
             {
                 ret = false;
             }

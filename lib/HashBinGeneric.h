@@ -96,7 +96,7 @@ public:
         KeyObj * retKey = hashBin[hash_index];
         KeyObj ** pPrevious = &hashBin[hash_index];
 
-        while (retKey != NULL && !key->IsSameKey(hashBin[hash_index]))
+        while (retKey != NULL && !key->IsSameKey(retKey))
         {
             pPrevious = &retKey->HashNext;
             retKey = retKey->HashNext;
