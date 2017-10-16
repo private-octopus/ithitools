@@ -33,7 +33,9 @@ typedef struct _pcap_csv_line
         int key_number;
         char key_value[64];
     };
+#if 0
     char key_name[64];
+#endif
     int count;
 } pcap_csv_line;
 

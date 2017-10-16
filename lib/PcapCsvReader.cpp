@@ -77,7 +77,9 @@ void PcapCsvReader::ReadNext()
         {
             start = read_string(line.key_value, sizeof(line.key_value), start);
         }
+#if 0
         start = read_string(line.key_name, sizeof(line.key_name), start);
+#endif
         (void) read_number(&line.count, start);
     }
 }

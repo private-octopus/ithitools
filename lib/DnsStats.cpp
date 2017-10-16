@@ -47,39 +47,6 @@ DnsStats::~DnsStats()
 }
 
 static char const * DefaultRootAddresses[] = {
-#if 0
-    "192.12.94.30",
-    "192.26.92.30",
-    "192.31.80.30",
-    "192.33.4.12",
-    "192.33.14.30",
-    "192.35.51.30",
-    "192.42.93.30",
-    "192.43.172.30",
-    "192.48.79.30",
-    "192.5.6.30",
-    "192.52.178.30",
-    "192.54.112.30",
-    "192.41.162.30",
-    "192.228.79.201",
-    "198.41.0.4",
-    "2001:500:856e::30",
-    "2001:502:1ca1::30",
-    "2001:502:7094::30",
-    "2001:502:8cc::30",
-    "2001:503:231d::2:30",
-    "2001:503:39c1::30",
-    "2001:503:83eb::30",
-    "2001:503:a83e::2:30",
-    "2001:503:d2d::30",
-    "2001:503:d414::30",
-    "2001:503:eea3::30",
-    "2001:500:d937::30",
-    "2001:500:200::b",
-    "2001:500:2::c",
-    "2001:503:ba3e::2:30",
-    "2001::500:84::c"
-#else
     "2001:503:ba3e::2:30",
     "198.41.0.4",
     "2001:500:200::b",
@@ -106,7 +73,6 @@ static char const * DefaultRootAddresses[] = {
     "199.7.83.42",
     "2001:dc3::35",
     "202.12.27.33"
-#endif
 };
 
 static char const * RegistryNameById[] = {
@@ -152,18 +118,15 @@ int DnsStats::SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start, boo
     int rrtype = 0;
     uint32_t name_start = start;
 
-#if 0
-    start = SubmitName(packet, length, start,
-        (!is_response && query_count < 10000)?REGISTRY_TLD_query:0);
-#endif
+    start = SubmitName(packet, length, start, false);
 
     if (start + 4 <= length)
     {
         rrtype = (packet[start] << 8) | packet[start + 1];
         rrclass = (packet[start + 2] << 8) | packet[start + 3];
         start += 4;
-        CheckRRClass(rrclass);
-        CheckRRType(rrtype);
+        // CheckRRClass(rrclass);
+        // CheckRRType(rrtype);
         if (dnsstat_flags&dnsStateFlagCountQueryParms)
         {
             SubmitRegistryNumber(REGISTRY_DNS_Q_CLASSES, rrclass);
@@ -199,7 +162,8 @@ int DnsStats::SubmitRecord(uint8_t * packet, uint32_t length, uint32_t start,
 
     record_count++;
 
-    start = SubmitName(packet, length, start, 0);
+    /* Labels are only tabulated in responses, to avoid polluting data with erroneous packets */
+    start = SubmitName(packet, length, start, is_response);
 
     if ((start + 10) > length)
     {
@@ -226,13 +190,12 @@ int DnsStats::SubmitRecord(uint8_t * packet, uint32_t length, uint32_t start,
                 /* only record rrtypes and rrclass if valid response */
                 if (rrtype != DnsRtype_OPT)
                 {
-                    CheckRRClass(rrclass);
-                    CheckRRType(rrtype);
+                    // CheckRRClass(rrclass);
+                    // CheckRRType(rrtype);
 
                     if (is_response)
                     {
                         SubmitRegistryNumber(REGISTRY_DNS_CLASSES, rrclass);
-                        (void)SubmitName(packet, length, name_start, REGISTRY_TLD_response);
                     }
                     else if (dnsstat_flags&dnsStateFlagCountQueryParms)
                     {
@@ -286,73 +249,11 @@ int DnsStats::SubmitRecord(uint8_t * packet, uint32_t length, uint32_t start,
     return start;
 }
 
-static char const * common_bad_tld[] = {
-    "local",
-    "home",
-    "ip",
-    "localdomain",
-    "dhcp",
-    "localhost",
-    "localnet",
-    "lan",
-    "telus",
-    "internal",
-    "belkin",
-    "invalid",
-    "workgroup",
-    "domain",
-    "corp",
-    "comg",
-    "homestation",
-    "backnet",
-    "router",
-    "gateway",
-    "nashr",
-    "pk5001z",
-    "pvt",
-    "rbl",
-    "toj",
-    "_tcp",
-    "actdsltmp",
-    "dlinkrouter",
-    "guest",
-    "intra",
-    "intranet",
-    "reviewimages",
-    "totolink",
-    "airdream",
-    "dlink",
-    "station",
-    "tendaap",
-    "_nfsv4idmapdomain",
-    "arris",
-    "be",
-    "blinkap",
-    "enterprise",
-    "mickeymouse",
-    "netg",
-    "openstacklocal",
-    "private",
-    "realtek",
-    "site",
-    "wimax",
-    "domainname",
-    "server",
-    "yfserver",
-    "oops",
-    "fco",
-    "public"
-};
-
-const uint32_t nb_common_bad_tld = sizeof(common_bad_tld) / sizeof(char const *);
-
-int DnsStats::SubmitName(uint8_t * packet, uint32_t length, uint32_t start, uint32_t registryId)
+int DnsStats::SubmitName(uint8_t * packet, uint32_t length, uint32_t start, bool should_tabulate)
 {
     uint32_t l = 0;
     uint32_t offset = 0;
-    uint32_t previous = 0;
     uint32_t name_start = start;
-    uint8_t lower_case_tld[64];
 
     while (start < length)
     {
@@ -361,56 +262,9 @@ int DnsStats::SubmitName(uint8_t * packet, uint32_t length, uint32_t start, uint
         if (l == 0)
         {
             /* end of parsing*/
-
-            SubmitRegistryNumber(REGISTRY_DNS_LabelType, 0);
-
-            if (previous != 0)
+            if (should_tabulate)
             {
-                uint32_t l_tld = packet[previous];
-                uint32_t tld_flags = 0;
-
-                if (l_tld > 0 && l_tld <= 63)
-                {
-                    NormalizeNamePart(l_tld, &packet[previous + 1], lower_case_tld, &tld_flags);
-
-                    if (!CheckTld(l_tld, lower_case_tld))
-                    {
-                        /* Analyze of non expected TLD */
-                        uint32_t tld_type = 0;
-                        bool found = false;
-
-                        for (uint32_t i = 0; i < nb_common_bad_tld; i++)
-                        {
-                            if (strcmp((const char *)lower_case_tld, common_bad_tld[i]) == 0)
-                            {
-                                found = true;
-                                tld_type = i;
-                                break;
-                            }
-                        }
-                        if (!found)
-                        {
-                            if ((tld_flags&1) != 0)
-                            {
-                                tld_type = 62;
-                            }
-                            else if ((tld_flags & 2) != 0)
-                            {
-                                tld_type = 63;
-                            }
-                            else
-                            {
-                                tld_type = l_tld + tld_flags;
-                            }
-                        }
-                        SubmitRegistryNumber(REGISTRY_TLD_error_class, tld_type);
-                    }
-
-                    if (registryId != 0)
-                    {
-                        SubmitRegistryString(registryId, l_tld, lower_case_tld);
-                    }
-                }
+                SubmitRegistryNumber(REGISTRY_DNS_LabelType, 0);
             }
             start++;
             break;
@@ -418,7 +272,10 @@ int DnsStats::SubmitName(uint8_t * packet, uint32_t length, uint32_t start, uint
         else if ((l & 0xC0) == 0xC0)
         {
             /* Name compression */
-            SubmitRegistryNumber(REGISTRY_DNS_LabelType, 0xC0);
+            if (should_tabulate)
+            {
+                SubmitRegistryNumber(REGISTRY_DNS_LabelType, 0xC0);
+            }
 
             if ((start + 2) > length)
             {
@@ -428,16 +285,6 @@ int DnsStats::SubmitName(uint8_t * packet, uint32_t length, uint32_t start, uint
             }
             else
             {
-                if (registryId != 0)
-                {
-                    uint32_t new_start = ((l & 63)<<8) + packet[start+1];
-
-                    if (new_start < name_start)
-                    {
-                        (void) SubmitName(packet, length, new_start, registryId);
-                    }
-                }
-
                 start += 2;
                 break;
             }
@@ -446,14 +293,20 @@ int DnsStats::SubmitName(uint8_t * packet, uint32_t length, uint32_t start, uint
         {
             /* found an extension. Don't know how to parse it! */
             error_flags |= DNS_REGISTRY_ERROR_LABEL;
-            SubmitRegistryNumber(REGISTRY_DNS_LabelType, l);
+            if (should_tabulate)
+            {
+                SubmitRegistryNumber(REGISTRY_DNS_LabelType, l);
+            }
             start = length;
             break;
         }
         else
         {
             /* regular name part. To do: tracking of underscore labels. */
-            SubmitRegistryNumber(REGISTRY_DNS_LabelType, 0);
+            if (should_tabulate)
+            {
+                SubmitRegistryNumber(REGISTRY_DNS_LabelType, 0);
+            }
             if (start + l + 1 > length)
             {
                 error_flags |= DNS_REGISTRY_ERROR_FORMAT;
@@ -462,7 +315,6 @@ int DnsStats::SubmitName(uint8_t * packet, uint32_t length, uint32_t start, uint
             }
             else
             {
-                previous = start;
                 start += l + 1;
             }
         }
@@ -497,7 +349,7 @@ void DnsStats::SubmitOPTRecord(uint32_t flags, uint8_t * content, uint32_t lengt
         uint32_t o_code = (content[current_index] << 8) | content[current_index + 1];
         uint32_t o_length = (content[current_index+2] << 8) | content[current_index + 3];
         current_index += 4 + o_length;
-        CheckOptOption(o_code);
+        // CheckOptOption(o_code);
         SubmitRegistryNumber(REGISTRY_EDNS_OPT_CODE, o_code);
     }
 }
@@ -507,7 +359,7 @@ void DnsStats::SubmitKeyRecord(uint8_t * content, uint32_t length)
     if (length > 8)
     {
         uint32_t algorithm = content[3];
-        CheckKeyAlgorithm(algorithm);
+        // CheckKeyAlgorithm(algorithm);
         SubmitRegistryNumber(REGISTRY_DNSSEC_Algorithm_Numbers, algorithm);
 
         if (algorithm == 2)
@@ -532,7 +384,7 @@ void DnsStats::SubmitRRSIGRecord(uint8_t * content, uint32_t length)
     if (length > 18)
     {
         uint32_t algorithm = content[2];
-        CheckKeyAlgorithm(algorithm);
+        // CheckKeyAlgorithm(algorithm);
         SubmitRegistryNumber(REGISTRY_DNSSEC_Algorithm_Numbers, algorithm);
     }
 }
@@ -542,7 +394,7 @@ void DnsStats::SubmitDSRecord(uint8_t * content, uint32_t length)
     if (length > 4)
     {
         uint32_t algorithm = content[2];
-        CheckKeyAlgorithm(algorithm);
+        // CheckKeyAlgorithm(algorithm);
         SubmitRegistryNumber(REGISTRY_DNSSEC_Algorithm_Numbers, algorithm);
     }
 }
@@ -587,6 +439,7 @@ void DnsStats::SubmitRegistryString(uint32_t registry_id, uint32_t length, uint8
     SubmitRegistryStringAndCount(registry_id, length, value, 1);
 }
 
+#if 0
 static char const *  rrtype_1_62[] = {
     "A",
     "NS",
@@ -984,50 +837,9 @@ void DnsStats::PrintErrorFlags(FILE * F, uint32_t flags)
         fprintf(F, """%s"",", flags_name);
     }
 }
+#endif
 
-static char const * tld_name_format[] = {
-    "unknown format",
-    "all letters",
-    "all numbers",
-    "alpha_num",
-    "dash",
-    "alpha_dash",
-    "num_dash",
-    "alpha_num_dash",
-};
-
-const uint32_t nb_tld_name_format = sizeof(tld_name_format) / sizeof(char const *);
-
-void DnsStats::PrintTldErrorClass(FILE * F, uint32_t tld_error_class)
-{
-    if (tld_error_class < nb_common_bad_tld)
-    {
-        fprintf(F, """.%s"",", common_bad_tld[tld_error_class]);
-    }
-    else if (tld_error_class == 62)
-    {
-        fprintf(F, """Non ASCII"",");
-    }
-    else if (tld_error_class == 63)
-    {
-        fprintf(F, """Special chars"",");
-    }
-    else
-    {
-        uint32_t name_format = tld_error_class / 64;
-        uint32_t name_length = tld_error_class % 64;
-
-        if (name_format < nb_tld_name_format)
-        {
-            fprintf(F, """%s (%d)"",", tld_name_format[name_format], name_length);
-        }
-        else
-        {
-            fprintf(F, """Unknown(%d)"",", tld_error_class);
-        }
-    }
-}
-
+#if 0
 void DnsStats::CheckRRType(uint32_t rrtype)
 {
     if (!((rrtype >= 1 && rrtype <= 62) || (rrtype >= 99 && rrtype <= 109) ||
@@ -1076,6 +888,7 @@ void DnsStats::CheckOptOption(uint32_t option)
         error_flags |= DNS_REGISTRY_ERROR_OPTO;
     }
 }
+#endif
 
 int DnsStats::CheckForUnderline(uint8_t * packet, uint32_t length, uint32_t start)
 {
@@ -1437,7 +1250,7 @@ void DnsStats::SetToUpperCase(uint8_t * domain, size_t length)
 }
 
 
-
+#if 0
 static char const *  valid_tld[] = {
     "aaa",
     "aarp",
@@ -3037,7 +2850,7 @@ bool DnsStats::CheckTld(uint32_t length, uint8_t * lower_case_tld)
 
     return ret;
 }
-
+#endif
 
 
 /*
@@ -3127,7 +2940,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
         arcount = (packet[10] << 8) | packet[11];
 
         SubmitRegistryNumber(REGISTRY_DNS_OpCodes, opcode);
-        CheckOpCode(opcode);
+        // CheckOpCode(opcode);
 
         if (is_response && opcode == DNS_OPCODE_QUERY 
             && rootAddresses.IsInList(source_addr, source_addr_length))
@@ -3192,6 +3005,11 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
 
                         SubmitRegistryNumber(REGISTRY_DNS_UsefulQueries, (stored)?1:0);
                     }
+
+                    if (dnsstat_flags&dnsStateFlagCountTld)
+                    {
+                        SubmitRegistryString(REGISTRY_TLD_response, packet[tld_offset], packet + tld_offset + 1);
+                    }
                 }
             }
         }
@@ -3213,7 +3031,10 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
         {
             error_flags |= DNS_REGISTRY_ERROR_FORMAT;
         }
-        parse_index = SubmitQuery(packet, length, parse_index, is_response);
+        else
+        {
+            parse_index = SubmitQuery(packet, length, parse_index, is_response);
+        }
     }
 
     for (uint32_t i = 0; i < ancount; i++)
@@ -3222,7 +3043,10 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
         {
             error_flags |= DNS_REGISTRY_ERROR_FORMAT;
         }
-        parse_index = SubmitRecord(packet, length, parse_index, NULL, NULL, is_response);
+        else
+        {
+            parse_index = SubmitRecord(packet, length, parse_index, NULL, NULL, is_response);
+        }
     }
 
     for (uint32_t i = 0; i < nscount; i++)
@@ -3231,7 +3055,10 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
         {
             error_flags |= DNS_REGISTRY_ERROR_FORMAT;
         }
-        parse_index = SubmitRecord(packet, length, parse_index, NULL, NULL, is_response);
+        else
+        {
+            parse_index = SubmitRecord(packet, length, parse_index, NULL, NULL, is_response);
+        }
     }
 
     for (uint32_t i = 0; i < arcount; i++)
@@ -3240,16 +3067,19 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
         {
             error_flags |= DNS_REGISTRY_ERROR_FORMAT;
         }
-        parse_index = SubmitRecord(packet, length, parse_index, &e_rcode, &e_length, is_response);
+        else
+        {
+            parse_index = SubmitRecord(packet, length, parse_index, &e_rcode, &e_length, is_response);
+        }
     }
 
-    if (has_header)
+    if (has_header && (dnsstat_flags&dnsStateFlagCountPacketSizes) != 0)
     {
         if (is_response)
         {
             SubmitRegistryNumber(REGISTRY_DNS_Response_Size, length);
             rcode |= (e_rcode << 4);
-            CheckRCode(rcode);
+            // CheckRCode(rcode);
             SubmitRegistryNumber(REGISTRY_DNS_RCODES, rcode);
             if ((flags & (1 << 5)) != 0)
             {
@@ -3394,7 +3224,7 @@ bool DnsStats::ExportToCsv(char const * fileName)
                     fprintf(F, """%s"",", entry->key_value);
                 }
             }
-
+#if 0
             if (entry->registry_id == REGISTRY_DNS_RRType ||
                 entry->registry_id == REGISTRY_DNS_Q_RRType)
             {
@@ -3441,7 +3271,7 @@ bool DnsStats::ExportToCsv(char const * fileName)
             {
                 fprintf(F, """ "",");
             }
-
+#endif
             fprintf(F, "%d\n", entry->count);
         }
 

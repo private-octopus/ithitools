@@ -56,7 +56,7 @@
 #define	REGISTRY_TLD_query 22
 #define	REGISTRY_TLD_response 23
 #define	REGISTRY_DNS_error_flag 24
-#define	REGISTRY_TLD_error_class 25
+// #define	REGISTRY_TLD_error_class 25
 #define	REGISTRY_DNS_txt_underline 26
 #define REGISTRY_DNS_root_QR 27
 #define REGISTRY_DNS_LeakByLength 28
@@ -85,6 +85,7 @@ enum DnsStatsFlags
     dnsStateFlagCountTld = 2,
     dnsStateFlagCountQueryParms = 4,
     dnsStateFlagCountUnderlinedNames = 8,
+    dnsStateFlagCountPacketSizes = 16
 };
 
 class TldAsKey
@@ -164,7 +165,7 @@ private:
     int SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start, bool is_response);
     int SubmitRecord(uint8_t * packet, uint32_t length, uint32_t start, 
         uint32_t * e_rcode, uint32_t * e_length, bool is_response);
-    int SubmitName(uint8_t * packet, uint32_t length, uint32_t start, uint32_t registryId);
+    int SubmitName(uint8_t * packet, uint32_t length, uint32_t start, bool should_tabulate);
 
     void SubmitOPTRecord(uint32_t flags, uint8_t * content, uint32_t length, uint32_t * e_rcode);
     void SubmitKeyRecord(uint8_t * content, uint32_t length);
@@ -175,7 +176,7 @@ private:
     void SubmitRegistryNumber(uint32_t registry_id, uint32_t number);
     void SubmitRegistryStringAndCount(uint32_t registry_id, uint32_t length, uint8_t * value, uint32_t count);
     void SubmitRegistryString(uint32_t registry_id, uint32_t length, uint8_t * value);
-
+#if 0
     void PrintRRType(FILE* F, uint32_t rrtype);
     void PrintRRClass(FILE* F, uint32_t rrclass);
     void PrintOpCode(FILE* F, uint32_t opcode);
@@ -194,6 +195,7 @@ private:
     void CheckKeyAlgorithm(uint32_t algo);
     void CheckOptOption(uint32_t option);
     bool CheckTld(uint32_t length, uint8_t * lower_case_tld);
+#endif
     int CheckForUnderline(uint8_t * packet, uint32_t length, uint32_t start);
 
     int GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t *offset);
