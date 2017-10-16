@@ -20,7 +20,7 @@
 
 // PcapCsvMerge.cpp : Defines the entry point for the console application.
 //
-
+#include <stdint.h>
 #include "PcapCsvReader.h"
 #include "PcapCsvMerge.h"
 
@@ -73,11 +73,6 @@ bool PcapCsvMerge::DoMerge(int nb_readers, char ** fname, FILE* target)
 
     if (ret)
     {
-
-    }
-
-    if (ret)
-    {
         for (int i = 0; ret && (i < nb_readers); i++)
         {
             ret = reader[i].Open(fname[i]);
@@ -91,8 +86,8 @@ bool PcapCsvMerge::DoMerge(int nb_readers, char ** fname, FILE* target)
 
     if (ret)
     {
+#if 0
         fprintf(target, "R-ID, R-Name, K-Type, Key, Key name,");
-
         for (int i = 0; i < nb_readers; i++)
         {
             fprintf(target, "F-%d,", i + 1);
@@ -101,7 +96,7 @@ bool PcapCsvMerge::DoMerge(int nb_readers, char ** fname, FILE* target)
 
         for (int i = 0; i < nb_readers; i++)
         {
-            fprintf(target, "0, Input File, 1, %s, F-%d,", GetFileName(fname[i+1]), i+1);
+            fprintf(target, "0, Input File, 1, %s, F-%d,", GetFileName(fname[i]), i);
             for (int j = 0; j < nb_readers; j++)
             {
                 if (j == i)
@@ -115,6 +110,9 @@ bool PcapCsvMerge::DoMerge(int nb_readers, char ** fname, FILE* target)
             }
             fprintf(target, "\n");
         }
+#else
+        fprintf(target, "R-ID, R-Name, K-Type, Key, Key name, Count\n");
+#endif
     }
 
     while (ret)
@@ -146,6 +144,19 @@ bool PcapCsvMerge::DoMerge(int nb_readers, char ** fname, FILE* target)
         }
         else
         {
+            // Compute the total count.
+            uint32_t total_count = 0;
+
+            for (int i = 0; ret && i < nb_readers; i++)
+            {
+                if (!reader[i].is_finished &&
+                    reader[i].IsEqual(&current_line))
+                {
+                    total_count += reader[i].line.count;
+                    reader[i].ReadNext();
+                }
+            }
+
             // Print the header of the current line
             fprintf(target, "%d, ""%s"", ", current_line.registry_id, current_line.registry_name);
 
@@ -160,7 +171,7 @@ bool PcapCsvMerge::DoMerge(int nb_readers, char ** fname, FILE* target)
             }
 
             fprintf(target, """%s"",", current_line.key_name);
-
+#if 0
             // Print the count for each line present
             for (int i = 0; ret && i < nb_readers; i++)
             {
@@ -175,6 +186,9 @@ bool PcapCsvMerge::DoMerge(int nb_readers, char ** fname, FILE* target)
                     fprintf(target, "0,");
                 }
             }
+#else
+            fprintf(target, """%d"",", total_count);
+#endif
             // And finish the csv line...
             fprintf(target, "\n");
         }

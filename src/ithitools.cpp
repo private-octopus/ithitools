@@ -32,8 +32,9 @@
 #include "pcap_reader.h"
 #include "DnsStats.h"
 #include "getopt.h"
+#include "PcapCsvMerge.h"
 
-void usage()
+int usage()
 {
     fprintf(stderr, "ITHITOOLS -- a tool for ITHI data extraction and metric computation.\n");
     fprintf(stderr, "Usage: ithitools <options> <input-files>\n");
@@ -57,22 +58,18 @@ void usage()
     fprintf(stderr, "                     summaries at extraction points.\n");
     fprintf(stderr, "  -t tld-file.txt    Text file containing a list of registered TLD, one per line.\n");
     fprintf(stderr, "  -u tld-file.txt	  Text file containing special usage TLD (RFC6761).\n");
+
+    return -1;
 }
 
 
 int main(int argc, char ** argv)
 {
-    pcap_reader reader;
-    int exec_mode = 0; /* capture extraction= 0, summary aggregation = 1 */
-    int nb_records_read = 0;
-    int nb_extracted = 0;
+    int exec_mode = -1; /* capture extraction= 0, summary aggregation = 1 */
     bool do_address_filtering = false;
-    bool found_v4 = false;
-    bool found_v6 = false;
+    int exit_code = 0;
+
     DnsStats stats;
-    int nb_udp_dns = 0;
-    int nb_udp_dns_frag = 0;
-    int nb_udp_dns_extract = 0;
     char const * default_inputFile = "smalltest.pcap";
     char const * inputFile = default_inputFile;
     char const * default_csv_file = "smalltest.csv";
@@ -81,19 +78,26 @@ int main(int argc, char ** argv)
     char const * allowed_addr_file = NULL;
     char const * excluded_addr_file = NULL;
     char const * table_version_addr_file = NULL;
-    int nb_names_in_m4 = 64;
     int nb_names_in_tld = 2048;
     char * extract_file = NULL;
     int extract_by_error_type[512] = { 0 };
 
     /* Get the parameters */
     int opt;
-    while ((opt = getopt(argc, argv, "o:r:a:x:v:n:m:t:u:hcsf")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:m:t:u:hcsf")) != -1)
     {
         switch (opt)
         {
         case 'c':
-            exec_mode = 0;
+            if (exec_mode != -1 && exec_mode != 0)
+            {
+                fprintf(stderr, "Can only specify one mode, -c (capture) or -s (summary)\n");
+                exit_code = -1;
+            }
+            else
+            {
+                exec_mode = 0;
+            }
             break;
         case 'o':
             out_file = optarg;
@@ -115,106 +119,199 @@ int main(int argc, char ** argv)
             fprintf(stderr, "The table redefinition option is not yet implemented.\n");
             break;
         case 'n':
+        {
+            int nb_names_in_m4;
+
             if ((nb_names_in_m4 = atoi(optarg)) <= 0)
             {
                 fprintf(stderr, "Invalid number of names: %s\n", optarg);
-                usage();
+                exit_code = usage();
+            }
+            else
+            {
+                stats.max_tld_leakage_count = (uint32_t) nb_names_in_m4;
             }
             break;
+        }
         case 'm':
-            if ((nb_names_in_m4 = atoi(optarg)) <= 0)
+        {
+            int nb_names_in_m4_table;
+            if ((nb_names_in_m4_table = atoi(optarg)) <= 0)
             {
-                fprintf(stderr, "Invalid number of names: %s\n", optarg);
-                usage();
+                fprintf(stderr, "Invalid number of names in table: %s\n", optarg);
+                exit_code = usage();
+            }
+            else
+            {
+                stats.max_tld_leakage_table_count = (uint32_t)nb_names_in_m4_table;
             }
             break;
+        }
         case 'f':
             do_address_filtering = true;
             fprintf(stderr, "The address filtering option is not yet implemented.\n");
             break;
         case 'h':
-            usage();
+            exit_code = usage();
             break;
         case 's':
-            exec_mode = 1;
-            fprintf(stderr, "The summary_aggregation option is not yet implemented.\n");
+            if (exec_mode != -1 && exec_mode != 1)
+            {
+                fprintf(stderr, "Can only specify one mode, -c (capture) or -s (summary)\n");
+                exit_code = -1;
+            }
+            else
+            {
+                exec_mode = 1;
+            }
             break;
         }
     }
 
-    /* Simplified style params */
-    if (optind < argc)
+    if (exit_code != 0)
     {
-        inputFile = argv[optind++];
+        return exit_code;
     }
 
-    if (reader.Open(inputFile, extract_file))
+    if (exec_mode == -1)
     {
-        printf("Open succeeds, magic = %x, v =  %d/%d, lmax = %d, net = %x\n",
-            reader.header.magic_number,
-            reader.header.version_major,
-            reader.header.version_minor,
-            reader.header.snaplen,
-            reader.header.network
-        );
+        /* Exec mode was not specified. Setting it to "capture" */
+        exec_mode = 0;
+    }
 
-        while (reader.ReadNext())
-        {
-            nb_records_read++;
-            if (nb_records_read <= 10 ||
-                (reader.ip_version == 4 && !found_v4) ||
-                (reader.ip_version == 6 && !found_v6))
+    if (exec_mode == 0)
+    {
+        /* Simplified style params */
+        bool atLeastOne = false;
+        int nb_records_read = 0;
+        int nb_extracted = 0;
+        int nb_udp_dns = 0;
+        int nb_udp_dns_frag = 0;
+        int nb_udp_dns_extract = 0;
+
+        do {
+            pcap_reader reader;
+
+            if (optind < argc)
             {
-                printf("Record %d, l = %d, ip: %d, tp: %d, tp_l: %d, %d:%d\n",
-                    nb_records_read, reader.frame_header.incl_len,
-                    reader.ip_version, reader.tp_version, reader.tp_length,
-                    reader.tp_port1, reader.tp_port2);
-                found_v4 |= (reader.ip_version == 4);
-                found_v6 |= (reader.ip_version == 6);
+                inputFile = argv[optind++];
             }
 
-            if (reader.tp_version == 17 &&
-                (reader.tp_port1 == 53 || reader.tp_port2 == 53))
+            if (!reader.Open(inputFile, extract_file))
             {
+                fprintf(stderr, "Could not open PCAP file <%s>.\n", inputFile);
+                exit_code = -1;
+            }
+            else
+            {
+                printf("Open <%s> succeeds.\n    magic = %x, v =  %d/%d, lmax = %d, net = %x\n",
+                    inputFile,
+                    reader.header.magic_number,
+                    reader.header.version_major,
+                    reader.header.version_minor,
+                    reader.header.snaplen,
+                    reader.header.network
+                );
 
-                if (reader.is_fragment)
+                while (reader.ReadNext())
                 {
-                    nb_udp_dns_frag++;
-                }
-                else
-                {
-                    stats.SubmitPacket(reader.buffer + reader.tp_offset + 8,
-                        reader.tp_length - 8, reader.ip_version, reader.buffer + reader.ip_offset);
-                    nb_udp_dns++;
+                    nb_records_read++;
 
-                    /* Apply default logic here for selecting what to extract */
-                    if (stats.error_flags > 0 && stats.error_flags < 512)
+                    if (reader.tp_version == 17 &&
+                        (reader.tp_port1 == 53 || reader.tp_port2 == 53))
                     {
-                        if (extract_by_error_type[stats.error_flags] < 5 ||
-                            (stats.error_flags == 64 &&
-                                extract_by_error_type[stats.error_flags] < 512))
+                        if (reader.is_fragment)
                         {
-                            reader.WriteExtract();
-                            extract_by_error_type[stats.error_flags] += 1;
-                            nb_extracted++;
+                            nb_udp_dns_frag++;
+                        }
+                        else
+                        {
+                            stats.SubmitPacket(reader.buffer + reader.tp_offset + 8,
+                                reader.tp_length - 8, reader.ip_version, reader.buffer + reader.ip_offset);
+                            nb_udp_dns++;
+
+                            /* Apply default logic here for selecting what to extract */
+                            if (stats.error_flags > 0 && stats.error_flags < 512)
+                            {
+                                if (extract_by_error_type[stats.error_flags] < 5 ||
+                                    (stats.error_flags == 64 &&
+                                        extract_by_error_type[stats.error_flags] < 512))
+                                {
+                                    reader.WriteExtract();
+                                    extract_by_error_type[stats.error_flags] += 1;
+                                    nb_extracted++;
+                                }
+                            }
                         }
                     }
                 }
+
+                printf("Read %d records, %d dns records.\nSkipped %d fragments.\nExtracted %d records.\n",
+                    nb_records_read, nb_udp_dns, nb_udp_dns_frag, nb_extracted);
+            }
+        } while (optind < argc && exit_code == 0);
+
+        if (exit_code == 0)
+        {
+            if (stats.ExportToCsv(out_file))
+            {
+                printf("Exported results to <%s>\n", out_file);
+            }
+            else
+            {
+                printf("Could not write to %s\n", out_file);
+                exit_code = -1;
             }
         }
-
-        printf("Read %d records, %d dns records.\nSkipped %d fragments.\nExtracted %d records.\n",
-            nb_records_read, nb_udp_dns, nb_udp_dns_frag, nb_extracted);
-
-        if (stats.ExportToCsv(out_file))
+    }
+    else if (exec_mode == 1)
+    {
+        if (optind >= argc)
         {
-            printf("Exported results to %s\n", out_file);
+            fprintf(stderr, "No file to merge!\n");
+            exit_code = usage();
         }
         else
         {
-            printf("Could not write to %s\n", out_file);
+            FILE * F_out = NULL;
+
+#ifdef _WINDOWS
+            errno_t err = fopen_s(&F_out, out_file, "w");
+            if (err != 0)
+            {
+                F_out = NULL;
+            }
+#else
+            bool ret;
+            F_out = fopen(filename, "w");
+#endif
+            if (F_out == NULL)
+            {
+                fprintf(stderr, "Cannot open output file <%s>\n", out_file);
+                exit_code = -1;
+            }
+            else
+            {
+                PcapCsvMerge merger;
+
+                if (!merger.DoMerge(argc - optind, argv + optind, F_out))
+                {
+                    fprintf(stderr, "Could not merge the input files!\n");
+                    exit_code = -1;
+                }
+                else
+                {
+                    printf("Merge succeeded.\n");
+                }
+            }
         }
     }
-    return 0;
+    else
+    {
+        fprintf(stderr, "Unexpected exec mode: %d\n", exec_mode);
+        exit_code = -1;
+    }
+
+    return exit_code;
 }
 

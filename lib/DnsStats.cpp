@@ -47,6 +47,7 @@ DnsStats::~DnsStats()
 }
 
 static char const * DefaultRootAddresses[] = {
+#if 0
     "192.12.94.30",
     "192.26.92.30",
     "192.31.80.30",
@@ -78,6 +79,34 @@ static char const * DefaultRootAddresses[] = {
     "2001:500:2::c",
     "2001:503:ba3e::2:30",
     "2001::500:84::c"
+#else
+    "2001:503:ba3e::2:30",
+    "198.41.0.4",
+    "2001:500:200::b",
+    "192.228.79.201",
+    "2001:500:2::c",
+    "192.33.4.12",
+    "2001:500:2d::d",
+    "199.7.91.13",
+    "2001:500:a8::e",
+    "192.203.230.10",
+    "2001:500:2f::f",
+    "192.5.5.241",
+    "2001:500:12::d0d",
+    "192.112.36.4",
+    "2001:500:1::53",
+    "198.97.190.53",
+    "2001:7fe::53",
+    "192.36.148.17",
+    "2001:503:c27::2:30",
+    "192.58.128.30",
+    "2001:7fd::1",
+    "193.0.14.129",
+    "2001:500:9f::42",
+    "199.7.83.42",
+    "2001:dc3::35",
+    "202.12.27.33"
+#endif
 };
 
 static char const * RegistryNameById[] = {
@@ -855,10 +884,11 @@ static char const * dnssec_algo_id_0_16[] = {
     "ED448"
 };
 
-static char const * dnssec_algo_id_252_254[] = {
+static char const * dnssec_algo_id_252_255[] = {
     "INDIRECT",
     "PRIVATEDNS",
-    "PRIVATEOID"
+    "PRIVATEOID",
+    "Reserved (255)"
 };
 
 void DnsStats::PrintKeyAlgorithm(FILE * F, uint32_t algo)
@@ -867,17 +897,21 @@ void DnsStats::PrintKeyAlgorithm(FILE * F, uint32_t algo)
     {
         fprintf(F, """%s"",", dnssec_algo_id_0_16[algo]);
     }
-    else if (algo >= 252 && algo <= 254)
-    {
-        fprintf(F, """%s"",", dnssec_algo_id_252_254[algo - 252]);
-    }
     else if (algo >= 17 && algo <= 122)
     {
         fprintf(F, """unassigned (%d)"",", algo);
     }
-    else if (algo >= 17 && algo <= 122)
+    else if (algo >= 123 && algo <= 251)
     {
         fprintf(F, """reserved (%d)"",", algo);
+    }
+    else if (algo >= 252 && algo <= 255)
+    {
+        fprintf(F, """%s"",", dnssec_algo_id_252_255[algo - 252]);
+    }
+    else
+    {
+        fprintf(F, ",");
     }
 }
 

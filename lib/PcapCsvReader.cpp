@@ -44,7 +44,7 @@ bool PcapCsvReader::Open(char * filename)
     bool ret = (err == 0);
 #else
     bool ret;
-    F = fopen(filename, "w");
+    F = fopen(filename, "r");
     ret = (F != NULL);
 #endif
 
