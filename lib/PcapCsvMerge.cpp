@@ -111,7 +111,7 @@ bool PcapCsvMerge::DoMerge(int nb_readers, char ** fname, FILE* target)
             fprintf(target, "\n");
         }
 #else
-        fprintf(target, "R-ID, R-Name, K-Type, Key, Count\n");
+        fprintf(target, "R-Name, K-Type, Key, Count\n");
 #endif
     }
 
@@ -158,8 +158,11 @@ bool PcapCsvMerge::DoMerge(int nb_readers, char ** fname, FILE* target)
             }
 
             // Print the header of the current line
+#if 0
             fprintf(target, "%d, ""%s"", ", current_line.registry_id, current_line.registry_name);
-
+#else
+            fprintf(target, """%s"", ", current_line.registry_name);
+#endif
             fprintf(target, "%d,", current_line.key_type);
             if (current_line.key_type == 0)
             {

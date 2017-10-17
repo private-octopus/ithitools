@@ -1160,6 +1160,22 @@ bool CompareTldEntries(TldAsKey * x, TldAsKey * y)
 }
 
 
+bool DnsStats::IsNumericDomain(uint8_t * tld, uint32_t length)
+{
+    bool ret = true;
+
+    for (uint32_t i = 0; i < length; i++)
+    {
+        if (tld[i] < '0' || tld[i] > '9')
+        {
+            ret = false;
+            break;
+        }
+    }
+
+    return ret;
+}
+
 void DnsStats::ExportLeakedDomains()
 {
     TldAsKey *tld_entry;
@@ -1184,7 +1200,8 @@ void DnsStats::ExportLeakedDomains()
     /* Retain the N most interesting values */
     for (TldAsKey * &entry : lines)
     {
-        if (export_count < max_tld_leakage_count)
+        if (export_count < max_tld_leakage_count &&
+            !IsNumericDomain(entry->tld, entry->tld_len))
         {
             SubmitRegistryStringAndCount(REGISTRY_DNS_LeakedTLD, 
                 entry->tld_len, entry->tld, entry->count);
@@ -3073,14 +3090,17 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
         }
     }
 
+    if (has_header)
+    {
+        rcode |= (e_rcode << 4);
+        SubmitRegistryNumber(REGISTRY_DNS_RCODES, rcode);
+    }
+
     if (has_header && (dnsstat_flags&dnsStateFlagCountPacketSizes) != 0)
     {
         if (is_response)
         {
             SubmitRegistryNumber(REGISTRY_DNS_Response_Size, length);
-            rcode |= (e_rcode << 4);
-            // CheckRCode(rcode);
-            SubmitRegistryNumber(REGISTRY_DNS_RCODES, rcode);
             if ((flags & (1 << 5)) != 0)
             {
                 SubmitRegistryNumber(REGISTRY_DNS_TC_length, e_length);
@@ -3176,6 +3196,7 @@ bool DnsStats::ExportToCsv(char const * fileName)
     
         for (dns_registry_entry_t * &entry : lines)
         {
+#if 0
             if (entry->registry_id < RegistryNameByIdNb)
             {
                 fprintf(F, "%d, ""%s"",", entry->registry_id,
@@ -3185,6 +3206,17 @@ bool DnsStats::ExportToCsv(char const * fileName)
             {
                 fprintf(F, "%d, %d,", entry->registry_id, entry->registry_id);
             }
+#else
+            if (entry->registry_id < RegistryNameByIdNb)
+            {
+                fprintf(F, """%s"",",
+                    RegistryNameById[entry->registry_id]);
+            }
+            else
+            {
+                fprintf(F, "%d,", entry->registry_id);
+            }
+#endif
 
             fprintf(F, "%d,", entry->key_type);
 

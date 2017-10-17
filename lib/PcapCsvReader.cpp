@@ -18,6 +18,7 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <stdint.h>
 #include <stdlib.h>
 #include "PcapCsvReader.h"
 
@@ -66,7 +67,9 @@ void PcapCsvReader::ReadNext()
     else
     {
         int start = 0;
+#if 0
         start = read_number(&line.registry_id, start);
+#endif
         start = read_string(line.registry_name, sizeof(line.registry_name), start);
         start = read_number(&line.key_type, start);
         if (line.key_type == 0)
@@ -87,12 +90,23 @@ void PcapCsvReader::ReadNext()
 bool PcapCsvReader::IsLower(pcap_csv_line * y)
 {
     bool ret = false;
+    int cs_ret;
 
+#if 0
     if (line.registry_id < y->registry_id)
     {
         ret = true;
     }
-    else if (line.registry_id == y->registry_id)
+    else 
+    if (line.registry_id == y->registry_id)
+#else
+    cs_ret = compare_string(line.registry_name, y->registry_name);
+    if (cs_ret > 0)
+    {
+        ret = true;
+    }
+    else if (cs_ret == 0)
+#endif
     {
         if (line.key_type < y->key_type)
         {
@@ -106,6 +120,8 @@ bool PcapCsvReader::IsLower(pcap_csv_line * y)
             }
             else
             {
+                ret = compare_string(line.key_value, y->key_value) > 0;
+#if 0
                 for (int i = 0; i < sizeof(line.key_value); i++)
                 {
                     if (line.key_value[i] < y->key_value[i])
@@ -118,6 +134,7 @@ bool PcapCsvReader::IsLower(pcap_csv_line * y)
                         break;
                     }
                 }
+#endif
             }
         }
     }
@@ -129,11 +146,7 @@ bool PcapCsvReader::IsEqual(pcap_csv_line * y)
 {
     bool ret = true;
 
-    if (line.registry_id != y->registry_id)
-    {
-        ret = false;
-    }
-    else if (line.registry_id != y->registry_id)
+    if (compare_string(line.registry_name, y->registry_name) != 0)
     {
         ret = false;
     }
@@ -141,7 +154,7 @@ bool PcapCsvReader::IsEqual(pcap_csv_line * y)
     {
         ret = false;
     }
-    else if (line.key_type == y->key_type)
+    else
     {
         if (line.key_type == 0)
         {
@@ -149,19 +162,7 @@ bool PcapCsvReader::IsEqual(pcap_csv_line * y)
         }
         else
         {
-            for (int i = 0; i < sizeof(line.key_value); i++)
-            {
-                if (line.key_value[i] != y->key_value[i])
-                {
-                    ret = false;
-                    break;
-                }
-                else if (line.key_value[i] == 0)
-                {
-                    ret = true;
-                    break;
-                }
-            }
+            ret = compare_string(line.key_value, y->key_value) == 0;
         }
     }
 
@@ -342,5 +343,31 @@ int PcapCsvReader::read_string(char* text, int text_max, int start)
     }
 
     return start;
+}
+
+int PcapCsvReader::compare_string(char * x, char * y)
+{
+    int ret = 0;
+    uint8_t ux, uy;
+
+    while (*x == *y && *x != 0)
+    {
+        x++;
+        y++;
+    }
+
+    ux = (uint8_t)*x;
+    uy = (uint8_t)*y;
+
+    if (ux < uy)
+    {
+        ret = 1;
+    }
+    else if (ux > uy)
+    {
+        ret = -1;
+    }
+
+    return ret;
 }
 

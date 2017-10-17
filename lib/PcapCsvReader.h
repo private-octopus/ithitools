@@ -25,7 +25,9 @@
 
 typedef struct _pcap_csv_line
 {
+#if 0
     int registry_id;
+#endif
     char registry_name[64];
     int key_type;
     union
@@ -62,6 +64,7 @@ public:
 private:
     int read_number(int* number, int start);
     int read_string(char* text, int text_max, int start);
+    int compare_string(char * x, char * y);
 };
 
 #endif

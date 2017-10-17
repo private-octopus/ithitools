@@ -205,6 +205,7 @@ private:
     void GetSourceAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
     void GetDestAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
 
+    bool IsNumericDomain(uint8_t * tld, uint32_t length);
     void ExportLeakedDomains();
 };
 
