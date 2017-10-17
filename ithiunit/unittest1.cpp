@@ -2,6 +2,9 @@
 #include "CppUnitTest.h"
 #include "hashtest.h"
 #include "testRfc6761.h"
+#include "LoadTest.h"
+#include "SaveTest.h"
+#include "MergeTest.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -24,6 +27,33 @@ namespace ithiunit
         {
             // TODO: Your test code here
             testRfc6761 test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(Load)
+        {
+            // TODO: Your test code here
+            LoadTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(Save)
+        {
+            // TODO: Your test code here
+            SaveTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(Merge)
+        {
+            // TODO: Your test code here
+            MergeTest test;
             bool ret = test.DoTest();
 
             Assert::AreEqual(ret, true);

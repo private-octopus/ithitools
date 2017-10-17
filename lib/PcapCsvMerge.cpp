@@ -86,33 +86,7 @@ bool PcapCsvMerge::DoMerge(int nb_readers, char ** fname, FILE* target)
 
     if (ret)
     {
-#if 0
-        fprintf(target, "R-ID, R-Name, K-Type, Key, Key name,");
-        for (int i = 0; i < nb_readers; i++)
-        {
-            fprintf(target, "F-%d,", i + 1);
-        }
-        fprintf(target, "\n");
-
-        for (int i = 0; i < nb_readers; i++)
-        {
-            fprintf(target, "0, Input File, 1, %s, F-%d,", GetFileName(fname[i]), i);
-            for (int j = 0; j < nb_readers; j++)
-            {
-                if (j == i)
-                {
-                    fprintf(target, "1,");
-                }
-                else
-                {
-                    fprintf(target, ",");
-                }
-            }
-            fprintf(target, "\n");
-        }
-#else
         fprintf(target, "R-Name, K-Type, Key, Count\n");
-#endif
     }
 
     while (ret)
@@ -158,11 +132,9 @@ bool PcapCsvMerge::DoMerge(int nb_readers, char ** fname, FILE* target)
             }
 
             // Print the header of the current line
-#if 0
-            fprintf(target, "%d, ""%s"", ", current_line.registry_id, current_line.registry_name);
-#else
+
             fprintf(target, """%s"", ", current_line.registry_name);
-#endif
+
             fprintf(target, "%d,", current_line.key_type);
             if (current_line.key_type == 0)
             {
@@ -173,28 +145,8 @@ bool PcapCsvMerge::DoMerge(int nb_readers, char ** fname, FILE* target)
                 fprintf(target, """%s"",", current_line.key_value);
             }
 
-#if 0
-            fprintf(target, """%s"",", current_line.key_name);
-#endif
-
-#if 0
-            // Print the count for each line present
-            for (int i = 0; ret && i < nb_readers; i++)
-            {
-                if (!reader[i].is_finished &&
-                    reader[i].IsEqual(&current_line))
-                {
-                    fprintf(target, "%d,", reader[i].line.count);
-                    reader[i].ReadNext();
-                }
-                else
-                {
-                    fprintf(target, "0,");
-                }
-            }
-#else
             fprintf(target, """%d"",", total_count);
-#endif
+
             // And finish the csv line...
             fprintf(target, "\n");
         }

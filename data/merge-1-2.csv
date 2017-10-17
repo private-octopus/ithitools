@@ -1,0 +1,240 @@
+CLASS,0,1,5052816
+CLASS,0,3,1660
+RR Type,0,1,1608068
+RR Type,0,2,1616272
+RR Type,0,6,248394
+RR Type,0,16,830
+RR Type,0,28,515288
+RR Type,0,41,330740
+RR Type,0,43,109282
+RR Type,0,46,618502
+RR Type,0,47,168153
+RR Type,0,48,767
+RR Type,0,50,168153
+RR Type,0,99,767
+OpCode,0,0,836854
+OpCode,0,4,4
+OpCode,0,5,478
+RCODE,0,0,583078
+RCODE,0,1,246
+RCODE,0,2,50
+RCODE,0,3,253698
+RCODE,0,5,260
+RCODE,0,8,2
+RCODE,0,9,2
+Label Type,0,0,1620766
+Label Type,0,192,3922536
+EDNS OPT CODE,0,3,32
+EDNS OPT CODE,0,8,622
+EDNS OPT CODE,0,10,1304
+Header Flags,0,4,22530
+Header Flags,0,5,14594
+Header Flags,0,6,275848
+EDNS Header_Flags,0,15,601348
+EDNS Version number,0,0,664366
+DNSSEC Algorithm Numbers,0,5,2136
+DNSSEC Algorithm Numbers,0,7,10768
+DNSSEC Algorithm Numbers,0,8,716076
+DNSSEC Algorithm Numbers,0,10,338
+Z-Error Flags,0,0,837290
+Z-Error Flags,0,256,20
+Z-Error Flags,0,384,46
+root-QR,0,0,146346
+root-QR,0,1,244
+root-QR,0,3,223188
+root-QR,0,5,24
+LeakByLength,0,1,136
+LeakByLength,0,2,586
+LeakByLength,0,3,2698
+LeakByLength,0,4,1592
+LeakByLength,0,5,872
+LeakByLength,0,6,998
+LeakByLength,0,7,12626
+LeakByLength,0,8,13156
+LeakByLength,0,9,13258
+LeakByLength,0,10,14546
+LeakByLength,0,11,11952
+LeakByLength,0,12,12320
+LeakByLength,0,13,11946
+LeakByLength,0,14,12114
+LeakByLength,0,15,12046
+LeakByLength,0,16,232
+LeakByLength,0,17,170
+LeakByLength,0,18,162
+LeakByLength,0,19,120
+LeakByLength,0,20,84
+LeakByLength,0,21,82
+LeakByLength,0,22,78
+LeakByLength,0,23,148
+LeakByLength,0,24,106
+LeakByLength,0,25,54
+LeakByLength,0,26,78
+LeakByLength,0,27,30
+LeakByLength,0,28,34
+LeakByLength,0,29,12
+LeakByLength,0,30,14
+LeakByLength,0,31,24
+LeakByLength,0,32,414
+LeakByLength,0,33,24
+LeakByLength,0,34,34
+LeakByLength,0,35,18
+LeakByLength,0,36,58
+LeakByLength,0,37,80
+LeakByLength,0,38,116
+LeakByLength,0,39,214
+LeakByLength,0,40,122
+LeakByLength,0,41,10
+LeakByLength,0,42,4
+LeakByLength,0,43,12
+LeakByLength,0,44,10
+LeakByLength,0,45,4
+LeakByLength,0,46,26
+LeakByLength,0,47,10
+LeakByLength,0,48,6
+LeakByLength,0,49,6
+LeakByLength,0,50,6
+LeakByLength,0,51,28
+LeakByLength,0,52,22
+LeakByLength,0,53,6
+LeakByLength,0,54,8
+LeakByLength,0,55,2
+LeakByLength,0,56,4
+LeakByLength,0,58,4
+LeakByLength,0,59,4
+LeakByLength,0,60,12
+LeakByLength,0,62,10
+LeakByLength,0,63,12
+LeakedTLD,1,_0x08e0a2,80
+LeakedTLD,1,_0x104492,48
+LeakedTLD,1,_0x10478f01,64
+LeakedTLD,1,_0x207e5a01904752,48
+LeakedTLD,1,_0x2222,150
+LeakedTLD,1,_0x28ad48,124
+LeakedTLD,1,_0x28caff,262
+LeakedTLD,1,_0x28da5401185eb4,70
+LeakedTLD,1,_0x28e5d8,70
+LeakedTLD,1,_0x30468a01,92
+LeakedTLD,1,_0x3055c5,54
+LeakedTLD,1,_0x3131ff7f,66
+LeakedTLD,1,_0x313238ffff,48
+LeakedTLD,1,_0x3281,98
+LeakedTLD,1,_0x32ff,74
+LeakedTLD,1,_0x3536ff7f,156
+LeakedTLD,1,_0x400e8502,102
+LeakedTLD,1,_0x40ff5301,78
+LeakedTLD,1,ACTDSLTMP,246
+LeakedTLD,1,AIRDREAM,212
+LeakedTLD,1,ARRIS,102
+LeakedTLD,1,ASUS,62
+LeakedTLD,1,BACKNET,632
+LeakedTLD,1,BELKIN,1412
+LeakedTLD,1,BLINKAP,254
+LeakedTLD,1,C,84
+LeakedTLD,1,CFF,106
+LeakedTLD,1,CFQ,202
+LeakedTLD,1,CHX,82
+LeakedTLD,1,CJ,76
+LeakedTLD,1,COMG,926
+LeakedTLD,1,CON,60
+LeakedTLD,1,CORP,828
+LeakedTLD,1,_0x434fc9,60
+LeakedTLD,1,CS,54
+LeakedTLD,1,CS9,174
+LeakedTLD,1,CSXR,86
+LeakedTLD,1,DHCP,2080
+LeakedTLD,1,DHCP HOST,4890
+LeakedTLD,1,DLINK,186
+LeakedTLD,1,DLINKROUTER,114
+LeakedTLD,1,DOM,80
+LeakedTLD,1,DOMAIN,1346
+LeakedTLD,1,GAOKEAP,124
+LeakedTLD,1,GATEWAY,118
+LeakedTLD,1,HOME,11418
+LeakedTLD,1,HOMESTATION,398
+LeakedTLD,1,HTML,112
+LeakedTLD,1,HTTP,88
+LeakedTLD,1,_0x48a5090218e70702,104
+LeakedTLD,1,INTERNAL,836
+LeakedTLD,1,INTRA,138
+LeakedTLD,1,INTRANET,106
+LeakedTLD,1,IP,4138
+LeakedTLD,1,LAN,1204
+LeakedTLD,1,LCL,80
+LeakedTLD,1,LOC,158
+LeakedTLD,1,LOCALDOMAIN,1960
+LeakedTLD,1,MHC,52
+LeakedTLD,1,MYNET,64
+LeakedTLD,1,NASHR,74
+LeakedTLD,1,NDA-HCLIN-NS01,90
+LeakedTLD,1,NEO,1686
+LeakedTLD,1,NETG,68
+LeakedTLD,1,_0x4e4554fb,64
+LeakedTLD,1,ORGG,86
+LeakedTLD,1,PK5001Z,612
+LeakedTLD,1,PRI,68
+LeakedTLD,1,PRIVATE,106
+LeakedTLD,1,PVT,194
+LeakedTLD,1,_0x507ba602f8fc47,54
+LeakedTLD,1,_0x50960d01,64
+LeakedTLD,1,_0x50f297,92
+LeakedTLD,1,RALINKAP,56
+LeakedTLD,1,RBL,166
+LeakedTLD,1,ROOT,56
+LeakedTLD,1,ROUTER,278
+LeakedTLD,1,SETTING,58
+LeakedTLD,1,SUBSTRATE,52
+LeakedTLD,1,SYS,28
+LeakedTLD,1,TELUS,644
+LeakedTLD,1,TENDAAP,94
+LeakedTLD,1,TOTOLINK,190
+LeakedTLD,1,TXT,90
+LeakedTLD,1,UNIFI,56
+LeakedTLD,1,_0x5553aaaaaaaaaaaaaaaa,110
+LeakedTLD,1,WORKGROUP,824
+LeakedTLD,1,_0x58464c01084cb3,64
+LeakedTLD,1,_0x584688,48
+LeakedTLD,1,_0x58552501d0e02301,160
+LeakedTLD,1,_0x58eb360208dd3402,50
+LeakedTLD,1,Z,2394
+LeakedTLD,1,_TCP,92
+LeakedTLD,1,_0x60574d0290fc4902,76
+LeakedTLD,1,_0x60f459,66
+LeakedTLD,1,_0x80c5a101,202
+LeakedTLD,1,_0x80d0d9,72
+LeakedTLD,1,_0x83,4078
+LeakedTLD,1,_0x885a4b01b845a3,60
+LeakedTLD,1,_0x90033102d82aa0,128
+LeakedTLD,1,_0x900dd901,48
+LeakedTLD,1,_0x900fa70148c0a501,72
+LeakedTLD,1,_0x90335e01,52
+LeakedTLD,1,_0x9035a3,62
+LeakedTLD,1,_0x9044d0,64
+LeakedTLD,1,_0x90a77d,52
+LeakedTLD,1,_0x9849f10180adf101,56
+LeakedTLD,1,_0xa0fb3501,60
+LeakedTLD,1,_0xa8d97b,62
+LeakedTLD,1,_0xb0061f0290fcbe01,152
+LeakedTLD,1,_0xb048dd,66
+LeakedTLD,1,_0xb0d3d00260364e,62
+LeakedTLD,1,_0xb0e8a201,60
+LeakedTLD,1,_0xb8f827,378
+LeakedTLD,1,_0xc0f85601,76
+LeakedTLD,1,_0xc4,288
+LeakedTLD,1,_0xd04db7,102
+LeakedTLD,1,_0xd0580c0158450c01,66
+LeakedTLD,1,_0xd0f54c,92
+LeakedTLD,1,_0xd835d8,66
+LeakedTLD,1,_0xe05be6,52
+LeakedTLD,1,_0xe0cd4401,62
+LeakedTLD,1,_0xe0ddbf,48
+LeakedTLD,1,_0xe81f0b01f8b92c,58
+LeakedTLD,1,_0xe85abb,62
+LeakedTLD,1,_0xf0db8d,128
+LeakedTLD,1,_0xf83e46,180
+LeakedTLD,1,_0xf8bd2d01e8512d01,68
+RFC6761-TLD,1,INVALID,986
+RFC6761-TLD,1,LOCAL,9394
+RFC6761-TLD,1,LOCALHOST,1042
+RFC6761-TLD,1,TEST,28
+UsefulQueries,0,0,92836
+UsefulQueries,0,1,53510

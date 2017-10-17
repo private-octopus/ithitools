@@ -33,6 +33,7 @@
 #include "DnsStats.h"
 #include "getopt.h"
 #include "PcapCsvMerge.h"
+#include "CaptureSummary.h"
 
 int usage()
 {
@@ -273,6 +274,28 @@ int main(int argc, char ** argv)
         }
         else
         {
+#if 1
+            CaptureSummary cs;
+
+            if (!cs.Merge(argc - optind, (char const **)(argv + optind)))
+            {
+                fprintf(stderr, "Cannot merge the input files.\n");
+                exit_code = -1;
+            }
+            else
+            {
+                if (!cs.Save(out_file))
+                {
+                    fprintf(stderr, "Cannot save the merged summary on <%s>.\n",
+                        out_file);
+                    exit_code = -1;
+                }
+                else
+                {
+                    printf("Merge succeeded.\n");
+                }
+            }
+#else
             FILE * F_out = NULL;
 
 #ifdef _WINDOWS
@@ -304,6 +327,7 @@ int main(int argc, char ** argv)
                     printf("Merge succeeded.\n");
                 }
             }
+#endif
         }
     }
     else

@@ -27,6 +27,7 @@
 #include "DnsStatHash.h"
 #include "AddressFilter.h"
 #include "HashBinGeneric.h"
+#include "CaptureSummary.h"
 
 /*
  * List of registry definitions 
@@ -147,6 +148,7 @@ public:
     void SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header);
 
     bool ExportToCsv(char const * fileName);
+    bool ExportToCaptureSummary(CaptureSummary * cs);
 
     uint32_t max_tld_leakage_count; 
     uint32_t max_tld_leakage_table_count;
@@ -176,26 +178,7 @@ private:
     void SubmitRegistryNumber(uint32_t registry_id, uint32_t number);
     void SubmitRegistryStringAndCount(uint32_t registry_id, uint32_t length, uint8_t * value, uint32_t count);
     void SubmitRegistryString(uint32_t registry_id, uint32_t length, uint8_t * value);
-#if 0
-    void PrintRRType(FILE* F, uint32_t rrtype);
-    void PrintRRClass(FILE* F, uint32_t rrclass);
-    void PrintOpCode(FILE* F, uint32_t opcode);
-    void PrintRCode(FILE* F, uint32_t rcode);
-    void PrintDnsFlags(FILE* F, uint32_t flag);
-    void PrintEDnsFlags(FILE* F, uint32_t flag);
-    void PrintKeyAlgorithm(FILE* F, uint32_t algo);
-    void PrintOptOption(FILE* F, uint32_t option);
-    void PrintErrorFlags(FILE* F, uint32_t flags);
-    void PrintTldErrorClass(FILE* F, uint32_t tld_error_class);
 
-    void CheckRRType(uint32_t rrtype);
-    void CheckRRClass(uint32_t rrclass);
-    void CheckOpCode(uint32_t opcode);
-    void CheckRCode(uint32_t rcode);
-    void CheckKeyAlgorithm(uint32_t algo);
-    void CheckOptOption(uint32_t option);
-    bool CheckTld(uint32_t length, uint8_t * lower_case_tld);
-#endif
     int CheckForUnderline(uint8_t * packet, uint32_t length, uint32_t start);
 
     int GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t *offset);

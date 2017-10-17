@@ -67,9 +67,6 @@ void PcapCsvReader::ReadNext()
     else
     {
         int start = 0;
-#if 0
-        start = read_number(&line.registry_id, start);
-#endif
         start = read_string(line.registry_name, sizeof(line.registry_name), start);
         start = read_number(&line.key_type, start);
         if (line.key_type == 0)
@@ -80,9 +77,6 @@ void PcapCsvReader::ReadNext()
         {
             start = read_string(line.key_value, sizeof(line.key_value), start);
         }
-#if 0
-        start = read_string(line.key_name, sizeof(line.key_name), start);
-#endif
         (void) read_number(&line.count, start);
     }
 }
@@ -92,21 +86,12 @@ bool PcapCsvReader::IsLower(pcap_csv_line * y)
     bool ret = false;
     int cs_ret;
 
-#if 0
-    if (line.registry_id < y->registry_id)
-    {
-        ret = true;
-    }
-    else 
-    if (line.registry_id == y->registry_id)
-#else
     cs_ret = compare_string(line.registry_name, y->registry_name);
     if (cs_ret > 0)
     {
         ret = true;
     }
     else if (cs_ret == 0)
-#endif
     {
         if (line.key_type < y->key_type)
         {
@@ -121,20 +106,6 @@ bool PcapCsvReader::IsLower(pcap_csv_line * y)
             else
             {
                 ret = compare_string(line.key_value, y->key_value) > 0;
-#if 0
-                for (int i = 0; i < sizeof(line.key_value); i++)
-                {
-                    if (line.key_value[i] < y->key_value[i])
-                    {
-                        ret = true;
-                        break;
-                    }
-                    else if (line.key_value[i] != y->key_value[i])
-                    {
-                        break;
-                    }
-                }
-#endif
             }
         }
     }
