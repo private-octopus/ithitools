@@ -5,6 +5,7 @@
 #include "LoadTest.h"
 #include "SaveTest.h"
 #include "MergeTest.h"
+#include "CaptureTest.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -54,6 +55,15 @@ namespace ithiunit
         {
             // TODO: Your test code here
             MergeTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(Capture)
+        {
+            // TODO: Your test code here
+            CaptureTest test;
             bool ret = test.DoTest();
 
             Assert::AreEqual(ret, true);

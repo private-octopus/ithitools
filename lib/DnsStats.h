@@ -145,9 +145,7 @@ public:
     LruHash<TldAsKey> tldLeakage;
     BinHash<TldAddressAsKey> queryUsage;
 
-    void SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header);
-
-    bool ExportToCsv(char const * fileName);
+    bool LoadPcapFiles(size_t nb_files, char const ** fileNames);
     bool ExportToCaptureSummary(CaptureSummary * cs);
 
     uint32_t max_tld_leakage_count; 
@@ -164,6 +162,9 @@ public:
     static void SetToUpperCase(uint8_t * domain, size_t length);
 
 private:
+    bool LoadPcapFile(char const * fileName);
+    void SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header);
+
     int SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start, bool is_response);
     int SubmitRecord(uint8_t * packet, uint32_t length, uint32_t start, 
         uint32_t * e_rcode, uint32_t * e_length, bool is_response);

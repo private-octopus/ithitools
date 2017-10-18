@@ -70,6 +70,7 @@ int main(int argc, char ** argv)
     bool do_address_filtering = false;
     int exit_code = 0;
 
+    CaptureSummary cs;
     DnsStats stats;
     char const * default_inputFile = "smalltest.pcap";
     char const * inputFile = default_inputFile;
@@ -182,6 +183,37 @@ int main(int argc, char ** argv)
 
     if (exec_mode == 0)
     {
+#if 1
+        if (optind >= argc)
+        {
+            fprintf(stderr, "No capture file to analyze!\n");
+            exit_code = usage();
+        }
+        else
+        {
+            if (!stats.LoadPcapFiles(argc - optind, (char const **)(argv + optind)))
+            {
+                fprintf(stderr, "Cannot process the input files.\n");
+                exit_code = -1;
+            }
+            else if (!stats.ExportToCaptureSummary(&cs))
+            {
+                fprintf(stderr, "Cannot process the capture summary.\n");
+                exit_code = -1;
+
+            }
+            else if (!cs.Save(out_file))
+            {
+                fprintf(stderr, "Cannot save the merged summary on <%s>.\n",
+                    out_file);
+                exit_code = -1;
+            }
+            else
+            {
+                printf("Capture processing succeeded.\n");
+            }
+        }
+#else
         /* Simplified style params */
         bool atLeastOne = false;
         int nb_records_read = 0;
@@ -264,6 +296,7 @@ int main(int argc, char ** argv)
                 exit_code = -1;
             }
         }
+#endif
     }
     else if (exec_mode == 1)
     {
@@ -274,8 +307,6 @@ int main(int argc, char ** argv)
         }
         else
         {
-#if 1
-            CaptureSummary cs;
 
             if (!cs.Merge(argc - optind, (char const **)(argv + optind)))
             {
@@ -295,39 +326,6 @@ int main(int argc, char ** argv)
                     printf("Merge succeeded.\n");
                 }
             }
-#else
-            FILE * F_out = NULL;
-
-#ifdef _WINDOWS
-            errno_t err = fopen_s(&F_out, out_file, "w");
-            if (err != 0)
-            {
-                F_out = NULL;
-            }
-#else
-            bool ret;
-            F_out = fopen(filename, "w");
-#endif
-            if (F_out == NULL)
-            {
-                fprintf(stderr, "Cannot open output file <%s>\n", out_file);
-                exit_code = -1;
-            }
-            else
-            {
-                PcapCsvMerge merger;
-
-                if (!merger.DoMerge(argc - optind, argv + optind, F_out))
-                {
-                    fprintf(stderr, "Could not merge the input files!\n");
-                    exit_code = -1;
-                }
-                else
-                {
-                    printf("Merge succeeded.\n");
-                }
-            }
-#endif
         }
     }
     else
@@ -335,6 +333,8 @@ int main(int argc, char ** argv)
         fprintf(stderr, "Unexpected exec mode: %d\n", exec_mode);
         exit_code = -1;
     }
+
+    /* TODO: capture a metric file if there is a -m option */
 
     return exit_code;
 }

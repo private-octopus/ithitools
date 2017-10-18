@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <algorithm>
 #include <vector>
+#include "pcap_reader.h"
 #include "DnsTypes.h"
 #include "DnsStats.h"
 
@@ -834,6 +835,56 @@ void DnsStats::SetToUpperCase(uint8_t * domain, size_t length)
 +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 */
 
+bool DnsStats::LoadPcapFiles(size_t nb_files, char const ** fileNames)
+{
+    bool ret = true;
+
+    for (size_t i = 0; ret && i < nb_files; i++)
+    {
+        ret = LoadPcapFile(fileNames[i]);
+    }
+
+    return ret;
+}
+
+bool DnsStats::LoadPcapFile(char const * fileName)
+{
+    bool ret = true;
+    pcap_reader reader;
+    size_t nb_records_read = 0;
+    size_t nb_udp_dns_frag = 0;
+    size_t nb_udp_dns = 0;
+
+    if (!reader.Open(fileName, NULL))
+    {
+        ret = false;
+    }
+    else
+    {
+        while (reader.ReadNext())
+        {
+            nb_records_read++;
+
+            if (reader.tp_version == 17 &&
+                (reader.tp_port1 == 53 || reader.tp_port2 == 53))
+            {
+                if (reader.is_fragment)
+                {
+                    nb_udp_dns_frag++;
+                }
+                else
+                {
+                    SubmitPacket(reader.buffer + reader.tp_offset + 8,
+                        reader.tp_length - 8, reader.ip_version, reader.buffer + reader.ip_offset);
+                    nb_udp_dns++;
+                }
+            }
+        }
+    }
+
+    return ret;
+}
+
 void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header)
 {
     bool is_response;
@@ -1092,104 +1143,6 @@ bool CompareRegistryEntries(dns_registry_entry_t * x, dns_registry_entry_t * y)
     return ret;
 }
 
-bool DnsStats::ExportToCsv(char const * fileName)
-{
-    FILE* F;
-    dns_registry_entry_t *entry;
-#ifdef _WINDOWS
-    errno_t err = fopen_s(&F, fileName, "w");
-    bool ret = (err == 0);
-#else
-    bool ret;
-
-    F = fopen(fileName, "w");
-    ret = (F != NULL);
-#endif
-
-    if (ret)
-    {
-        /* Get the ordered list of leaked domain into the main hash */
-        ExportLeakedDomains();
-    }
-
-    if (ret)
-    {
-        int vector_index = 0;
-
-        std::vector<dns_registry_entry_t *> lines(hashTable.GetCount());
-
-        for (uint32_t i = 0; i < hashTable.GetSize(); i++)
-        {
-            entry = hashTable.GetEntry(i);
-            if (entry != NULL)
-            {
-                lines[vector_index] = entry;
-                vector_index++;
-            }
-        }
-        std::sort(lines.begin(), lines.end(), CompareRegistryEntries);
-    
-        for (dns_registry_entry_t * &entry : lines)
-        {
-            if (entry->registry_id < RegistryNameByIdNb)
-            {
-                fprintf(F, """%s"",",
-                    RegistryNameById[entry->registry_id]);
-            }
-            else
-            {
-                fprintf(F, "%d,", entry->registry_id);
-            }
-
-            fprintf(F, "%d,", entry->key_type);
-
-            if (entry->key_type == 0)
-            {
-                fprintf(F, "%d,", entry->key_number);
-            }
-            else
-            {
-                /* Check that the value is printable */
-                bool printable = true;
-                for (uint32_t i = 0; i < entry->key_length; i++)
-                {
-                    int x = entry->key_value[i];
-
-                    if (x >= ' ' && x < 127 && x != '"')
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        printable = false;
-                        break;
-                    }
-                }
-                if (!printable)
-                {
-                    fprintf(F, """_0x");
-                    for (uint32_t i = 0; i < entry->key_length; i++)
-                    {
-                        fprintf(F, "%02x", entry->key_value[i]);
-                    }
-                    fprintf(F, """,");
-                }
-                else
-                {
-                    fprintf(F, """%s"",", entry->key_value);
-                }
-            }
-
-            fprintf(F, "%d\n", entry->count);
-        }
-
-        fclose(F);
-    }
-
-
-    return ret;
-}
-
 bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
 {
     dns_registry_entry_t *entry;
@@ -1214,11 +1167,20 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
 
                 if (entry->registry_id < RegistryNameByIdNb)
                 {
-                    strcpy(line.registry_name, RegistryNameById[entry->registry_id]);
+                    memcpy(line.registry_name, RegistryNameById[entry->registry_id],
+                        strlen(RegistryNameById[entry->registry_id]) + 1);
                 }
                 else
                 {
+#ifdef _WINDOWS
+                    if (_itoa_s(entry->registry_id, line.registry_name,
+                        sizeof(line.registry_name), 10) != 0)
+                    {
+                        ret = false;
+                    }
+#else
                     (void)itoa(entry->registry_id, line.registry_name, 10);
+#endif
                 }
                 line.key_type = entry->key_type;
 
@@ -1260,12 +1222,12 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
 
                                 for (int j = 0; j < 2; j++)
                                 {
-                                    int c = (x[j] < 10) ? '0' + x[j] : 'A' + x[j] - 10;
+                                    int c = (x[j] < 10) ? '0' + x[j] : 'a' + x[j] - 10;
                                     line.key_value[byte_index++] = c;
                                 }
                             }
                         }
-                        entry->key_value[byte_index] = 0;
+                        line.key_value[byte_index] = 0;
                     }
                     else
                     {
