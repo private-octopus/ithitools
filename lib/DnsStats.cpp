@@ -108,7 +108,10 @@ static char const * RegistryNameById[] = {
     "LeakByLength",
     "LeakedTLD",
     "RFC6761-TLD",
-    "UsefulQueries"
+    "UsefulQueries",
+    "DANE_CertUsage",
+    "DANE_TlsaSelector",
+    "DANE_TlsaMatchingType"
 };
 
 static uint32_t RegistryNameByIdNb = sizeof(RegistryNameById) / sizeof(char const*);
@@ -233,6 +236,9 @@ int DnsStats::SubmitRecord(uint8_t * packet, uint32_t length, uint32_t start,
                 case (int)DnsRtype_DS:
                     SubmitDSRecord(&packet[start + 10], ldata);
                     break;
+                case (int)DnsRtype_TLSA:
+                    SubmitTLSARecord(&packet[start + 10], ldata);
+                    break;
                 default:
                     break;
                 }
@@ -333,7 +339,7 @@ void DnsStats::SubmitOPTRecord(uint32_t flags, uint8_t * content, uint32_t lengt
     {
         if ((flags & (1 << i)) != 0)
         {
-            SubmitRegistryNumber(REGISTRY_EDNS_Header_Flags, i);
+            SubmitRegistryNumber(REGISTRY_EDNS_Header_Flags, 15 - i);
         }
     }
 
@@ -388,6 +394,16 @@ void DnsStats::SubmitDSRecord(uint8_t * content, uint32_t length)
     {
         uint32_t algorithm = content[2];
         SubmitRegistryNumber(REGISTRY_DNSSEC_Algorithm_Numbers, algorithm);
+    }
+}
+
+void DnsStats::SubmitTLSARecord(uint8_t * content, uint32_t length)
+{
+    if (length >= 3)
+    {
+        SubmitRegistryNumber(REGISTRY_DANE_CertUsage, content[0]);
+        SubmitRegistryNumber(REGISTRY_DANE_TlsaSelector, content[1]);
+        SubmitRegistryNumber(REGISTRY_DANE_TlsaMatchingType, content[2]);
     }
 }
 

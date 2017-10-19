@@ -19,42 +19,19 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "CaptureSummary.h"
-#include "MergeTest.h"
+#ifndef METRIC_TEST_H
+#define METRIC_TEST_H
 
-static char const * summary1 = "..\\data\\summary1.csv";
-static char const * summary2 = "..\\data\\summary2.csv";
-static char const * target = "..\\data\\merge-1-2.csv";
-
-MergeTest::MergeTest()
+class MetricTest
 {
-}
+public:
+    MetricTest();
+    ~MetricTest();
 
+    bool DoTest();
 
-MergeTest::~MergeTest()
-{
-}
+    static bool compare_files(char const * fname1, char const * fname2);
+    static bool compare_lines(char const * b1, char const * b2);
+};
 
-bool MergeTest::DoTest()
-{
-    CaptureSummary cs;
-    char const * list[2] = { summary1, summary2 };
-
-    bool ret = cs.Merge(2, list);
-
-    if (ret)
-    {
-        CaptureSummary tcs;
-
-        ret = tcs.Load(target);
-
-        if (ret)
-        {
-            tcs.Sort();
-
-            ret = cs.Compare(&tcs);
-        }
-    }
-
-    return ret;
-}
+#endif /* METRIC_TEST_H */

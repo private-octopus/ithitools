@@ -64,6 +64,10 @@
 #define REGISTRY_DNS_LeakedTLD 29
 #define REGISTRY_DNS_RFC6761TLD 30
 #define REGISTRY_DNS_UsefulQueries 31
+#define REGISTRY_DANE_CertUsage 32
+#define REGISTRY_DANE_TlsaSelector 33
+#define REGISTRY_DANE_TlsaMatchingType 34
+
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
 #define DNS_REGISTRY_ERROR_RRCLASS (1<<1)
@@ -175,6 +179,7 @@ private:
     void SubmitKeyRecord(uint8_t * content, uint32_t length);
     void SubmitRRSIGRecord(uint8_t * content, uint32_t length);
     void SubmitDSRecord(uint8_t * content, uint32_t length);
+    void SubmitTLSARecord(uint8_t * content, uint32_t length);
 
     void SubmitRegistryNumberAndCount(uint32_t registry_id, uint32_t number, uint32_t count);
     void SubmitRegistryNumber(uint32_t registry_id, uint32_t number);
