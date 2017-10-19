@@ -32,8 +32,8 @@
 #include "pcap_reader.h"
 #include "DnsStats.h"
 #include "getopt.h"
-#include "PcapCsvMerge.h"
 #include "CaptureSummary.h"
+#include "ithimetrics.h"
 
 int usage()
 {
@@ -42,7 +42,7 @@ int usage()
     fprintf(stderr, "Options:\n");
     fprintf(stderr, "  -c                 process capture files in PCAP format.\n");
     fprintf(stderr, "  -s                 process summary files, from previous captures.\n");
-    fprintf(stderr, "  -o file.csv        output file.\n");
+    fprintf(stderr, "  -o file.csv        output file containing the computed summary.\n");
     fprintf(stderr, "  -r root-addr.txt   text file containing the list of root server addresses.\n");
     fprintf(stderr, "  -a res-addr.txt	  allowed list of resolver addresses. Traffic to or from\n");
     fprintf(stderr, "                     addresses in this list will not be filtered out by the\n");
@@ -55,8 +55,7 @@ int usage()
     fprintf(stderr, "                     the IANA site, using the “CSV” link provided by IANA.\n");
     fprintf(stderr, "                     The file name must be the IANA specified name.\n");
     fprintf(stderr, "  -n number	      Number of strings in the list of leaking domains(M4).\n");
-    fprintf(stderr, "  -m number	      Total number of TLD strings that will be retained in\n");
-    fprintf(stderr, "                     summaries at extraction points.\n");
+    fprintf(stderr, "  -m metric.csv	  output file containing the computed metric.\n");
     fprintf(stderr, "  -t tld-file.txt    Text file containing a list of registered TLD, one per line.\n");
     fprintf(stderr, "  -u tld-file.txt	  Text file containing special usage TLD (RFC6761).\n");
 
@@ -80,6 +79,7 @@ int main(int argc, char ** argv)
     char const * allowed_addr_file = NULL;
     char const * excluded_addr_file = NULL;
     char const * table_version_addr_file = NULL;
+    char const * metric_file = "metric.csv";
     int nb_names_in_tld = 2048;
     char * extract_file = NULL;
     int extract_by_error_type[512] = { 0 };
@@ -137,16 +137,7 @@ int main(int argc, char ** argv)
         }
         case 'm':
         {
-            int nb_names_in_m4_table;
-            if ((nb_names_in_m4_table = atoi(optarg)) <= 0)
-            {
-                fprintf(stderr, "Invalid number of names in table: %s\n", optarg);
-                exit_code = usage();
-            }
-            else
-            {
-                stats.max_tld_leakage_table_count = (uint32_t)nb_names_in_m4_table;
-            }
+            metric_file = optarg;
             break;
         }
         case 'f':
@@ -334,7 +325,26 @@ int main(int argc, char ** argv)
         exit_code = -1;
     }
 
-    /* TODO: capture a metric file if there is a -m option */
+    /* Compute and save the ITHI metrics */
+    if (exit_code == 0)
+    {
+        ithimetrics met;
+
+        if (!met.GetMetrics(&cs))
+        {
+            fprintf(stderr, "Cannot compute the ITHI metrics.\n");
+            exit_code = -1;
+        }
+        else if (!met.Save(metric_file))
+        {
+            fprintf(stderr, "Cannot save the ITHI metrics in <%s>.\n", metric_file);
+            exit_code = -1;
+        }
+        else
+        {
+            printf("ITHI metrics computed and saved in <%s>\n", metric_file);
+        }
+    }
 
     return exit_code;
 }

@@ -748,11 +748,6 @@ void DnsStats::ExportLeakedDomains()
                 entry->tld_len, entry->tld, entry->count);
             export_count++;
         }
-        else
-        {
-            SubmitRegistryNumberAndCount(REGISTRY_DNS_LeakByLength,
-                entry->tld_len, entry->count);
-        }
     }
 }
 
@@ -805,6 +800,18 @@ void DnsStats::SetToUpperCase(uint8_t * domain, size_t length)
             domain[i] = (uint8_t)c;
         }
     }
+}
+
+char const * DnsStats::GetTableName(uint32_t tableId)
+{
+    char const * ret = NULL;
+
+    if (tableId < RegistryNameByIdNb)
+    {
+        ret = RegistryNameById[tableId];
+    }
+
+    return ret;
 }
 
 /*
@@ -969,21 +976,22 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
                     }
                     else
                     {
+                        /* Insert in leakage table */
                         TldAsKey key(packet + tld_offset + 1, packet[tld_offset]);
                         bool stored = false;
-
                         (void)tldLeakage.InsertOrAdd(&key, true, &stored);
-                        /* TODO: If full enough, remove the LRU and add it to per-length stats */
+
+                        /* TODO: If full enough, remove the LRU */
                         if (tldLeakage.GetCount() > max_tld_leakage_table_count)
                         {
                             TldAsKey * removed = tldLeakage.RemoveLRU();
                             if (removed != NULL)
                             {
-                                SubmitRegistryNumberAndCount(REGISTRY_DNS_LeakByLength,
-                                    removed->tld_len, removed->count);
                                 delete removed;
                             }
                         }
+                        /* Add count of leaks by length, including all packets */
+                        SubmitRegistryNumber(REGISTRY_DNS_LeakByLength, packet[tld_offset]);
                     }
                 }
                 else if (rcode == DNS_RCODE_NOERROR)

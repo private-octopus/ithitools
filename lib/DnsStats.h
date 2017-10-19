@@ -160,6 +160,7 @@ public:
 
     static bool IsRfc6761Tld(uint8_t * tld, size_t length);
     static void SetToUpperCase(uint8_t * domain, size_t length);
+    static char const * GetTableName(uint32_t tableId);
 
 private:
     bool LoadPcapFile(char const * fileName);

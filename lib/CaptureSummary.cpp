@@ -238,8 +238,33 @@ size_t CaptureSummary::Size()
     return summary.size();
 }
 
-void CaptureSummary::Extract(char * table_name, std::vector<CaptureLine*>* extract, bool need_alloc)
+uint32_t CaptureSummary::GetCountByNumber(char const * table_name, uint32_t number)
 {
+    uint32_t count = 0;
+
+    for (size_t i = 0; i < summary.size(); i++)
+    {
+        if (compare_string(table_name, summary[i]->registry_name) == 0 &&
+            summary[i]->key_type == 0 &&
+            summary[i]->key_number == number)
+        {
+            count = summary[i]->count;
+            break;
+        }
+    }
+
+    return count;
+}
+
+void CaptureSummary::Extract(char const * table_name, std::vector<CaptureLine*>* extract)
+{
+    for (size_t i = 0; i < summary.size(); i++)
+    {
+        if (compare_string(table_name, summary[i]->registry_name) == 0)
+        {
+            extract->push_back(summary[i]);
+        }
+    }
 }
 
 bool CaptureSummary::Merge(size_t nb_files, char const ** file_name)
@@ -536,7 +561,7 @@ int CaptureSummary::read_string(char* text, int text_max, size_t start, char * b
     return start;
 }
 
-int CaptureSummary::compare_string(char * x, char * y)
+int CaptureSummary::compare_string(char const * x, char const * y)
 {
     int ret = 0;
     uint8_t ux, uy;

@@ -36,7 +36,9 @@ public:
 
     size_t Size();
 
-    void Extract(char * table_name, std::vector<CaptureLine *> *extract, bool need_alloc);
+    uint32_t GetCountByNumber(char const * table_name, uint32_t number);
+
+    void Extract(char const * table_name, std::vector<CaptureLine *> *extract);
 
     bool Merge(size_t nb_files, char const ** file_name);
     bool Merge(size_t nb_summaries, CaptureSummary ** cs);
@@ -46,7 +48,7 @@ private:
     int read_number(int* number, size_t start, char * buffer, size_t buffer_max);
     int read_string(char* text, int text_max, size_t start, char * buffer, size_t buffer_max);
 
-    static int compare_string(char * x, char * y);
+    static int compare_string(char const * x, char const * y);
     static bool CaptureLineIsLower(CaptureLine * x, CaptureLine * y);
     static bool CaptureLineIsSameKey(CaptureLine * x, CaptureLine * y);
 };
