@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <algorithm>
 #include "DnsStats.h"
 #include "ithimetrics.h"
@@ -446,13 +447,17 @@ void ithimetrics::GetM4_3(CaptureSummary * cs)
             line.domain[indx++] = 't';
             line.domain[indx++] = 'h';
             line.domain[indx++] = '_';
-
-#ifdef _WINDOWS
-            (void) _itoa_s(extract[i]->key_number, &line.domain[indx],
-                sizeof(line.domain) - indx, 10);
-#else
-            (void)itoa(extract[i]->key_number, &line.domain[indx], 10);
-#endif
+            /* Length is between 0 and 64, and itoa is not portable */
+            if (extract[i]->key_number < 10)
+            {
+                line.domain[indx++] = '0' + extract[i]->key_number;
+            }
+            else
+            {
+                line.domain[indx++] = '0' + extract[i]->key_number/10;
+                line.domain[indx++] = '0' + extract[i]->key_number%10;
+            }
+            line.domain[indx++] = 0;
             line.frequency = ((double)extract[i]->count) / ((double)nb_rootqueries);
 
             if (extract.size() < 8 || line.frequency >= 0.001)
