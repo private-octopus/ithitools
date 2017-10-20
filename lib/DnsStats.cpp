@@ -28,8 +28,6 @@
 #include "DnsTypes.h"
 #include "DnsStats.h"
 
-
-
 DnsStats::DnsStats()
     :
     record_count(0),
@@ -755,13 +753,13 @@ void DnsStats::ExportLeakedDomains()
     std::sort(lines.begin(), lines.end(), CompareTldEntries);
 
     /* Retain the N most interesting values */
-    for (TldAsKey * &entry : lines)
+    for (size_t i=0; i < lines.size(); i++)
     {
         if (export_count < max_tld_leakage_count &&
-            !IsNumericDomain(entry->tld, entry->tld_len))
+            !IsNumericDomain(lines[i]->tld, lines[i]->tld_len))
         {
             SubmitRegistryStringAndCount(REGISTRY_DNS_LeakedTLD, 
-                entry->tld_len, entry->tld, entry->count);
+                lines[i]->tld_len, lines[i]->tld, lines[i]->count);
             export_count++;
         }
     }
@@ -1196,15 +1194,22 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
                 }
                 else
                 {
-#ifdef _WINDOWS
-                    if (_itoa_s(entry->registry_id, line.registry_name,
-                        sizeof(line.registry_name), 10) != 0)
+                    /* turns out that itoa() is not portable, so here we go. */
+                    char number[16];
+                    uint32_t target = entry->registry_id;
+                    size_t k = 0;
+                    for (; (target > 0 || k == 0) && k < 16; k++)
                     {
-                        ret = false;
+                        number[k] = (target % 10) + '0';
+                        target /= 10;
                     }
-#else
-                    (void)itoa(entry->registry_id, line.registry_name, 10);
-#endif
+                    
+                    for (size_t l = 0; l < k; l++)
+                    {
+                        line.registry_name[l] = number[k - 1 - l];
+                    }
+
+                    line.registry_name[k] = 0;
                 }
                 line.key_type = entry->key_type;
 
