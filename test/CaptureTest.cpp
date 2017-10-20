@@ -26,9 +26,11 @@
 #ifdef _WINDOWS
 static char const * pcap_input_test = "..\\data\\tiny-capture.pcap";
 static char const * pcap_test_output = "..\\data\\tiny-capture.csv";
+static char const * pcap_test_debug = "tiny-capture-out.csv";
 #else
 static char const * pcap_input_test = "data/tiny-capture.pcap";
 static char const * pcap_test_output = "data/tiny-capture.csv";
+static char const * pcap_test_debug = "tiny-capture-out.csv";
 #endif
 
 CaptureTest::CaptureTest()
@@ -63,6 +65,11 @@ bool CaptureTest::DoTest()
                 tcs.Sort();
 
                 ret = cs.Compare(&tcs);
+
+                if (!ret)
+                {
+                    cs.Save(pcap_test_debug);
+                }
             }
         }
     }
