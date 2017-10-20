@@ -31,10 +31,10 @@ ADD_EXECUTABLE(ithitools
    $(ITHITOOLS_LIBRARY_FILES)
 )
 
-ADD_EXECUTABLE(ithitest
-   src/ithitest.cpp 
-   $(ITHITOOLS_LIBRARY_FILES)
-   $(ITHITOOLS_TEST_LIBRARY_FILES)
-)
+#ADD_EXECUTABLE(ithitest
+#   src/ithitest.cpp 
+#   $(ITHITOOLS_LIBRARY_FILES)
+#   $(ITHITOOLS_TEST_LIBRARY_FILES)
+#)
 
 SET(TEST_EXES ithitest)
