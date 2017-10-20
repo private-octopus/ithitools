@@ -52,7 +52,7 @@ ADD_EXECUTABLE(ithitest
    test/MergeTest.cpp
    test/MetricTest.cpp
    test/SaveTest.cpp
-   test/testRfc6761.cpp)
+   test/testRfc6761.cpp
 )
 
 SET(TEST_EXES ithitest)
