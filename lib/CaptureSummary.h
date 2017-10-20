@@ -64,13 +64,13 @@ public:
 
     bool Merge(size_t nb_files, char const ** file_name);
     bool Merge(size_t nb_summaries, CaptureSummary ** cs);
+    static int compare_string(char const * x, char const * y);
 
 private:
     std::vector<CaptureLine *> summary;
     int read_number(int* number, size_t start, char * buffer, size_t buffer_max);
     int read_string(char* text, int text_max, size_t start, char * buffer, size_t buffer_max);
 
-    static int compare_string(char const * x, char const * y);
     static bool CaptureLineIsLower(CaptureLine * x, CaptureLine * y);
     static bool CaptureLineIsSameKey(CaptureLine * x, CaptureLine * y);
 };

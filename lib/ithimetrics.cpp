@@ -2,6 +2,7 @@
 #include <string.h>
 #include <algorithm>
 #include "DnsStats.h"
+#include "CaptureSummary.h"
 #include "ithimetrics.h"
 
 /* Initial definition of the registry tables */
@@ -559,5 +560,16 @@ void ithimetrics::GetM6(CaptureSummary * cs)
 
 bool ithimetrics::metric4_line_is_bigger(metric4_line_t x, metric4_line_t y)
 {
-    return (x.frequency > y.frequency);
+    bool ret = false;
+
+    if (x.frequency > y.frequency)
+    {
+        ret = true;
+    }
+    else if (x.frequency == y.frequency)
+    {
+        ret = CaptureSummary::compare_string(x.domain, y.domain) > 0;
+    }
+
+    return (ret);
 }
