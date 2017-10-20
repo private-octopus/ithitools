@@ -70,7 +70,7 @@ bool LoadTest::DoGoodTest()
         bool ret = (err == 0);
 #else
         bool ret;
-        F = fopen(file_name, "r");
+        F = fopen(good_file, "r");
         ret = (F != NULL);
 #endif
 
