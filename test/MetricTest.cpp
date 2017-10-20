@@ -145,12 +145,12 @@ bool MetricTest::compare_lines(char const * b1, char const * b2)
         b2++;
     }
 
-    while (*b1 == '/n' || *b1 == '/r')
+    while (*b1 == '\n' || *b1 == '\r')
     {
         b1++;
     }
 
-    while (*b2 == '/n' || *b2 == '/r')
+    while (*b2 == '\n' || *b2 == '\r')
     {
         b2++;
     }
