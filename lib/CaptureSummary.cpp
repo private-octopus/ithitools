@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <algorithm>
+#include <string.h>
 #include "CaptureSummary.h"
 
 CaptureSummary::CaptureSummary()
