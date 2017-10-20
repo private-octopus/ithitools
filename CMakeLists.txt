@@ -16,13 +16,13 @@ SET(ITHITOOLS_LIBRARY_FILES
 )
 
 SET(ITHITOOLS_TEST_LIBRARY_FILES
-   test\CaptureTest.cpp
-   test\hashtest.cpp
-   test\LoadTest.cpp
-   test\MergeTest.cpp
-   test\MetricTest.cpp
-   test\SaveTest.cpp
-   test\testRfc6761.cpp
+   test/CaptureTest.cpp
+   test/hashtest.cpp
+   test/LoadTest.cpp
+   test/MergeTest.cpp
+   test/MetricTest.cpp
+   test/SaveTest.cpp
+   test/testRfc6761.cpp
 )
 
 ADD_EXECUTABLE(ithitools 
@@ -34,7 +34,7 @@ ADD_EXECUTABLE(ithitools
 ADD_EXECUTABLE(ithitest
    src/ithitest.cpp 
    $(ITHITOOLS_LIBRARY_FILES)
-   $((ITHITOOLS_TEST_LIBRARY_FILES)
+   $(ITHITOOLS_TEST_LIBRARY_FILES)
 )
 
 SET(TEST_EXES ithitest)
