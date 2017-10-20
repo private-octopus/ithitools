@@ -23,6 +23,7 @@
 #define CAPTURE_SUMMARY_H
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <vector>
 
 typedef struct _capture_line
