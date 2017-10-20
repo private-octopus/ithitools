@@ -703,9 +703,9 @@ bool CompareTldEntries(TldAsKey * x, TldAsKey * y)
     {
         for (size_t i = 0; i < x->tld_len; i++)
         {
-            if (x->tld[i] != x->tld[i])
+            if (x->tld[i] != y->tld[i])
             {
-                ret = x->tld[i] < x->tld[i];
+                ret = x->tld[i] < y->tld[i];
                 break;
             }
         }
@@ -1225,7 +1225,7 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
                     {
                         int x = entry->key_value[i];
 
-                        if (x >= ' ' && x < 127 && x != '"' && x != ',')
+                        if (x > ' ' && x < 127 && x != '"' && x != ',')
                         {
                             continue;
                         }
