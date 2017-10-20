@@ -20,9 +20,34 @@ The project builds a single executable, "ithitools.exe", which can be used in tw
 
 * aggregation of several summary files and extraction of supported metrics.
 
-# Development
+Calling ithitools with the option "-h" will produce a standard looking "usage"
+page. Further documentation is available in DnsProtocolParametersAnalysis.pdf.
 
-The tool is developed as a Visual Studio project, and should run under either Windows or Unix.
-That is, this will be true as soon as we reach a sufficient stage of development...
+# Building ITHITOOLS
 
+ITHITOOLS was developed in C++, and can be built under Windows or Linux.
+
+## ITHITOOLS on Windows
+
+To build ITHITOOLS on Windows, you need to:
+
+ * Have a version of Visual Studio 2017 installed. The freely available
+   "Community" version will work.
+
+ * Clone and compile ITHITOOLS, using the Visual Studio 2017 solution 
+   ithitoolsvs.sln included in the sources.
+
+ * You can use the unit tests included in the Visual Studio solution to 
+   verify the port.
+
+## ITHITOOLS on Linux
+
+To build ITHITOOLS on Linux, you need to:
+
+ * Clone and compile ITHITOOLS:
+~~~
+   cmake .
+   make
+~~~
+ * Run the test program "ithitest" to verify the port.
 
