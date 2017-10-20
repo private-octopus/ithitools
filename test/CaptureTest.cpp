@@ -23,8 +23,13 @@
 #include "CaptureTest.h"
 #include "pcap_reader.h"
 
+#ifdef _WINDOWS
 static char const * pcap_input_test = "..\\data\\tiny-capture.pcap";
 static char const * pcap_test_output = "..\\data\\tiny-capture.csv";
+#else
+static char const * pcap_input_test = "data/tiny-capture.pcap";
+static char const * pcap_test_output = "data/tiny-capture.csv";
+#endif
 
 CaptureTest::CaptureTest()
 {

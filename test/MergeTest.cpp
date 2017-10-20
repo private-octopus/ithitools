@@ -22,9 +22,15 @@
 #include "CaptureSummary.h"
 #include "MergeTest.h"
 
+#ifdef _WINDOWS
 static char const * summary1 = "..\\data\\summary1.csv";
 static char const * summary2 = "..\\data\\summary2.csv";
 static char const * target = "..\\data\\merge-1-2.csv";
+#else
+static char const * summary1 = "data/summary1.csv";
+static char const * summary2 = "data/summary2.csv";
+static char const * target = "data/merge-1-2.csv";
+#endif
 
 MergeTest::MergeTest()
 {

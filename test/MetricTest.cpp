@@ -22,10 +22,15 @@
 #include "ithimetrics.h"
 #include "MetricTest.h"
 
-
+#ifdef _WINDOWS
 static char const * metric_test_input = "..\\data\\tiny-capture.csv";
 static char const * metric_test_output = "metric-test.csv";
 static char const * metric_test_ref = "..\\data\\tiny-metrics.csv";
+#else
+static char const * metric_test_input = "data/tiny-capture.csv";
+static char const * metric_test_output = "metric-test.csv";
+static char const * metric_test_ref = "data/tiny-metrics.csv";
+#endif
 
 
 MetricTest::MetricTest()

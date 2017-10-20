@@ -22,9 +22,13 @@
 #include "CaptureSummary.h"
 #include "SaveTest.h"
 
-
+#ifdef _WINDOWS
 static char const * good_file = "..\\data\\summary1.csv";
 static char const * saved_file = "save_test.csv";
+#else
+static char const * good_file = "data/summary1.csv";
+static char const * saved_file = "save_test.csv";
+#endif
 
 SaveTest::SaveTest()
 {

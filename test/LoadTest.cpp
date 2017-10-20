@@ -30,9 +30,13 @@ LoadTest::~LoadTest()
 {
 }
 
-
+#ifdef _WINDOWS
 static char const * no_such_file = "no_such_file.csv";
 static char const * good_file = "..\\data\\summary1.csv";
+#else
+static char const * no_such_file = "no_such_file.csv";
+static char const * good_file = "./data/summary1.csv";
+#endif
 
 
 bool LoadTest::DoTest()
