@@ -1221,13 +1221,20 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
                 {
                     /* Check that the value is printable */
                     bool printable = true;
+                    bool previous_was_space = true; /* Cannot have space at beginning */
                     for (uint32_t i = 0; i < entry->key_length; i++)
                     {
                         int x = entry->key_value[i];
 
                         if (x > ' ' && x < 127 && x != '"' && x != ',')
                         {
+                            previous_was_space = false;
                             continue;
+                        }
+                        else if (x == ' ' && !previous_was_space)
+                        {
+                            /* Cannot have several spaces */
+                            previous_was_space = true;
                         }
                         else
                         {
@@ -1235,6 +1242,12 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
                             break;
                         }
                     }
+                    if (previous_was_space)
+                    {
+                        /* Cannot have space at end */
+                        printable = false;
+                    }
+
                     if (!printable)
                     {
                         size_t byte_index = 3;
