@@ -85,7 +85,7 @@ bool pcap_reader::Open(char const * f_name, char * f_extract_name)
         }
 #endif
 
-        if (err != 0)
+        if (err != 0 || F_pcap == NULL)
         {
             ret = false;
             printf("Error: %d (0x%x) for %s\n", err, err, f_name);

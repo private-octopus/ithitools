@@ -140,19 +140,16 @@ AddressFilter::~AddressFilter()
 
 bool AddressFilter::SetList(char const * fname)
 {
-    bool ret = true;
+    bool ret;
     FILE * F = NULL;
     char line[256];
 
 #ifdef _WINDOWS
-    if (fopen_s(&F, fname, "r") != 0) {
-        ret = false;
-    }
+    errno_t err = fopen_s(&F, fname, "w");
+    ret = (err == 0 && F != NULL);
 #else
     F = fopen(fname, "r");
-    if (F == NULL) {
-        ret = false;
-    }
+    ret = (F != NULL);
 #endif
 
     while (ret && fgets(line, sizeof(line), F) != NULL)

@@ -92,7 +92,7 @@ bool MetricTest::compare_files(char const * fname1, char const * fname2)
         ret = (F2 != NULL);
     }
 #endif
-    if (ret)
+    if (ret && F1 != NULL && F2 != NULL)
     {
         char buffer1[256];
         char buffer2[256];

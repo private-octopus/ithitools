@@ -67,7 +67,7 @@ bool LoadTest::DoGoodTest()
 
 #ifdef _WINDOWS
         errno_t err = fopen_s(&F, good_file, "r");
-        bool ret = (err == 0);
+        bool ret = (err == 0 && F != NULL);
 #else
         bool ret;
         F = fopen(good_file, "r");

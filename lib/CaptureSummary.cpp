@@ -48,7 +48,7 @@ bool CaptureSummary::Load(char const * file_name)
 
 #ifdef _WINDOWS
     errno_t err = fopen_s(&F, file_name, "r");
-    bool ret = (err == 0);
+    bool ret = (err == 0 && F != NULL);
 #else
     bool ret;
     F = fopen(file_name, "r");
@@ -89,7 +89,7 @@ bool CaptureSummary::Save(char const * file_name)
 
 #ifdef _WINDOWS
     errno_t err = fopen_s(&F, file_name, "w");
-    bool ret = (err == 0);
+    bool ret = (err == 0 && F != NULL);
 #else
     bool ret;
     F = fopen(file_name, "w");
