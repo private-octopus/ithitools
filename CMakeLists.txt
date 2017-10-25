@@ -8,7 +8,6 @@ INCLUDE_DIRECTORIES(src lib test)
 SET(ITHITOOLS_LIBRARY_FILES
    lib/AddressFilter.cpp
    lib/CaptureSummary.cpp
-   lib/DnsStatHash.cpp
    lib/DnsStats.cpp
    lib/ithimetrics.cpp
    lib/pcap_reader.cpp
@@ -30,7 +29,6 @@ ADD_EXECUTABLE(ithitools
    src/getopt.c 
    lib/AddressFilter.cpp
    lib/CaptureSummary.cpp
-   lib/DnsStatHash.cpp
    lib/DnsStats.cpp
    lib/ithimetrics.cpp
    lib/pcap_reader.cpp
@@ -41,7 +39,6 @@ ADD_EXECUTABLE(ithitest
    src/ithitest.cpp 
    lib/AddressFilter.cpp
    lib/CaptureSummary.cpp
-   lib/DnsStatHash.cpp
    lib/DnsStats.cpp
    lib/ithimetrics.cpp
    lib/pcap_reader.cpp
