@@ -407,7 +407,8 @@ void DnsStats::SubmitTLSARecord(uint8_t * content, uint32_t length)
 
 void DnsStats::SubmitRegistryNumberAndCount(uint32_t registry_id, uint32_t number, uint32_t count)
 {
-    dns_registry_entry_t key;
+    DnsHashEntry key;
+    bool stored = false;
 
     key.count = count;
     key.registry_id = registry_id;
@@ -415,7 +416,7 @@ void DnsStats::SubmitRegistryNumberAndCount(uint32_t registry_id, uint32_t numbe
     key.key_type = 0; /* number */
     key.key_number = number;
 
-    (void)hashTable.InsertOrAdd(&key);
+    (void)hashTable.InsertOrAdd(&key, true, &stored);
 }
 
 void DnsStats::SubmitRegistryNumber(uint32_t registry_id, uint32_t number)
@@ -425,7 +426,8 @@ void DnsStats::SubmitRegistryNumber(uint32_t registry_id, uint32_t number)
 
 void DnsStats::SubmitRegistryStringAndCount(uint32_t registry_id, uint32_t length, uint8_t * value, uint32_t count)
 {
-    dns_registry_entry_t key;
+    DnsHashEntry key;
+    bool stored = false;
 
     if (length < 64)
     {
@@ -436,7 +438,7 @@ void DnsStats::SubmitRegistryStringAndCount(uint32_t registry_id, uint32_t lengt
         memcpy(key.key_value, value, length);
         key.key_value[length] = 0;
 
-        (void)hashTable.InsertOrAdd(&key);
+        (void)hashTable.InsertOrAdd(&key, true, &stored);
     }
 }
 
@@ -1124,50 +1126,9 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
     SubmitRegistryNumber(REGISTRY_DNS_error_flag, error_flags);
 }
 
-bool CompareRegistryEntries(dns_registry_entry_t * x, dns_registry_entry_t * y)
-{
-    bool ret = false;
-
-    if (x->registry_id < y->registry_id)
-    {
-        ret = true;
-    }
-    else if (x->registry_id == y->registry_id)
-    {
-        if (x->key_type < y->key_type)
-        {
-            ret = true;
-        }
-        else if (x->key_type == y->key_type)
-        {
-            if (x->key_type == 0)
-            {
-                ret = (x->key_number < y->key_number);
-            }
-            else
-            {
-                for (int i = 0; i < sizeof(x->key_value); i++)
-                {
-                    if (x->key_value[i] < y->key_value[i])
-                    {
-                        ret = true;
-                        break;
-                    }
-                    else if (x->key_value[i] != y->key_value[i])
-                    {
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    return ret;
-}
-
 bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
 {
-    dns_registry_entry_t *entry;
+    DnsHashEntry *entry;
     bool ret = true;
 
     if (ret)
@@ -1178,12 +1139,13 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
 
     if (ret)
     {
-        cs->Reserve(hashTable.GetSize());
+        cs->Reserve(hashTable.GetCount());
 
         for (uint32_t i = 0; i < hashTable.GetSize(); i++)
         {
             entry = hashTable.GetEntry(i);
-            if (entry != NULL)
+
+            while (entry != NULL)
             {
                 CaptureLine line;
 
@@ -1280,6 +1242,8 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
                 line.count = entry->count;
 
                 cs->AddLine(&line, true);
+
+                entry = entry->HashNext;
             }
         }
 
@@ -1433,4 +1397,74 @@ TldAddressAsKey * TldAddressAsKey::CreateCopy()
 void TldAddressAsKey::Add(TldAddressAsKey * key)
 {
     this->count += key->count;
+}
+
+DnsHashEntry::DnsHashEntry()
+    :
+    hash(0),
+    registry_id(0),
+    count(0),
+    key_type(0),
+    key_length(0),
+    key_number(0),
+    HashNext(NULL)
+{
+}
+
+DnsHashEntry::~DnsHashEntry()
+{
+}
+
+bool DnsHashEntry::IsSameKey(DnsHashEntry * key)
+{
+    bool ret = registry_id == key->registry_id &&
+        key_type == key->key_type &&
+        key_length == key->key_length &&
+        memcmp(key_value, key->key_value, key_length) == 0;
+
+    return ret;
+}
+
+uint32_t DnsHashEntry::Hash()
+{
+    if (hash == 0)
+    {
+        uint64_t hash64 = 0;
+
+        hash64 = registry_id;
+        hash64 ^= (hash64 << 23) ^ (hash64 >> 17);
+        hash64 ^= key_type;
+        hash64 ^= (hash64 << 23) ^ (hash64 >> 17);
+        hash64 ^= key_length;
+        hash64 ^= (hash64 << 23) ^ (hash64 >> 17);
+        for (uint32_t i = 0; i < key_length; i++)
+        {
+            hash64 ^= key_value[i];
+            hash64 ^= (hash64 << 23) ^ (hash64 >> 17);
+        }
+
+        hash = (uint32_t)(hash64 ^ (hash64 >> 32));
+    }
+    return hash;
+}
+
+DnsHashEntry * DnsHashEntry::CreateCopy()
+{
+    DnsHashEntry * key = new DnsHashEntry();
+
+    if (key != NULL)
+    {
+        key->registry_id = registry_id;
+        key->key_type = key_type;
+        key->key_length = key_length;
+        memcpy(key->key_value, key_value, key_length);
+        key->count = count;
+    }
+
+    return key;
+}
+
+void DnsHashEntry::Add(DnsHashEntry * key)
+{
+    count += key->count;
 }

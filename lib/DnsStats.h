@@ -24,7 +24,9 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#if 0
 #include "DnsStatHash.h"
+#endif
 #include "AddressFilter.h"
 #include "HashBinGeneric.h"
 #include "CaptureSummary.h"
@@ -93,6 +95,29 @@ enum DnsStatsFlags
     dnsStateFlagCountPacketSizes = 16
 };
 
+class DnsHashEntry {
+public:
+    DnsHashEntry();
+    ~DnsHashEntry();
+
+    bool IsSameKey(DnsHashEntry* key);
+    uint32_t Hash();
+    DnsHashEntry* CreateCopy();
+    void Add(DnsHashEntry* key);
+
+    DnsHashEntry * HashNext;
+
+    uint32_t hash;
+    uint32_t registry_id;
+    uint32_t count;
+    uint32_t key_type;
+    uint32_t key_length;
+    union {
+        uint32_t key_number;
+        uint8_t key_value[64];
+    };
+};
+
 class TldAsKey
 {
 public:
@@ -144,7 +169,7 @@ public:
     DnsStats();
     ~DnsStats();
 
-    DnsStatHash hashTable;
+    BinHash<DnsHashEntry> hashTable;
     AddressFilter rootAddresses;
     LruHash<TldAsKey> tldLeakage;
     BinHash<TldAddressAsKey> queryUsage;

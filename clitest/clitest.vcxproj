@@ -149,7 +149,6 @@
   <ItemGroup>
     <ClCompile Include="..\lib\AddressFilter.cpp" />
     <ClCompile Include="..\lib\CaptureSummary.cpp" />
-    <ClCompile Include="..\lib\DnsStatHash.cpp" />
     <ClCompile Include="..\lib\DnsStats.cpp" />
     <ClCompile Include="..\lib\ithimetrics.cpp" />
     <ClCompile Include="..\lib\pcap_reader.cpp" />
@@ -166,7 +165,6 @@
   <ItemGroup>
     <ClInclude Include="..\lib\AddressFilter.h" />
     <ClInclude Include="..\lib\CaptureSummary.h" />
-    <ClInclude Include="..\lib\DnsStatHash.h" />
     <ClInclude Include="..\lib\DnsStats.h" />
     <ClInclude Include="..\lib\DnsTypes.h" />
     <ClInclude Include="..\lib\HashBinGeneric.h" />

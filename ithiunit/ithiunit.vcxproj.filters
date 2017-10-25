@@ -24,9 +24,6 @@
     <ClInclude Include="..\lib\AddressFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\DnsStatHash.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\DnsStats.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -84,9 +81,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\AddressFilter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\lib\DnsStatHash.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\lib\DnsStats.cpp">

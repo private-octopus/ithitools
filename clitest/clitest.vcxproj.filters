@@ -21,9 +21,6 @@
     <ClCompile Include="..\lib\CaptureSummary.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\DnsStatHash.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\lib\DnsStats.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -66,9 +63,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\CaptureSummary.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\DnsStatHash.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\DnsStats.h">
