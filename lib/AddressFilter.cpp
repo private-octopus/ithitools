@@ -77,6 +77,7 @@
 IPAsKey::IPAsKey(uint8_t * addr, size_t addr_len)
     :
     count(1),
+    HashNext(NULL),
     hash(0)
 {
     if (addr_len > 16)
@@ -143,7 +144,7 @@ bool AddressFilter::SetList(char const * fname)
     FILE * F = NULL;
     char line[256];
 
-#ifdef WIN32
+#ifdef _WINDOWS
     if (fopen_s(&F, fname, "r") != 0) {
         ret = false;
     }
@@ -212,7 +213,11 @@ void AddressFilter::AddToList(uint8_t * addr, size_t len)
 
     if (x != NULL)
     {
-        if (!table.InsertOrAdd(x, true))
+        bool stored = false;
+
+        (void)table.InsertOrAdd(x, false, &stored);
+
+        if (!stored)
         {
             delete x;
         }

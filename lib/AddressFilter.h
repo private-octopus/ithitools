@@ -23,7 +23,7 @@
 #define ADDRESS_FILTER_H
 
 #include <stdint.h>
-#include "HashWriteOnceGeneric.h"
+#include "HashBinGeneric.h"
 
 class IPAsKey
 {
@@ -35,7 +35,7 @@ public:
     uint32_t Hash();
     IPAsKey* CreateCopy();
     void Add(IPAsKey* key);
-
+    IPAsKey * HashNext;
 
     size_t addr_len;
     uint8_t addr[16];
@@ -63,7 +63,7 @@ public:
         return table.GetCount();
     }
 
-    HashWriteOnce<IPAsKey> table;
+    BinHash<IPAsKey> table;
 };
 
 #endif /* ADDRESS_FILTER_H */

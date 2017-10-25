@@ -170,7 +170,6 @@
     <ClInclude Include="..\lib\DnsStats.h" />
     <ClInclude Include="..\lib\DnsTypes.h" />
     <ClInclude Include="..\lib\HashBinGeneric.h" />
-    <ClInclude Include="..\lib\HashWriteOnceGeneric.h" />
     <ClInclude Include="..\lib\ithimetrics.h" />
     <ClInclude Include="..\lib\linktype.h" />
     <ClInclude Include="..\lib\pcap_reader.h" />

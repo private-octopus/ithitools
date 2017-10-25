@@ -80,9 +80,6 @@
     <ClInclude Include="..\lib\HashBinGeneric.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\HashWriteOnceGeneric.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\ithimetrics.h">
       <Filter>Header Files</Filter>
     </ClInclude>
