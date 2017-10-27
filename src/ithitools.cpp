@@ -66,7 +66,6 @@ int usage()
 int main(int argc, char ** argv)
 {
     int exec_mode = -1; /* capture extraction= 0, summary aggregation = 1 */
-    bool do_address_filtering = false;
     int exit_code = 0;
 
     CaptureSummary cs;
@@ -79,7 +78,7 @@ int main(int argc, char ** argv)
     char const * allowed_addr_file = NULL;
     char const * excluded_addr_file = NULL;
     char const * table_version_addr_file = NULL;
-    char const * metric_file = "metric.csv";
+    char const * metric_file = NULL;
     int nb_names_in_tld = 2048;
     char * extract_file = NULL;
     int extract_by_error_type[512] = { 0 };
@@ -109,12 +108,10 @@ int main(int argc, char ** argv)
             fprintf(stderr, "The root addresses redefinition option is not yet implemented.\n");
             break;
         case 'a':
-            allowed_addr_file = optarg;
-            fprintf(stderr, "The allowed address option is not yet implemented.\n");
+            stats.allowedAddresses.AddToList(optarg);
             break;
         case 'x':
-            excluded_addr_file = optarg;
-            fprintf(stderr, "The excluded address option is not yet implemented.\n");
+            stats.bannedAddresses.AddToList(optarg);
             break;
         case 'v':
             table_version_addr_file = optarg;
@@ -141,8 +138,7 @@ int main(int argc, char ** argv)
             break;
         }
         case 'f':
-            do_address_filtering = true;
-            fprintf(stderr, "The address filtering option is not yet implemented.\n");
+            stats.enable_frequent_address_filtering = true;
             break;
         case 'h':
             exit_code = usage();
@@ -326,7 +322,7 @@ int main(int argc, char ** argv)
     }
 
     /* Compute and save the ITHI metrics */
-    if (exit_code == 0)
+    if (exit_code == 0 && metric_file != NULL)
     {
         ithimetrics met;
 

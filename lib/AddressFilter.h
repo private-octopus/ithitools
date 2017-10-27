@@ -33,7 +33,7 @@ public:
 
     bool IsSameKey(IPAsKey* key);
     uint32_t Hash();
-    IPAsKey* CreateCopy();
+    virtual IPAsKey* CreateCopy();
     void Add(IPAsKey* key);
     IPAsKey * HashNext;
 
@@ -58,12 +58,39 @@ public:
 
     bool IsInList(uint8_t * addr, size_t len);
 
+    static bool AddressText(uint8_t * addr, size_t len, char * text, size_t text_max);
+
     uint32_t GetCount()
     {
         return table.GetCount();
     }
 
     BinHash<IPAsKey> table;
+};
+
+class IPAsKeyLRU : public IPAsKey
+{
+public:
+    IPAsKeyLRU(uint8_t * addr, size_t addr_len);
+    ~IPAsKeyLRU();
+
+    IPAsKeyLRU* CreateCopy() override;
+
+    IPAsKeyLRU * HashNext;
+    IPAsKeyLRU * MoreRecentKey;
+    IPAsKeyLRU * LessRecentKey;
+};
+
+class AddressUseTracker
+{
+public:
+    AddressUseTracker();
+    ~AddressUseTracker();
+
+    uint32_t Check(uint8_t * addr, size_t len);
+
+    uint32_t table_lru_max;
+    LruHash<IPAsKeyLRU> table;
 };
 
 #endif /* ADDRESS_FILTER_H */

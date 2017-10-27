@@ -228,3 +228,99 @@ bool AddressFilter::IsInList(uint8_t * addr, size_t len)
 
     return (ret != NULL);
 }
+
+bool AddressFilter::AddressText(uint8_t * addr, size_t len, char * text, size_t text_max)
+{
+    bool ret = true;
+
+    if (len == 4)
+    {
+        if (inet_ntop(AF_INET, addr, text, text_max) == NULL)
+        {
+            ret = false;
+        }
+    }
+    else if (len == 16)
+    {
+        if (inet_ntop(AF_INET6, addr, text, text_max) == NULL)
+        {
+            ret = false;
+        }
+    }
+    else
+    {
+        ret = false;
+    }
+
+    return ret;
+}
+
+AddressUseTracker::AddressUseTracker()
+    :
+    table_lru_max(0x8000)
+{
+}
+
+AddressUseTracker::~AddressUseTracker()
+{
+}
+
+uint32_t AddressUseTracker::Check(uint8_t * addr, size_t len)
+{
+    IPAsKeyLRU * x = new IPAsKeyLRU(addr, len);
+    uint32_t count = 1;
+
+    while (table.GetCount() >= table_lru_max)
+    {
+        IPAsKeyLRU * removed = table.RemoveLRU();
+
+        if (removed != NULL)
+        {
+            delete removed;
+        }
+    }
+
+    if (x != NULL)
+    {
+        bool stored = false;
+
+        IPAsKeyLRU * y = table.InsertOrAdd(x, false, &stored);
+
+        if (!stored)
+        {
+            delete x;
+        }
+
+        if (y != NULL)
+        {
+            count = y->count;
+        }
+    }
+
+    return count;
+}
+
+IPAsKeyLRU::IPAsKeyLRU(uint8_t * addr, size_t addr_len)
+    :
+    MoreRecentKey(NULL),
+    LessRecentKey(NULL),
+    IPAsKey(addr, addr_len)
+{
+}
+
+IPAsKeyLRU::~IPAsKeyLRU()
+{
+}
+
+IPAsKeyLRU * IPAsKeyLRU::CreateCopy()
+{
+    IPAsKeyLRU * x = new IPAsKeyLRU(addr, addr_len);
+
+    if (x != NULL)
+    {
+        x->count = count;
+        x->hash = hash;
+    }
+
+    return x;
+}

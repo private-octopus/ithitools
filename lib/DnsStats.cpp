@@ -34,9 +34,11 @@ DnsStats::DnsStats()
     query_count(0),
     response_count(0),
     dnsstat_flags(0),
+    frequent_address_max_count(128),
     max_query_usage_count(0x8000),
     max_tld_leakage_count(0x80),
-    max_tld_leakage_table_count(0x8000)
+    max_tld_leakage_table_count(0x8000),
+    enable_frequent_address_filtering(false)
 {
 }
 
@@ -109,7 +111,8 @@ static char const * RegistryNameById[] = {
     "UsefulQueries",
     "DANE_CertUsage",
     "DANE_TlsaSelector",
-    "DANE_TlsaMatchingType"
+    "DANE_TlsaMatchingType",
+    "FrequentAddress"
 };
 
 static uint32_t RegistryNameByIdNb = sizeof(RegistryNameById) / sizeof(char const*);
@@ -767,6 +770,38 @@ void DnsStats::ExportLeakedDomains()
     }
 }
 
+bool DnsStats::CheckAddress(uint8_t* addr, size_t len)
+{
+    bool ret = true;
+
+    if (!allowedAddresses.IsInList(addr, len))
+    {
+        if (bannedAddresses.IsInList(addr, len))
+        {
+            ret = false;
+        }
+        else if (enable_frequent_address_filtering)
+        {
+            uint32_t count = frequentAddresses.Check(addr, len);
+
+            if (count > frequent_address_max_count)
+            {
+                /* Add the address to the dropped list */
+                char addr_text[64];
+
+                if (AddressFilter::AddressText(addr, len, addr_text, sizeof(addr_text)))
+                {
+                    SubmitRegistryString(REGISTRY_TOOL_FrequentAddress,
+                        strlen(addr_text), (uint8_t *) addr_text);
+                }
+
+                ret = false;
+            }
+        }
+    }
+    return ret;
+}
+
 static char const * rfc6761_tld[] = {
     "EXAMPLE",
     "INVALID",
@@ -928,6 +963,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
     uint32_t parse_index = 0;
     uint32_t e_length = 512;
     uint32_t tc_bit = 0;
+    bool unfiltered = false;
 
     error_flags = 0;
 
@@ -948,7 +984,18 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
         GetSourceAddress(ip_type, ip_header, &source_addr, &source_addr_length);
         GetDestAddress(ip_type, ip_header, &dest_addr, &dest_addr_length);
 
+        if (is_response)
+        {
+            unfiltered = CheckAddress(dest_addr, dest_addr_length);
+        }
+        else
+        {
+            unfiltered = CheckAddress(source_addr, source_addr_length);
+        }
+    }
 
+    if (unfiltered)
+    {
         if (is_response)
         {
             response_count++;

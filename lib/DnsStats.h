@@ -69,6 +69,7 @@
 #define REGISTRY_DANE_CertUsage 32
 #define REGISTRY_DANE_TlsaSelector 33
 #define REGISTRY_DANE_TlsaMatchingType 34
+#define REGISTRY_TOOL_FrequentAddress 35
 
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
@@ -171,12 +172,18 @@ public:
 
     BinHash<DnsHashEntry> hashTable;
     AddressFilter rootAddresses;
+    AddressFilter allowedAddresses;
+    AddressFilter bannedAddresses;
+    AddressUseTracker frequentAddresses;
+
     LruHash<TldAsKey> tldLeakage;
     BinHash<TldAddressAsKey> queryUsage;
 
     bool LoadPcapFiles(size_t nb_files, char const ** fileNames);
     bool ExportToCaptureSummary(CaptureSummary * cs);
-
+    
+    bool enable_frequent_address_filtering;
+    uint32_t frequent_address_max_count;
     uint32_t max_tld_leakage_count; 
     uint32_t max_tld_leakage_table_count;
     uint32_t max_query_usage_count;
@@ -222,6 +229,8 @@ private:
 
     bool IsNumericDomain(uint8_t * tld, uint32_t length);
     void ExportLeakedDomains();
+
+    bool CheckAddress(uint8_t* addr, size_t addr_len);
 };
 
 #endif /* DNSTAT_H */
