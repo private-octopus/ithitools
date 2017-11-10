@@ -37,6 +37,7 @@
 #include "MergeTest.h"
 #include "CaptureTest.h"
 #include "MetricTest.h"
+#include "PatternTest.h"
 
 int main(int argc, char ** argv)
 {
@@ -48,6 +49,7 @@ int main(int argc, char ** argv)
     MergeTest merge_test;
     CaptureTest capture_test;
     MetricTest metric_test;
+    PatternTest pattern_test;
 
     if (!hash_test.DoTest())
     {
@@ -74,6 +76,10 @@ int main(int argc, char ** argv)
         fprintf(stderr, "Capture test fails.\n");
     }
     else if (!metric_test.DoTest())
+    {
+        fprintf(stderr, "Metric test fails.\n");
+    }
+    else if (!pattern_test.DoTest())
     {
         fprintf(stderr, "Metric test fails.\n");
     }

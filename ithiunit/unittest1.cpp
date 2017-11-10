@@ -28,6 +28,7 @@
 #include "MergeTest.h"
 #include "CaptureTest.h"
 #include "MetricTest.h"
+#include "PatternTest.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -39,7 +40,6 @@ namespace ithiunit
 		
 		TEST_METHOD(Hash)
 		{
-			// TODO: Your test code here
             hashtest test;
             bool ret = test.DoTest();
 
@@ -48,7 +48,6 @@ namespace ithiunit
 
         TEST_METHOD(Rfc6761)
         {
-            // TODO: Your test code here
             testRfc6761 test;
             bool ret = test.DoTest();
 
@@ -57,7 +56,6 @@ namespace ithiunit
 
         TEST_METHOD(Load)
         {
-            // TODO: Your test code here
             LoadTest test;
             bool ret = test.DoTest();
 
@@ -66,7 +64,6 @@ namespace ithiunit
 
         TEST_METHOD(Save)
         {
-            // TODO: Your test code here
             SaveTest test;
             bool ret = test.DoTest();
 
@@ -75,7 +72,6 @@ namespace ithiunit
 
         TEST_METHOD(Merge)
         {
-            // TODO: Your test code here
             MergeTest test;
             bool ret = test.DoTest();
 
@@ -84,7 +80,6 @@ namespace ithiunit
 
         TEST_METHOD(Capture)
         {
-            // TODO: Your test code here
             CaptureTest test;
             bool ret = test.DoTest();
 
@@ -93,8 +88,16 @@ namespace ithiunit
 
         TEST_METHOD(Metric)
         {
-            // TODO: Your test code here
             MetricTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(Pattern)
+        {
+            // TODO: Your test code here
+            PatternTest test;
             bool ret = test.DoTest();
 
             Assert::AreEqual(ret, true);

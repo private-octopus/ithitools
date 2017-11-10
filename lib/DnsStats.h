@@ -70,6 +70,9 @@
 #define REGISTRY_DANE_TlsaSelector 33
 #define REGISTRY_DANE_TlsaMatchingType 34
 #define REGISTRY_TOOL_FrequentAddress 35
+#define REGISTRY_DNS_Tld_Usage 36
+#define REGISTRY_DNS_RFC6761_Usage 37
+#define REGISTRY_DNS_Frequent_TLD_Usage 38
 
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
@@ -179,6 +182,9 @@ public:
     LruHash<TldAsKey> tldLeakage;
     BinHash<TldAddressAsKey> queryUsage;
 
+    BinHash<TldAsKey> registeredTld;
+    LruHash<TldAsKey> tldStringUsage;
+
     bool LoadPcapFiles(size_t nb_files, char const ** fileNames);
     bool ExportToCaptureSummary(CaptureSummary * cs);
     
@@ -187,6 +193,7 @@ public:
     uint32_t max_tld_leakage_count; 
     uint32_t max_tld_leakage_table_count;
     uint32_t max_query_usage_count;
+    uint32_t max_tld_string_usage_count;
     uint32_t dnsstat_flags;
     int record_count; 
     int query_count;
@@ -228,7 +235,12 @@ private:
     void GetDestAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
 
     bool IsNumericDomain(uint8_t * tld, uint32_t length);
+
+    void ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id);
     void ExportLeakedDomains();
+    void ExportStringUsage();
+
+    void LoadRegisteredTLD_from_memory();
 
     bool CheckAddress(uint8_t* addr, size_t addr_len);
 };
