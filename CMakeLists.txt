@@ -46,6 +46,7 @@ ADD_EXECUTABLE(ithitest
    lib/ithimetrics.cpp
    lib/pcap_reader.cpp
    lib/UsefulTransaction.cpp
+   lib/NamePattern.cpp
    test/CaptureTest.cpp
    test/hashtest.cpp
    test/LoadTest.cpp
