@@ -116,7 +116,8 @@ static char const * RegistryNameById[] = {
     "FrequentAddress",
     "TldUsage",
     "RFC6761Usage",
-    "Frequent-TLD-usage"
+    "Frequent-TLD-usage",
+    "TLD-Usage-Count"
 };
 
 static uint32_t RegistryNameByIdNb = sizeof(RegistryNameById) / sizeof(char const*);
@@ -923,7 +924,8 @@ bool DnsStats::IsNumericDomain(uint8_t * tld, uint32_t length)
     return ret;
 }
 
-void DnsStats::ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id)
+void DnsStats::ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id,
+    bool do_accounting)
 {
     TldAsKey *tld_entry;
     std::vector<TldAsKey *> lines(table->GetCount());
@@ -954,49 +956,27 @@ void DnsStats::ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id)
                 lines[i]->tld_len, lines[i]->tld, lines[i]->count);
             export_count++;
         }
+        else if (do_accounting)
+        {
+            /* Add count of leaks by length -- should replace by pattern match later */
+            SubmitRegistryNumberAndCount(REGISTRY_DNS_LeakByLength, 
+                lines[i]->tld_len, lines[i]->count);
+        }
+        else if (export_count >= max_tld_leakage_count)
+        {
+            break;
+        }
     }
 }
 
 void DnsStats::ExportLeakedDomains()
 {
-#if 0
-    TldAsKey *tld_entry;
-    std::vector<TldAsKey *> lines(tldLeakage.GetCount());
-    int vector_index = 0;
-    uint32_t export_count = 0;
-
-    for (uint32_t i = 0; i < tldLeakage.GetSize(); i++)
-    {
-        tld_entry = tldLeakage.GetEntry(i);
-
-        while (tld_entry != NULL)
-        {
-            lines[vector_index] = tld_entry;
-            vector_index++;
-            tld_entry = tld_entry->HashNext;
-        }
-    }
-
-    std::sort(lines.begin(), lines.end(), CompareTldEntries);
-
-    /* Retain the N most interesting values */
-    for (size_t i=0; i < lines.size(); i++)
-    {
-        if (export_count < max_tld_leakage_count &&
-            !IsNumericDomain(lines[i]->tld, lines[i]->tld_len))
-        {
-            SubmitRegistryStringAndCount(REGISTRY_DNS_LeakedTLD, 
-                lines[i]->tld_len, lines[i]->tld, lines[i]->count);
-            export_count++;
-        }
-    }
-#endif
-    ExportDomains(&tldLeakage, REGISTRY_DNS_LeakedTLD);
+    ExportDomains(&tldLeakage, REGISTRY_DNS_LeakedTLD, true);
 }
 
 void DnsStats::ExportStringUsage()
 {
-    ExportDomains(&tldStringUsage, REGISTRY_DNS_Frequent_TLD_Usage);
+    ExportDomains(&tldStringUsage, REGISTRY_DNS_Frequent_TLD_Usage, false);
 }
 
 void DnsStats::LoadRegisteredTLD_from_memory()
@@ -1294,17 +1274,18 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
                             bool stored = false;
                             (void)tldLeakage.InsertOrAdd(&key, true, &stored);
 
-                            /* TODO: If full enough, remove the LRU */
+                            /* TODO: If full enough, remove the LRU, and account for it in the patterns catalog */
                             if (tldLeakage.GetCount() > max_tld_leakage_table_count)
                             {
                                 TldAsKey * removed = tldLeakage.RemoveLRU();
                                 if (removed != NULL)
                                 {
+                                    /* Add count of leaks by length -- should replace by pattern match later */
+                                    SubmitRegistryNumber(REGISTRY_DNS_LeakByLength, removed->tld_len);
+
                                     delete removed;
                                 }
                             }
-                            /* Add count of leaks by length, including all packets */
-                            SubmitRegistryNumber(REGISTRY_DNS_LeakByLength, packet[tld_offset]);
                         }
                     }
                     else if (rcode == DNS_RCODE_NOERROR)
@@ -1341,6 +1322,9 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
             {
                 /* Perform statistics on user traffic */
                 TldAsKey key(packet + tld_offset + 1, packet[tld_offset]);
+
+                /* Keep a count */
+                SubmitRegistryNumber(REGISTRY_DNS_TLD_Usage_Count, 0);
 
                 /* Check whether this TLD is in the registered list */
                 if (registeredTld.GetCount() == 0)

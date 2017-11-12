@@ -73,6 +73,7 @@
 #define REGISTRY_DNS_Tld_Usage 36
 #define REGISTRY_DNS_RFC6761_Usage 37
 #define REGISTRY_DNS_Frequent_TLD_Usage 38
+#define REGISTRY_DNS_TLD_Usage_Count 39
 
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
@@ -236,7 +237,8 @@ private:
 
     bool IsNumericDomain(uint8_t * tld, uint32_t length);
 
-    void ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id);
+    void ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id, 
+        bool do_accounting);
     void ExportLeakedDomains();
     void ExportStringUsage();
 

@@ -306,8 +306,10 @@ metric6_def_t m6_metrics_list[] = {
 ithimetrics::ithimetrics()
     :
     nb_rootqueries(0),
+    nb_userqueries(0),
     m3_1(0),
-    m3_2(0)
+    m3_2(0),
+    m33_4(0)
 {
 }
 
@@ -322,6 +324,9 @@ bool ithimetrics::GetMetrics(CaptureSummary * cs)
     
     GetM3_1(cs);
     GetM3_2(cs);
+    GetM33_1(cs);
+    GetM33_2(cs);
+    GetM33_3(cs);
     GetM4_1(cs);
     GetM4_2(cs);
     GetM4_3(cs);
@@ -348,6 +353,28 @@ bool ithimetrics::Save(char const * file_name)
         fprintf(F, "M3.1, , %6f,\n", m3_1);
         fprintf(F, "M3.2, , %6f,\n", m3_2);
 
+        m33_4 = 1.0;
+
+        for (size_t i = 0; i < m33_1.size(); i++)
+        {
+            fprintf(F, "M3.3.1, %s, %6f,\n", m33_1[i].domain, m33_1[i].frequency);
+            m33_4 -= m33_1[i].frequency;
+        }
+
+        for (size_t i = 0; i < m33_2.size(); i++)
+        {
+            fprintf(F, "M3.3.2, %s, %6f,\n", m33_2[i].domain, m33_2[i].frequency);
+            m33_4 -= m33_2[i].frequency;
+        }
+
+        for (size_t i = 0; i < m33_3.size(); i++)
+        {
+            fprintf(F, "M3.3.3, %s, %6f,\n", m33_3[i].domain, m33_3[i].frequency);
+            m33_4 -= m33_3[i].frequency;
+        }
+
+        fprintf(F, "M3.3.4, , %6f,\n", (m33_4 > 0)?m33_4:0);
+
         for (size_t i = 0; i < m4_1.size(); i++)
         {
             fprintf(F, "M4.1, %s, %6f,\n", m4_1[i].domain, m4_1[i].frequency);
@@ -362,11 +389,16 @@ bool ithimetrics::Save(char const * file_name)
         {
             fprintf(F, "M4.3, %s, %6f,\n", m4_3[i].domain, m4_3[i].frequency);
         }
-
         for (size_t i = 0; i < m6.size(); i++)
         {
             fprintf(F, "%s.1, , %6f,\n", m6[i].m6_prefix, m6[i].m6_x_1);
             fprintf(F, "%s.2, , %6f,\n", m6[i].m6_prefix, m6[i].m6_x_2);
+            for (size_t j = 0; j < m6[i].m6_x_3.size(); j++)
+            {
+                fprintf(F, "%s.3, %d, %d,\n", m6[i].m6_prefix, 
+                    m6[i].m6_x_3[j].parameter_value,
+                    m6[i].m6_x_3[j].parameter_count);
+            }
         }
     }
 
@@ -416,17 +448,17 @@ void ithimetrics::GetM3_2(CaptureSummary * cs)
     }
 }
 
-void ithimetrics::GetM4_1(CaptureSummary * cs)
+void ithimetrics::GetM33_1(CaptureSummary * cs)
 {
-    GetM4_X(cs, REGISTRY_DNS_RFC6761TLD, &m4_1);
+    GetM3_X(cs, REGISTRY_DNS_RFC6761TLD, &m33_1, 0);
 }
 
-void ithimetrics::GetM4_2(CaptureSummary * cs)
+void ithimetrics::GetM33_2(CaptureSummary * cs)
 {
-    GetM4_X(cs, REGISTRY_DNS_LeakedTLD, &m4_2);
+    GetM3_X(cs, REGISTRY_DNS_LeakedTLD, &m33_2, 0.001);
 }
 
-void ithimetrics::GetM4_3(CaptureSummary * cs)
+void ithimetrics::GetM33_3(CaptureSummary * cs)
 {
     if (nb_rootqueries > 0)
     {
@@ -434,7 +466,7 @@ void ithimetrics::GetM4_3(CaptureSummary * cs)
 
         cs->Extract(
             DnsStats::GetTableName(REGISTRY_DNS_LeakByLength), &extract);
-        m4_3.reserve(extract.size());
+        m33_3.reserve(extract.size());
 
         for (size_t i = 0; i < extract.size(); i++)
         {
@@ -463,39 +495,76 @@ void ithimetrics::GetM4_3(CaptureSummary * cs)
 
             if (extract.size() < 8 || line.frequency >= 0.001)
             {
-                m4_3.push_back(line);
+                m33_3.push_back(line);
             }
         }
 
-        std::sort(m4_3.begin(), m4_3.end(), metric4_line_is_bigger);
+        std::sort(m33_3.begin(), m33_3.end(), metric4_line_is_bigger);
     }
 }
 
-void ithimetrics::GetM4_X(CaptureSummary * cs, uint32_t table_id, std::vector<metric4_line_t>* m4_x)
+void ithimetrics::GetM4_1(CaptureSummary * cs)
 {
-    if (nb_rootqueries > 0)
+    GetM4_X(cs, REGISTRY_DNS_Tld_Usage, &m4_1, 0);
+}
+
+void ithimetrics::GetM4_2(CaptureSummary * cs)
+{
+    GetM4_X(cs, REGISTRY_DNS_RFC6761_Usage, &m4_2, 0);
+}
+
+void ithimetrics::GetM4_3(CaptureSummary * cs)
+{
+    GetM4_X(cs, REGISTRY_DNS_Frequent_TLD_Usage, &m4_3, 0.001);
+}
+
+void ithimetrics::GetM3_X(CaptureSummary * cs, uint32_t table_id, 
+    std::vector<metric4_line_t>* mstring_x, double min_share)
+{
+    GetStringM_X(cs, table_id, mstring_x, nb_rootqueries, min_share);
+}
+
+void ithimetrics::GetM4_X(CaptureSummary * cs, uint32_t table_id, std::vector<metric4_line_t>* mstring_x, double min_share)
+{
+    /* compute nb_userqueries, and use it */
+    if (nb_userqueries == 0)
+    {
+        nb_userqueries = cs->GetCountByNumber(
+            DnsStats::GetTableName(REGISTRY_DNS_TLD_Usage_Count), 0);
+    }
+
+    if (nb_userqueries > 0)
+    {
+        GetStringM_X(cs, table_id, mstring_x, nb_userqueries, min_share);
+    }
+}
+
+void ithimetrics::GetStringM_X(CaptureSummary * cs, uint32_t table_id, 
+    std::vector<metric4_line_t>* mstring_x, uint32_t nbqueries, double min_share)
+{
+    if (nbqueries > 0)
     {
         std::vector<CaptureLine *> extract;
 
         cs->Extract(
             DnsStats::GetTableName(table_id), &extract);
-        m4_x->reserve(extract.size());
+        mstring_x->reserve(extract.size());
 
         for (size_t i = 0; i < extract.size(); i++)
         {
             metric4_line_t line;
 
             line.domain[strlen(extract[i]->key_value)] = 0;
-            line.frequency = ((double)extract[i]->count) / ((double)nb_rootqueries);
+            line.frequency = ((double)extract[i]->count) / ((double)nbqueries);
 
-            if (extract.size() < 8 || line.frequency >= 0.001)
+            if (extract.size() < 8 || line.frequency >= min_share)
             {
                 memcpy(line.domain, extract[i]->key_value, strlen(extract[i]->key_value));
-                m4_x->push_back(line);
+                mstring_x->push_back(line);
             }
         }
 
-        std::sort(m4_x->begin(), m4_x->end(), metric4_line_is_bigger);
+        std::sort(mstring_x->begin(), mstring_x->end(), metric4_line_is_bigger);
     }
 }
 
@@ -529,6 +598,7 @@ void ithimetrics::GetM6(CaptureSummary * cs)
             for (size_t j = 0; j < extract.size(); j++)
             {
                 bool registered = false;
+                metric6_parameter_t parameter_data;
 
                 for (size_t k = 0; k < m6_metrics_list[i].nb_registered; k++)
                 {
@@ -540,6 +610,9 @@ void ithimetrics::GetM6(CaptureSummary * cs)
                 }
 
                 count_instances += extract[j]->count;
+                parameter_data.parameter_count = extract[j]->count;
+                parameter_data.parameter_value = extract[j]->key_number;
+                line.m6_x_3.push_back(parameter_data);
 
                 if (registered)
                 {

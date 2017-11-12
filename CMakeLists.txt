@@ -12,6 +12,7 @@ SET(ITHITOOLS_LIBRARY_FILES
    lib/ithimetrics.cpp
    lib/pcap_reader.cpp
    lib/UsefulTransaction.cpp
+   lib/NamePattern.cpp
 )
 
 SET(ITHITOOLS_TEST_LIBRARY_FILES
@@ -22,6 +23,7 @@ SET(ITHITOOLS_TEST_LIBRARY_FILES
    test/MetricTest.cpp
    test/SaveTest.cpp
    test/testRfc6761.cpp
+   test/PatternTest.cpp
 )
 
 ADD_EXECUTABLE(ithitools 
@@ -33,6 +35,7 @@ ADD_EXECUTABLE(ithitools
    lib/ithimetrics.cpp
    lib/pcap_reader.cpp
    lib/UsefulTransaction.cpp
+   lib/NamePattern.cpp
 )
 
 ADD_EXECUTABLE(ithitest
@@ -50,6 +53,7 @@ ADD_EXECUTABLE(ithitest
    test/MetricTest.cpp
    test/SaveTest.cpp
    test/testRfc6761.cpp
+   test/PatternTest.cpp
 )
 
 SET(TEST_EXES ithitest)
