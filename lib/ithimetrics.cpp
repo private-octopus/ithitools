@@ -353,7 +353,7 @@ bool ithimetrics::Save(char const * file_name)
         fprintf(F, "M3.1, , %6f,\n", m3_1);
         fprintf(F, "M3.2, , %6f,\n", m3_2);
 
-        m33_4 = 1.0;
+        m33_4 = m3_1;
 
         for (size_t i = 0; i < m33_1.size(); i++)
         {
