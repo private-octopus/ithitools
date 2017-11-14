@@ -3,7 +3,7 @@ CMAKE_POLICY(SET CMP0003 NEW)
 
 PROJECT(ithitools C CXX)
 
-set(CMAKE_CXX_STANDARD 11)
+SET(CMAKE_CXX_STANDARD 11)
 
 INCLUDE_DIRECTORIES(src lib test include)
 
@@ -74,8 +74,16 @@ ADD_LIBRARY(ithicap SHARED
    lib/DnscapPlugIn.cpp
 )
 
-SET_TARGET_PROPERTIES(ithicap PROPERTIES VERSION 0.1)
+SET_TARGET_PROPERTIES(ithicap PROPERTIES
+                              VERSION 0.1
+                              PUBLIC_HEADER include/ithicap.h)
 
 SET_TARGET_PROPERTIES(ithitools PROPERTIES VERSION 0.1)
 
 SET(TEST_EXES ithitest)
+
+INSTALL(TARGETS ithitools ithicap
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        PUBLIC_HEADER DESTINATION include)
+
