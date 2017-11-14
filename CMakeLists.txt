@@ -1,7 +1,9 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 CMAKE_POLICY(SET CMP0003 NEW)
 
 PROJECT(ithitools C CXX)
+
+set(CMAKE_CXX_STANDARD 11)
 
 INCLUDE_DIRECTORIES(src lib test include)
 
@@ -62,6 +64,18 @@ ADD_EXECUTABLE(ithitest
    test/PluginTest.cpp
 )
 
+ADD_LIBRARY(ithicap SHARED
+   lib/AddressFilter.cpp
+   lib/CaptureSummary.cpp
+   lib/DnsStats.cpp
+   lib/pcap_reader.cpp
+   lib/UsefulTransaction.cpp
+   lib/NamePattern.cpp
+   lib/DnscapPlugIn.cpp
+)
 
+SET_TARGET_PROPERTIES(ithicap PROPERTIES VERSION 0.1)
+
+SET_TARGET_PROPERTIES(ithitools PROPERTIES VERSION 0.1)
 
 SET(TEST_EXES ithitest)
