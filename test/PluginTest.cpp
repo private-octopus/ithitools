@@ -1,3 +1,5 @@
+
+#include <string.h>
 #include "dnscap_common.h"
 #include "ithicap.h"
 #include "pcap_reader.h"
@@ -131,7 +133,9 @@ bool PluginTest::DoTest()
 {
     bool ret = true;
     int argc = 3;
-    char * argv[] = { (char *) "test", "-o", (char *)pcap_test_debug };
+    char * argv[] = { (char *) "test",
+                      (char *) "-o",
+                      (char *) pcap_test_debug };
 
     my_bpftimeval ts = { 0, 0 };
 

@@ -3,7 +3,7 @@ CMAKE_POLICY(SET CMP0003 NEW)
 
 PROJECT(ithitools C CXX)
 
-INCLUDE_DIRECTORIES(src lib test)
+INCLUDE_DIRECTORIES(src lib test include)
 
 SET(ITHITOOLS_LIBRARY_FILES
    lib/AddressFilter.cpp
@@ -14,7 +14,7 @@ SET(ITHITOOLS_LIBRARY_FILES
    lib/UsefulTransaction.cpp
    lib/NamePattern.cpp
    lib/getopt.c
-   lib/DnscapPlugin.cpp
+   lib/DnscapPlugIn.cpp
 )
 
 SET(ITHITOOLS_TEST_LIBRARY_FILES
@@ -26,6 +26,7 @@ SET(ITHITOOLS_TEST_LIBRARY_FILES
    test/SaveTest.cpp
    test/testRfc6761.cpp
    test/PatternTest.cpp
+   test/PluginTest.cpp
 )
 
 ADD_EXECUTABLE(ithitools 
@@ -49,6 +50,7 @@ ADD_EXECUTABLE(ithitest
    lib/pcap_reader.cpp
    lib/UsefulTransaction.cpp
    lib/NamePattern.cpp
+   lib/DnscapPlugIn.cpp
    test/CaptureTest.cpp
    test/hashtest.cpp
    test/LoadTest.cpp
@@ -57,6 +59,7 @@ ADD_EXECUTABLE(ithitest
    test/SaveTest.cpp
    test/testRfc6761.cpp
    test/PatternTest.cpp
+   test/PluginTest.cpp
 )
 
 
