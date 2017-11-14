@@ -29,6 +29,7 @@
 #include "CaptureTest.h"
 #include "MetricTest.h"
 #include "PatternTest.h"
+#include "PluginTest.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -98,6 +99,15 @@ namespace ithiunit
         {
             // TODO: Your test code here
             PatternTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(Plugin)
+        {
+            // TODO: Your test code here
+            PluginTest test;
             bool ret = test.DoTest();
 
             Assert::AreEqual(ret, true);

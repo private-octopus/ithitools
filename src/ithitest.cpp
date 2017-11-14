@@ -38,6 +38,7 @@
 #include "CaptureTest.h"
 #include "MetricTest.h"
 #include "PatternTest.h"
+#include "PluginTest.h"
 
 int main(int argc, char ** argv)
 {
@@ -50,6 +51,7 @@ int main(int argc, char ** argv)
     CaptureTest capture_test;
     MetricTest metric_test;
     PatternTest pattern_test;
+    PluginTest plugin_test;
 
     if (!hash_test.DoTest())
     {
@@ -81,7 +83,11 @@ int main(int argc, char ** argv)
     }
     else if (!pattern_test.DoTest())
     {
-        fprintf(stderr, "Metric test fails.\n");
+        fprintf(stderr, "Pattern test fails.\n");
+    }
+    else if (!plugin_test.DoTest())
+    {
+        fprintf(stderr, "Plugin test fails.\n");
     }
     else
     {

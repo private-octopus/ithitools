@@ -13,6 +13,8 @@ SET(ITHITOOLS_LIBRARY_FILES
    lib/pcap_reader.cpp
    lib/UsefulTransaction.cpp
    lib/NamePattern.cpp
+   lib/getopt.c
+   lib/DnscapPlugin.cpp
 )
 
 SET(ITHITOOLS_TEST_LIBRARY_FILES
@@ -28,7 +30,6 @@ SET(ITHITOOLS_TEST_LIBRARY_FILES
 
 ADD_EXECUTABLE(ithitools 
    src/ithitools.cpp
-   src/getopt.c 
    lib/AddressFilter.cpp
    lib/CaptureSummary.cpp
    lib/DnsStats.cpp
@@ -36,6 +37,7 @@ ADD_EXECUTABLE(ithitools
    lib/pcap_reader.cpp
    lib/UsefulTransaction.cpp
    lib/NamePattern.cpp
+   lib/getopt.c
 )
 
 ADD_EXECUTABLE(ithitest
@@ -56,5 +58,7 @@ ADD_EXECUTABLE(ithitest
    test/testRfc6761.cpp
    test/PatternTest.cpp
 )
+
+
 
 SET(TEST_EXES ithitest)

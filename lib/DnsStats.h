@@ -186,6 +186,12 @@ public:
     BinHash<TldAsKey> registeredTld;
     LruHash<TldAsKey> tldStringUsage;
 
+    /* For the plug in */
+    void SubmitPacket(uint8_t * packet, uint32_t length,
+        uint8_t * source_addr, size_t source_addr_length,
+        uint8_t * dest_addr, size_t dest_addr_length);
+
+    /* For the command line tools */
     bool LoadPcapFiles(size_t nb_files, char const ** fileNames);
     bool ExportToCaptureSummary(CaptureSummary * cs);
     

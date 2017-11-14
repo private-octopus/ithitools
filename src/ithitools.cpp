@@ -154,6 +154,12 @@ int main(int argc, char ** argv)
                 exec_mode = 1;
             }
             break;
+        case 't':
+            fprintf(stderr, "Sorry, update list of registered TLD not implemented yet.\n");
+            break;
+        case 'u':
+            fprintf(stderr, "Sorry, update list of special usage names (RFC6761) not implemented yet.\n");
+            break;
         }
     }
 
@@ -170,7 +176,6 @@ int main(int argc, char ** argv)
 
     if (exec_mode == 0)
     {
-#if 1
         if (optind >= argc)
         {
             fprintf(stderr, "No capture file to analyze!\n");
@@ -200,90 +205,6 @@ int main(int argc, char ** argv)
                 printf("Capture processing succeeded.\n");
             }
         }
-#else
-        /* Simplified style params */
-        bool atLeastOne = false;
-        int nb_records_read = 0;
-        int nb_extracted = 0;
-        int nb_udp_dns = 0;
-        int nb_udp_dns_frag = 0;
-        int nb_udp_dns_extract = 0;
-
-        do {
-            pcap_reader reader;
-
-            if (optind < argc)
-            {
-                inputFile = argv[optind++];
-            }
-
-            if (!reader.Open(inputFile, extract_file))
-            {
-                fprintf(stderr, "Could not open PCAP file <%s>.\n", inputFile);
-                exit_code = -1;
-            }
-            else
-            {
-                printf("Open <%s> succeeds.\n    magic = %x, v =  %d/%d, lmax = %d, net = %x\n",
-                    inputFile,
-                    reader.header.magic_number,
-                    reader.header.version_major,
-                    reader.header.version_minor,
-                    reader.header.snaplen,
-                    reader.header.network
-                );
-
-                while (reader.ReadNext())
-                {
-                    nb_records_read++;
-
-                    if (reader.tp_version == 17 &&
-                        (reader.tp_port1 == 53 || reader.tp_port2 == 53))
-                    {
-                        if (reader.is_fragment)
-                        {
-                            nb_udp_dns_frag++;
-                        }
-                        else
-                        {
-                            stats.SubmitPacket(reader.buffer + reader.tp_offset + 8,
-                                reader.tp_length - 8, reader.ip_version, reader.buffer + reader.ip_offset);
-                            nb_udp_dns++;
-
-                            /* Apply default logic here for selecting what to extract */
-                            if (stats.error_flags > 0 && stats.error_flags < 512)
-                            {
-                                if (extract_by_error_type[stats.error_flags] < 5 ||
-                                    (stats.error_flags == 64 &&
-                                        extract_by_error_type[stats.error_flags] < 512))
-                                {
-                                    reader.WriteExtract();
-                                    extract_by_error_type[stats.error_flags] += 1;
-                                    nb_extracted++;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                printf("Read %d records, %d dns records.\nSkipped %d fragments.\nExtracted %d records.\n",
-                    nb_records_read, nb_udp_dns, nb_udp_dns_frag, nb_extracted);
-            }
-        } while (optind < argc && exit_code == 0);
-
-        if (exit_code == 0)
-        {
-            if (stats.ExportToCsv(out_file))
-            {
-                printf("Exported results to <%s>\n", out_file);
-            }
-            else
-            {
-                printf("Could not write to %s\n", out_file);
-                exit_code = -1;
-            }
-        }
-#endif
     }
     else if (exec_mode == 1)
     {

@@ -1171,11 +1171,23 @@ bool DnsStats::LoadPcapFile(char const * fileName)
 
 void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header)
 {
-    bool is_response;
     uint8_t * source_addr;
     size_t source_addr_length;
     uint8_t * dest_addr;
     size_t dest_addr_length;
+
+    GetSourceAddress(ip_type, ip_header, &source_addr, &source_addr_length);
+    GetDestAddress(ip_type, ip_header, &dest_addr, &dest_addr_length);
+
+    SubmitPacket(packet, length, source_addr, source_addr_length,
+        dest_addr, dest_addr_length);
+}
+
+void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
+    uint8_t * source_addr, size_t source_addr_length,
+    uint8_t * dest_addr, size_t dest_addr_length)
+{
+    bool is_response;
 
     bool has_header = true;
     uint32_t flags = 0;
@@ -1207,8 +1219,6 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
     else
     {
         is_response = ((packet[2] & 128) != 0);
-        GetSourceAddress(ip_type, ip_header, &source_addr, &source_addr_length);
-        GetDestAddress(ip_type, ip_header, &dest_addr, &dest_addr_length);
 
         if (is_response)
         {
