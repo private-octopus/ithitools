@@ -328,9 +328,12 @@ ithimetrics::ithimetrics()
     :
     nb_rootqueries(0),
     nb_userqueries(0),
+    nb_nondelegated(0),
+    nb_delegated(0),
     m3_1(0),
     m3_2(0),
-    m33_4(0)
+    m33_4(0),
+    m4_1(0)
 {
 }
 
@@ -396,10 +399,7 @@ bool ithimetrics::Save(char const * file_name)
 
         fprintf(F, "M3.3.4, , %6f,\n", (m33_4 > 0)?m33_4:0);
 
-        for (size_t i = 0; i < m4_1.size(); i++)
-        {
-            fprintf(F, "M4.1, %s, %6f,\n", m4_1[i].domain, m4_1[i].frequency);
-        }
+        fprintf(F, "M4.1, , %6f,\n", m4_1);
 
         for (size_t i = 0; i < m4_2.size(); i++)
         {
@@ -410,6 +410,7 @@ bool ithimetrics::Save(char const * file_name)
         {
             fprintf(F, "M4.3, %s, %6f,\n", m4_3[i].domain, m4_3[i].frequency);
         }
+
         for (size_t i = 0; i < m6.size(); i++)
         {
             fprintf(F, "%s.1, , %6f,\n", m6[i].m6_prefix, m6[i].m6_x_1);
@@ -526,7 +527,21 @@ void ithimetrics::GetM33_3(CaptureSummary * cs)
 
 void ithimetrics::GetM4_1(CaptureSummary * cs)
 {
-    GetM4_X(cs, REGISTRY_DNS_Tld_Usage, &m4_1, 0);
+    nb_nondelegated = cs->GetCountByNumber(
+        DnsStats::GetTableName(REGISTRY_DNS_TLD_Usage_Count), 0);
+    nb_delegated = cs->GetCountByNumber(
+        DnsStats::GetTableName(REGISTRY_DNS_TLD_Usage_Count), 1);
+    nb_userqueries = nb_nondelegated + nb_delegated;
+
+    if (nb_userqueries > 0)
+    {
+        m4_1 = (double)nb_delegated;
+        m4_1 /= (double)nb_userqueries;
+    }
+    else
+    {
+        m4_1 = 0;
+    }
 }
 
 void ithimetrics::GetM4_2(CaptureSummary * cs)
@@ -547,13 +562,7 @@ void ithimetrics::GetM3_X(CaptureSummary * cs, uint32_t table_id,
 
 void ithimetrics::GetM4_X(CaptureSummary * cs, uint32_t table_id, std::vector<metric4_line_t>* mstring_x, double min_share)
 {
-    /* compute nb_userqueries, and use it */
-    if (nb_userqueries == 0)
-    {
-        nb_userqueries = cs->GetCountByNumber(
-            DnsStats::GetTableName(REGISTRY_DNS_TLD_Usage_Count), 0);
-    }
-
+    /* compute using nb_userqueries */
     if (nb_userqueries > 0)
     {
         GetStringM_X(cs, table_id, mstring_x, nb_userqueries, min_share);

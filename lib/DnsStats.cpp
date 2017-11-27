@@ -1333,9 +1333,6 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                 /* Perform statistics on user traffic */
                 TldAsKey key(packet + tld_offset + 1, packet[tld_offset]);
 
-                /* Keep a count */
-                SubmitRegistryNumber(REGISTRY_DNS_TLD_Usage_Count, 0);
-
                 /* Check whether this TLD is in the registered list */
                 if (registeredTld.GetCount() == 0)
                 {
@@ -1345,26 +1342,32 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                 if (registeredTld.Retrieve(&key) != NULL)
                 {
                     /* This is a registered TLD */
-                    SubmitRegistryString(REGISTRY_DNS_Tld_Usage, packet[tld_offset], packet + tld_offset + 1);
-                }
-                else if (IsRfc6761Tld(packet + tld_offset + 1, packet[tld_offset]))
-                {
-                    SubmitRegistryString(REGISTRY_DNS_RFC6761_Usage, packet[tld_offset], packet + tld_offset + 1);
+                    SubmitRegistryNumber(REGISTRY_DNS_TLD_Usage_Count, 1);
                 }
                 else
                 {
-                    bool stored = false;
+                    /* Keep a count */
+                    SubmitRegistryNumber(REGISTRY_DNS_TLD_Usage_Count, 0);
 
-                    if (tldStringUsage.GetCount() >= max_tld_string_usage_count)
+                    if (IsRfc6761Tld(packet + tld_offset + 1, packet[tld_offset]))
                     {
-                        TldAsKey * removed = tldStringUsage.RemoveLRU();
-                        if (removed != NULL)
-                        {
-                            delete removed;
-                        }
+                        SubmitRegistryString(REGISTRY_DNS_RFC6761_Usage, packet[tld_offset], packet + tld_offset + 1);
                     }
+                    else
+                    {
+                        bool stored = false;
 
-                    tldStringUsage.InsertOrAdd(&key, true, &stored);
+                        if (tldStringUsage.GetCount() >= max_tld_string_usage_count)
+                        {
+                            TldAsKey * removed = tldStringUsage.RemoveLRU();
+                            if (removed != NULL)
+                            {
+                                delete removed;
+                            }
+                        }
+
+                        tldStringUsage.InsertOrAdd(&key, true, &stored);
+                    }
                 }
             }
         }

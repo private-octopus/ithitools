@@ -45,6 +45,8 @@ public:
 private:
     uint32_t nb_rootqueries;
     uint32_t nb_userqueries;
+    uint32_t nb_nondelegated;
+    uint32_t nb_delegated;
 
     double m3_1;
     double m3_2;
@@ -52,7 +54,7 @@ private:
     std::vector<metric4_line_t> m33_2;
     std::vector<metric4_line_t> m33_3;
     double m33_4;
-    std::vector<metric4_line_t> m4_1;
+    double m4_1;
     std::vector<metric4_line_t> m4_2;
     std::vector<metric4_line_t> m4_3;
     std::vector<metric6_line_t> m6;
