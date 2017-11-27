@@ -1,9 +1,11 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.11)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.1)
 CMAKE_POLICY(SET CMP0003 NEW)
 
 PROJECT(ithitools C CXX)
 
-INCLUDE_DIRECTORIES(src lib test)
+SET(CMAKE_CXX_STANDARD 11)
+
+INCLUDE_DIRECTORIES(src lib test include)
 
 SET(ITHITOOLS_LIBRARY_FILES
    lib/AddressFilter.cpp
@@ -14,7 +16,7 @@ SET(ITHITOOLS_LIBRARY_FILES
    lib/UsefulTransaction.cpp
    lib/NamePattern.cpp
    lib/getopt.c
-   lib/DnscapPlugin.cpp
+   lib/DnscapPlugIn.cpp
 )
 
 SET(ITHITOOLS_TEST_LIBRARY_FILES
@@ -26,6 +28,7 @@ SET(ITHITOOLS_TEST_LIBRARY_FILES
    test/SaveTest.cpp
    test/testRfc6761.cpp
    test/PatternTest.cpp
+   test/PluginTest.cpp
 )
 
 ADD_EXECUTABLE(ithitools 
@@ -49,6 +52,7 @@ ADD_EXECUTABLE(ithitest
    lib/pcap_reader.cpp
    lib/UsefulTransaction.cpp
    lib/NamePattern.cpp
+   lib/DnscapPlugIn.cpp
    test/CaptureTest.cpp
    test/hashtest.cpp
    test/LoadTest.cpp
@@ -57,8 +61,29 @@ ADD_EXECUTABLE(ithitest
    test/SaveTest.cpp
    test/testRfc6761.cpp
    test/PatternTest.cpp
+   test/PluginTest.cpp
 )
 
+ADD_LIBRARY(ithicap SHARED
+   lib/AddressFilter.cpp
+   lib/CaptureSummary.cpp
+   lib/DnsStats.cpp
+   lib/pcap_reader.cpp
+   lib/UsefulTransaction.cpp
+   lib/NamePattern.cpp
+   lib/DnscapPlugIn.cpp
+)
 
+SET_TARGET_PROPERTIES(ithicap PROPERTIES
+                              VERSION 0.1
+                              PUBLIC_HEADER include/ithicap.h)
+
+SET_TARGET_PROPERTIES(ithitools PROPERTIES VERSION 0.1)
 
 SET(TEST_EXES ithitest)
+
+INSTALL(TARGETS ithitools ithicap
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        PUBLIC_HEADER DESTINATION include)
+
