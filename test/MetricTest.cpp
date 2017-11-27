@@ -24,9 +24,15 @@
 #include "MetricTest.h"
 
 #ifdef _WINDOWS
+#ifndef _WINDOWS64
 static char const * metric_test_input = "..\\data\\tiny-capture.csv";
 static char const * metric_test_output = "metric-test.csv";
 static char const * metric_test_ref = "..\\data\\tiny-metrics.csv";
+#else
+static char const * metric_test_input = "..\\..\\data\\tiny-capture.csv";
+static char const * metric_test_output = "metric-test.csv";
+static char const * metric_test_ref = "..\\..\\data\\tiny-metrics.csv";
+#endif
 #else
 static char const * metric_test_input = "data/tiny-capture.csv";
 static char const * metric_test_output = "metric-test.csv";

@@ -950,17 +950,17 @@ void DnsStats::ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id,
     for (size_t i = 0; i < lines.size(); i++)
     {
         if (export_count < max_tld_leakage_count &&
-            !IsNumericDomain(lines[i]->tld, lines[i]->tld_len))
+            !IsNumericDomain(lines[i]->tld, (uint32_t) lines[i]->tld_len))
         {
             SubmitRegistryStringAndCount(registry_id,
-                lines[i]->tld_len, lines[i]->tld, lines[i]->count);
+                (uint32_t) lines[i]->tld_len, lines[i]->tld, lines[i]->count);
             export_count++;
         }
         else if (do_accounting)
         {
             /* Add count of leaks by length -- should replace by pattern match later */
             SubmitRegistryNumberAndCount(REGISTRY_DNS_LeakByLength, 
-                lines[i]->tld_len, lines[i]->count);
+                (uint32_t) lines[i]->tld_len, lines[i]->count);
         }
         else if (export_count >= max_tld_leakage_count)
         {
@@ -1018,7 +1018,7 @@ bool DnsStats::CheckAddress(uint8_t* addr, size_t len)
                 if (AddressFilter::AddressText(addr, len, addr_text, sizeof(addr_text)))
                 {
                     SubmitRegistryString(REGISTRY_TOOL_FrequentAddress,
-                        strlen(addr_text), (uint8_t *) addr_text);
+                        (uint32_t) strlen(addr_text), (uint8_t *) addr_text);
                 }
 
                 ret = false;
@@ -1291,7 +1291,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                                 if (removed != NULL)
                                 {
                                     /* Add count of leaks by length -- should replace by pattern match later */
-                                    SubmitRegistryNumber(REGISTRY_DNS_LeakByLength, removed->tld_len);
+                                    SubmitRegistryNumber(REGISTRY_DNS_LeakByLength, (uint32_t) removed->tld_len);
 
                                     delete removed;
                                 }

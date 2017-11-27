@@ -23,8 +23,13 @@
 #include "SaveTest.h"
 
 #ifdef _WINDOWS
+#ifndef _WINDOWS64
 static char const * good_file = "..\\data\\summary1.csv";
 static char const * saved_file = "save_test.csv";
+#else
+static char const * good_file = "..\\..\\data\\summary1.csv";
+static char const * saved_file = "save_test.csv";
+#endif
 #else
 static char const * good_file = "data/summary1.csv";
 static char const * saved_file = "save_test.csv";

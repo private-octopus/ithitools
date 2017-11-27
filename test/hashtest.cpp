@@ -339,7 +339,7 @@ public:
         }
 
         memcpy(this->text, text, text_len);
-        this->text_len = text_len;
+        this->text_len = (uint32_t) text_len;
     }
 
     ~hashTestKey()

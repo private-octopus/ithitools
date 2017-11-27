@@ -487,7 +487,7 @@ int CaptureSummary::read_number(int * number, size_t start, char * buffer, size_
         }
     }
 
-    return start;
+    return (int) start;
 }
 
 int CaptureSummary::read_string(char* text, int text_max, size_t start, char * buffer, size_t buffer_max)
@@ -580,7 +580,7 @@ int CaptureSummary::read_string(char* text, int text_max, size_t start, char * b
         }
     }
 
-    return start;
+    return (int) start;
 }
 
 int CaptureSummary::compare_string(char const * x, char const * y)
