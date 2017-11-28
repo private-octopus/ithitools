@@ -424,8 +424,8 @@ bool PatternTest::TestRandom(char const  ** test_strings,
         {
             bool test_random = NamePattern::CheckAlphaRandom(val, len);
 
-            if ((test_random & !is_random) ||
-                (!test_random & is_random))
+            if ((test_random && (!is_random)) ||
+                ((!test_random) && is_random))
             {
                 nb_fail++;
             }
