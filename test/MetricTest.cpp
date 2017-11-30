@@ -28,15 +28,19 @@
 static char const * metric_test_input = "..\\data\\tiny-capture.csv";
 static char const * metric_test_output = "metric-test.csv";
 static char const * metric_test_ref = "..\\data\\tiny-metrics.csv";
+static char const * root_zone_file = "..\\data\\root.zone";
+
 #else
 static char const * metric_test_input = "..\\..\\data\\tiny-capture.csv";
 static char const * metric_test_output = "metric-test.csv";
 static char const * metric_test_ref = "..\\..\\data\\tiny-metrics.csv";
+static char const * root_zone_file = "..\\..\\data\\root.zone";
 #endif
 #else
 static char const * metric_test_input = "data/tiny-capture.csv";
 static char const * metric_test_output = "metric-test.csv";
 static char const * metric_test_ref = "data/tiny-metrics.csv";
+static char const * root_zone_file = "data/root.zone";
 #endif
 
 
@@ -58,7 +62,12 @@ bool MetricTest::DoTest()
     {
         ithimetrics met;
 
-        ret = met.GetMetrics(&cs);
+        ret = met.GetM7(root_zone_file);
+        
+        if (ret)
+        {
+            ret = met.GetMetrics(&cs);
+        }
 
         if (ret)
         {

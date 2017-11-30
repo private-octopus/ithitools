@@ -152,6 +152,7 @@
     <ClCompile Include="..\lib\DnsStats.cpp" />
     <ClCompile Include="..\lib\getopt.c" />
     <ClCompile Include="..\lib\ithimetrics.cpp" />
+    <ClCompile Include="..\lib\M7Getter.cpp" />
     <ClCompile Include="..\lib\NamePattern.cpp" />
     <ClCompile Include="..\lib\pcap_reader.cpp" />
     <ClCompile Include="..\lib\UsefulTransaction.cpp" />
@@ -169,6 +170,7 @@
     <ClInclude Include="..\lib\HashWriteOnceGeneric.h" />
     <ClInclude Include="..\lib\ithimetrics.h" />
     <ClInclude Include="..\lib\linktype.h" />
+    <ClInclude Include="..\lib\M7Getter.h" />
     <ClInclude Include="..\lib\NamePattern.h" />
     <ClInclude Include="..\lib\pcap_reader.h" />
     <ClInclude Include="..\lib\UsefulTransaction.h" />

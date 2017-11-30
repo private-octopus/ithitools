@@ -45,6 +45,9 @@
     <ClCompile Include="..\lib\getopt.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\lib\M7Getter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\targetver.h">
@@ -90,6 +93,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\getopt.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\M7Getter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

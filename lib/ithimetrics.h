@@ -39,6 +39,7 @@ public:
     ~ithimetrics();
 
     bool GetMetrics(CaptureSummary* cs);
+    bool GetM7(char const * zone_file_name);
 
     bool Save(char const * file_name);
 
@@ -58,6 +59,7 @@ private:
     std::vector<metric4_line_t> m4_2;
     std::vector<metric4_line_t> m4_3;
     std::vector<metric6_line_t> m6;
+    double m7;
 
     void GetM3_1(CaptureSummary* cs);
     void GetM3_2(CaptureSummary* cs);

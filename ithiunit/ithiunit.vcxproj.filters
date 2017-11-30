@@ -84,6 +84,9 @@
     <ClInclude Include="..\test\PluginTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\lib\M7Getter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -144,6 +147,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\test\PluginTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\M7Getter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

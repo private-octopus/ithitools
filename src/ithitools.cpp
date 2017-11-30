@@ -58,6 +58,8 @@ int usage()
     fprintf(stderr, "  -m metric.csv	  output file containing the computed metric.\n");
     fprintf(stderr, "  -t tld-file.txt    Text file containing a list of registered TLD, one per line.\n");
     fprintf(stderr, "  -u tld-file.txt	  Text file containing special usage TLD (RFC6761).\n");
+    fprintf(stderr, "  -7 root.zone  	  Compute the metric M7 using the specified zone-file.\n");
+    fprintf(stderr, "                  	  Only used when -m argument is set for metric computation.\n");
 
     return -1;
 }
@@ -79,13 +81,14 @@ int main(int argc, char ** argv)
     char const * excluded_addr_file = NULL;
     char const * table_version_addr_file = NULL;
     char const * metric_file = NULL;
+    char const * root_zone_file = NULL;
     int nb_names_in_tld = 2048;
     char * extract_file = NULL;
     int extract_by_error_type[512] = { 0 };
 
     /* Get the parameters */
     int opt;
-    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:m:t:u:hcsf")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:m:t:u:7:hcsf")) != -1)
     {
         switch (opt)
         {
@@ -159,6 +162,9 @@ int main(int argc, char ** argv)
             break;
         case 'u':
             fprintf(stderr, "Sorry, update list of special usage names (RFC6761) not implemented yet.\n");
+            break;
+        case '7':
+            root_zone_file = optarg;
             break;
         }
     }
@@ -247,7 +253,12 @@ int main(int argc, char ** argv)
     {
         ithimetrics met;
 
-        if (!met.GetMetrics(&cs))
+        if (root_zone_file != NULL && !met.GetM7(root_zone_file))
+        {
+            fprintf(stderr, "Cannot compute the ITHI metrics M7 from <root_zone_file>.\n");
+            exit_code = -1;
+        }
+        else if (!met.GetMetrics(&cs))
         {
             fprintf(stderr, "Cannot compute the ITHI metrics.\n");
             exit_code = -1;

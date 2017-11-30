@@ -24,6 +24,7 @@
 #include <algorithm>
 #include "DnsStats.h"
 #include "CaptureSummary.h"
+#include "M7Getter.h"
 #include "ithimetrics.h"
 
 /* Initial definition of the registry tables */
@@ -333,7 +334,8 @@ ithimetrics::ithimetrics()
     m3_1(0),
     m3_2(0),
     m33_4(0),
-    m4_1(0)
+    m4_1(0),
+    m7(0)
 {
 }
 
@@ -355,6 +357,27 @@ bool ithimetrics::GetMetrics(CaptureSummary * cs)
     GetM4_2(cs);
     GetM4_3(cs);
     GetM6(cs);
+
+    return ret;
+}
+
+bool ithimetrics::GetM7(char const * zone_file_name)
+{
+    M7Getter getter;
+
+    bool ret = getter.GetM7(zone_file_name);
+
+    if (ret)
+    {
+        if (getter.nb_tld_queried > 0)
+        {
+            m7 = ((double)getter.nb_ds_present) / ((double)getter.nb_tld_queried);
+        }
+        else
+        {
+            ret = false;
+        }
+    }
 
     return ret;
 }
@@ -422,6 +445,8 @@ bool ithimetrics::Save(char const * file_name)
                     m6[i].m6_x_3[j].parameter_count);
             }
         }
+
+        fprintf(F, "M7, , %6f,\n", m7);
     }
 
     if (F != NULL)
