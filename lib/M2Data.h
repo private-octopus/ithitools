@@ -18,7 +18,7 @@ enum abuseType {
 };
 
 typedef struct st_M2DataLine_t {
-    char name[64];
+    char name[128];
     union {
         int RegistrarId;
         char TldType[64];

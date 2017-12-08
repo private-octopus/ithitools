@@ -1,0 +1,7 @@
+As of 31 January 2017
+Registrar,IANA ID,Domains in zone,Abusive Domains,Abuse Score,Phishing Domains,Malware Domains,Spam Domains,Botnet C&C Domains,Newly Listed Abuse Domains This Month,Abuse Domains end of last month(2017-9-30),Abuse Score end of last month(2017-9-30),Total abuse domains in last 12 months
+"Abcdef.xyzt, LLC",146,"6,789,123","21,813",0.32,234,345,"21,111",123,"27,156","20,722",0.31,"250,849"
+1&amp;1 BlaBlaBla XY,83,"432,109","1,336",0.31,34,45,"1,234",23,"1,728","1,269",0.29,"15,364"
+"Ghijkl Technologies, Inc. Foo - Subsidiary of Ghijkl, Inc. USA",106,"1,234,567",547,0.04,45,34,456,12,4938,519,0.04,"6,290"
+"Absurdistan Economic &amp; Industry Co., Ltd",2485,"234,567",349,0.15,4,0,345,0,938,331,0.14,"4,013"
+Reserved for non-billable transactions where Registry Operator acts as Registrar,9999,"123,456","65,758",53.26,0,"12,345","43,210","10,203",493,"62,470",50.80,"756,217"

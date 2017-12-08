@@ -164,6 +164,7 @@
     <ClCompile Include="..\test\CsvTest.cpp" />
     <ClCompile Include="..\test\hashtest.cpp" />
     <ClCompile Include="..\test\LoadTest.cpp" />
+    <ClCompile Include="..\test\M2DataTest.cpp" />
     <ClCompile Include="..\test\MergeTest.cpp" />
     <ClCompile Include="..\test\MetricTest.cpp" />
     <ClCompile Include="..\test\PatternTest.cpp" />
@@ -191,6 +192,7 @@
     <ClInclude Include="..\test\CsvTest.h" />
     <ClInclude Include="..\test\hashtest.h" />
     <ClInclude Include="..\test\LoadTest.h" />
+    <ClInclude Include="..\test\M2DataTest.h" />
     <ClInclude Include="..\test\MergeTest.h" />
     <ClInclude Include="..\test\MetricTest.h" />
     <ClInclude Include="..\test\PatternTest.h" />

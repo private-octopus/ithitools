@@ -46,7 +46,22 @@ bool M2Data::Load(char const * monthly_csv_file_name)
         int start = 0;
         memset(&line, 0, sizeof(M2DataLine_t));
 
-        start = CsvHelper::read_string(line.name, sizeof(line.name), start, buffer, sizeof(buffer));
+        if (M2Type == M2DataType::TLD_old)
+        {
+            start = CsvHelper::read_string(line.name + 1, sizeof(line.name) - 1, start, buffer, sizeof(buffer));
+            if (line.name[1] == 0)
+            {
+                line.name[0] = 0;
+            }
+            else
+            {
+                line.name[0] = '.';
+            }
+        }
+        else
+        {
+            start = CsvHelper::read_string(line.name, sizeof(line.name), start, buffer, sizeof(buffer));
+        }
         switch (M2Type)
         {
         case TLD:

@@ -40,6 +40,7 @@
 #include "PatternTest.h"
 #include "PluginTest.h"
 #include "CsvTest.h"
+#include "M2DataTest.h"
 
 int main(int argc, char ** argv)
 {
@@ -54,6 +55,7 @@ int main(int argc, char ** argv)
     PatternTest pattern_test;
     PluginTest plugin_test;
     CsvTest csv_test;
+    M2DataTest m2data_test;
 
     if (!hash_test.DoTest())
     {
@@ -94,6 +96,10 @@ int main(int argc, char ** argv)
     else if (!csv_test.DoTest())
     {
         fprintf(stderr, "CSV test fails.\n");
+    }
+    else if (!m2data_test.DoTest())
+    {
+        fprintf(stderr, "M2 data test fails.\n");
     }
     else
     {

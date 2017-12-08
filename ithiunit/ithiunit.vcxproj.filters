@@ -96,6 +96,9 @@
     <ClInclude Include="..\test\CsvTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\test\M2DataTest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -168,6 +171,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\test\CsvTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\test\M2DataTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
