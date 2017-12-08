@@ -68,8 +68,6 @@ public:
 
 private:
     std::vector<CaptureLine *> summary;
-    int read_number(int* number, size_t start, char * buffer, size_t buffer_max);
-    int read_string(char* text, int text_max, size_t start, char * buffer, size_t buffer_max);
 
     static bool CaptureLineIsLower(CaptureLine * x, CaptureLine * y);
     static bool CaptureLineIsSameKey(CaptureLine * x, CaptureLine * y);

@@ -39,6 +39,7 @@
 #include "MetricTest.h"
 #include "PatternTest.h"
 #include "PluginTest.h"
+#include "CsvTest.h"
 
 int main(int argc, char ** argv)
 {
@@ -52,6 +53,7 @@ int main(int argc, char ** argv)
     MetricTest metric_test;
     PatternTest pattern_test;
     PluginTest plugin_test;
+    CsvTest csv_test;
 
     if (!hash_test.DoTest())
     {
@@ -88,6 +90,10 @@ int main(int argc, char ** argv)
     else if (!plugin_test.DoTest())
     {
         fprintf(stderr, "Plugin test fails.\n");
+    }
+    else if (!csv_test.DoTest())
+    {
+        fprintf(stderr, "CSV test fails.\n");
     }
     else
     {

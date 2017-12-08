@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <algorithm>
 #include <string.h>
+#include "CsvHelper.h"
 #include "CaptureSummary.h"
 
 CaptureSummary::CaptureSummary()
@@ -58,17 +59,17 @@ bool CaptureSummary::Load(char const * file_name)
     while ( ret && fgets(buffer, sizeof(buffer), F))
     {
         int start = 0;
-        start = read_string(line.registry_name, sizeof(line.registry_name), start, buffer, sizeof(buffer));
-        start = read_number(&line.key_type, start, buffer, sizeof(buffer));
+        start = CsvHelper::read_string(line.registry_name, sizeof(line.registry_name), start, buffer, sizeof(buffer));
+        start = CsvHelper::read_number(&line.key_type, start, buffer, sizeof(buffer));
         if (line.key_type == 0)
         {
-            start = read_number(&line.key_number, start, buffer, sizeof(buffer));
+            start = CsvHelper::read_number(&line.key_number, start, buffer, sizeof(buffer));
         }
         else
         {
-            start = read_string(line.key_value, sizeof(line.key_value), start, buffer, sizeof(buffer));
+            start = CsvHelper::read_string(line.key_value, sizeof(line.key_value), start, buffer, sizeof(buffer));
         }
-        (void)read_number(&line.count, start, buffer, sizeof(buffer));
+        (void)CsvHelper::read_number(&line.count, start, buffer, sizeof(buffer));
 
         /* TODO: check that the parsing is good */
 
@@ -405,182 +406,6 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
     }
 
     return ret;
-}
-
-int CaptureSummary::read_number(int * number, size_t start, char * buffer, size_t buffer_max)
-{
-    int x = 0;
-    char text[64];
-    int text_max = sizeof(text);
-
-
-    /* Skip blanks */
-    while (start < buffer_max && (buffer[start] == ' ' || buffer[start] == '\t'))
-    {
-        start++;
-    }
-
-    /* If quoted, remove the quotes */
-    if (start < buffer_max && buffer[start] == '"')
-    {
-        if (x < (text_max - 1))
-        {
-            text[x] = buffer[start];
-            x++;
-        }
-        start++;
-        while (start < buffer_max && buffer[start] != 0)
-        {
-            if (buffer[start] == '"')
-            {
-                /* Copy the quote and break. */
-                if (x < (text_max - 1))
-                {
-                    text[x] = buffer[start];
-                    x++;
-                }
-                start++;
-                break;
-            }
-            else
-            {
-                if (x < (text_max - 1))
-                {
-                    text[x] = buffer[start];
-                    x++;
-                }
-                start++;
-            }
-        }
-    }
-    else
-    {
-        while (start < buffer_max && buffer[start] != 0 && buffer[start] != ',')
-        {
-            if (x < (text_max - 1))
-            {
-                text[x] = buffer[start];
-                x++;
-            }
-            start++;
-        }
-    }
-    text[x] = 0;
-
-    *number = atoi(text);
-
-    /* Skip comma */
-    while (start < buffer_max)
-    {
-        if (buffer[start] == ',')
-        {
-            start++;
-            break;
-        }
-        else if (buffer[start] == ' ' || buffer[start] == '\t')
-        {
-            start++;
-        }
-        else
-        {
-            break;
-        }
-    }
-
-    return (int) start;
-}
-
-int CaptureSummary::read_string(char* text, int text_max, size_t start, char * buffer, size_t buffer_max)
-{
-    int x = 0;
-
-    /* Skip blanks */
-    while (start < buffer_max && (buffer[start] == ' ' || buffer[start] == '\t'))
-    {
-        start++;
-    }
-
-    /* If quoted, copy quoted, else copy */
-    if (start < buffer_max && buffer[start] == '"')
-    {
-        if (x < (text_max - 1))
-        {
-            text[x] = buffer[start];
-            x++;
-        }
-        start++;
-        while (start < buffer_max && buffer[start] != 0)
-        {
-            if (buffer[start] == '"')
-            {
-                /* Copy the quote and skip it. */
-                if (x < (text_max - 1))
-                {
-                    text[x] = buffer[start];
-                    x++;
-                }
-                start++;
-                /* Test whether there is a double quote */
-                if (start < buffer_max && buffer[start] == '"')
-                {
-                    /* copy the double quote and continue */
-                    if (x < (text_max - 1))
-                    {
-                        text[x] = buffer[start];
-                        x++;
-                    }
-                    start++;
-                }
-                else
-                {
-                    /* This was the final quote */
-                    break;
-                }
-            }
-            else
-            {
-                if (x < (text_max - 1))
-                {
-                    text[x] = buffer[start];
-                    x++;
-                }
-                start++;
-            }
-        }
-    }
-    else
-    {
-        while (start < buffer_max && buffer[start] != 0 && buffer[start] != ',')
-        {
-            if (x < (text_max - 1))
-            {
-                text[x] = buffer[start];
-                x++;
-            }
-            start++;
-        }
-    }
-    text[x] = 0;
-
-    /* Skip comma */
-    while (start < buffer_max)
-    {
-        if (buffer[start] == ',')
-        {
-            start++;
-            break;
-        }
-        else if (buffer[start] == ' ' || buffer[start] == '\t')
-        {
-            start++;
-        }
-        else
-        {
-            break;
-        }
-    }
-
-    return (int) start;
 }
 
 int CaptureSummary::compare_string(char const * x, char const * y)

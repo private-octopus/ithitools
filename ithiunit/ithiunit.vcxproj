@@ -154,6 +154,7 @@
   <ItemGroup>
     <ClInclude Include="..\lib\AddressFilter.h" />
     <ClInclude Include="..\lib\CaptureSummary.h" />
+    <ClInclude Include="..\lib\CsvHelper.h" />
     <ClInclude Include="..\lib\DnsStats.h" />
     <ClInclude Include="..\lib\DnsTypes.h" />
     <ClInclude Include="..\lib\getopt.h" />
@@ -161,11 +162,13 @@
     <ClInclude Include="..\lib\HashWriteOnceGeneric.h" />
     <ClInclude Include="..\lib\ithimetrics.h" />
     <ClInclude Include="..\lib\linktype.h" />
+    <ClInclude Include="..\lib\M2Data.h" />
     <ClInclude Include="..\lib\M7Getter.h" />
     <ClInclude Include="..\lib\NamePattern.h" />
     <ClInclude Include="..\lib\pcap_reader.h" />
     <ClInclude Include="..\lib\UsefulTransaction.h" />
     <ClInclude Include="..\test\CaptureTest.h" />
+    <ClInclude Include="..\test\CsvTest.h" />
     <ClInclude Include="..\test\hashtest.h" />
     <ClInclude Include="..\test\LoadTest.h" />
     <ClInclude Include="..\test\MergeTest.h" />
@@ -180,15 +183,18 @@
   <ItemGroup>
     <ClCompile Include="..\lib\AddressFilter.cpp" />
     <ClCompile Include="..\lib\CaptureSummary.cpp" />
+    <ClCompile Include="..\lib\CsvHelper.cpp" />
     <ClCompile Include="..\lib\DnscapPlugIn.cpp" />
     <ClCompile Include="..\lib\DnsStats.cpp" />
     <ClCompile Include="..\lib\getopt.c" />
     <ClCompile Include="..\lib\ithimetrics.cpp" />
+    <ClCompile Include="..\lib\M2Data.cpp" />
     <ClCompile Include="..\lib\M7Getter.cpp" />
     <ClCompile Include="..\lib\NamePattern.cpp" />
     <ClCompile Include="..\lib\pcap_reader.cpp" />
     <ClCompile Include="..\lib\UsefulTransaction.cpp" />
     <ClCompile Include="..\test\CaptureTest.cpp" />
+    <ClCompile Include="..\test\CsvTest.cpp" />
     <ClCompile Include="..\test\hashtest.cpp" />
     <ClCompile Include="..\test\LoadTest.cpp" />
     <ClCompile Include="..\test\MergeTest.cpp" />

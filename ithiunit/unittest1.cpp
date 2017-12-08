@@ -30,6 +30,7 @@
 #include "MetricTest.h"
 #include "PatternTest.h"
 #include "PluginTest.h"
+#include "CsvTest.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -108,6 +109,15 @@ namespace ithiunit
         {
             // TODO: Your test code here
             PluginTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(CsvHelper)
+        {
+            // TODO: Your test code here
+            CsvTest test;
             bool ret = test.DoTest();
 
             Assert::AreEqual(ret, true);
