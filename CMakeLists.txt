@@ -18,6 +18,8 @@ SET(ITHITOOLS_LIBRARY_FILES
    lib/getopt.c
    lib/DnscapPlugIn.cpp
    lib/M7Getter.cpp
+   lib/CsvHelper.cpp
+   lib/M2Data.cpp
 )
 
 SET(ITHITOOLS_TEST_LIBRARY_FILES
@@ -30,6 +32,7 @@ SET(ITHITOOLS_TEST_LIBRARY_FILES
    test/testRfc6761.cpp
    test/PatternTest.cpp
    test/PluginTest.cpp
+   test/CsvTest.cpp
 )
 
 ADD_EXECUTABLE(ithitools 
@@ -43,6 +46,8 @@ ADD_EXECUTABLE(ithitools
    lib/NamePattern.cpp
    lib/M7Getter.cpp
    lib/getopt.c
+   lib/CsvHelper.cpp
+   lib/M2Data.cpp
 )
 
 ADD_EXECUTABLE(ithitest
@@ -56,6 +61,8 @@ ADD_EXECUTABLE(ithitest
    lib/NamePattern.cpp
    lib/DnscapPlugIn.cpp
    lib/M7Getter.cpp
+   lib/CsvHelper.cpp
+   lib/M2Data.cpp
    test/CaptureTest.cpp
    test/hashtest.cpp
    test/LoadTest.cpp
@@ -65,6 +72,7 @@ ADD_EXECUTABLE(ithitest
    test/testRfc6761.cpp
    test/PatternTest.cpp
    test/PluginTest.cpp
+   test/CsvTest.cpp
 )
 
 ADD_LIBRARY(ithicap SHARED
@@ -74,6 +82,7 @@ ADD_LIBRARY(ithicap SHARED
    lib/pcap_reader.cpp
    lib/UsefulTransaction.cpp
    lib/NamePattern.cpp
+   lib/CsvHelper.cpp
    lib/DnscapPlugIn.cpp
 )
 

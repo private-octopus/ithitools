@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <string.h>
 #include "CsvHelper.h"
 #include "M2Data.h"
 
