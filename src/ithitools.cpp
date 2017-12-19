@@ -39,7 +39,8 @@ int usage()
 {
     fprintf(stderr, "ITHITOOLS -- a tool for ITHI data extraction and metric computation.\n");
     fprintf(stderr, "Usage: ithitools <options> <input-files>\n");
-    fprintf(stderr, "Options:\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Options used in capture mode:\n");
     fprintf(stderr, "  -c                 process capture files in PCAP format.\n");
     fprintf(stderr, "  -s                 process summary files, from previous captures.\n");
     fprintf(stderr, "  -o file.csv        output file containing the computed summary.\n");
@@ -50,16 +51,44 @@ int usage()
     fprintf(stderr, "  -x res-addr.txt	  excluded list of resolver addresses. Traffic to or from\n");
     fprintf(stderr, "                     these addresses will be ignored when extracting traffic.\n");
     fprintf(stderr, "  -f	              Filter out address sources that generate too much traffic.\n");
-    fprintf(stderr, "  -v table-file.csv  Use the definition from the csv file for the specified\n");
-    fprintf(stderr, "                     parameter table.The CSV file should be downloaded from\n");
-    fprintf(stderr, "                     the IANA site, using the “CSV” link provided by IANA.\n");
-    fprintf(stderr, "                     The file name must be the IANA specified name.\n");
-    fprintf(stderr, "  -n number	      Number of strings in the list of leaking domains(M4).\n");
-    fprintf(stderr, "  -m metric.csv	  output file containing the computed metric.\n");
     fprintf(stderr, "  -t tld-file.txt    Text file containing a list of registered TLD, one per line.\n");
     fprintf(stderr, "  -u tld-file.txt	  Text file containing special usage TLD (RFC6761).\n");
-    fprintf(stderr, "  -7 root.zone  	  Compute the metric M7 using the specified zone-file.\n");
-    fprintf(stderr, "                  	  Only used when -m argument is set for metric computation.\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Options used in metric computation mode:\n");
+    fprintf(stderr, "  -i ithi/folder	  File path of the ITHI folder (ITHI).\n");
+    fprintf(stderr, "                     If not specified, use the current directory.\n");
+    fprintf(stderr, "  -d yyyy-mm-dd      Date for which the metrics shall be computed.");
+    fprintf(stderr, "                     If not specified, use current day.\n");
+    fprintf(stderr, "  -y accuracy.csv	  CSV file containing accuracy data needed for M1.\n");
+    fprintf(stderr, "                     If not specified, M1 data is read from (ITHI)/input/M1/\n");
+    fprintf(stderr, "  -b abuse.csv	      CSV file containing abuse data needed for M2.\n");
+    fprintf(stderr, "                     If not specified, M2 data is read from (ITHI)/input/M2/\n");
+    fprintf(stderr, "  -p root-cap.csv    CSV file containing summary of root traffic for M3.\n");
+    fprintf(stderr, "                     If not specified, M3 data is read from (ITHI)/input/M3/\n");
+    fprintf(stderr, "  -e r-res-cap.csv   CSV file containing summary of recursive resolver traffic for M4\n");
+    fprintf(stderr, "                     and M6. If not specified, data is read from (ITHI)/input/M46/\n");
+    fprintf(stderr, "  -l lies.csv	      CSV file containing abuse data needed for M5.\n");
+    fprintf(stderr, "                     If not specified, M5 data is read from (ITHI)/input/M5/\n");
+    fprintf(stderr, "  -z root.zone  	  Root zone file used computing M7.\n");
+    fprintf(stderr, "  -n number	      Number of strings in the list of leaking domains(M4).\n");
+    fprintf(stderr, "  -v table-file.csv  Use the definition from the csv file for the specified\n");
+    fprintf(stderr, "                     parameter table when computing M6. The CSV file should be\n");
+    fprintf(stderr, "                     downloaded from the IANA site, using the CSV link provided\n");
+    fprintf(stderr, "                     by IANA. The file name must be the IANA specified name.\n");
+    fprintf(stderr, "  -1 m1.csv	      Output file where to write the computed metric M1.\n");
+    fprintf(stderr, "  -2 m2.csv	      Output file where to write the computed metric M2.\n");
+    fprintf(stderr, "  -3 m3.csv	      Output file where to write the computed metric M3.\n");
+    fprintf(stderr, "  -4 m4.csv	      Output file where to write the computed metric M4.\n");
+    fprintf(stderr, "  -5 m5.csv	      Output file where to write the computed metric M5.\n");
+    fprintf(stderr, "  -6 m6.csv	      Output file where to write the computed metric M6.\n");
+    fprintf(stderr, "  -7 m7.csv	      Output file where to write the computed metric M7.\n");
+    fprintf(stderr, "                     If these options are not specified, metric are written\n");
+    fprintf(stderr, "                     in the folder (ITHI)/output/Mx/, with x = [1234567],\n");
+    fprintf(stderr, "                     with file name MX-yyyy-mm-dd.csv.\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Option used in test mode:\n");
+    fprintf(stderr, "  -m metric.csv	  output file containing all the computed metric.\n");
+
 
     return -1;
 }
