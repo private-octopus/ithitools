@@ -28,6 +28,7 @@ SET(ITHITOOLS_TEST_LIBRARY_FILES
    test/LoadTest.cpp
    test/MergeTest.cpp
    test/MetricTest.cpp
+   test/M2DataTest.cpp
    test/SaveTest.cpp
    test/testRfc6761.cpp
    test/PatternTest.cpp
@@ -68,6 +69,7 @@ ADD_EXECUTABLE(ithitest
    test/LoadTest.cpp
    test/MergeTest.cpp
    test/MetricTest.cpp
+   test/M2DataTest.cpp
    test/SaveTest.cpp
    test/testRfc6761.cpp
    test/PatternTest.cpp
