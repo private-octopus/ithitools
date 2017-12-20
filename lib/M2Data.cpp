@@ -11,7 +11,6 @@ M2Data::M2Data()
 {
 }
 
-
 M2Data::~M2Data()
 {
 }
@@ -24,6 +23,39 @@ bool M2Data::IsSooner(M2Data * x, M2Data * y)
 bool M2Data::TldIsSmaller(M2DataLine_t x, M2DataLine_t y)
 {
     return (strcmp(x.name, y.name) < 0);
+}
+
+/*
+ * IANA has reserved a set of registry IDs for special purpose. Data from these registries should
+ * not be summed in the total number of abuse domains.
+ * We add to this reserved list the registry #1797, "Stichting Registrar of Last Resort Foundation",
+ * which is used to park malware domains while taking down botnets and the like.
+ */
+
+static const int m2data_reserved_registry[] = {
+    1, 3, 8, 119, 376, 2482, 9995, 9996, 9997, 9998, 9999, 10009, 4000001, 8888888
+};
+
+static const size_t nb_m2data_reserved_registry = sizeof(m2data_reserved_registry) / sizeof(int);
+
+bool M2Data::IsReservedRegistry(int registrar_id)
+{
+    bool ret = false;
+
+    for (size_t i = 0; i < nb_m2data_reserved_registry; i++)
+    {
+        if (registrar_id == m2data_reserved_registry[i])
+        {
+            ret = true;
+            break;
+        }
+        else if (registrar_id < m2data_reserved_registry[i])
+        {
+            break;
+        }
+    }
+
+    return ret;
 }
 
 bool M2Data::Load(char const * monthly_csv_file_name)

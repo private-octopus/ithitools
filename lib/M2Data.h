@@ -40,6 +40,7 @@ public:
 
     static bool IsSooner(M2Data * x, M2Data * y);
     static bool TldIsSmaller(M2DataLine_t x, M2DataLine_t y);
+    static bool IsReservedRegistry(int registrar_id);
 
     bool Load(char const * monthly_csv_file_name);
 
