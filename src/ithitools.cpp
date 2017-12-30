@@ -45,14 +45,14 @@ int usage()
     fprintf(stderr, "  -s                 process summary files, from previous captures.\n");
     fprintf(stderr, "  -o file.csv        output file containing the computed summary.\n");
     fprintf(stderr, "  -r root-addr.txt   text file containing the list of root server addresses.\n");
-    fprintf(stderr, "  -a res-addr.txt      allowed list of resolver addresses. Traffic to or from\n");
+    fprintf(stderr, "  -a res-addr.txt    allowed list of resolver addresses. Traffic to or from\n");
     fprintf(stderr, "                     addresses in this list will not be filtered out by the\n");
     fprintf(stderr, "                     excessive traffic filtering mechanism.\n");
-    fprintf(stderr, "  -x res-addr.txt      excluded list of resolver addresses. Traffic to or from\n");
+    fprintf(stderr, "  -x res-addr.txt    excluded list of resolver addresses. Traffic to or from\n");
     fprintf(stderr, "                     these addresses will be ignored when extracting traffic.\n");
-    fprintf(stderr, "  -f              Filter out address sources that generate too much traffic.\n");
+    fprintf(stderr, "  -f                 Filter out address sources that generate too much traffic.\n");
     fprintf(stderr, "  -t tld-file.txt    Text file containing a list of registered TLD, one per line.\n");
-    fprintf(stderr, "  -u tld-file.txt      Text file containing special usage TLD (RFC6761).\n");
+    fprintf(stderr, "  -u tld-file.txt    Text file containing special usage TLD (RFC6761).\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Options used in metric computation mode:\n");
     fprintf(stderr, "  -i ithi/folder     File path of the ITHI folder (ITHI).\n");
