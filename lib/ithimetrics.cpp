@@ -605,9 +605,9 @@ bool ithimetrics::SaveMetricFiles()
             if (ret)
             {
 #ifdef _WINDOWS
-                sprintf_s(buffer, sizeof(buffer), "%s\\M%d\\M%d-%s.csv", ithi_folder, i + 1, i + 1, metric_date);
+                snprintf(buffer, sizeof(buffer), "%s\\M%d\\M%d-%s.csv", ithi_folder, i + 1, i + 1, metric_date);
 #else
-                sprintf_s(buffer, sizeof(buffer), "%s/M%d/M%d-%s.csv", ithi_folder, i + 1, i + 1, metric_date);
+                snprintf(buffer, sizeof(buffer), "%s/M%d/M%d-%s.csv", ithi_folder, i + 1, i + 1, metric_date);
 #endif
                 SetMetricFileNames(i, buffer);
             }
@@ -1012,7 +1012,7 @@ bool ithimetrics::SetDefaultDate(time_t current_time)
 #endif
     if (ret)
     {
-        ret = sprintf_s(buffer, sizeof(buffer), "%04d-%02d-%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday) > 0;
+        ret = snprintf(buffer, sizeof(buffer), "%04d-%02d-%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday) > 0;
     }
 
     if (ret)
@@ -1057,7 +1057,7 @@ bool ithimetrics::SetDefaultCaptureFiles()
 
     if (ret)
     {
-        ret = sprintf_s(dir_name_346, sizeof(dir_name_346), "%s%sinput%sM346", ithi_folder, ITHI_FILE_PATH_SEP, ITHI_FILE_PATH_SEP);
+        ret = snprintf(dir_name_346, sizeof(dir_name_346), "%s%sinput%sM346", ithi_folder, ITHI_FILE_PATH_SEP, ITHI_FILE_PATH_SEP);
     }
 
     if (ret)
@@ -1079,12 +1079,12 @@ bool ithimetrics::SetDefaultCaptureFiles()
                     continue;
                 }
 
-                ret = sprintf_s(dir_name_loc, sizeof(dir_name_loc), "%s%s%s%s",
+                ret = snprintf(dir_name_loc, sizeof(dir_name_loc), "%s%s%s%s",
                     dir_name_346, ITHI_FILE_PATH_SEP, dir_loc->d_name, ITHI_FILE_PATH_SEP) > 0;
 
                 if (ret)
                 {
-                    ret = sprintf_s(expected_name, sizeof(expected_name), "M346-%s-%s.csv",
+                    ret = snprintf(expected_name, sizeof(expected_name), "M346-%s-%s.csv",
                         metric_date, dir_loc->d_name) > 0;
                 }
 
@@ -1126,7 +1126,7 @@ bool ithimetrics::SetDefaultCaptureFiles()
 
                                 if (ret)
                                 {
-                                    ret = sprintf_s(file_name, sizeof(file_name), "%s%s",
+                                    ret = snprintf(file_name, sizeof(file_name), "%s%s",
                                         dir_name_loc, expected_name) > 0;
                                     if (ret)
                                     {
