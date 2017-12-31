@@ -53,6 +53,7 @@ int usage()
     fprintf(stderr, "  -f              Filter out address sources that generate too much traffic.\n");
     fprintf(stderr, "  -t tld-file.txt    Text file containing a list of registered TLD, one per line.\n");
     fprintf(stderr, "  -u tld-file.txt      Text file containing special usage TLD (RFC6761).\n");
+    fprintf(stderr, "  -n number          Number of strings in the list of leaking domains(M4).\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Options used in metric computation mode:\n");
     fprintf(stderr, "  -i ithi/folder     File path of the ITHI folder (ITHI).\n");
@@ -70,7 +71,6 @@ int usage()
     fprintf(stderr, "  -l lies.csv        CSV file containing abuse data needed for M5.\n");
     fprintf(stderr, "                     If not specified, M5 data is read from (ITHI)/input/M5/\n");
     fprintf(stderr, "  -z root.zone       Root zone file used computing M7.\n");
-    fprintf(stderr, "  -n number          Number of strings in the list of leaking domains(M4).\n");
     fprintf(stderr, "  -v table-file.csv  Use the definition from the csv file for the specified\n");
     fprintf(stderr, "                     parameter table when computing M6. The CSV file should be\n");
     fprintf(stderr, "                     downloaded from the IANA site, using the CSV link provided\n");
@@ -124,7 +124,7 @@ int main(int argc, char ** argv)
         case 'c':
             if (exec_mode != -1 && exec_mode != 0)
             {
-                fprintf(stderr, "Can only specify one mode, -c (capture) or -s (summary)\n");
+                fprintf(stderr, "Can only specify -c (capture), -s (summary), or -m (metrics)\n");
                 exit_code = -1;
             }
             else
