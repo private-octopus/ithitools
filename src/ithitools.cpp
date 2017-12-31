@@ -45,14 +45,14 @@ int usage()
     fprintf(stderr, "  -s                 process summary files, from previous captures.\n");
     fprintf(stderr, "  -o file.csv        output file containing the computed summary.\n");
     fprintf(stderr, "  -r root-addr.txt   text file containing the list of root server addresses.\n");
-    fprintf(stderr, "  -a res-addr.txt      allowed list of resolver addresses. Traffic to or from\n");
+    fprintf(stderr, "  -a res-addr.txt    allowed list of resolver addresses. Traffic to or from\n");
     fprintf(stderr, "                     addresses in this list will not be filtered out by the\n");
     fprintf(stderr, "                     excessive traffic filtering mechanism.\n");
-    fprintf(stderr, "  -x res-addr.txt      excluded list of resolver addresses. Traffic to or from\n");
+    fprintf(stderr, "  -x res-addr.txt    excluded list of resolver addresses. Traffic to or from\n");
     fprintf(stderr, "                     these addresses will be ignored when extracting traffic.\n");
-    fprintf(stderr, "  -f              Filter out address sources that generate too much traffic.\n");
+    fprintf(stderr, "  -f                 Filter out address sources that generate too much traffic.\n");
     fprintf(stderr, "  -t tld-file.txt    Text file containing a list of registered TLD, one per line.\n");
-    fprintf(stderr, "  -u tld-file.txt      Text file containing special usage TLD (RFC6761).\n");
+    fprintf(stderr, "  -u tld-file.txt    Text file containing special usage TLD (RFC6761).\n");
     fprintf(stderr, "  -n number          Number of strings in the list of leaking domains(M4).\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Options used in metric computation mode:\n");
@@ -64,10 +64,9 @@ int usage()
     fprintf(stderr, "                     If not specified, M1 data is read from (ITHI)/input/M1/\n");
     fprintf(stderr, "  -b abuse.csv       CSV file containing abuse data needed for M2.\n");
     fprintf(stderr, "                     If not specified, M2 data is read from (ITHI)/input/M2/\n");
-    fprintf(stderr, "  -p root-cap.csv    CSV file containing summary of root traffic for M3.\n");
-    fprintf(stderr, "                     If not specified, M3 data is read from (ITHI)/input/M3/\n");
-    fprintf(stderr, "  -e r-res-cap.csv   CSV file containing summary of recursive resolver traffic for M4\n");
-    fprintf(stderr, "                     and M6. If not specified, data is read from (ITHI)/input/M46/\n");
+    fprintf(stderr, "  -S summary.csv     CSV file containing summary of recursive resolver traffic\n");
+    fprintf(stderr, "                     for M3, M4 and M6. If not specified, data is read from\n");
+    fprintf(stderr, "                     (ITHI)/input/M346/\n");
     fprintf(stderr, "  -l lies.csv        CSV file containing abuse data needed for M5.\n");
     fprintf(stderr, "                     If not specified, M5 data is read from (ITHI)/input/M5/\n");
     fprintf(stderr, "  -z root.zone       Root zone file used computing M7.\n");
@@ -88,7 +87,7 @@ int usage()
     fprintf(stderr, "\n");
     fprintf(stderr, "Option used in test mode:\n");
     fprintf(stderr, "  -m metric.csv      output file containing all the computed metric.\n");
-    fprintf(stderr, "  -?                 Print this page.\n");
+    fprintf(stderr, "  -? -h              Print this page.\n");
 
     return -1;
 }
@@ -110,14 +109,20 @@ int main(int argc, char ** argv)
     char const * excluded_addr_file = NULL;
     char const * table_version_addr_file = NULL;
     char const * metric_file = NULL;
+    char const * ithi_file = NULL;
+    char const * accuracy_file = NULL;
+    char const * abuse_file = NULL;
+    char const * summary_file = NULL;
+    char const * lies_file = NULL;
     char const * root_zone_file = NULL;
+    char const * metric_output_files[7] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
     int nb_names_in_tld = 2048;
     char * extract_file = NULL;
     int extract_by_error_type[512] = { 0 };
 
     /* Get the parameters */
     int opt;
-    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:m:t:u:7:hcsf?")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:m:t:u:z:l:1:2:3:4:5:6:7:hcsf?")) != -1)
     {
         switch (opt)
         {
@@ -165,10 +170,8 @@ int main(int argc, char ** argv)
             break;
         }
         case 'm':
-        {
             metric_file = optarg;
             break;
-        }
         case 'f':
             stats.enable_frequent_address_filtering = true;
             break;
@@ -192,11 +195,41 @@ int main(int argc, char ** argv)
         case 'u':
             fprintf(stderr, "Sorry, update list of special usage names (RFC6761) not implemented yet.\n");
             break;
-        case '7':
+        case 'y':
+            accuracy_file = optarg;
+            break;
+        case 'b':
+            abuse_file = optarg;
+            break;
+        case 'z':
             root_zone_file = optarg;
+            break;
+        case 'l':
+            lies_file = optarg;
             break;
         case '?':
             exit_code = usage();
+            break;
+        case 1:
+            metric_output_files[0] = optarg;
+            break;
+        case 2:
+            metric_output_files[1] = optarg;
+            break;
+        case 3:
+            metric_output_files[2] = optarg;
+            break;
+        case 4:
+            metric_output_files[3] = optarg;
+            break;
+        case 5:
+            metric_output_files[4] = optarg;
+            break;
+        case 6:
+            metric_output_files[5] = optarg;
+            break;
+        case 7:
+            metric_output_files[6] = optarg;
             break;
         }
     }

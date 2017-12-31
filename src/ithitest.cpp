@@ -52,6 +52,8 @@ int main(int argc, char ** argv)
     MergeTest merge_test;
     CaptureTest capture_test;
     MetricTest metric_test;
+    MetricDateTest metric_date_test;
+    MetricCaptureFileTest metric_capture_file_test;
     PatternTest pattern_test;
     PluginTest plugin_test;
     CsvTest csv_test;
@@ -81,9 +83,17 @@ int main(int argc, char ** argv)
     {
         fprintf(stderr, "Capture test fails.\n");
     }
-    else if (!metric_test.DoTest())
+    else if (!metric_date_test.DoTest())
     {
-        fprintf(stderr, "Metric test fails.\n");
+        fprintf(stderr, "Metric date test fails.\n");
+    }
+    else if (!metric_date_test.DoTest())
+    {
+        fprintf(stderr, "Metric date test fails.\n");
+    }
+    else if (!metric_capture_file_test.DoTest())
+    {
+        fprintf(stderr, "Metric capture file test fails.\n");
     }
     else if (!pattern_test.DoTest())
     {

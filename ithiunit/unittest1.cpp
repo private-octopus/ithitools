@@ -97,6 +97,22 @@ namespace ithiunit
             Assert::AreEqual(ret, true);
         }
 
+        TEST_METHOD(MetricDate)
+        {
+            MetricDateTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(MetricCaptureFile)
+        {
+            MetricCaptureFileTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
         TEST_METHOD(Pattern)
         {
             // TODO: Your test code here

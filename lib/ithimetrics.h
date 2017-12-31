@@ -1,5 +1,7 @@
 #ifndef ITHI_METRICS_H
 #define ITHI_METRICS_H
+
+#include <time.h>
 #include "CaptureSummary.h"
 
 typedef struct _st_metric4_line_t {
@@ -41,6 +43,22 @@ public:
     bool GetMetrics(CaptureSummary* cs);
     bool GetM7(char const * zone_file_name);
 
+    bool SetIthiFolder(char const * folder);
+    bool SetMetricFileNames(int metric_number, char const * metric_file_name);
+
+    bool SetCaptureFileNames(int nb_files, char const ** file_names);
+    bool SetDefaultCaptureFiles();
+    uint32_t GetNbCaptureFiles() { return nb_capture_files; };
+    const char * GetCaptureFileName(uint32_t file_index) { 
+        return (file_index < nb_capture_files)?capture_file[file_index]:NULL; };
+
+    bool SetDateString(char const * date_string);
+    bool SetDefaultDate(time_t current_time);
+    const char * GetMetricDate() { return (const char *)metric_date; };
+
+
+    bool SaveMetricFiles();
+
     bool Save(char const * file_name);
 
 private:
@@ -48,6 +66,12 @@ private:
     uint32_t nb_userqueries;
     uint32_t nb_nondelegated;
     uint32_t nb_delegated;
+    char * metric_date;
+    char * ithi_folder;
+    char * metric_file[7];
+    bool metric_is_available[7];
+    uint32_t nb_capture_files;
+    char ** capture_file;
 
     double m3_1;
     double m3_2;
@@ -60,6 +84,16 @@ private:
     std::vector<metric4_line_t> m4_3;
     std::vector<metric6_line_t> m6;
     double m7;
+
+    bool SetFileNames();
+
+    bool SaveM1(FILE * F);
+    bool SaveM2(FILE * F);
+    bool SaveM3(FILE * F);
+    bool SaveM4(FILE * F);
+    bool SaveM5(FILE * F);
+    bool SaveM6(FILE * F);
+    bool SaveM7(FILE * F);
 
     void GetM3_1(CaptureSummary* cs);
     void GetM3_2(CaptureSummary* cs);
@@ -78,5 +112,6 @@ private:
     void GetM6(CaptureSummary* cs);
 
     static bool metric4_line_is_bigger(metric4_line_t x, metric4_line_t y);
+    static bool copy_name(char ** target, char const * name);
 };
 #endif

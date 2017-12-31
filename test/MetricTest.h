@@ -34,4 +34,26 @@ public:
     static bool compare_lines(char const * b1, char const * b2);
 };
 
+class MetricDateTest
+{
+public:
+    MetricDateTest();
+    ~MetricDateTest();
+
+    bool DoTest();
+};
+
+class MetricCaptureFileTest
+{
+public:
+    MetricCaptureFileTest();
+    ~MetricCaptureFileTest();
+
+    bool DoTest();
+
+private:
+    bool CreateDirectoryIfAbsent(char const * dir_name);
+    bool CopyFileToDestination(char const * target_name, char const * source_name);
+};
+
 #endif /* METRIC_TEST_H */
