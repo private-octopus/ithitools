@@ -619,7 +619,7 @@ bool ithimetrics::SaveMetricFiles()
             errno_t err = fopen_s(&F, metric_file[i], "w");
             ret = (err == 0);
 #else
-            *F = fopen(metric_file[i], "w");
+            F = fopen(metric_file[i], "w");
             ret = (F != NULL);
 #endif
         }

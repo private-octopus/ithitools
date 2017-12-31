@@ -24,8 +24,10 @@
 #else
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <errno.h>
 #endif
 #include <stdio.h>
+#include <string.h>
 #include "ithimetrics.h"
 #include "MetricTest.h"
 
