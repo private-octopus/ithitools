@@ -4,6 +4,8 @@
 #include <time.h>
 #include "CaptureSummary.h"
 
+class M2Data;
+
 typedef struct _st_metric4_line_t {
     char domain[64];
     double frequency;
@@ -56,6 +58,9 @@ public:
     bool SetDefaultDate(time_t current_time);
     const char * GetMetricDate() { return (const char *)metric_date; };
 
+    bool SetAbuseFileName(char const * abuse_file_name);
+    bool SetDefaultAbuseFileName(time_t current_time);
+    const char * GetAbuseFileName() { return (const char *)abuse_file_name; };
 
     bool SaveMetricFiles();
 
@@ -72,7 +77,10 @@ private:
     bool metric_is_available[7];
     uint32_t nb_capture_files;
     char ** capture_file;
+    char * abuse_file_name;
+    M2Data * m2_data;
 
+    double m2_1234[4];
     double m3_1;
     double m3_2;
     std::vector<metric4_line_t> m33_1;
@@ -85,8 +93,6 @@ private:
     std::vector<metric6_line_t> m6;
     double m7;
 
-    bool SetFileNames();
-
     bool SaveM1(FILE * F);
     bool SaveM2(FILE * F);
     bool SaveM3(FILE * F);
@@ -95,6 +101,7 @@ private:
     bool SaveM6(FILE * F);
     bool SaveM7(FILE * F);
 
+    void GetM2();
     void GetM3_1(CaptureSummary* cs);
     void GetM3_2(CaptureSummary* cs);
     void GetM33_1(CaptureSummary* cs);

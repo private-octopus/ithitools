@@ -44,6 +44,8 @@ public:
 
     bool Load(char const * monthly_csv_file_name);
 
+    void ComputeMetrics(double ithi_m2[4]);
+
     void Sort();
 
     bool Save();

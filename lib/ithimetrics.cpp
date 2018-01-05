@@ -44,6 +44,7 @@
 #include "DnsStats.h"
 #include "CaptureSummary.h"
 #include "M7Getter.h"
+#include "M2Data.h"
 #include "ithimetrics.h"
 
 /* Initial definition of the registry tables */
@@ -358,7 +359,9 @@ ithimetrics::ithimetrics()
     metric_date(NULL),
     ithi_folder(NULL),
     nb_capture_files(0),
-    capture_file(NULL)
+    capture_file(NULL),
+    abuse_file_name(NULL),
+    m2_data(NULL)
 {
     for (int i = 0; i < 7; i++)
     {
@@ -379,6 +382,17 @@ ithimetrics::~ithimetrics()
     {
         free(ithi_folder);
         ithi_folder = NULL;
+    }
+
+    if (abuse_file_name == NULL)
+    {
+        free(abuse_file_name);
+        abuse_file_name = NULL;
+    }
+
+    if (m2_data != NULL)
+    {
+        delete m2_data;
     }
 
     for (int i = 0; i < 7; i++)
@@ -410,6 +424,7 @@ bool ithimetrics::GetMetrics(CaptureSummary * cs)
 {
     bool ret = true;
     
+    GetM2();
     GetM3_1(cs);
     GetM3_2(cs);
     GetM33_1(cs);
@@ -570,11 +585,6 @@ bool ithimetrics::Save(char const * file_name)
     return ret;
 }
 
-bool ithimetrics::SetFileNames()
-{
-    return false;
-}
-
 bool ithimetrics::SaveMetricFiles()
 {
     bool ret = true;
@@ -673,7 +683,14 @@ bool ithimetrics::SaveM1(FILE * F)
 
 bool ithimetrics::SaveM2(FILE * F)
 {
-    return false;
+    bool ret = true;
+
+    for (int i = 0; i < 4; i++)
+    {
+        ret &= (fprintf(F, "M2.%d, %6f,\n", i + 1, m2_1234[i]) > 0);
+    }
+
+    return ret;
 }
 
 bool ithimetrics::SaveM3(FILE * F)
@@ -765,6 +782,26 @@ bool ithimetrics::SaveM7(FILE * F)
     ret = (fprintf(F, "M7, , %6f,\n", m7) > 0);
 
     return ret;
+}
+
+void ithimetrics::GetM2()
+{
+    bool ret = true;
+
+    if (abuse_file_name == NULL)
+    {
+        (void)SetDefaultAbuseFileName(time(0));
+    }
+
+    if (abuse_file_name != NULL && m2_data != NULL)
+    {
+        if (m2_data->Load(abuse_file_name))
+        {
+            m2_data->ComputeMetrics(m2_1234);
+
+            metric_is_available[1] = true;
+        }
+    }
 }
 
 void ithimetrics::GetM3_1(CaptureSummary * cs)
@@ -1018,6 +1055,68 @@ bool ithimetrics::SetDefaultDate(time_t current_time)
     if (ret)
     {
         ret = SetDateString(buffer);
+    }
+
+    return ret;
+}
+
+bool ithimetrics::SetAbuseFileName(char const * abuse_file_name)
+{
+    bool ret = true;
+
+    if (m2_data != NULL)
+    {
+        m2_data = new M2Data();
+        if (m2_data == NULL)
+        {
+            ret = false;
+        }
+    }
+
+    if (ret)
+    {
+        ret = m2_data->parse_file_name(m2_data->get_file_name(abuse_file_name));
+
+        if (!ret)
+        {
+            delete m2_data;
+            m2_data = NULL;
+        }
+    }
+
+    if (ret)
+    {
+        ret = copy_name(&this->abuse_file_name, abuse_file_name);
+    }
+
+    return ret;
+}
+
+bool ithimetrics::SetDefaultAbuseFileName(time_t current_time)
+{
+    bool ret = (abuse_file_name == NULL);
+    char file_name_buffer[512];
+
+    if (ret && ithi_folder == NULL)
+    {
+        ret = SetIthiFolder(ITHI_DEFAULT_FOLDER);
+    }
+
+    if (ret && metric_date == NULL)
+    {
+        ret = SetDefaultDate(time(0));
+    }
+
+    if (ret)
+    {
+        ret = snprintf(file_name_buffer, sizeof(file_name_buffer),
+            "%s%sinput%sM2%s_tlds.csv", 
+            ithi_folder, ITHI_FILE_PATH_SEP, ITHI_FILE_PATH_SEP, metric_date) > 0;
+
+        if (ret)
+        {
+            ret = SetAbuseFileName(file_name_buffer);
+        }
     }
 
     return ret;

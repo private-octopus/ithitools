@@ -98,6 +98,7 @@ int main(int argc, char ** argv)
     int exec_mode = -1; /* capture extraction= 0, summary aggregation = 1 */
     int exit_code = 0;
 
+    ithimetrics met;
     CaptureSummary cs;
     DnsStats stats;
     char const * default_inputFile = "smalltest.pcap";
@@ -122,7 +123,7 @@ int main(int argc, char ** argv)
 
     /* Get the parameters */
     int opt;
-    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:m:t:u:z:l:1:2:3:4:5:6:7:hcsf?")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:m:t:u:i:d:y:b:z:l:1:2:3:4:5:6:7:hcsf?")) != -1)
     {
         switch (opt)
         {
@@ -195,8 +196,21 @@ int main(int argc, char ** argv)
         case 'u':
             fprintf(stderr, "Sorry, update list of special usage names (RFC6761) not implemented yet.\n");
             break;
+        case 'i':
+            if (!met.SetIthiFolder(optarg))
+            {
+                fprintf(stderr, "Cannot set ITHI folder name = %s\n", optarg);
+            }
+            break;
+        case 'd':
+            if (!met.SetDateString(optarg))
+            {
+                fprintf(stderr, "Cannot set date string = %s\n", optarg);
+            }
+            break;
         case 'y':
-            accuracy_file = optarg;
+            // accuracy_file = optarg;
+            fprintf(stderr, "Sorry, Metric M1 not implemented yet.\n");
             break;
         case 'b':
             abuse_file = optarg;
@@ -205,31 +219,53 @@ int main(int argc, char ** argv)
             root_zone_file = optarg;
             break;
         case 'l':
-            lies_file = optarg;
+            fprintf(stderr, "Sorry, Metric M5 not implemented yet.\n");
+            // lies_file = optarg;
             break;
         case '?':
             exit_code = usage();
             break;
-        case 1:
-            metric_output_files[0] = optarg;
+        case '1':
+            if (!met.SetMetricFileNames(0, optarg))
+            {
+                fprintf(stderr, "Cannot set metric_file_name[1] = %s\n", optarg);
+            }
             break;
-        case 2:
-            metric_output_files[1] = optarg;
+        case '2':
+            if (!met.SetMetricFileNames(1, optarg))
+            {
+                fprintf(stderr, "Cannot set metric_file_name[2] = %s\n", optarg);
+            }
             break;
-        case 3:
-            metric_output_files[2] = optarg;
+        case '3':
+            if (!met.SetMetricFileNames(2, optarg))
+            {
+                fprintf(stderr, "Cannot set metric_file_name[3] = %s\n", optarg);
+            }
             break;
-        case 4:
-            metric_output_files[3] = optarg;
+        case '4':
+            if (!met.SetMetricFileNames(3, optarg))
+            {
+                fprintf(stderr, "Cannot set metric_file_name[4] = %s\n", optarg);
+            }
             break;
-        case 5:
-            metric_output_files[4] = optarg;
+        case '5':
+            if (!met.SetMetricFileNames(4, optarg))
+            {
+                fprintf(stderr, "Cannot set metric_file_name[5] = %s\n", optarg);
+            }
             break;
-        case 6:
-            metric_output_files[5] = optarg;
+        case '6':
+            if (!met.SetMetricFileNames(5, optarg))
+            {
+                fprintf(stderr, "Cannot set metric_file_name[6] = %s\n", optarg);
+            }
             break;
-        case 7:
-            metric_output_files[6] = optarg;
+        case '7':
+            if (!met.SetMetricFileNames(6, optarg))
+            {
+                fprintf(stderr, "Cannot set metric_file_name[7] = %s\n", optarg);
+            }
             break;
         }
     }
@@ -316,8 +352,6 @@ int main(int argc, char ** argv)
     /* Compute and save the ITHI metrics */
     if (exit_code == 0 && metric_file != NULL)
     {
-        ithimetrics met;
-
         if (root_zone_file != NULL && !met.GetM7(root_zone_file))
         {
             fprintf(stderr, "Cannot compute the ITHI metrics M7 from <root_zone_file>.\n");

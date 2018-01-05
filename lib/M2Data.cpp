@@ -136,6 +136,32 @@ bool M2Data::Load(char const * monthly_csv_file_name)
     return ret;
 }
 
+void M2Data::ComputeMetrics(double ithi_m2[4])
+{
+    int totals[4] = { 0,0,0,0 };
+    int total_domains = 0;
+
+    for (size_t i = 0; i < dataset.size(); i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            totals[j] += dataset[i].abuse_count[j];
+        }
+
+        total_domains += dataset[i].Domains;
+    }
+
+    for (int j = 0; j < 4; j++)
+    {
+        ithi_m2[j] = (double)totals[j];
+
+        if (total_domains > 0)
+        {
+            ithi_m2[j] /= (double)total_domains;
+        }
+    }
+}
+
 void M2Data::Sort()
 {
     std::sort(dataset.begin(), dataset.end(), M2Data::TldIsSmaller);
