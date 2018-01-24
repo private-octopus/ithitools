@@ -1,0 +1,314 @@
+<html>
+<head>
+    <style>
+        html {
+            font-family: Verdana;
+        }
+        
+        table {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td, th {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #dddddd;
+        }
+    </style> 
+	
+<script type="text/javascript">
+
+var canvas ;
+var context ;
+var Val_max;
+var Val_min;
+var sections;
+var xScale;
+    var yScale;
+    var colorSet = ["#F0F0F0C0", "#808080C0", "#C0C0C0C0", "#404040C0"];
+
+    // Values for the M4 metrics, September 2017 -- this is test data
+
+    var M41Data = [31.91, 30.47];
+    var M42DataSet = [["LOCAL", 10.92, 10.99],
+    ["INVALID", 0.64, 0.65],
+    ["LOCALHOST", 0.64, 0.60]];
+    var M43DataSet = [["HOME", 1.07, 1.03],
+    ["DOMAINNAME", 0.43, 0.44],
+    ["ENTERPRISE", 0.43, 0.40],
+    ["LOCALDOMAIN", 0.43, 0.46],
+    ["STAFF", 0.43, 0.46],
+    ["TELUS", 0.43, 0.47],
+    ["AGI", 0.21, 0.22],
+    ["BELKIN", 0.21, 0.23],
+    ["CORP", 0.21, 0.21],
+    ["CRC", 0.21, 0.23],
+    ["DCA", 0.21, 0.21],
+    ["DOMAIN", 0.21, 0.22],
+    ["DS", 0.21, 0.23],
+    ["FTY", 0.21, 0.21],
+    ["GUEST", 0.21, 0.20],
+    ["IP", 0.21, 0.20],
+    ["MVR2", 0.21, 0.23],
+    ["MYMAX", 0.21, 0.23],
+    ["NN", 0.21, 0.21]];
+    
+    function init() {
+        // Compute the values of the metrics
+        var m42 = columnSum(M42DataSet, 1);
+        average42 = columnSum(M42DataSet, 2);
+        var m43 = columnSum(M43DataSet, 1);
+        average43 = columnSum(M43DataSet, 2);
+        var m44 = 100 - M41Data[0] - m42 - m43;
+        average44 = 100 - M41Data[1] - average42 - average43;
+
+        var M4Set = [M41Data[0], m42, m43, m44];
+
+
+        // Set the text values that depend on the current data
+        setDateElement();
+        setValElement("valM41", M41Data[0]);
+        setValElement("averageM41", M41Data[1]);
+        setValElement("valM42", m42);
+        setValElement("averageM42", average42);
+        setValElement("valM43", m43);
+        setValElement("averageM43", average43);
+        setValElement("valM44", m44);
+        setValElement("averageM44", average44);
+
+        // Set the color blobs in the M4 table, then plot the M4 pie chart
+        setColorBlob("colorBlobM41", colorSet[0]);
+        setColorBlob("colorBlobM42", colorSet[1]);
+        setColorBlob("colorBlobM43", colorSet[2]);
+        setColorBlob("colorBlobM44", colorSet[3]);
+
+        plotPieChart("pieChartM4", M4Set, colorSet);
+
+        // Generate the value for the tables of elements
+        fillMetricTable("RFC 6761 name", "m42Table", M42DataSet);
+        fillMetricTable("Frequently used string", "m43Table", M43DataSet);
+    }
+
+    function columnSum(dataSet, columnIndex)
+    {
+        sum = 0;
+
+        for (i= 0; i < dataSet.length; i++)
+        {
+            lineSet = dataSet[i];
+            sum += lineSet[columnIndex];
+        }
+
+        return sum;
+    }
+
+    function setDateElement()
+    {
+        dateElement = document.getElementById("dateHeading");
+        dateElement.innerHTML = "September 2017";
+    }
+
+    function setValElement(valElementId, x) {
+        elm = document.getElementById(valElementId);
+
+        if (x.toFixed(2)) {
+            elm.innerHTML = "<b>" + x.toFixed(2) + "%</b>";
+        }
+        else {
+            elm.innerHTML = "<b>" + x + "</b>";
+        }
+    }
+
+    function setColorBlob(canvasId, colorValue)
+    {
+        var c = document.getElementById(canvasId);
+        var ctx = c.getContext("2d");
+        var w = c.width / 2;
+        var h = c.height / 2;
+        ctx.fillStyle = colorValue;
+        ctx.fillRect(0, 0, w, h);
+    }
+
+    function plotPieChart(canvasPieId, dataSet, colorSet) {
+        var c = document.getElementById(canvasPieId);
+        var ctx = c.getContext("2d");
+        var colorIndex = 0;
+        var alphaRad0 = 1.5;
+        var alpha = 1.5;
+        var alpha2 = 0;
+        var xc = c.width / 2;
+        var yc = c.height / 2;
+        var margin = 10;
+        var radius = yc;
+        if (radius > xc) {
+            radius = xc;
+        }
+
+        if (radius > margin) {
+            radius -= margin;
+        }
+        else {
+            radius /= 2;
+        }
+
+        for (i = 0; i < dataSet.length; i++)
+        {
+            ctx.fillStyle = colorSet[colorIndex];
+            alpha2 = alpha + (2 * dataSet[i] / 100);
+            ctx.beginPath();
+            ctx.moveTo(xc, yc);
+            ctx.arc(xc, yc, radius, alpha * Math.PI, alpha2 * Math.PI);
+            ctx.fill();
+            alpha = alpha2;
+            colorIndex++;
+            if (colorIndex >= colorSet.length)
+            {
+                colorIndex = 0;
+            }
+        }
+    }
+
+    function fillMetricTable(tableName, tableId, dataSet)
+    {
+        tableElem = document.getElementById(tableId);
+        tableText = "<table><tr><th>" + tableName + "</th><th>Current value</th><th>Average value</th></tr>\n";
+
+        for (i= 0; i < dataSet.length; i++)
+        {
+            lineSet = dataSet[i];
+            tableText += "<tr><td>" + lineSet[0] + "</td>";
+            
+            for (j = 1; j < 3 && j < lineSet.length; j++)
+            {
+                tableText += "<td align=\"right\">" + lineSet[j].toFixed(2)+"%</td>";
+            }
+            tableText += "</tr>\n";
+        }
+        tableElem.innerHTML += "</table>\n";
+
+        tableElem.innerHTML = tableText;
+    }
+
+</script>
+</head>
+
+<body onLoad="init()">
+
+<h1>M4: Usage and misuse of TLD names by DNS clients</h1>
+
+<h2 id="dateHeading">September 2017</h2>
+
+    <p>
+        The M4 metrics measure the usage of TLDs and leakage of undelegated strings by DNS users.
+        This is somewhat similar to the M3.3 set of metrics, with the difference that M3.3 analyze
+        the traffic arriving to the root, which may be heavily filtered by the recursive resolvers. 
+        M4 attempts to measure the original behavior of DNS clients. 
+        M4 comprises 4 metrics, measuring the fraction of queries going to delegated
+        TLD, to RFC 6761 special use names, to frequently leaked strings, and
+        to other strings.
+    </p>
+    <p>
+        In the following table, the <em>current value</em> is the
+        value of the metric for the current month.
+        The <em>average value</em> is the average value of that metric
+        over the 12 months preceeding this one -- or the average since the beginning
+        of measurements if measurements started fewer than 12 months ago.
+    </p>
+
+    <table display="inline">
+        <tr>
+            <td rowspan="5">
+                <canvas display="inline" id="pieChartM4" height="160" width="160"></canvas>
+            </td>
+            <th></th>
+            <th></th>
+            <th>Current value</th>
+            <th>Average value</th>
+        </tr>
+        <tr>
+            <td>
+                <canvas id="colorBlobM41" height="32" width="32"></canvas>
+            </td>
+            <td>
+                M4.1: % of queries directed at delegated TLDs.
+            </td>
+            <td align="right" id="valM41">
+                -
+            </td>
+            <td align="right" id="averageM41">
+                -
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <canvas id="colorBlobM42" height="32" width="32"></canvas>
+            </td>
+            <td>
+                <a href="#M42">M4.2:  % of queries directed at that special use names, registered per RFC 6761.</a>
+            </td>
+            <td align="right" id="valM42">
+                -
+            </td>
+            <td align="right" id="averageM42">
+                -
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <canvas id="colorBlobM43" height="32" width="32"></canvas>
+            </td>
+            <td>
+                <a href="#M43">M4.3:  % of queries directed at frequenctly used strings.</a>
+            </td>
+            <td align="right" id="valM43">
+                -
+            </td>
+            <td align="right" id="averageM43">
+                -
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <canvas id="colorBlobM44" height="32" width="32"></canvas>
+            </td>
+            <td>
+                M4.4: fraction of traffic that is not explained by M4.1, M4.2 or M4.3. 
+            </td>
+            <td align="right" id="valM44">
+                -
+            </td>
+            <td align="right" id="averageM44">
+                -
+            </td>
+        </tr>
+    </table>
+
+    <p>
+        The following tables provide the list of names or strings most frequently
+        encountered as part of M4.2 and M4.3.
+    </p>
+
+    <h3 id="M42">Queries to RFC 6761 reserved names</h3>
+    <p>
+        In the following table, the <em>current value</em> is the fraction of queries to the root
+        directed at RFC 6761 names in the current month. The <em>average value</em> is the average of
+        that fraction since the beginning of the year.
+    </p>
+    <div id="m42Table">Table M42 not found</div>
+
+    <h3 id="M43">Queries to frequently leaked strings</h3>
+    <p>
+        In the following table, the <em>current value</em> is the fraction of queries to the root
+        directed at frequently used strings in the current month. The <em>average value</em> is the average of
+        that fraction since the beginning of the year.
+    </p>
+    <div id="m43Table">Table M43 not found</div>
+
+</body>
+</html>
