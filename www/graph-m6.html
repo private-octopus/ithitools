@@ -1,0 +1,153 @@
+<html>
+<head>
+    <style>
+        html {
+            font-family: Verdana;
+        }
+
+        table {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td, th {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #dddddd;
+        }
+    </style>
+	
+<script type="text/javascript">
+
+var canvas ;
+var context ;
+var Val_max;
+var Val_min;
+var sections;
+var xScale;
+    var yScale;
+    var colorSet = ["#404040C0", "#A0A0A0C0", "#EFEFEFC0", "#404040C0"];
+
+    // Values for the M6 metrics, since Jan 2017 -- this is test data
+    var M6Data = [
+        ["M6.DNS.01", "DNS CLASSes", 33.3333, 33.84858132, 0, 0],
+        ["M6.DNS.02", "Resource Record (RR) TYPEs", 11.6279, 11.58239253, 0, 0],
+        ["M6.DNS.03", "DNS OpCodes", 40, 38.11261489, 0, 0],
+        ["M6.DNS.04", "DNS RCODEs", 23.8095, 24.17691587, 0, 0],
+        ["M6.DNS.05", "AFSDB RR Subtype", 0, 0, 0, 0],
+        ["M6.DNS.06", "DHCID RR Identifier Type Codes", 0, 0, 0, 0],
+        ["M6.DNS.07", "DNS Label Types", 50, 50.78748323, 0, 0],
+        ["M6.DNS.08", "DNS EDNS0 Option Codes (OPT)", 13.3333, 12.97025876, 0, 0],
+        ["M6.DNS.09", "DNS Header Flags", 33.3333, 31.68967715, 7.6748, 7.634283439],
+        ["M6.DNS.10", "EDNS Header Flags (16 bits)", 100, 100, 0, 0],
+        ["M6.DNS.11", "EDNS version Number (8 bits)", 100, 100, 0, 0],
+        ["M6.DNS.12", "Child Synchronization (CSYNC) Flags ", 0, 0, 0, 0],
+        ["M6.DNSSEC.1", "DNS Security Algorithm Numbers", 0, 0, 0, 0],
+        ["M6.DNSSEC.2", "DNS KEY Record Diffie-Hellman Prime Lengths", 0, 0, 0, 0],
+        ["M6.DNSSEC.3", "DNS KEY Record Diffie-Hellman Well-Known Prime/Generator Pairs", 23.5294, 24.68492142, 0, 0],
+        ["M6.DANE.1", "TLSA Certificate Usages", 0, 0, 0, 0],
+        ["M6.DANE.2", "TLSA Selectors", 0, 0, 0, 0],
+        ["M6.DANE.3", "TLSA Matching Types", 0, 0, 0, 0]];
+
+    function init() {
+
+        // Set the text values that depend on the current data
+        setDateElement();
+
+        // Set the table data
+        fillM6Table("tableM61", M6Data, 1);
+        fillM6Table("tableM62", M6Data, 2);
+    }
+
+    function setDateElement()
+    {
+        dateElement = document.getElementById("dateHeading");
+        dateElement.innerHTML = "September 2017";
+    }
+
+    function fillM6Table(tableId, dataSet, subMetric)
+    {
+        tableElem = document.getElementById(tableId);
+        tableText = "<table><tr><th>Metric</th><th>Registry table name</th>";
+        tableText += "<th>Current value</th> <th>Average value</th> </tr>";
+
+        metricColumn = subMetric * 2;
+
+        for (i= 0; i < dataSet.length; i++)
+        {
+            lineSet = dataSet[i];
+            tableText += "<tr><td>" + lineSet[0] + "." + subMetric + "</td>";
+            tableText += "<td>" + lineSet[1] + "</td>";
+            
+            for (j = metricColumn; j < metricColumn + 2 && j < lineSet.length; j++)
+            {
+                tableText += "<td align=\"right\">" + lineSet[j].toFixed(2)+"%</td>";
+            }
+            tableText += "</tr>\n";
+        }
+        tableText += "</table>\n";
+        
+        tableElem.innerHTML = tableText;
+    }
+
+</script>
+</head>
+
+<body onLoad="init()">
+
+<h1>M6: health of IANA registries for DNS parameters</h1>
+
+<h2 id="dateHeading">-</h2>
+    <p>
+        The M6 metrics tracks the health of three set of registries maintained by IANA: 
+        the Domain Name System (DNS) Parameters, the Domain Name System Security 
+        (DNSSEC) Algorithm Numbers, and the DNS-Based Authentication of Named Entities 
+        (DANE) Parameters. Each of these groups includes different parameter sets. We will 
+        track the health each of the these parameters by a set of metrics of the form “M6.N.X.*”, 
+        where “M6.N.X” is the metric index composed of the registry name “N” and the parameter 
+        set index “X”. The following tables present the value of the metrics M6.N.X.1 and
+        M6.N.X.2.
+    </p>
+    <h3>M6.N.X.1 - Usage</h3>
+    <p>
+        The metrics M6.N.X.1, which track "usage" as the ratio of the number of parameters 
+        found at least once in real traffic, divided by the total number of parameters found
+        registered in the table.
+    </p>
+    <p>
+        In the following table, the <em>current value</em> is the
+        value of the usage metric for the current month.
+        The <em>average value</em> is the average value of that metric
+        over the 12 months preceeding this one -- or the average since the beginning
+        of measurements if measurements started fewer than 12 months ago.
+    </p>
+
+    <div id="tableM61">
+        Table M6.X.N.1 not found.
+    </div>
+
+    <h3>M6.N.X.2 - Squatting</h3>
+    <p>
+        The metrics M6.X.N.2, which track "squatting" as the ratio of the total number of
+        instances of unregistered parameters (squat) found in real traffic, divided by the total
+        number of parameter instances found in real traffic.
+    </p>
+    <p>
+        In the following table, the <em>current value</em> is the
+        value of the squatting metric for the current month.
+        The <em>average value</em> is the average value of that metric
+        over the 12 months preceeding this one -- or the average since the beginning
+        of measurements if measurements started fewer than 12 months ago.
+    </p>
+
+    <div id="tableM62">
+        Table M6.X.N.1 not found.
+    </div>
+
+</body>
+</html>

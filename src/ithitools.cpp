@@ -214,6 +214,10 @@ int main(int argc, char ** argv)
             break;
         case 'b':
             abuse_file = optarg;
+            if (!met.SetAbuseFileName(optarg))
+            {
+                fprintf(stderr, "Cannot set abuse file name = %s\n", optarg);
+            }
             break;
         case 'z':
             root_zone_file = optarg;
@@ -362,14 +366,29 @@ int main(int argc, char ** argv)
             fprintf(stderr, "Cannot compute the ITHI metrics.\n");
             exit_code = -1;
         }
-        else if (!met.Save(metric_file))
-        {
-            fprintf(stderr, "Cannot save the ITHI metrics in <%s>.\n", metric_file);
-            exit_code = -1;
-        }
         else
         {
-            printf("ITHI metrics computed and saved in <%s>\n", metric_file);
+            if (metric_file != NULL)
+            {
+                if (!met.Save(metric_file))
+                {
+                    fprintf(stderr, "Cannot save the ITHI metrics in <%s>.\n", metric_file);
+                    exit_code = -1;
+                }
+                else
+                {
+                    printf("ITHI metrics computed and saved in <%s>\n", metric_file);
+                }
+            }
+            else if (!met.SaveMetricFiles())
+            {
+                fprintf(stderr, "Cannot save the ITHI metrics.\n");
+                exit_code = -1;
+            }
+            else
+            {
+                printf("ITHI metrics computed and saved.\n");
+            }
         }
     }
 

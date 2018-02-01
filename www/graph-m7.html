@@ -1,0 +1,208 @@
+<html>
+<head>
+    <style>
+        html {
+            font-family: Verdana;
+        }
+
+        table {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td, th {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #dddddd;
+        }
+    </style>
+
+<script type="text/javascript">
+
+var canvas ;
+var context ;
+var Val_max;
+var Val_min;
+var sections;
+var xScale;
+var yScale;
+		// Values for the Data Plot, they can also be obtained from a external file
+
+var M7DataSet = [85, 86.50, 89, 89, 89.30, 90, 89.50, 90, 90.50]
+
+    function init() {
+        // set these values for your data 
+        setDateElement();
+        setValElement("valM7", getLastElement(M7DataSet));
+        setValElement("averageM7", getAverageElement(M7DataSet));
+
+        // Plot the chart
+        setScale("graphM7");
+
+        plotGraphM7(M7DataSet, "#404040C0");
+    }
+
+    function setDateElement() {
+        dateElement = document.getElementById("dateHeading");
+        dateElement.innerHTML = "September 2017";
+    }
+
+    function setValElement(valElementId, x) {
+        elm = document.getElementById(valElementId);
+
+        if (x.toFixed(2)) {
+            elm.innerHTML = "<b>" + x.toFixed(2) + "%</b>";
+        }
+        else {
+            elm.innerHTML = "<b>" + x + "</b>";
+        }
+    }
+
+    function getLastElement(dataSet) {
+        if (dataSet.length < 1) {
+            return "-";
+        }
+        else {
+            return dataSet[dataSet.length - 1];
+        }
+    }
+
+    function getAverageElement(dataSet) {
+        if (dataSet.length <= 1) {
+            return "-";
+        }
+        else {
+            last = dataSet.length - 2;
+            first = 0;
+            if (dataSet.length > 13) {
+                first = dataSet.length - 13;
+            }
+            average = 0;
+            for (i = first; i <= last; i++) {
+                average += dataSet[i];
+            }
+            average /= (last + 1 - first);
+
+            return average;
+        }
+    }
+
+    function setScale(canvasId) {
+        sections = 12;
+        Val_max = 100;
+        Val_min = 0;
+        var stepSize = 10;
+        var columnSize = 50;
+        var rowSize = 50;
+        var margin = 10;
+        var xAxis = [" ", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+
+        canvas = document.getElementById(canvasId);
+        context = canvas.getContext("2d");
+        context.fillStyle = "#808080"
+        context.font = "20 pt Verdana"
+
+        yScale = (canvas.height - columnSize - margin) / (Val_max - Val_min);
+        xScale = (canvas.width - rowSize) / sections;
+
+        context.strokeStyle = "#808080"; // color of grid lines
+        context.beginPath();
+        // print Parameters on X axis, and grid lines on the graph
+        for (i = 1; i <= sections + 1; i++) {
+            var x = i * xScale;
+            context.fillText(xAxis[i], x, columnSize - margin);
+            context.moveTo(x, columnSize + margin);
+            context.lineTo(x, canvas.height);
+        }
+        // print row header and draw horizontal grid lines
+        var count = 0;
+        for (scale = Val_max; scale >= Val_min; scale = scale - stepSize) {
+            var y = columnSize + (yScale * count * stepSize);
+            context.fillText(scale + "%", margin, y + margin);
+            context.moveTo(rowSize, y + margin)
+            context.lineTo(canvas.width, y + margin)
+            count++;
+        }
+        context.stroke();
+
+        context.translate(rowSize, canvas.height + Val_min * yScale);
+        context.scale(1, -1 * yScale);
+    }
+
+    function plotGraphM7(dataSet, graphColor) {
+        l = dataSet.length;
+
+        if (l > sections) {
+            l = sections;
+        }
+
+        // Plot the data set
+
+        context.fillStyle = graphColor;
+        context.beginPath();
+        context.moveTo(0, 0);
+
+        for (i = 0; i < l; i++) {
+            context.lineTo(i * xScale, dataSet[i]);
+        }
+
+        context.lineTo((l - 1) * xScale, 0);
+        context.closePath();
+        context.fill();
+
+    }
+
+</script>
+</head>
+
+<body onLoad="init()">
+<h1>M7 – deployment of DNS SEC</h1>
+<h2 id="dateHeading">-</h2>
+    <p>
+        We track the deployment of DNSSEC by measuring the number of top level domains 
+        that are signed according to DNSSEC. The data is measured by parsing a 
+        copy of the root zone. The metric M7 is defined as the ratio of the number of 
+        TLD for which at least one DS record is present over the total number of TLD 
+        in the root zone.
+    </p>
+    <p>
+        In the following table, the <em>current value</em> is the
+        value of the metric for the current month.
+        The <em>average value</em> is the average value of that metric
+        over the 12 months preceeding this one -- or the average since the beginning
+        of measurements if measurements started fewer than 12 months ago.
+    </p>
+
+    <table>
+        <tr>
+            <th></th>
+            <th>Current value</th>
+            <th>Average value</th>
+        </tr>
+        <tr>
+            <td>
+                M7: % of TLDs signed with DNSSEC
+            </td>
+            <td align="right" id="valM7">
+                -
+            </td>
+            <td align="right" id="averageM7">
+                -
+            </td>
+        </tr>
+    </table>
+    <p>
+        The following graph shows the evolution of M7 over time.
+    </p>
+
+    <canvas id="graphM7" height="400" width="650">
+        No M7 data available
+    </canvas>
+</body>
+</html>

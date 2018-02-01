@@ -523,6 +523,11 @@ bool ithimetrics::Save(char const * file_name)
     ret = (F != NULL);
 #endif
 
+    if (m2_data != NULL)
+    {
+        SaveM2(F);
+    }
+
     if (ret)
     {
         fprintf(F, "M3.1, , %6f,\n", m3_1);
@@ -1064,7 +1069,7 @@ bool ithimetrics::SetAbuseFileName(char const * abuse_file_name)
 {
     bool ret = true;
 
-    if (m2_data != NULL)
+    if (m2_data == NULL)
     {
         m2_data = new M2Data();
         if (m2_data == NULL)

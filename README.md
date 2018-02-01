@@ -4,12 +4,15 @@ The ITHITOOLS program include a set of tools designed to compute some of
 "Identifier Technology Health Indicators" (ITHI) metrics defined by ICANN.
 The identifiers include Names, Numbers, and Protocol Parameters.
 A general presentation of the ITHI work is available here: https://www.icann.org/ithi.
-The tools are focused on a subset of the ITHI problem, 
+The capture part of the tools are focused on a subset of the ITHI problem, 
 specifically the computation of the IHTI metrics M3, M4 and M6:
 
 * overhead in root traffic (M3.1, and M3.2 for duplicate requests contained in single PCAP file)
 * leakage of RFC6761 names and other undelegated names (M4)
 * usage of DNS protocol parameters defined in IANA registries (M6) plus list of unregistered parameters and frequencies.
+
+The metric part of the tools reads data from the ITHI input folders, and produces the
+ITHI metrics.
 
 # Usage
 
@@ -22,6 +25,9 @@ The project builds a single executable, "ithitools.exe", which can be used in tw
 
 Calling ithitools with the option "-h" will produce a standard looking "usage"
 page. Further documentation is available in DnsProtocolParametersAnalysis.pdf.
+
+On Linux systems, the project also builds a shared library, "ithicap" (libithicap.so). This
+library is meant to be used as an extension to "dnscap".
 
 # Building ITHITOOLS
 

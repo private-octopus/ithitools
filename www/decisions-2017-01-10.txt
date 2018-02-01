@@ -1,0 +1,27 @@
+M7: OK. Echelle 0 a 100
+
+Look at MRTG graphs -- can zoom to slices of time, etc.
+2 time scales? Variable time scales? Decide: 1- beginning of time; 2- yearly.
+
+M3.[1-2]: use pie for current value. Use stacked graphs for evolution.
+    use plot.ly in Python for the graphs.
+    Keep it simplefor now, not so important for San Juan/PR.
+
+M.3.3: keep it a table. Simplify: this month, average over last 12 months.
+
+Decision: average per month rather than daily metrics. We will see what the community says.
+
+Registry activity: just having no activity is not important, but there are indeed differences.
+
+Have table with results for all registries (M6). Complete table, plus top activity and top squatting. (Include registration activity metric).
+As a starter, do not display list of values.
+
+Data collection? Need call with Roy Arends to get M3 data. Should get a call with compliance and get M1 data. Need call with Dave P. to understand the registrar data. Also need to contact recursive.
+
+
+
+
+
+
+
+
