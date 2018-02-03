@@ -23,10 +23,9 @@
 #define ITHI_TEST_H
 #include <stdio.h>
 
-#ifndef TEST_LOG
-#define TEST_LOG ithi_test_class::Log
-#endif
-
+void SET_LOG_FILE(FILE* f_log);
+FILE*  GET_LOG_FILE();
+void TEST_LOG(const char * fmt, ...);
 
 class ithi_test_class
 {
@@ -42,7 +41,7 @@ public:
     static ithi_test_class * TestByNumber(int number);
 
     static void SetLog(FILE* F);
-    static void Log(const char* fmt, ...);
+    static FILE * GetLog();
 };
 
 

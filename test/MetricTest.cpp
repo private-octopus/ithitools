@@ -66,15 +66,28 @@ bool MetricTest::DoTest()
     CaptureSummary cs;
     bool ret = cs.Load(metric_test_input);
 
+    if (!ret)
+    {
+        TEST_LOG("Could not load input from %s\n", metric_test_input);
+    }
+
     if (ret)
     {
         ithimetrics met;
 
-        ret = met.GetM7(root_zone_file);
+        ret = met.GetM7(root_zone_file); 
+        if (!ret)
+        {
+            TEST_LOG("Could not load M7 from %s\n", root_zone_file);
+        }
         
         if (ret)
         {
             ret = met.GetMetrics(&cs);
+            if (!ret)
+            {
+                TEST_LOG("Could not get metrics out of %s\n", metric_test_input);
+            }
         }
 
         if (ret)
@@ -85,7 +98,16 @@ bool MetricTest::DoTest()
             {
                 ret = compare_files(metric_test_output, metric_test_ref);
             }
+            else
+            {
+                TEST_LOG("Could not save metrics to %s\n", metric_test_output);
+            }
         }
+    }
+
+    if (ret)
+    {
+        TEST_LOG("Saved metrics to %s\n", metric_test_output);
     }
 
     return ret;
@@ -136,6 +158,7 @@ bool MetricTest::compare_files(char const * fname1, char const * fname2)
             {
                 /* F2 is too short */
                 TEST_LOG("File comparison fails - %s is too short.\n", fname2);
+                TEST_LOG("    Missing line: %s", buffer1);
                 ret = false;
             }
             else
@@ -154,6 +177,7 @@ bool MetricTest::compare_files(char const * fname1, char const * fname2)
         {
             /* F2 is too long */
             TEST_LOG("File comparison fails - %s is too long.\n", fname2);
+            TEST_LOG("    Extra line: %s", buffer2);
             ret = false;
         }
     }

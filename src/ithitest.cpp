@@ -90,7 +90,7 @@ int main(int argc, char ** argv)
     int nb_success = 0;
     int nb_fails = 0;
 
-    ithi_test_class::SetLog(stderr);
+    SET_LOG_FILE(stderr);
 
     if (argc < 2)
     {

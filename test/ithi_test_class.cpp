@@ -139,20 +139,28 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
 
 static FILE * F_log = NULL;
 
-void ithi_test_class::SetLog(FILE * F)
+void SET_LOG_FILE(FILE * F)
 {
     F_log = F;
 }
 
-void ithi_test_class::Log(const char * fmt, ...)
+FILE * GET_LOG_FILE()
 {
-    if (F_log != NULL)
-    {
-        va_list args;
-        va_start(args, fmt);
-        fprintf(F_log, fmt, args);
-        va_end(args);
-    }
+    return F_log;
 }
 
+void TEST_LOG(const char * fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    if (F_log != NULL)
+    {
+#ifdef _WINDOWS
+        vfprintf_s(F_log, fmt, args);
+#else
+        vfprintf(F_log, fmt, args);
+#endif
+    }
+    va_end(args);
+}
 
