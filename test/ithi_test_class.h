@@ -21,6 +21,12 @@
 
 #ifndef ITHI_TEST_H
 #define ITHI_TEST_H
+#include <stdio.h>
+
+#ifndef TEST_LOG
+#define TEST_LOG ithi_test_class::Log
+#endif
+
 
 class ithi_test_class
 {
@@ -34,6 +40,9 @@ public:
     static char const * GetTestName(int number);
     static int GetTestNumberByName(const char * name);
     static ithi_test_class * TestByNumber(int number);
+
+    static void SetLog(FILE* F);
+    static void Log(const char* fmt, ...);
 };
 
 

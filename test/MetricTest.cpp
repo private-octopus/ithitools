@@ -115,6 +115,16 @@ bool MetricTest::compare_files(char const * fname1, char const * fname2)
         ret = (F2 != NULL);
     }
 #endif
+    if (F1 == NULL)
+    {
+        TEST_LOG("Cannot open %s.\n", fname1);
+    }
+
+    if (F2 == NULL)
+    {
+        TEST_LOG("Cannot open %s.\n", fname2);
+    }
+
     if (ret && F1 != NULL && F2 != NULL)
     {
         char buffer1[256];
@@ -125,17 +135,25 @@ bool MetricTest::compare_files(char const * fname1, char const * fname2)
             if (fgets(buffer2, sizeof(buffer2), F2) == NULL)
             {
                 /* F2 is too short */
+                TEST_LOG("File comparison fails - %s is too short.\n", fname2);
                 ret = false;
             }
             else
             {
                 ret = compare_lines(buffer1, buffer2);
+                if (!ret)
+                {
+                    TEST_LOG("File comparison fails - different value:\n");
+                    TEST_LOG("    %s", buffer1); 
+                    TEST_LOG(" vs %s", buffer2);
+                }
             }
         }
 
         if (ret && fgets(buffer2, sizeof(buffer2), F2) != NULL)
         {
             /* F2 is too long */
+            TEST_LOG("File comparison fails - %s is too long.\n", fname2);
             ret = false;
         }
     }
@@ -203,12 +221,14 @@ bool MetricDateTest::DoTest()
     {
         if (met.GetMetricDate() == NULL)
         {
+            TEST_LOG("Metric test: cannot get metric's date.\n");
             ret = false;
         }
         else
         {
             if (strcmp(metric_date_test_jan_31_2017, met.GetMetricDate()) != 0)
             {
+                TEST_LOG("Metric test: date value is not test date, 2017/01/31.\n");
                 ret = false;
             }
         }
@@ -320,6 +340,12 @@ bool MetricCaptureFileTest::DoTest()
         {
             ret = false;
         }
+    }
+
+    if (!ret)
+    {
+        TEST_LOG("Metric test: cannot create and populate the test directory %s.\n",
+            metric_test_dir_ithi);
     }
 
     return ret;

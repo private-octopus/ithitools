@@ -90,6 +90,8 @@ int main(int argc, char ** argv)
     int nb_success = 0;
     int nb_fails = 0;
 
+    ithi_test_class::SetLog(stderr);
+
     if (argc < 2)
     {
         for (int i = 0; i < ithi_test_class::get_number_of_tests(); i++)

@@ -1,3 +1,7 @@
+
+#include <stdarg.h>
+#include <stdlib.h>
+#include <string.h>
 #include <string.h>
 
 #include "hashtest.h"
@@ -98,29 +102,57 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_list_enum::test_enum_Rfc6761:
         test = new testRfc6761();
+        break;
     case test_list_enum::test_enum_Load:
         test = new LoadTest();
+        break;
     case test_list_enum::test_enum_Save:
         test = new SaveTest();
+        break;
     case test_list_enum::test_enum_Merge:
         test = new MergeTest();
+        break;
     case test_list_enum::test_enum_Capture:
         test = new CaptureTest();
+        break;
     case test_list_enum::test_enum_Metric:
         test = new MetricTest();
+        break;
     case test_list_enum::test_enum_Pattern:
         test = new PatternTest();
+        break;
     case test_list_enum::test_enum_Plugin:
         test = new PluginTest();
+        break;
     case test_list_enum::test_enum_Csv:
         test = new CsvTest();
+        break;
     case test_list_enum::test_enum_M2Data:
         test = new M2DataTest();
+        break;
     default:
         break;
     }
 
     return test;
+}
+
+static FILE * F_log = NULL;
+
+void ithi_test_class::SetLog(FILE * F)
+{
+    F_log = F;
+}
+
+void ithi_test_class::Log(const char * fmt, ...)
+{
+    if (F_log != NULL)
+    {
+        va_list args;
+        va_start(args, fmt);
+        fprintf(F_log, fmt, args);
+        va_end(args);
+    }
 }
 
 
