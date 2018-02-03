@@ -268,6 +268,7 @@ static const char * metric_test_dir_list[] = {
 static const char * metric_test_file_list[] = {
     metric_test_dir_m346_l1_f, metric_test_dir_m346_l2_b, metric_test_dir_m346_l2_f, metric_test_dir_m346_b
 };
+
 bool MetricCaptureFileTest::DoTest()
 {
     bool ret = true;

@@ -21,13 +21,16 @@
 
 #ifndef SAVE_TEST_H
 #define SAVE_TEST_H
-class SaveTest
+
+#include "ithi_test_class.h"
+
+class SaveTest : public ithi_test_class
 {
 public:
     SaveTest();
     ~SaveTest();
 
-    bool DoTest();
+    bool DoTest() override;
 };
 
 #endif /* SAVE_TEST_H */

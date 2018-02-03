@@ -18,14 +18,18 @@
 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+#ifndef TEST_RFC6761_H
+#define TEST_RFC6761_H
 
-#pragma once
-class testRfc6761
+#include "ithi_test_class.h"
+
+class testRfc6761: public ithi_test_class
 {
 public:
     testRfc6761();
     ~testRfc6761();
 
-    bool DoTest();
+    bool DoTest() override;
 };
 
+#endif

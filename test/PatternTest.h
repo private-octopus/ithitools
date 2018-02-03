@@ -22,13 +22,16 @@
 #ifndef PATTERN_TEST_H
 #define PATTERN_TEST_H
 
-class PatternTest
+#include <stdint.h>
+#include "ithi_test_class.h"
+
+class PatternTest : public ithi_test_class
 {
 public:
     PatternTest();
     ~PatternTest();
 
-    bool DoTest();
+    bool DoTest() override;
 
 private:
     bool TestOnePattern(char const ** test_strings,

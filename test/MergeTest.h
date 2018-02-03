@@ -21,13 +21,16 @@
 
 #ifndef MERGE_TEST_H
 #define MERGE_TEST_H
-class MergeTest
+
+#include "ithi_test_class.h"
+
+class MergeTest: public ithi_test_class
 {
 public:
     MergeTest();
     ~MergeTest();
 
-    bool DoTest();
+    bool DoTest() override;
 };
 
 #endif /* MERGE_TEST_H */

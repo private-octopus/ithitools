@@ -22,13 +22,15 @@
 #ifndef METRIC_TEST_H
 #define METRIC_TEST_H
 
-class MetricTest
+#include "ithi_test_class.h"
+
+class MetricTest : public ithi_test_class
 {
 public:
     MetricTest();
     ~MetricTest();
 
-    bool DoTest();
+    bool DoTest() override;
 
     static bool compare_files(char const * fname1, char const * fname2);
     static bool compare_lines(char const * b1, char const * b2);

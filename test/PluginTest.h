@@ -22,13 +22,15 @@
 #ifndef PLUGIN_TEST_H
 #define PLUGIN_TEST_H
 
-class PluginTest
+#include "ithi_test_class.h"
+
+class PluginTest : public ithi_test_class
 {
 public:
     PluginTest();
     ~PluginTest();
 
-    bool DoTest();
+    bool DoTest() override;
 private:
     bool LoadPcapFile(char const * fileName);
     void LoadOpt(int argc, char * argv[]);

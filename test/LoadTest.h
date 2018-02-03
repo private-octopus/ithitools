@@ -22,13 +22,15 @@
 #ifndef LOAD_TEST_H
 #define LOAD_TEST_H
 
-class LoadTest
+#include "ithi_test_class.h"
+
+class LoadTest: public ithi_test_class
 {
 public:
     LoadTest();
     ~LoadTest();
 
-    bool DoTest();
+    bool DoTest() override;
 private:
     bool DoGoodTest();
     bool DoNoSuchTest();

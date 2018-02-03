@@ -22,13 +22,15 @@
 #ifndef CSV_TEST_H
 #define CSV_TEST_H
 
-class CsvTest
+#include "ithi_test_class.h"
+
+class CsvTest : public ithi_test_class
 {
 public:
     CsvTest();
     ~CsvTest();
 
-    bool DoTest();
+    bool DoTest() override;
 };
 
 #endif

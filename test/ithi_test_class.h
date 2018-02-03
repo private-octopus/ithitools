@@ -1,6 +1,6 @@
 /*
 * Author: Christian Huitema
-* Copyright (c) 2017, Private Octopus, Inc.
+* Copyright (c) 2018, Private Octopus, Inc.
 * All rights reserved.
 *
 * Permission to use, copy, modify, and distribute this software for any
@@ -19,17 +19,23 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef CAPTURE_TEST_H
-#define CAPTURE_TEST_H
+#ifndef ITHI_TEST_H
+#define ITHI_TEST_H
 
-#include "ithi_test_class.h"
-
-class CaptureTest: public ithi_test_class
+class ithi_test_class
 {
 public:
-    CaptureTest();
-    ~CaptureTest();
-    bool DoTest() override;
+    ithi_test_class();
+    ~ithi_test_class();
+
+    virtual bool DoTest() = 0;
+
+    static int get_number_of_tests();
+    static char const * GetTestName(int number);
+    static int GetTestNumberByName(const char * name);
+    static ithi_test_class * TestByNumber(int number);
 };
 
-#endif /* CAPTURE_TEST_H */
+
+
+#endif /* ITHI_TEST_H */

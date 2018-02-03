@@ -170,6 +170,7 @@
     <ClInclude Include="..\test\CaptureTest.h" />
     <ClInclude Include="..\test\CsvTest.h" />
     <ClInclude Include="..\test\hashtest.h" />
+    <ClInclude Include="..\test\ithi_test_class.h" />
     <ClInclude Include="..\test\LoadTest.h" />
     <ClInclude Include="..\test\M2DataTest.h" />
     <ClInclude Include="..\test\MergeTest.h" />
@@ -197,6 +198,7 @@
     <ClCompile Include="..\test\CaptureTest.cpp" />
     <ClCompile Include="..\test\CsvTest.cpp" />
     <ClCompile Include="..\test\hashtest.cpp" />
+    <ClCompile Include="..\test\ithi_test_class.cpp" />
     <ClCompile Include="..\test\LoadTest.cpp" />
     <ClCompile Include="..\test\M2DataTest.cpp" />
     <ClCompile Include="..\test\MergeTest.cpp" />

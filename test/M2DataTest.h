@@ -22,13 +22,15 @@
 #ifndef M2_DATA_TEST_H
 #define M2_DATA_TEST_H
 
-class M2DataTest
+#include "ithi_test_class.h"
+
+class M2DataTest : public ithi_test_class
 {
 public:
     M2DataTest();
     ~M2DataTest();
 
-    bool DoTest();
+    bool DoTest() override;
 };
 
 #endif

@@ -30,91 +30,119 @@
 #include "CaptureSummary.h"
 #include "ithimetrics.h"
 
-#include "hashtest.h"
-#include "testRfc6761.h"
-#include "LoadTest.h"
-#include "SaveTest.h"
-#include "MergeTest.h"
-#include "CaptureTest.h"
-#include "MetricTest.h"
-#include "PatternTest.h"
-#include "PluginTest.h"
-#include "CsvTest.h"
-#include "M2DataTest.h"
+#include "ithi_test_class.h"
 
-int main(int argc, char ** argv)
+bool do_one_test(int i, FILE* f_log)
 {
-    bool ret = false;
-    hashtest hash_test;
-    testRfc6761 test6761;
-    LoadTest load_test;
-    SaveTest save_test;
-    MergeTest merge_test;
-    CaptureTest capture_test;
-    MetricTest metric_test;
-    MetricDateTest metric_date_test;
-    MetricCaptureFileTest metric_capture_file_test;
-    PatternTest pattern_test;
-    PluginTest plugin_test;
-    CsvTest csv_test;
-    M2DataTest m2data_test;
+    bool ret = true;
+    ithi_test_class * test = ithi_test_class::TestByNumber(i);
 
-    if (!hash_test.DoTest())
+    if (test == NULL)
     {
-        fprintf(stderr, "hash test fails.\n");
-    }
-    else if (!test6761.DoTest())
-    {
-        fprintf(stderr, "RFC 6761 test fails.\n");
-    }
-    else if (!load_test.DoTest())
-    {
-        fprintf(stderr, "Load test fails.\n");
-    }
-    else if (!save_test.DoTest())
-    {
-        fprintf(stderr, "Save test fails.\n");
-    }
-    else if (!merge_test.DoTest())
-    {
-        fprintf(stderr, "Merge test fails.\n");
-    }
-    else if (!capture_test.DoTest())
-    {
-        fprintf(stderr, "Capture test fails.\n");
-    }
-    else if (!metric_date_test.DoTest())
-    {
-        fprintf(stderr, "Metric date test fails.\n");
-    }
-    else if (!metric_date_test.DoTest())
-    {
-        fprintf(stderr, "Metric date test fails.\n");
-    }
-    else if (!metric_capture_file_test.DoTest())
-    {
-        fprintf(stderr, "Metric capture file test fails.\n");
-    }
-    else if (!pattern_test.DoTest())
-    {
-        fprintf(stderr, "Pattern test fails.\n");
-    }
-    else if (!plugin_test.DoTest())
-    {
-        fprintf(stderr, "Plugin test fails.\n");
-    }
-    else if (!csv_test.DoTest())
-    {
-        fprintf(stderr, "CSV test fails.\n");
-    }
-    else if (!m2data_test.DoTest())
-    {
-        fprintf(stderr, "M2 data test fails.\n");
+        fprintf(f_log, "Cannot instantiate test %d (%s)\n",
+            i, ithi_test_class::GetTestName(i));
+        ret = false;
     }
     else
     {
-        printf("All tests pass.\n");
-        ret = true;
+        fprintf(f_log, "Starting test %d (%s)\n",
+            i, ithi_test_class::GetTestName(i));
+
+        if (test->DoTest())
+        {
+            fprintf(f_log, "    Pass.\n");
+        }
+        else
+        {
+            fprintf(f_log, "    Test %d (%s) FAILS.\n",
+                i, ithi_test_class::GetTestName(i));
+            ret = false;
+        }
+
+        delete test;
+    }
+
+    return ret;
+}
+
+void Usage(int argc, char ** argv, FILE* f_log)
+{
+    fprintf(stderr, "Usage: %s [test_name]\n", argv[0]);
+    fprintf(stderr, "   Possible test names:\n");
+    for (int j = 0; j < ithi_test_class::get_number_of_tests();)
+    {
+        fprintf(stderr, "       ");
+        for (int k = 0; k < 6 && j < ithi_test_class::get_number_of_tests(); k++, j++)
+        {
+            fprintf(stderr, "%s", ithi_test_class::GetTestName(j));
+            if (j < ithi_test_class::get_number_of_tests())
+            {
+                fprintf(stderr, ", ");
+            }
+        }
+        fprintf(stderr, "\n");
+    }
+}
+
+int main(int argc, char ** argv)
+{
+    bool ret = true;
+    int nb_success = 0;
+    int nb_fails = 0;
+
+    if (argc < 2)
+    {
+        for (int i = 0; i < ithi_test_class::get_number_of_tests(); i++)
+        {
+            if (do_one_test(i, stdout))
+            {
+                nb_success++;
+            }
+            else
+            {
+                nb_fails++;
+                ret = false;
+            }
+        }
+    }
+    else
+    {
+        for (int i = 1; i < argc; i++)
+        {
+            int test_num = ithi_test_class::GetTestNumberByName(argv[i]);
+
+            if (test_num < ithi_test_class::get_number_of_tests())
+            {
+                if (do_one_test(test_num, stdout))
+                {
+                    nb_success++;
+                }
+                else
+                {
+                    nb_fails++;
+                    ret = false;
+                }
+            }
+            else
+            {
+                fprintf(stderr, "Unknow test name: %s\n", argv[i]);
+                Usage(argc, argv, stderr);
+                break;
+            }
+        }
+    }
+
+    if ((nb_success + nb_fails) > 1)
+    {
+        if (nb_fails == 0)
+        {
+            fprintf(stdout, "All %d tests passed.\n", nb_success);
+        }
+        else
+        {
+            fprintf(stdout, "Out of %d tests, %d FAILED.\n",
+                nb_success + nb_fails, nb_fails);
+        }
     }
 
     return (ret) ? 0 : -1;
