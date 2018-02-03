@@ -26,7 +26,7 @@ class ithi_test_class
 {
 public:
     ithi_test_class();
-    ~ithi_test_class();
+    virtual ~ithi_test_class();
 
     virtual bool DoTest() = 0;
 

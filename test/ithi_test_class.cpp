@@ -77,7 +77,7 @@ int ithi_test_class::GetTestNumberByName(const char * name)
     for (int i = 0; i < test_list_enum::test_enum_max_number; i++)
     {
 #ifdef _WINDOWS
-        if (strcmpi(name, GetTestName(i)) == 0)
+        if (_strcmpi(name, GetTestName(i)) == 0)
 #else
         if (strcasecmp(name, GetTestName(i)) == 0)
 #endif
