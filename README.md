@@ -84,7 +84,7 @@ compilers for your system, typically gcc/g++. If you want to use a different
 compiler, for example CLANG, you can either change your system's defaults,
 or set explicit arguments to CMAKE, such as:
 ~~~
-   cmake -D CMAKE_C_COMPILER="/usr/bin/clang" -D CMAKE_CXX_COMPILER "/usr/bin/clang++" .
+   cmake -D CMAKE_C_COMPILER="/usr/bin/clang" -D CMAKE_CXX_COMPILER="/usr/bin/clang++" .
 ~~~
 The exact value of the arguments depend of course of where the compilers
 are installed.
