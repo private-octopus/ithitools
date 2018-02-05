@@ -27,7 +27,15 @@ Calling ithitools with the option "-h" will produce a standard looking "usage"
 page. Further documentation is available in DnsProtocolParametersAnalysis.pdf.
 
 On Linux systems, the project also builds a shared library, "ithicap" (libithicap.so). This
-library is meant to be used as an extension to "dnscap".
+library is meant to be used as an extension to "dnscap". A typical usage would be:
+~~~
+    dnscap <dnscap-parameters> -P libithicap.so -o <ithi-capture-file.csv>
+~~~
+The "ithicap" capture options can be displayed with the option -h, as in:
+~~~
+    dnscap <dnscap-parameters> -P libithicap.so -h
+~~~ 
+
 
 # Building ITHITOOLS
 
@@ -57,3 +65,26 @@ To build ITHITOOLS on Linux, you need to:
 ~~~
  * Run the test program "ithitest" to verify the port.
 
+### Build dependencies on Linux
+
+Building ITHITOOLS on Linux requires installation of CMAKE and of a C++ compiler. 
+The installation tools depend on the Linux version.
+
+On Ubuntu, the recommended way to install the GCC/C++ compiler is by installing
+the "build essentials":
+~~~
+   sudo apt-get install build-essential
+~~~
+The CMAKE package can of course be installed as:
+~~~
+   sudo apt-get install cmake
+~~~
+By default, CMAKE will create a make file that reference the default C/C++
+compilers for your system, typically gcc/g++. If you want to use a different
+compiler, for example CLANG, you can either change your system's defaults,
+or set explicit arguments to CMAKE, such as:
+~~~
+   cmake -D CMAKE_C_COMPILER="/usr/bin/clang" -D CMAKE_CXX_COMPILER "/usr/bin/clang++" .
+~~~
+The exact value of the arguments depend of course of where the compilers
+are installed.
