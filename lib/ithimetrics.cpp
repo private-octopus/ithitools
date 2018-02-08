@@ -928,7 +928,24 @@ void ithimetrics::GetM4_2(CaptureSummary * cs)
 
 void ithimetrics::GetM4_3(CaptureSummary * cs)
 {
-    GetM4_X(cs, REGISTRY_DNS_Frequent_TLD_Usage, &m4_3, 0.001);
+    double min_val = 0;
+
+    if (nb_userqueries > 0)
+    {
+        /*
+         * We adjust the threshold to 1% of the non delegated TLD queries,
+         * or 0.1% of total queries, whichever is lower.
+         */
+        min_val = (double)nb_nondelegated;
+        min_val /= nb_userqueries;
+        min_val /= 500;
+        
+        if (min_val > 0.001)
+        {
+            min_val = 0.001;
+        }
+    }
+    GetM4_X(cs, REGISTRY_DNS_Frequent_TLD_Usage, &m4_3, min_val);
 }
 
 void ithimetrics::GetM3_X(CaptureSummary * cs, uint32_t table_id, 
