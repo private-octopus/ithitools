@@ -83,7 +83,7 @@ extern "C"
         int opt;
         int exit_code = 0;
 
-        while (exit_code == 0 && (opt = getopt(*argc, *argv, "o:r:a:x:n:t:u:hcsf")) != -1)
+        while (exit_code == 0 && (opt = getopt(*argc, *argv, "o:r:a:x:n:t:u:hf")) != -1)
         {
             switch (opt)
             {
@@ -125,6 +125,7 @@ extern "C"
                 fprintf(stderr, "Sorry, update list of special usage names (RFC6761) not implemented yet.\n");
                 exit(1);
                 break;
+
             case 'h':
             default:
                 libithicap_usage();
