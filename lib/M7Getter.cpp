@@ -278,3 +278,43 @@ void TldDSAsKey::Add(TldDSAsKey * key)
     count += key->count;
     ds_count += key->ds_count;
 }
+
+ComputeM7::ComputeM7()
+    :
+    m7(0)
+{
+}
+
+ComputeM7::~ComputeM7()
+{
+}
+
+bool ComputeM7::Load(char const * single_file_name)
+{
+    return m7Getter.GetM7(single_file_name);
+}
+
+bool ComputeM7::Compute()
+{
+    bool ret = true;
+
+    if (m7Getter.nb_tld_queried > 0)
+    {
+        m7 = ((double)m7Getter.nb_ds_present) / ((double)m7Getter.nb_tld_queried);
+    }
+    else
+    {
+        ret = false;
+    }
+
+    return ret;
+}
+
+bool ComputeM7::Write(FILE * F_out)
+{
+    bool ret = true;
+
+    ret = (fprintf(F_out, "M7, , %6f,\n", m7) > 0);
+
+    return ret;
+}

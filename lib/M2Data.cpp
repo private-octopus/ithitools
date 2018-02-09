@@ -410,3 +410,54 @@ bool M2Data::parse_file_name(char const * monthly_csv_file_name)
 
     return ret;
 }
+
+ComputeM2::ComputeM2()
+{
+    for (int i = 0; i < 4; i++)
+    {
+        ithi_m2[i] = 0;
+    }
+}
+
+ComputeM2::~ComputeM2()
+{
+}
+
+bool ComputeM2::Load(char const * single_file_name)
+{
+    bool ret = true;
+    char const * file_name = NULL;
+
+    if ((file_name = m2Data.get_file_name(single_file_name)) == NULL)
+    {
+        ret = false;
+    }
+    else if (!m2Data.parse_file_name(file_name))
+    {
+        ret = false;
+    }
+    else
+    {
+        ret = m2Data.Load(single_file_name);
+    }
+    return false;
+}
+
+bool ComputeM2::Compute()
+{
+    m2Data.ComputeMetrics(ithi_m2);
+
+    return true;
+}
+
+bool ComputeM2::Write(FILE * F_out)
+{
+    bool ret = true;
+
+    for (int i = 0; i < 4; i++)
+    {
+        ret &= (fprintf(F_out, "M2.%d, %6f,\n", i + 1, ithi_m2[i]) > 0);
+    }
+
+    return ret;
+}

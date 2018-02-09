@@ -20,6 +20,8 @@ SET(ITHITOOLS_LIBRARY_FILES
    lib/M7Getter.cpp
    lib/CsvHelper.cpp
    lib/M2Data.cpp
+   lib/ComputeMetric.cpp
+   lib/ComputeM34.cpp
 )
 
 SET(ITHITOOLS_TEST_LIBRARY_FILES
@@ -50,6 +52,8 @@ ADD_EXECUTABLE(ithitools
    lib/getopt.c
    lib/CsvHelper.cpp
    lib/M2Data.cpp
+   lib/ComputeMetric.cpp
+   lib/ComputeM34.cpp
 )
 
 ADD_EXECUTABLE(ithitest
@@ -65,6 +69,8 @@ ADD_EXECUTABLE(ithitest
    lib/M7Getter.cpp
    lib/CsvHelper.cpp
    lib/M2Data.cpp
+   lib/ComputeMetric.cpp
+   lib/ComputeM34.cpp
    test/CaptureTest.cpp
    test/hashtest.cpp
    test/LoadTest.cpp

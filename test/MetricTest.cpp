@@ -83,7 +83,15 @@ bool MetricTest::DoTest()
         
         if (ret)
         {
-            ret = met.GetMetrics(&cs);
+            if (!met.SetCaptureFileNames(1, &metric_test_input))
+            {
+                ret = false;
+                TEST_LOG("Could not set capture file name to %s\n", metric_test_input);
+            }
+            else
+            {
+                ret = met.GetMetrics();
+            }
             if (!ret)
             {
                 TEST_LOG("Could not get metrics out of %s\n", metric_test_input);

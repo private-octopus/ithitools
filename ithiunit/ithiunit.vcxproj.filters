@@ -102,6 +102,15 @@
     <ClInclude Include="..\test\ithi_test_class.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\lib\ComputeMetric.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\ComputeM6.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\ComputeM34.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -180,6 +189,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\test\ithi_test_class.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\ComputeMetric.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\ComputeM6.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\ComputeM34.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

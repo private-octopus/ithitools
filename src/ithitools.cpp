@@ -361,7 +361,12 @@ int main(int argc, char ** argv)
             fprintf(stderr, "Cannot compute the ITHI metrics M7 from <root_zone_file>.\n");
             exit_code = -1;
         }
-        else if (!met.GetMetrics(&cs))
+        else if (!met.SetCaptureFileNames(1, &out_file))
+        {
+            fprintf(stderr, "Cannot set the capture file name to %s.\n", out_file);
+            exit_code = -1;
+        }
+        else if (!met.GetMetrics())
         {
             fprintf(stderr, "Cannot compute the ITHI metrics.\n");
             exit_code = -1;

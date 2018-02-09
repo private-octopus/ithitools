@@ -148,6 +148,9 @@
   <ItemGroup>
     <ClCompile Include="..\lib\AddressFilter.cpp" />
     <ClCompile Include="..\lib\CaptureSummary.cpp" />
+    <ClCompile Include="..\lib\ComputeM34.cpp" />
+    <ClCompile Include="..\lib\ComputeM6.cpp" />
+    <ClCompile Include="..\lib\ComputeMetric.cpp" />
     <ClCompile Include="..\lib\CsvHelper.cpp" />
     <ClCompile Include="..\lib\DnscapPlugIn.cpp" />
     <ClCompile Include="..\lib\DnsStats.cpp" />
@@ -163,6 +166,9 @@
   <ItemGroup>
     <ClInclude Include="..\lib\AddressFilter.h" />
     <ClInclude Include="..\lib\CaptureSummary.h" />
+    <ClInclude Include="..\lib\ComputeM34.h" />
+    <ClInclude Include="..\lib\ComputeM6.h" />
+    <ClInclude Include="..\lib\ComputeMetric.h" />
     <ClInclude Include="..\lib\CsvHelper.h" />
     <ClInclude Include="..\lib\dnscap_common.h" />
     <ClInclude Include="..\lib\DnsStatHash.h" />

@@ -1,6 +1,8 @@
 #ifndef M7_GETTER_H
 #define M7_GETTER_H
 
+#include "ComputeMetric.h"
+
 class TldDSAsKey
 {
 public:
@@ -34,6 +36,21 @@ public:
 private:
 
     bool ParseRecord(char * buffer, char ** p_tld, size_t * tld_length, bool * has_ds);
+};
+
+class ComputeM7 : public ComputeMetric
+{
+public:
+    ComputeM7();
+    ~ComputeM7();
+
+    bool Load(char const * single_file_name) override;
+    bool Compute() override;
+    bool Write(FILE * F_out) override;
+
+private:
+    M7Getter m7Getter;
+    double m7;
 };
 
 #endif

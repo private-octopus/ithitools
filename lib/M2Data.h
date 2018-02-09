@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <vector>
+#include "ComputeMetric.h"
 
 enum M2DataType {
     Unknown = 0,
@@ -60,3 +61,17 @@ public:
     M2DataType M2Type;
 };
 
+class ComputeM2 : public ComputeMetric
+{
+public:
+    ComputeM2();
+    ~ComputeM2();
+
+    bool Load(char const * single_file_name) override;
+    bool Compute() override;
+    bool Write(FILE * F_out) override;
+
+private:
+    M2Data m2Data;
+    double ithi_m2[4];
+};
