@@ -55,7 +55,7 @@ bool ComputeMetric::Save(char const * out_file)
     errno_t err = fopen_s(&F, out_file, "w");
     ret = (err == 0);
 #else
-    F = fopen(metric_file[i], "w");
+    F = fopen(out_file, "w");
     ret = (F != NULL);
 #endif
 
