@@ -22,6 +22,8 @@
 #ifndef CSV_HELPER_H
 #define CSV_HELPER_H
 
+#include <stdint.h>
+
 class CsvHelper
 {
 public:
