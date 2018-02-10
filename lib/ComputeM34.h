@@ -42,7 +42,7 @@ public:
     bool Write(FILE * F_out) override;
 
 private:
-    uint32_t nb_rootqueries;
+    uint64_t nb_rootqueries;
     double m3_1;
     double m3_2;
     std::vector<metric34_line_t> m33_1;
@@ -73,9 +73,9 @@ public:
     bool Write(FILE * F_out) override;
 
 private:
-    uint32_t nb_userqueries;
-    uint32_t nb_nondelegated;
-    uint32_t nb_delegated;
+    uint64_t nb_userqueries;
+    uint64_t nb_nondelegated;
+    uint64_t nb_delegated;
     CaptureSummary cs;
 
     double m4_1;

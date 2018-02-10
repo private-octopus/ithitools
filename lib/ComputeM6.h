@@ -33,7 +33,7 @@ typedef struct _st_metric6_registered_t {
 
 typedef struct _st_metric6_parameter {
     uint32_t parameter_value;
-    uint32_t parameter_count;
+    uint64_t parameter_count;
 } metric6_parameter_t;
 
 typedef struct _st_metric6_def_t {

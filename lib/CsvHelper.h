@@ -29,6 +29,7 @@ public:
     ~CsvHelper();
 
     static int read_number(int * number, size_t start, char const * buffer, size_t buffer_max);
+    static int read_number64(uint64_t * number, size_t start, char const * buffer, size_t buffer_max);
     static int read_string(char* text, int text_max, size_t start, char const * buffer, size_t buffer_max);
     static int read_double(double * number, size_t start, char const * buffer, size_t buffer_max);
 

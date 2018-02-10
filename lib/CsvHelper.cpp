@@ -127,6 +127,99 @@ int CsvHelper::read_number(int * number, size_t start, char const * buffer, size
     return (int)start;
 }
 
+
+int CsvHelper::read_number64(uint64_t * number, size_t start, char const * buffer, size_t buffer_max)
+{
+    int x = 0;
+    char text[64];
+    int text_max = sizeof(text);
+    int has_comma = 0;
+    int last_comma_index = -1;
+    char * end_ptr;
+
+
+    /* Skip blanks */
+    while (start < buffer_max && (buffer[start] == ' ' || buffer[start] == '\t'))
+    {
+        start++;
+    }
+
+    /* If quoted, remove the quotes */
+    if (start < buffer_max && buffer[start] == '"')
+    {
+        start++;
+        while (start < buffer_max && buffer[start] != 0)
+        {
+            if (buffer[start] == '"')
+            {
+                /* Skip the quote and break. */
+                start++;
+                break;
+            }
+            else if (buffer[start] == ',')
+            {
+                /* Skip the comma unless there is a syntax error. */
+                if (has_comma != 0)
+                {
+                    if ((x - last_comma_index) != 3)
+                    {
+                        text[x++] = ',';
+                        break;
+                    }
+                }
+
+                has_comma = 1;
+                last_comma_index = x;
+                start++;
+            }
+            else
+            {
+                if (x < (text_max - 1))
+                {
+                    text[x] = buffer[start];
+                    x++;
+                }
+                start++;
+            }
+        }
+    }
+    else
+    {
+        while (start < buffer_max && buffer[start] != 0 && buffer[start] != ',')
+        {
+            if (x < (text_max - 1))
+            {
+                text[x] = buffer[start];
+                x++;
+            }
+            start++;
+        }
+    }
+    text[x] = 0;
+
+    *number = strtoull(text, &end_ptr, 10);
+
+    /* Skip comma */
+    while (start < buffer_max)
+    {
+        if (buffer[start] == ',')
+        {
+            start++;
+            break;
+        }
+        else if (buffer[start] == ' ' || buffer[start] == '\t')
+        {
+            start++;
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    return (int)start;
+}
+
 int CsvHelper::read_string(char* text, int text_max, size_t start, char const * buffer, size_t buffer_max)
 {
     int x = 0;

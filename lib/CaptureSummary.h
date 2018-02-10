@@ -35,7 +35,7 @@ typedef struct _capture_line
         int key_number;
         char key_value[64];
     };
-    int count;
+    uint64_t count;
 } CaptureLine;
 
 class CaptureSummary
@@ -58,7 +58,7 @@ public:
 
     size_t Size();
 
-    uint32_t GetCountByNumber(char const * table_name, uint32_t number);
+    uint64_t GetCountByNumber(char const * table_name, uint32_t number);
 
     void Extract(char const * table_name, std::vector<CaptureLine *> *extract);
 

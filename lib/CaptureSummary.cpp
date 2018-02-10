@@ -69,7 +69,7 @@ bool CaptureSummary::Load(char const * file_name)
         {
             start = CsvHelper::read_string(line.key_value, sizeof(line.key_value), start, buffer, sizeof(buffer));
         }
-        (void)CsvHelper::read_number(&line.count, start, buffer, sizeof(buffer));
+        (void)CsvHelper::read_number64(&line.count, start, buffer, sizeof(buffer));
 
         /* TODO: check that the parsing is good */
 
@@ -113,7 +113,7 @@ bool CaptureSummary::Save(char const * file_name)
             fprintf(F, """%s"",", line->key_value);
         }
 
-        fprintf(F, """%d"",\n", line->count);
+        fprintf(F, """%lld"",\n", (long long)line->count);
     }
 
     if (F != NULL)
@@ -261,9 +261,9 @@ size_t CaptureSummary::Size()
     return summary.size();
 }
 
-uint32_t CaptureSummary::GetCountByNumber(char const * table_name, uint32_t number)
+uint64_t CaptureSummary::GetCountByNumber(char const * table_name, uint32_t number)
 {
-    uint32_t count = 0;
+    uint64_t count = 0;
 
     for (size_t i = 0; i < summary.size(); i++)
     {
@@ -430,6 +430,7 @@ bool CaptureSummary::Merge(size_t nb_files, char const ** file_name)
     return ret;
 }
 
+#if 0
 bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
 {
     bool ret = true;
@@ -509,6 +510,65 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
 
     return ret;
 }
+#else
+bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
+{
+    bool ret = true;
+    size_t max_size = 0;
+    size_t complete_size = 0;
+    size_t * indx = new size_t[nb_summaries];
+    std::vector<CaptureLine *> complete;
+    CaptureLine current_line;
+
+    ret = indx != NULL;
+
+    /* Compute the plausible max size and the complete size */
+    for (size_t i = 0; ret && i < nb_summaries; i++)
+    {
+        if (cs[i]->Size() > max_size)
+        {
+            max_size = cs[i]->Size();
+        }
+        else
+        {
+            max_size += 64;
+        }
+
+        complete_size += cs[i]->Size();
+    }
+
+    /* Create a complete list that contains all the summaries */
+    complete.reserve(complete_size);
+    for (size_t i = 0; ret && i < nb_summaries; i++)
+    {
+        for (size_t j = 0; j < cs[i]->Size(); j++)
+        {
+            complete.push_back(cs[i]->summary[j]);
+        }
+    }
+    /* Sort the complete list */
+    std::sort(complete.begin(), complete.end(), CaptureLineIsLower);
+
+    /* Now go through the list and perform the summations */
+    Reserve(max_size);
+
+    for (size_t i = 0; i < complete.size();) {
+        /* Read the next capture line */
+        current_line = *complete[i++];
+
+        /* Summarize all matching lines */
+        while (i < complete.size() && CaptureLineIsSameKey(complete[i], &current_line)) {
+            current_line.count += complete[i]->count;
+            i++;
+        }
+
+        /* Add line to summary */
+        AddLine(&current_line, true);
+    }
+
+    return ret;
+}
+#endif
 
 int CaptureSummary::compare_string(char const * x, char const * y)
 {

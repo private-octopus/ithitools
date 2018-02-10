@@ -41,7 +41,7 @@ bool metric34_line_is_bigger(metric34_line_t x, metric34_line_t y)
 }
 
 void GetStringM_X(CaptureSummary * cs, uint32_t table_id,
-    std::vector<metric34_line_t>* mstring_x, uint32_t nbqueries, double min_share)
+    std::vector<metric34_line_t>* mstring_x, uint64_t nbqueries, double min_share)
 {
     if (nbqueries > 0)
     {
@@ -165,9 +165,9 @@ void ComputeM3::GetM3_X(uint32_t table_id,
 bool ComputeM3::GetM3_1()
 {
     bool ret = true;
-    uint32_t nb_noerror = cs.GetCountByNumber(
+    uint64_t nb_noerror = cs.GetCountByNumber(
         DnsStats::GetTableName(REGISTRY_DNS_root_QR), 0);
-    uint32_t nb_nxdomain = cs.GetCountByNumber(
+    uint64_t nb_nxdomain = cs.GetCountByNumber(
         DnsStats::GetTableName(REGISTRY_DNS_root_QR), 3);
     nb_rootqueries = nb_noerror + nb_nxdomain;
 
@@ -188,11 +188,11 @@ bool ComputeM3::GetM3_1()
 bool ComputeM3::GetM3_2()
 {
     bool ret = true;
-    uint32_t nb_useful = cs.GetCountByNumber(
+    uint64_t nb_useful = cs.GetCountByNumber(
         DnsStats::GetTableName(REGISTRY_DNS_UsefulQueries), 1);
-    uint32_t nb_useless = cs.GetCountByNumber(
+    uint64_t nb_useless = cs.GetCountByNumber(
         DnsStats::GetTableName(REGISTRY_DNS_UsefulQueries), 0);
-    uint32_t total = nb_useful + nb_useless;
+    uint64_t total = nb_useful + nb_useless;
 
     if (total > 0)
     {

@@ -362,8 +362,8 @@ bool ComputeM6::Compute()
         else
         {
             size_t count_present = 0;
-            size_t count_instances = 0;
-            size_t count_unregistered = 0;
+            uint64_t count_instances = 0;
+            uint64_t count_unregistered = 0;
 
             for (size_t j = 0; j < extract.size(); j++)
             {
@@ -413,9 +413,9 @@ bool ComputeM6::Write(FILE * F_out)
         ret &= fprintf(F_out, "%s.2, , %6f,\n", m6[i].m6_prefix, m6[i].m6_x_2) > 0;
         for (size_t j = 0; j < m6[i].m6_x_3.size(); j++)
         {
-            ret &= fprintf(F_out, "%s.3, %d, %d,\n", m6[i].m6_prefix,
+            ret &= fprintf(F_out, "%s.3, %d, %llu,\n", m6[i].m6_prefix,
                 m6[i].m6_x_3[j].parameter_value,
-                m6[i].m6_x_3[j].parameter_count) > 0;
+                (unsigned long long)m6[i].m6_x_3[j].parameter_count) > 0;
         }
     }
 
