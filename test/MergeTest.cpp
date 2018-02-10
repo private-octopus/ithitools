@@ -70,3 +70,90 @@ bool MergeTest::DoTest()
 
     return ret;
 }
+
+char const * capture_list_name = "capture_list.txt";
+
+MergeListTest::MergeListTest()
+{
+}
+
+MergeListTest::~MergeListTest()
+{
+}
+
+bool MergeListTest::DoTest()
+{
+    bool ret = true;
+    FILE * F;
+    char const * list[2] = { summary1, summary2 };
+    int nb_files = 0;
+
+    for (unsigned int run = 0; ret && run < 10; run++)
+    {
+        unsigned int multiplier = (1 << run);
+        CaptureSummary cs;
+
+        /* create the capture list */
+#ifdef _WINDOWS
+        errno_t err = fopen_s(&F, capture_list_name, "w");
+        ret = (err == 0 && F != NULL);
+#else
+        F = fopen(capture_list_name, "w");
+        ret = (F != NULL);
+#endif
+
+        if (ret)
+        {
+            for (size_t j = 0; j < multiplier; j++)
+            {
+                for (size_t i = 0; i < 2; i++)
+                {
+                    ret = fputs(list[i], F) != EOF;
+                    if (ret)
+                    {
+                        ret = fputs("\n", F) != EOF;
+                    }
+                    nb_files++;
+                    if (!ret)
+                    {
+                        TEST_LOG("Cannot write file name %d on capture file\n", nb_files);
+                    }
+                }
+            }
+            fclose(F);
+        }
+        else {
+            TEST_LOG("Cannot create capture file for run %d\n", run);
+        }
+
+        if (ret)
+        {
+            ret = cs.Merge(capture_list_name);
+            if (!ret) {
+                TEST_LOG("Merge of %d capture files failed.\n", nb_files);
+            }
+        }
+
+        if (ret)
+        {
+            CaptureSummary tcs;
+
+            ret = tcs.Load(target);
+
+            if (ret)
+            {
+                tcs.MultiplyByConstantForTest(multiplier);
+                tcs.Sort();
+
+                ret = cs.Compare(&tcs);
+
+                if (!ret)
+                {
+                    TEST_LOG("Merge of %d capture files does not match prediction.\n", nb_files);
+                }
+            }
+        }
+    }
+
+    return ret;
+}

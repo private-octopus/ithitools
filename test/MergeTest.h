@@ -33,4 +33,14 @@ public:
     bool DoTest() override;
 };
 
+class MergeListTest : public ithi_test_class
+{
+public:
+    MergeListTest();
+    ~MergeListTest();
+
+    bool DoTest() override;
+};
+
+
 #endif /* MERGE_TEST_H */

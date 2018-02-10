@@ -23,6 +23,7 @@ enum test_list_enum {
     test_enum_Load,
     test_enum_Save,
     test_enum_Merge,
+    test_enum_Merge_List,
     test_enum_Capture,
     test_enum_Metric,
     test_enum_Pattern,
@@ -58,6 +59,8 @@ char const * ithi_test_class::GetTestName(int number)
         return("save");
     case test_list_enum::test_enum_Merge:
         return("merge");
+    case test_list_enum::test_enum_Merge_List:
+        return("merge_list");
     case test_list_enum::test_enum_Capture:
         return("capture");
     case test_list_enum::test_enum_Metric:
@@ -111,6 +114,9 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_list_enum::test_enum_Merge:
         test = new MergeTest();
+        break;
+    case test_list_enum::test_enum_Merge_List:
+        test = new MergeListTest();
         break;
     case test_list_enum::test_enum_Capture:
         test = new CaptureTest();

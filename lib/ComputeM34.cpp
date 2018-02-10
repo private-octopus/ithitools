@@ -330,18 +330,18 @@ bool ComputeM4::Compute()
 
 bool ComputeM4::Write(FILE * F_out)
 {
-    bool ret = true;
+    bool ret = fprintf(F_out, "M4.1, , %6f,\n", m4_1) > 0;
 
-    ret = fprintf(F_out, "M4.1, , %6f,\n", m4_1) > 0;
-
-    for (size_t i = 0; ret && i < m4_2.size(); i++)
-    {
+    for (size_t i = 0; ret && i < m4_2.size(); i++) {
         ret = fprintf(F_out, "M4.2, %s, %6f,\n", m4_2[i].domain, m4_2[i].frequency) > 0;
     }
 
-    for (size_t i = 0; ret && i < m4_3.size(); i++)
-    {
+    for (size_t i = 0; ret && i < m4_3.size(); i++) {
         ret = fprintf(F_out, "M4.3, %s, %6f,\n", m4_3[i].domain, m4_3[i].frequency) > 0;
+    }
+
+    if (ret) {
+        ret = fprintf(F_out, "M4.4, , %6f,\n", m4_4) > 0;
     }
 
     return ret;

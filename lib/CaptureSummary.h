@@ -62,9 +62,12 @@ public:
 
     void Extract(char const * table_name, std::vector<CaptureLine *> *extract);
 
+    bool Merge(char const * list_file_name);
     bool Merge(size_t nb_files, char const ** file_name);
     bool Merge(size_t nb_summaries, CaptureSummary ** cs);
     static int compare_string(char const * x, char const * y);
+
+    void MultiplyByConstantForTest(unsigned int multiplier);
 
 private:
     std::vector<CaptureLine *> summary;

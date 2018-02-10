@@ -290,6 +290,108 @@ void CaptureSummary::Extract(char const * table_name, std::vector<CaptureLine*>*
     }
 }
 
+bool CaptureSummary::Merge(char const * list_file_name)
+{
+    size_t nb_alloc = 0;
+    char ** file_list = NULL;
+    size_t nb_files = 0;
+    FILE* F;
+    char buffer[512];
+
+    /* Open the list file */
+#ifdef _WINDOWS
+    errno_t err = fopen_s(&F, list_file_name, "r");
+    bool ret = (err == 0 && F != NULL);
+#else
+    bool ret;
+    F = fopen(list_file_name, "r");
+    ret = (F != NULL);
+#endif
+
+    /* Read each file name and add it to the list */
+    while (ret && fgets(buffer, sizeof(buffer), F) != NULL) {
+        /* Clean up the end of the buffer */
+        size_t len = strlen(buffer);
+
+        while (len > 0 && (buffer[len-1] == ' ' || buffer[len-1] == '\t' || buffer[len-1] == '\r' || buffer[len-1] == '\n')) {
+            buffer[len--] = 0;
+        }
+
+        if (len == 0)
+        {
+            continue;
+        }
+
+        /* Allocate memory if necessary */
+        if (nb_files >= nb_alloc) {
+            size_t new_len = (nb_alloc == 0) ? 512 : 2 * nb_alloc;
+            char ** new_list = new char*[new_len];
+
+            if (new_list == NULL) {
+                ret = false;
+            }
+            else
+            {
+                size_t i = 0;
+                while (i < nb_alloc){
+                    new_list[i] = file_list[i];
+                    file_list[i++] = NULL;
+                }
+                while (i < new_len) {
+                    new_list[i++] = NULL;
+                }
+
+                if (file_list != NULL) {
+                    delete[] file_list;
+                }
+                file_list = new_list;
+                nb_alloc = new_len;
+            }
+        }
+
+        /* Record the name */
+        if (ret)
+        {
+            file_list[nb_files] = new char[len + 1];
+            if (file_list[nb_files] == NULL)
+            {
+                ret = false;
+            }
+            else
+            {
+                memcpy(file_list[nb_files], buffer, len);
+                file_list[nb_files][len] = 0;
+                nb_files++;
+            }
+        }
+    }
+
+    /* Merge the list */
+    if (ret)
+    {
+        ret = Merge(nb_files, (char const **)file_list);
+    }
+
+    /* Clean up */
+    if (file_list != NULL)
+    {
+        for (size_t i = 0; i < nb_files; i++)
+        {
+            delete[] file_list[i];
+            file_list[i] = NULL;
+        }
+
+        delete[] file_list;
+    }
+
+    if (F != NULL)
+    {
+        fclose(F);
+    }
+
+    return ret;
+}
+
 bool CaptureSummary::Merge(size_t nb_files, char const ** file_name)
 {
     CaptureSummary ** list = new  CaptureSummary*[nb_files];
@@ -432,4 +534,12 @@ int CaptureSummary::compare_string(char const * x, char const * y)
     }
 
     return ret;
+}
+
+void CaptureSummary::MultiplyByConstantForTest(unsigned int multiplier)
+{
+    for (size_t i = 0; i < summary.size(); i++)
+    {
+        summary[i]->count *= multiplier;
+    }
 }

@@ -22,6 +22,7 @@ SET(ITHITOOLS_LIBRARY_FILES
    lib/M2Data.cpp
    lib/ComputeMetric.cpp
    lib/ComputeM34.cpp
+   lib/ComputeM6.cpp
 )
 
 SET(ITHITOOLS_TEST_LIBRARY_FILES
@@ -54,6 +55,7 @@ ADD_EXECUTABLE(ithitools
    lib/M2Data.cpp
    lib/ComputeMetric.cpp
    lib/ComputeM34.cpp
+   lib/ComputeM6.cpp
 )
 
 ADD_EXECUTABLE(ithitest
@@ -71,6 +73,7 @@ ADD_EXECUTABLE(ithitest
    lib/M2Data.cpp
    lib/ComputeMetric.cpp
    lib/ComputeM34.cpp
+   lib/ComputeM6.cpp
    test/CaptureTest.cpp
    test/hashtest.cpp
    test/LoadTest.cpp
