@@ -43,6 +43,7 @@ int usage()
     fprintf(stderr, "Options used in capture mode:\n");
     fprintf(stderr, "  -c                 process capture files in PCAP format.\n");
     fprintf(stderr, "  -s                 process summary files, from previous captures.\n");
+    fprintf(stderr, "  -S filelist.txt    process summary files listed in file list.\n");
     fprintf(stderr, "  -o file.csv        output file containing the computed summary.\n");
     fprintf(stderr, "  -r root-addr.txt   text file containing the list of root server addresses.\n");
     fprintf(stderr, "  -a res-addr.txt    allowed list of resolver addresses. Traffic to or from\n");
@@ -64,9 +65,12 @@ int usage()
     fprintf(stderr, "                     If not specified, M1 data is read from (ITHI)/input/M1/\n");
     fprintf(stderr, "  -b abuse.csv       CSV file containing abuse data needed for M2.\n");
     fprintf(stderr, "                     If not specified, M2 data is read from (ITHI)/input/M2/\n");
-    fprintf(stderr, "  -S summary.csv     CSV file containing summary of recursive resolver traffic\n");
-    fprintf(stderr, "                     for M3, M4 and M6. If not specified, data is read from\n");
-    fprintf(stderr, "                     (ITHI)/input/M346/\n");
+    fprintf(stderr, "  -O summary.csv     CSV file containing summary of recursive resolver traffic\n");
+    fprintf(stderr, "                     for M3. If not specified, data is read from\n");
+    fprintf(stderr, "                     (ITHI)/input/M3/\n");
+    fprintf(stderr, "  -R summary.csv     CSV file containing summary of recursive resolver traffic\n");
+    fprintf(stderr, "                     for M4 and M6. If not specified, data is read from\n");
+    fprintf(stderr, "                     (ITHI)/input/M46/\n");
     fprintf(stderr, "  -l lies.csv        CSV file containing abuse data needed for M5.\n");
     fprintf(stderr, "                     If not specified, M5 data is read from (ITHI)/input/M5/\n");
     fprintf(stderr, "  -z root.zone       Root zone file used computing M7.\n");
@@ -114,6 +118,7 @@ int main(int argc, char ** argv)
     char const * accuracy_file = NULL;
     char const * abuse_file = NULL;
     char const * summary_file = NULL;
+    char const * capture_summary_list = NULL;
     char const * lies_file = NULL;
     char const * root_zone_file = NULL;
     char const * metric_output_files[7] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
@@ -123,7 +128,7 @@ int main(int argc, char ** argv)
 
     /* Get the parameters */
     int opt;
-    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:m:t:u:i:d:y:b:z:l:1:2:3:4:5:6:7:hcsf?")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:m:t:u:i:d:y:b:z:l:1:2:3:4:5:6:7:S:hcsf?")) != -1)
     {
         switch (opt)
         {
@@ -187,6 +192,18 @@ int main(int argc, char ** argv)
             }
             else
             {
+                exec_mode = 1;
+            }
+            break;
+        case 'S':
+            if (exec_mode != -1 && exec_mode != 1)
+            {
+                fprintf(stderr, "Can only specify one mode, -c (capture) or -s/-S (summary)\n");
+                exit_code = -1;
+            }
+            else
+            {
+                capture_summary_list = optarg;
                 exec_mode = 1;
             }
             break;
@@ -319,21 +336,22 @@ int main(int argc, char ** argv)
     }
     else if (exec_mode == 1)
     {
-        if (optind >= argc)
-        {
+        if (capture_summary_list == NULL && optind >= argc)  {
             fprintf(stderr, "No file to merge!\n");
             exit_code = usage();
-        }
-        else
-        {
-
-            if (!cs.Merge(argc - optind, (char const **)(argv + optind)))
-            {
-                fprintf(stderr, "Cannot merge the input files.\n");
+        }  else {
+            if (capture_summary_list == NULL) {
+                if (!cs.Merge(argc - optind, (char const **)(argv + optind)))
+                {
+                    fprintf(stderr, "Cannot merge the input files.\n");
+                    exit_code = -1;
+                }
+            } else if (!cs.Merge(capture_summary_list)) {
+                fprintf(stderr, "Cannot merge the listed files.\n");
                 exit_code = -1;
             }
-            else
-            {
+
+            if (exit_code == 0) {
                 if (!cs.Save(out_file))
                 {
                     fprintf(stderr, "Cannot save the merged summary on <%s>.\n",
