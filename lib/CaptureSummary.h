@@ -73,7 +73,8 @@ private:
     std::vector<CaptureLine *> summary;
 
     static bool CaptureLineIsLower(CaptureLine * x, CaptureLine * y);
-    static bool CaptureLineIsSameKey(CaptureLine * x, CaptureLine * y);
+    static bool CaptureLineIsSameKey(CaptureLine * x, CaptureLine * y); 
+    static bool CaptureLineIsLargerCount(CaptureLine * x, CaptureLine * y);
 };
 
 #endif

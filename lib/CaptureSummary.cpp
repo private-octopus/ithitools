@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <string.h>
 #include "CsvHelper.h"
+#include "DnsStats.h"
 #include "CaptureSummary.h"
 
 CaptureSummary::CaptureSummary()
@@ -213,6 +214,18 @@ bool CaptureSummary::CaptureLineIsLower(CaptureLine * x, CaptureLine * y)
                 ret = cmp > 0;
             }
         }
+    }
+
+    return ret;
+}
+
+bool CaptureSummary::CaptureLineIsLargerCount(CaptureLine * x, CaptureLine * y)
+{
+    bool ret = false;
+
+    if (x->count > y->count)
+    {
+        ret = true;
     }
 
     return ret;
@@ -518,9 +531,21 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
     size_t complete_size = 0;
     size_t * indx = new size_t[nb_summaries];
     std::vector<CaptureLine *> complete;
+    std::vector<CaptureLine *> leaked_tld;
+    std::vector<CaptureLine *> frequent_tld;
+    char const * leak_tld_id = NULL;
+    char const * frequent_tld_id = NULL;
     CaptureLine current_line;
 
     ret = indx != NULL;
+
+    if (ret)
+    {
+        leak_tld_id = DnsStats::GetTableName(REGISTRY_DNS_LeakedTLD);
+        frequent_tld_id = DnsStats::GetTableName(REGISTRY_DNS_Frequent_TLD_Usage);
+
+        ret = (leak_tld_id != NULL && frequent_tld_id != NULL);
+    }
 
     /* Compute the plausible max size and the complete size */
     for (size_t i = 0; ret && i < nb_summaries; i++)
@@ -529,30 +554,31 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
         {
             max_size = cs[i]->Size();
         }
-        else
-        {
-            max_size += 64;
-        }
 
         complete_size += cs[i]->Size();
     }
 
     /* Create a complete list that contains all the summaries */
-    complete.reserve(complete_size);
-    for (size_t i = 0; ret && i < nb_summaries; i++)
+    if (ret)
     {
-        for (size_t j = 0; j < cs[i]->Size(); j++)
-        {
+        complete.reserve(complete_size);
+        leaked_tld.reserve(48 * nb_summaries);
+        frequent_tld.reserve(16 * nb_summaries);
+    }
+
+    for (size_t i = 0; ret && i < nb_summaries; i++) {
+        for (size_t j = 0; j < cs[i]->Size(); j++) {
             complete.push_back(cs[i]->summary[j]);
         }
     }
     /* Sort the complete list */
     std::sort(complete.begin(), complete.end(), CaptureLineIsLower);
 
-    /* Now go through the list and perform the summations */
-    Reserve(max_size);
+    /* Now go through the list and perform the summations.
+     * Put the frequent tld and tls usage in separate lists */
+    Reserve(max_size + 64* nb_summaries);
 
-    for (size_t i = 0; i < complete.size();) {
+    for (size_t i = 0; ret && i < complete.size();) {
         /* Read the next capture line */
         current_line = *complete[i++];
 
@@ -562,8 +588,79 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
             i++;
         }
 
-        /* Add line to summary */
-        AddLine(&current_line, true);
+        /* Add line to summary, or to one of the special registries */
+
+        if (strcmp(current_line.registry_name, leak_tld_id) == 0) {
+            CaptureLine *tld_line = new CaptureLine;
+
+            if (tld_line != NULL)
+            {
+                memcpy(tld_line, &current_line, sizeof(CaptureLine));
+                leaked_tld.push_back(tld_line);
+            }
+            else
+            {
+                ret = false;
+            }
+        }
+        else if (strcmp(current_line.registry_name, frequent_tld_id) == 0) {
+            CaptureLine *tld_line = new CaptureLine;
+
+            if (tld_line != NULL)
+            {
+                memcpy(tld_line, &current_line, sizeof(CaptureLine));
+                frequent_tld.push_back(tld_line);
+            }
+            else
+            {
+                ret = false;
+            }
+        }
+        else {
+            AddLine(&current_line, true);
+        }
+    }
+
+    /* Sort and tabulate the most used TLD. */
+    if (ret) {
+        std::sort(frequent_tld.begin(), frequent_tld.end(), CaptureLineIsLargerCount);
+        for (size_t i = 0; i < frequent_tld.size() && i < 128; i++) {
+            AddLine(frequent_tld[i], true);
+        }
+    }
+
+    /* Sort and tabulate the most leaked TLD. 
+     * TODO: tabulate the length of the discarded TLD, and correct the captured values */
+    if (ret) {
+        std::sort(leaked_tld.begin(), leaked_tld.end(), CaptureLineIsLargerCount);
+        for (size_t i = 0; i < leaked_tld.size() && i < 128; i++) {
+            AddLine(leaked_tld[i], true);
+        }
+    }
+
+    if (ret) {
+        /* Sort the whole thing again */
+        Sort();
+    }
+
+    /* Clean up */
+
+    for (size_t i = 0; i < frequent_tld.size(); i++)
+    {
+        if (frequent_tld[i] != NULL)
+        {
+            delete frequent_tld[i];
+            frequent_tld[i] = NULL;
+        }
+    }
+
+    for (size_t i = 0; i < leaked_tld.size(); i++)
+    {
+        if (leaked_tld[i] != NULL)
+        {
+            delete leaked_tld[i];
+            leaked_tld[i] = NULL;
+        }
     }
 
     return ret;
