@@ -26,6 +26,8 @@ enum test_list_enum {
     test_enum_Merge_List,
     test_enum_Capture,
     test_enum_Metric,
+    test_enum_MetricDate,
+    test_enum_MetricCaptureFile,
     test_enum_Pattern,
     test_enum_Plugin,
     test_enum_Csv,
@@ -65,6 +67,10 @@ char const * ithi_test_class::GetTestName(int number)
         return("capture");
     case test_list_enum::test_enum_Metric:
         return("metric");
+    case test_list_enum::test_enum_MetricDate:
+        return("metricDate");
+    case test_list_enum::test_enum_MetricCaptureFile:
+        return("metricCaptureFile");
     case test_list_enum::test_enum_Pattern:
         return("pattern");
     case test_list_enum::test_enum_Plugin:
@@ -123,6 +129,12 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_list_enum::test_enum_Metric:
         test = new MetricTest();
+        break;
+    case test_list_enum::test_enum_MetricDate:
+        test = new MetricDateTest();
+        break;
+    case test_list_enum::test_enum_MetricCaptureFile:
+        test = new MetricCaptureFileTest();
         break;
     case test_list_enum::test_enum_Pattern:
         test = new PatternTest();

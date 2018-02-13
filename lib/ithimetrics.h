@@ -8,7 +8,6 @@
 #include "ComputeM6.h"
 #include "M7Getter.h"
 
-
 class ithimetrics
 {
 public:
@@ -16,16 +15,27 @@ public:
     ~ithimetrics();
 
     bool GetMetrics();
-    bool GetM7(char const * zone_file_name);
 
     bool SetIthiFolder(char const * folder);
     bool SetMetricFileNames(int metric_number, char const * metric_file_name);
 
-    bool SetCaptureFileNames(int nb_files, char const ** file_names);
-    bool SetDefaultCaptureFiles();
-    uint32_t GetNbCaptureFiles() { return nb_capture_files; };
-    const char * GetCaptureFileName(uint32_t file_index) {
-        return (file_index < nb_capture_files) ? capture_file[file_index] : NULL;
+    bool SetRootCaptureFileName(char const * file_name);
+    bool SetRecursiveCaptureFileName(char const * file_name);
+
+    bool SetRootZoneFileName(char const * file_name);
+
+    bool SetDefaultRootCaptureFile();
+    bool SetDefaultRecursiveCaptureFile();
+    bool SetDefaultRootZoneFile();
+
+    const char * GetRootCaptureFileName() {
+        return root_capture_file_name;
+    };
+    const char * GetRecursiveCaptureFileName() {
+        return recursive_capture_file_name;
+    };
+    const char * GetRootZoneFileName() {
+        return root_zone_file_name;
     };
 
     bool SetDateString(char const * date_string);
@@ -51,10 +61,12 @@ private:
     char * ithi_folder;
     char * metric_file[7];
     bool metric_is_available[7];
-    uint32_t nb_capture_files;
-    char ** capture_file;
+    char * root_capture_file_name;
+    char * recursive_capture_file_name;
     char * abuse_file_name;
+    char * root_zone_file_name;
 
+    bool ithimetrics::SetDefaultCaptureFiles(char const * metric_name, char const * suffix, char ** p_file_name);
 
     static bool copy_name(char ** target, char const * name);
 };

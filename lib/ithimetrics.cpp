@@ -51,9 +51,10 @@ ithimetrics::ithimetrics()
     :
     metric_date(NULL),
     ithi_folder(NULL),
-    nb_capture_files(0),
-    capture_file(NULL),
-    abuse_file_name(NULL)
+    root_capture_file_name(NULL),
+    recursive_capture_file_name(NULL),
+    abuse_file_name(NULL),
+    root_zone_file_name(NULL)
 {
     for (int i = 0; i < 7; i++) {
         metric_file[i] = NULL;
@@ -85,18 +86,19 @@ ithimetrics::~ithimetrics() {
         }
     }
 
-    if (capture_file != NULL) {
-        for (uint32_t i = 0; i < nb_capture_files; i++)
-        {
-            if (capture_file[i] != NULL)
-            {
-                free(capture_file[i]);
-                capture_file[i] = NULL;
-            }
-        }
+    if (root_capture_file_name != NULL) {
+        free(root_capture_file_name);
+        root_capture_file_name = NULL;
+    }
 
-        free(capture_file);
-        capture_file = NULL;
+    if (recursive_capture_file_name != NULL) {
+        free(recursive_capture_file_name);
+        recursive_capture_file_name = NULL;
+    }
+
+    if (root_zone_file_name != NULL) {
+        free(root_zone_file_name);
+        root_zone_file_name = NULL;
     }
 }
 
@@ -122,37 +124,12 @@ bool ithimetrics::SetMetricFileNames(int metric_number, char const * metric_file
     return ret;
 }
 
-bool ithimetrics::SetCaptureFileNames(int nb_files, char const ** file_names)
-{
-    bool ret = true;
-
-    if (nb_files > 0)
-    {
-        capture_file = (char **)malloc(nb_files * sizeof(char *));
-        if (capture_file == NULL)
-        {
-            ret = false;
-        }
-        else
-        {
-            memset(capture_file, 0, nb_files * sizeof(char *));
-            this->nb_capture_files = nb_files;
-
-            for (int i = 0; ret && i < nb_files; i++)
-            {
-                ret = copy_name(&capture_file[i], file_names[i]);
-            }
-        }
-    }
-
-    return ret;
-}
-
 bool ithimetrics::SetDefaultDate(time_t current_time)
 {
     bool ret = true;
     struct tm tm;
     char buffer[256];
+    int last_day_of_month[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
 #ifdef _WINDOWS
     if (localtime_s(&tm, &current_time) != 0)
@@ -162,9 +139,16 @@ bool ithimetrics::SetDefaultDate(time_t current_time)
 #else
     tm = *localtime(&current_time);
 #endif
+
+    int year4digit = tm.tm_year + 1900;
+    if (year4digit % 4 == 0 && (year4digit % 100 != 0 || year4digit % 400 == 0))
+    {
+        last_day_of_month[1] = 29;
+    }
+
     if (ret)
     {
-        ret = snprintf(buffer, sizeof(buffer), "%04d-%02d-%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday) > 0;
+        ret = snprintf(buffer, sizeof(buffer), "%04d-%02d-%02d", tm.tm_year + 1900, tm.tm_mon + 1, last_day_of_month[tm.tm_mon]) > 0;
     }
 
     if (ret)
@@ -193,8 +177,8 @@ bool ithimetrics::SetDefaultAbuseFileName(time_t current_time)
     if (ret)
     {
         ret = snprintf(file_name_buffer, sizeof(file_name_buffer),
-            "%s%sinput%sM2%s_tlds.csv", 
-            ithi_folder, ITHI_FILE_PATH_SEP, ITHI_FILE_PATH_SEP, metric_date) > 0;
+            "%s%sinput%sM2%s%s_tlds.csv", 
+            ithi_folder, ITHI_FILE_PATH_SEP, ITHI_FILE_PATH_SEP, ITHI_FILE_PATH_SEP, metric_date) > 0;
 
         if (ret)
         {
@@ -205,26 +189,44 @@ bool ithimetrics::SetDefaultAbuseFileName(time_t current_time)
     return ret;
 }
 
-bool ithimetrics::SetDefaultCaptureFiles()
+bool ithimetrics::SetRootCaptureFileName(char const * file_name)
+{
+    return copy_name(&root_capture_file_name, file_name);
+}
+
+bool ithimetrics::SetRecursiveCaptureFileName(char const * file_name)
+{
+    return copy_name(&recursive_capture_file_name, file_name);
+}
+
+bool ithimetrics::SetRootZoneFileName(char const * file_name)
+{
+    return copy_name(&root_zone_file_name, file_name);
+}
+
+bool ithimetrics::SetDefaultRootCaptureFile()
+{
+    return SetDefaultCaptureFiles("M3", "-summary.csv", &root_capture_file_name);
+}
+
+bool ithimetrics::SetDefaultRecursiveCaptureFile()
+{
+    return SetDefaultCaptureFiles("M46", "-summary.csv", &recursive_capture_file_name);
+}
+
+bool ithimetrics::SetDefaultRootZoneFile()
+{
+    return SetDefaultCaptureFiles("M7", ".zone", &recursive_capture_file_name);
+}
+
+bool ithimetrics::SetDefaultCaptureFiles(char const * metric_name, char const * suffix, char ** p_file_name)
 {
     bool ret = true;
-    char dir_name_346[512];
-    char dir_name_loc[512];
-    char expected_name[256];
     char file_name[512];
-    size_t max_file_number = 128;
 
-    if (capture_file != NULL)
+    if (*p_file_name != NULL)
     {
         ret = false;
-    }
-    else
-    {
-        capture_file = (char **)malloc(max_file_number * sizeof(char *));
-        memset(capture_file, 0, max_file_number * sizeof(char *));
-        nb_capture_files = 0;
-
-        ret = capture_file != NULL;
     }
 
     if (ret && ithi_folder == NULL)
@@ -239,93 +241,12 @@ bool ithimetrics::SetDefaultCaptureFiles()
 
     if (ret)
     {
-        ret = snprintf(dir_name_346, sizeof(dir_name_346), "%s%sinput%sM346", ithi_folder, ITHI_FILE_PATH_SEP, ITHI_FILE_PATH_SEP);
-    }
+        ret = snprintf(file_name, sizeof(file_name), "%s%sinput%s%s%s%s-%s%s", ithi_folder, ITHI_FILE_PATH_SEP, 
+            ITHI_FILE_PATH_SEP, metric_name, ITHI_FILE_PATH_SEP, metric_name, metric_date, suffix) > 0;
 
-    if (ret)
-    {
-        DIR           *d346;
-        struct dirent *dir_loc;
-        d346 = opendir(dir_name_346);
-        if (d346 == NULL)
+        if (ret)
         {
-            ret = false;
-        }
-        else
-        {
-            while ((dir_loc = readdir(d346)) != NULL)
-            {
-                if (strcmp(dir_loc->d_name, ".") == 0 ||
-                    strcmp(dir_loc->d_name, "..") == 0)
-                {
-                    continue;
-                }
-
-                ret = snprintf(dir_name_loc, sizeof(dir_name_loc), "%s%s%s%s",
-                    dir_name_346, ITHI_FILE_PATH_SEP, dir_loc->d_name, ITHI_FILE_PATH_SEP) > 0;
-
-                if (ret)
-                {
-                    ret = snprintf(expected_name, sizeof(expected_name), "M346-%s-%s.csv",
-                        metric_date, dir_loc->d_name) > 0;
-                }
-
-                if (ret)
-                {
-                    DIR           *d_loc;
-                    struct dirent *file_ent;
-                    d_loc = opendir(dir_name_loc);
-                    if (d_loc == NULL)
-                    {
-                        /* Probably not a directory */
-                        continue;
-                    }
-                    else
-                    {
-                        while (ret && (file_ent = readdir(d_loc)) != NULL)
-                        {
-                            /* Check whether the name matches the expected pattern */
-                            if (strcmp(expected_name, file_ent->d_name) == 0)
-                            {
-                                if (nb_capture_files >= max_file_number)
-                                {
-                                    char ** new_capture_file = NULL;
-                                    max_file_number *= 2;
-                                    new_capture_file = (char **)malloc(max_file_number * sizeof(char*));
-
-                                    if (new_capture_file == NULL)
-                                    {
-                                        ret = false;
-                                    }
-                                    else
-                                    {
-                                        memset(new_capture_file, 0, max_file_number * sizeof(char*));
-                                        memcpy(new_capture_file, capture_file, nb_capture_files * sizeof(char*));
-                                        free(capture_file);
-                                        capture_file = new_capture_file;
-                                    }
-                                }
-
-                                if (ret)
-                                {
-                                    ret = snprintf(file_name, sizeof(file_name), "%s%s",
-                                        dir_name_loc, expected_name) > 0;
-                                    if (ret)
-                                    {
-                                        ret = copy_name(&capture_file[nb_capture_files], file_name);
-                                        nb_capture_files++;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-
-                        closedir(d_loc);
-                    }
-                }
-            }
-
-            closedir(d346);
+            ret = copy_name(p_file_name, file_name);
         }
     }
 
@@ -367,42 +288,47 @@ bool ithimetrics::GetMetrics() {
         (void)SetDefaultAbuseFileName(time(0));
     }
 
-    if (abuse_file_name != NULL)
+    if (abuse_file_name != NULL && cm2.Load(abuse_file_name))
     {
-        if (cm2.Load(abuse_file_name))
-        {
-            metric_is_available[1] = cm2.Compute();
-            ret |= metric_is_available[1];
-        }
+        metric_is_available[1] = cm2.Compute();
+        ret |= metric_is_available[1];
     }
 
-    if (cm3.LoadMultipleFiles((char const **)capture_file, nb_capture_files))
+    if (root_capture_file_name == NULL)
+    {
+        (void)SetDefaultRootCaptureFile();
+    }
+
+    if (root_capture_file_name != NULL && cm3.Load(root_capture_file_name))
     {
         metric_is_available[2] = cm3.Compute();
         ret |= metric_is_available[2];
     }
 
-    if (cm4.LoadMultipleFiles((char const **)capture_file, nb_capture_files))
+    if (recursive_capture_file_name == NULL)
+    {
+        (void)SetDefaultRootCaptureFile();
+    }
+
+    if (recursive_capture_file_name != NULL && cm4.Load(recursive_capture_file_name))
     {
         metric_is_available[3] = cm4.Compute();
         ret |= metric_is_available[3];
     }
 
 
-    if (cm6.LoadMultipleFiles((char const **)capture_file, nb_capture_files))
+    if (recursive_capture_file_name != NULL && cm6.Load(recursive_capture_file_name))
     {
         metric_is_available[5] = cm6.Compute();
         ret |= metric_is_available[5];
     }
 
-    return ret;
-}
+    if (root_zone_file_name == NULL)
+    {
+        (void)SetDefaultRootZoneFile();
+    }
 
-bool ithimetrics::GetM7(char const * zone_file_name)
-{
-    bool ret = false;
-
-    if (cm7.Load(zone_file_name))
+    if (root_zone_file_name != NULL && cm7.Load(root_zone_file_name))
     {
         metric_is_available[6] = cm7.Compute();
         ret = metric_is_available[6];
@@ -410,7 +336,6 @@ bool ithimetrics::GetM7(char const * zone_file_name)
 
     return ret;
 }
-
 
 bool ithimetrics::SaveMetricFiles()
 {

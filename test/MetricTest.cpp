@@ -75,23 +75,19 @@ bool MetricTest::DoTest()
     {
         ithimetrics met;
 
-        ret = met.GetM7(root_zone_file); 
-        if (!ret)
+        if (!met.SetRootZoneFileName(root_zone_file))
         {
-            TEST_LOG("Could not load M7 from %s\n", root_zone_file);
+            ret = false;
+            TEST_LOG("Could not set root zone file to %s\n", root_zone_file);
         }
-        
-        if (ret)
+        if (!met.SetRootCaptureFileName(metric_test_input) || !met.SetRecursiveCaptureFileName(metric_test_input))
         {
-            if (!met.SetCaptureFileNames(1, &metric_test_input))
-            {
-                ret = false;
-                TEST_LOG("Could not set capture file name to %s\n", metric_test_input);
-            }
-            else
-            {
-                ret = met.GetMetrics();
-            }
+            ret = false;
+            TEST_LOG("Could not set capture file name to %s\n", metric_test_input);
+        }
+        else
+        {
+            ret = met.GetMetrics();
             if (!ret)
             {
                 TEST_LOG("Could not get metrics out of %s\n", metric_test_input);
@@ -280,15 +276,10 @@ MetricCaptureFileTest::~MetricCaptureFileTest()
 #ifdef _WINDOWS
 static char const * metric_test_dir_ithi = ".\\ithi";
 static char const * metric_test_dir_input = ".\\ithi\\input";
-static char const * metric_test_dir_m346 = ".\\ithi\\input\\M346";
-static char const * metric_test_dir_m346_l1 = ".\\ithi\\input\\M346\\b-root-lax";
-static char const * metric_test_dir_m346_l2 = ".\\ithi\\input\\M346\\b-root-mia";
-static char const * metric_test_dir_m346_l3 = ".\\ithi\\input\\M346\\ams-nic";
-
-static char const * metric_test_dir_m346_l1_f = ".\\ithi\\input\\M346\\b-root-lax\\M346-2017-01-31-b-root-lax.csv";
-static char const * metric_test_dir_m346_l2_b = ".\\ithi\\input\\M346\\b-root-mia\\M346-2017-01-30-b-root-mia.csv";
-static char const * metric_test_dir_m346_l2_f = ".\\ithi\\input\\M346\\b-root-mia\\M346-2017-01-31-b-root-mia.csv";
-static char const * metric_test_dir_m346_b = ".\\ithi\\input\\M346\\M346-2017-01-30.csv";
+static char const * metric_test_dir_m3 = ".\\ithi\\input\\M3";
+static char const * metric_test_dir_m3_f = ".\\ithi\\input\\M3\\M3-2017-01-31-summary.csv";
+static char const * metric_test_dir_m46 = ".\\ithi\\input\\M46";
+static char const * metric_test_dir_m46_f = ".\\ithi\\input\\M46\\M46-2017-01-31-summary.csv";
 
 #ifdef _WINDOWS64
 static char const * metric_test_capture = "..\\..\\data\\tiny-capture.csv";
@@ -299,26 +290,19 @@ static char const * metric_test_capture = "..\\data\\tiny-capture.csv";
 #else
 static char const * metric_test_dir_ithi = "./ithi";
 static char const * metric_test_dir_input = "./ithi/input";
-static char const * metric_test_dir_m346 = "./ithi/input/M346";
-static char const * metric_test_dir_m346_l1 = "./ithi/input/M346/b-root-lax";
-static char const * metric_test_dir_m346_l2 = "./ithi/input/M346/b-root-mia";
-static char const * metric_test_dir_m346_l3 = "./ithi/input/M346/ams-nic";
-
-static char const * metric_test_dir_m346_l1_f = "./ithi/input/M346/b-root-lax/M346-2017-01-31-b-root-lax.csv";
-static char const * metric_test_dir_m346_l2_b = "./ithi/input/M346/b-root-mia/M346-2017-01-30-b-root-mia.csv";
-static char const * metric_test_dir_m346_l2_f = "./ithi/input/M346/b-root-mia/M346-2017-01-31-b-root-mia.csv";
-static char const * metric_test_dir_m346_b = "./ithi/input/M346/M346-2017-01-30.csv";
-
+static char const * metric_test_dir_m3 = "./ithi/input/M3";
+static char const * metric_test_dir_m3_f = "./ithi/input/M3/M3-2017-01-31-summary.csv";
+static char const * metric_test_dir_m46 = "./ithi/input/M46";
+static char const * metric_test_dir_m46_f = "./ithi/input/M46/M46-2017-01-31-summary.csv";
 static char const * metric_test_capture = "data/tiny-capture.csv";
 #endif
 
 static const char * metric_test_dir_list[] = {
-    metric_test_dir_ithi, metric_test_dir_input, metric_test_dir_m346,
-    metric_test_dir_m346_l1, metric_test_dir_m346_l2, metric_test_dir_m346_l3
+    metric_test_dir_ithi, metric_test_dir_input, metric_test_dir_m3, metric_test_dir_m46
 };
 
 static const char * metric_test_file_list[] = {
-    metric_test_dir_m346_l1_f, metric_test_dir_m346_l2_b, metric_test_dir_m346_l2_f, metric_test_dir_m346_b
+    metric_test_dir_m3_f, metric_test_dir_m46_f
 };
 
 bool MetricCaptureFileTest::DoTest()
@@ -326,8 +310,7 @@ bool MetricCaptureFileTest::DoTest()
     bool ret = true;
     ithimetrics met;
 
-    /* First, prepare the ITHI directories in the current folder 
-     * Use three locations for the capture summaries */
+    /* First, prepare the ITHI directories in the current folder */
     for (size_t i = 0; ret && i < sizeof(metric_test_dir_list) / sizeof(char *); i++)
     {
         ret = CreateDirectoryIfAbsent(metric_test_dir_list[i]);
@@ -340,44 +323,74 @@ bool MetricCaptureFileTest::DoTest()
         ret = CopyFileToDestination(metric_test_file_list[i], metric_test_capture);
     }
 
+    if (!ret)
+    {
+        TEST_LOG("Metric test: cannot create and populate the test directory %s.\n",
+            metric_test_dir_ithi);
+    }
+
     /* Set the target directory and target date in the metric object */
     if (ret)
     {
         ret = met.SetIthiFolder(metric_test_dir_ithi);
+
+        if (!ret)
+        {
+            TEST_LOG("Metric test: cannot the ITHI directory %s.\n",
+                metric_test_dir_ithi);
+        }
+
     }
 
     if (ret)
     {
         ret = met.SetDateString(metric_date_test_jan_31_2017);
+
+        if (!ret)
+        {
+            TEST_LOG("Metric test: cannot set the date %s.\n",
+                metric_date_test_jan_31_2017);
+        }
     }
 
     /* Obtain the default capture files for the date. */
     if (ret)
     {
-        ret = met.SetDefaultCaptureFiles();
+        ret = met.SetDefaultRootCaptureFile();
+
+        if (!ret)
+        {
+            TEST_LOG("Metric test: cannot set the default root capture file.\n");
+        }
+    }
+
+    if (ret)
+    {
+        ret = met.SetDefaultRecursiveCaptureFile();
+
+        if (!ret)
+        {
+            TEST_LOG("Metric test: cannot set the default recursive capture file.\n");
+        }
     }
 
     /* Verify that they match expectations */
     if (ret)
     {
-        if (met.GetNbCaptureFiles() != 2)
+        if (strcmp(metric_test_dir_m3_f, met.GetRootCaptureFileName()) != 0)
         {
             ret = false;
-        }
-        else if (strcmp(metric_test_dir_m346_l1_f, met.GetCaptureFileName(0)) != 0)
-        {
-            ret = false;
-        }
-        else if (strcmp(metric_test_dir_m346_l2_f, met.GetCaptureFileName(1)) != 0)
-        {
-            ret = false;
-        }
-    }
 
-    if (!ret)
-    {
-        TEST_LOG("Metric test: cannot create and populate the test directory %s.\n",
-            metric_test_dir_ithi);
+            TEST_LOG("Metric test: unexpected default root capture file.\n            %s\n instead of %s\n",
+                met.GetRootCaptureFileName(), metric_test_dir_m3_f);
+        }
+        else if (strcmp(metric_test_dir_m46_f, met.GetRecursiveCaptureFileName()) != 0)
+        {
+            ret = false;
+
+            TEST_LOG("Metric test: unexpected default recursive capture file.\n            %s\n instead of %s\n",
+                met.GetRecursiveCaptureFileName(), metric_test_dir_m46_f);
+        }
     }
 
     return ret;

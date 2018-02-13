@@ -36,7 +36,7 @@ public:
     static bool compare_lines(char const * b1, char const * b2);
 };
 
-class MetricDateTest
+class MetricDateTest : public ithi_test_class
 {
 public:
     MetricDateTest();
@@ -45,7 +45,7 @@ public:
     bool DoTest();
 };
 
-class MetricCaptureFileTest
+class MetricCaptureFileTest : public ithi_test_class
 {
 public:
     MetricCaptureFileTest();
