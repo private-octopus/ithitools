@@ -24,57 +24,52 @@
 	
 <script type="text/javascript">
 
-var canvas ;
-var context ;
-var Val_max;
-var Val_min;
-var sections;
-var xScale;
+    var canvas ;
+    var context ;
+    var Val_max;
+    var Val_min;
+    var sections;
+    var xScale;
     var yScale;
     var colorSet = ["#F0F0F0C0", "#808080C0", "#C0C0C0C0", "#404040C0"];
 
     // Values for the M4 metrics, September 2017 -- this is test data
 
-    var M41Data = [31.91, 30.47];
-    var M42DataSet = [["LOCAL", 10.92, 10.99],
-    ["INVALID", 0.64, 0.65],
-    ["LOCALHOST", 0.64, 0.60]];
-    var M43DataSet = [["HOME", 1.07, 1.03],
-    ["DOMAINNAME", 0.43, 0.44],
-    ["ENTERPRISE", 0.43, 0.40],
-    ["LOCALDOMAIN", 0.43, 0.46],
-    ["STAFF", 0.43, 0.46],
-    ["TELUS", 0.43, 0.47],
-    ["AGI", 0.21, 0.22],
-    ["BELKIN", 0.21, 0.23],
-    ["CORP", 0.21, 0.21],
-    ["CRC", 0.21, 0.23],
-    ["DCA", 0.21, 0.21],
-    ["DOMAIN", 0.21, 0.22],
-    ["DS", 0.21, 0.23],
-    ["FTY", 0.21, 0.21],
-    ["GUEST", 0.21, 0.20],
-    ["IP", 0.21, 0.20],
-    ["MVR2", 0.21, 0.23],
-    ["MYMAX", 0.21, 0.23],
-    ["NN", 0.21, 0.21]];
-    
+    var M4Data;
+
     function init() {
+        loadDoc();
+    }
+
+    function loadDoc() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                M4Data = JSON.parse(this.responseText);
+                draw_page();
+            }
+        };
+        xhttp.open("GET", "M4Data.txt", true);
+        xhttp.send();
+    }
+
+    function draw_page() {
         // Compute the values of the metrics
-        var m42 = columnSum(M42DataSet, 1);
-        average42 = columnSum(M42DataSet, 2);
-        var m43 = columnSum(M43DataSet, 1);
-        average43 = columnSum(M43DataSet, 2);
-        var m44 = 100 - M41Data[0] - m42 - m43;
-        average44 = 100 - M41Data[1] - average42 - average43;
+        var m42 = columnSum(M4Data.M42DataSet, 1);
+        average42 = columnSum(M4Data.M42DataSet, 2);
+        var m43 = columnSum(M4Data.M43DataSet, 1);
+        average43 = columnSum(M4Data.M43DataSet, 2);
+        var m44 = 100 - M4Data.M41Data[0] - m42 - m43;
+        average44 = 100 - M4Data.M41Data[1] - average42 - average43;
 
-        var M4Set = [M41Data[0], m42, m43, m44];
-
+        var M4Set = [M4Data.M41Data[0], m42, m43, m44];
 
         // Set the text values that depend on the current data
-        setDateElement();
-        setValElement("valM41", M41Data[0]);
-        setValElement("averageM41", M41Data[1]);
+
+        setDateElement(M4Data.date);
+
+        setValElement("valM41", M4Data.M41Data[0]);
+        setValElement("averageM41", M4Data.M41Data[1]);
         setValElement("valM42", m42);
         setValElement("averageM42", average42);
         setValElement("valM43", m43);
@@ -91,8 +86,8 @@ var xScale;
         plotPieChart("pieChartM4", M4Set, colorSet);
 
         // Generate the value for the tables of elements
-        fillMetricTable("RFC 6761 name", "m42Table", M42DataSet);
-        fillMetricTable("Frequently used string", "m43Table", M43DataSet);
+        fillMetricTable("RFC 6761 name", "m42Table", M4Data.M42DataSet);
+        fillMetricTable("Frequently used string", "m43Table", M4Data.M43DataSet);
     }
 
     function columnSum(dataSet, columnIndex)
@@ -108,10 +103,10 @@ var xScale;
         return sum;
     }
 
-    function setDateElement()
+    function setDateElement(date)
     {
         dateElement = document.getElementById("dateHeading");
-        dateElement.innerHTML = "September 2017";
+        dateElement.innerHTML = date;
     }
 
     function setValElement(valElementId, x) {
@@ -202,7 +197,7 @@ var xScale;
 
 <h1>M4: Usage and misuse of TLD names by DNS clients</h1>
 
-<h2 id="dateHeading">September 2017</h2>
+<h2 id="dateHeading"> - </h2>
 
     <p>
         The M4 metrics measure the usage of TLDs and leakage of undelegated strings by DNS users.

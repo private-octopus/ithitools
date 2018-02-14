@@ -1,5 +1,5 @@
 {
-        "date" : "September 2017",
+        "date" : "September 2017 (Fictitious data, for test and illustration only)",
         "M41Data" : [31.91, 30.47],
         "M42DataSet" : [["LOCAL", 10.92, 10.99],
     ["INVALID", 0.64, 0.65],

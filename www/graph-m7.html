@@ -31,25 +31,40 @@ var Val_min;
 var sections;
 var xScale;
 var yScale;
-		// Values for the Data Plot, they can also be obtained from a external file
 
-var M7DataSet = [85, 86.50, 89, 89, 89.30, 90, 89.50, 90, 90.50]
+var M7Data; // Will be obtained from the web server.
 
     function init() {
+        loadDoc();
+    }
+
+    function loadDoc() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                M7Data = JSON.parse(this.responseText);
+                draw_page();
+            }
+        };
+        xhttp.open("GET", "M7Data.txt", true);
+        xhttp.send();
+    }
+
+    function draw_page() {
         // set these values for your data 
-        setDateElement();
-        setValElement("valM7", getLastElement(M7DataSet));
-        setValElement("averageM7", getAverageElement(M7DataSet));
+        setDateElement(M7Data.date);
+        setValElement("valM7", getLastElement(M7Data.M7DataSet));
+        setValElement("averageM7", getAverageElement(M7Data.M7DataSet));
 
         // Plot the chart
         setScale("graphM7");
 
-        plotGraphM7(M7DataSet, "#404040C0");
+        plotGraphM7(M7Data.M7DataSet, "#404040C0");
     }
 
-    function setDateElement() {
+    function setDateElement(date) {
         dateElement = document.getElementById("dateHeading");
-        dateElement.innerHTML = "September 2017";
+        dateElement.innerHTML = date;
     }
 
     function setValElement(valElementId, x) {

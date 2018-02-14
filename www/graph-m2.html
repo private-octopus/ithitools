@@ -23,45 +23,57 @@
     </style>
 
     
-	
+        
 <script type="text/javascript">
 
-var canvas ;
-var context ;
-var Val_max;
-var Val_min;
-var sections;
-var xScale;
+    var canvas ;
+    var context ;
+    var Val_max;
+    var Val_min;
+    var sections;
+    var xScale;
     var yScale;
 
     // Values for the M3.1 and M3.2 metrics, since Jan 2017 -- this is test data
     
-    var M2Data = [
-        [2.46, 4.065, 2.295, 2.69, 2.69, 5.63, 2.41, 2.23, 2.5],
-        [3.645, 3.67, 2.88, 2.775, 4.48, 4.6, 3.1, 2.81, 2.74],
-        [104.845, 95.22, 98.435, 95.15, 109.88, 104.86, 109.55, 99.81, 85.58],
-        [2.095, 2.285, 3.03, 3.065, 1.07, 2.16, 3.45, 3.12, 2.41]];
+    var M2Data;
 
     var M2DataMax = [5, 200, 5, 5];
 
     function init() {
+        loadDoc();
+    }
+
+    function loadDoc() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                M2Data = JSON.parse(this.responseText);
+                draw_page();
+            }
+        };
+        xhttp.open("GET", "M2Data.txt", true);
+        xhttp.send();
+    }
+
+    function draw_page() {
 
         // Set the text values that depend on the current data
-        setDateElement("September 2017");
-        setValElement("valM21", getLastElement(M2Data[0]));
-        setValElement("valM22", getLastElement(M2Data[1]));
-        setValElement("valM23", getLastElement(M2Data[2]));
-        setValElement("valM24", getLastElement(M2Data[3]));
-        setValElement("averageM21", getAverageElement(M2Data[0]));
-        setValElement("averageM22", getAverageElement(M2Data[1]));
-        setValElement("averageM23", getAverageElement(M2Data[2]));
-        setValElement("averageM24", getAverageElement(M2Data[3]));
+        setDateElement(M2Data.date);
+        setValElement("valM21", getLastElement(M2Data.m2Val[0]));
+        setValElement("valM22", getLastElement(M2Data.m2Val[1]));
+        setValElement("valM23", getLastElement(M2Data.m2Val[2]));
+        setValElement("valM24", getLastElement(M2Data.m2Val[3]));
+        setValElement("averageM21", getAverageElement(M2Data.m2Val[0]));
+        setValElement("averageM22", getAverageElement(M2Data.m2Val[1]));
+        setValElement("averageM23", getAverageElement(M2Data.m2Val[2]));
+        setValElement("averageM24", getAverageElement(M2Data.m2Val[3]));
 
         // Draw the relevant graphs
-        plotGraphM2("graphM21", M2Data[0], 10, "#404040C0");
-        plotGraphM2("graphM22", M2Data[1], 10, "#404040C0");
-        plotGraphM2("graphM23", M2Data[2], 200, "#404040C0");
-        plotGraphM2("graphM24", M2Data[3], 10, "#404040C0");    
+        plotGraphM2("graphM21", M2Data.m2Val[0], 10, "#404040C0");
+        plotGraphM2("graphM22", M2Data.m2Val[1], 10, "#404040C0");
+        plotGraphM2("graphM23", M2Data.m2Val[2], 200, "#404040C0");
+        plotGraphM2("graphM24", M2Data.m2Val[3], 10, "#404040C0");    
     }
 
     function setDateElement(dateValue)
@@ -118,45 +130,45 @@ var xScale;
 
 function setScale(canvasId, v_max)
 {
-	sections = 12;
-	Val_max = v_max;
-	Val_min = 0;
+        sections = 12;
+        Val_max = v_max;
+        Val_min = 0;
     var stepSize = v_max / 10;
-	var columnSize = 50;
-	var rowSize = 50;
-	var margin = 10;
-	var xAxis = [" ", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] 
-			
-	canvas = document.getElementById(canvasId);
-	context = canvas.getContext("2d");
-	context.fillStyle = "#808080"
-	context.font = "20 pt Verdana"
-	
-	yScale = (canvas.height - columnSize - margin) / (Val_max - Val_min);
-	xScale = (canvas.width - rowSize) / sections;
-	
-	context.strokeStyle="#808080"; // color of grid lines
-	context.beginPath();
-		// print Parameters on X axis, and grid lines on the graph
-	for (i=1;i<=sections + 1;i++) {
-		var x = i * xScale;
-		context.fillText(xAxis[i], x,columnSize - margin);
-		context.moveTo(x, columnSize + margin);
-		context.lineTo(x, canvas.height);
-	}
-		// print row header and draw horizontal grid lines
-	var count =  0;
-	for (scale=Val_max;scale>=Val_min;scale = scale - stepSize) {
-		var y = columnSize + (yScale * count * stepSize); 
-		context.fillText(scale, margin,y + margin);
-		context.moveTo(rowSize,y + margin)
-		context.lineTo(canvas.width,y + margin)
-		count++;
-	}
-	context.stroke();
-	
-	context.translate(rowSize,canvas.height + Val_min * yScale);
-	context.scale(1,-1 * yScale);
+        var columnSize = 50;
+        var rowSize = 50;
+        var margin = 10;
+        var xAxis = [" ", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] 
+                        
+        canvas = document.getElementById(canvasId);
+        context = canvas.getContext("2d");
+        context.fillStyle = "#808080"
+        context.font = "20 pt Verdana"
+        
+        yScale = (canvas.height - columnSize - margin) / (Val_max - Val_min);
+        xScale = (canvas.width - rowSize) / sections;
+        
+        context.strokeStyle="#808080"; // color of grid lines
+        context.beginPath();
+                // print Parameters on X axis, and grid lines on the graph
+        for (i=1;i<=sections + 1;i++) {
+                var x = i * xScale;
+                context.fillText(xAxis[i], x,columnSize - margin);
+                context.moveTo(x, columnSize + margin);
+                context.lineTo(x, canvas.height);
+        }
+                // print row header and draw horizontal grid lines
+        var count =  0;
+        for (scale=Val_max;scale>=Val_min;scale = scale - stepSize) {
+                var y = columnSize + (yScale * count * stepSize); 
+                context.fillText(scale, margin,y + margin);
+                context.moveTo(rowSize,y + margin)
+                context.lineTo(canvas.width,y + margin)
+                count++;
+        }
+        context.stroke();
+        
+        context.translate(rowSize,canvas.height + Val_min * yScale);
+        context.scale(1,-1 * yScale);
 }
 
     function plotGraphM2(canvasId, dataSet, valmax, graphColor) {

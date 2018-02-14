@@ -1,5 +1,5 @@
 {
-    "date" : "September 2017",
+    "date" : "September 2017 (Fictitious data, for test and illustration only)",
     "m2Val" : [
         [2.46, 4.065, 2.295, 2.69, 2.69, 5.63, 2.41, 2.23, 2.5],
         [3.645, 3.67, 2.88, 2.775, 4.48, 4.6, 3.1, 2.81, 2.74],

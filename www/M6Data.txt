@@ -1,5 +1,5 @@
 {
-        "date" : "September 2017",
+        "date" : "September 2017 (Fictitious data, for test and illustration only)",
         "m6Val" : [
         ["M6.DNS.01", "DNS CLASSes", 33.3333, 33.84858132, 0, 0],
         ["M6.DNS.02", "Resource Record (RR) TYPEs", 11.6279, 11.58239253, 0, 0],

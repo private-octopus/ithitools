@@ -24,50 +24,48 @@
 	
 <script type="text/javascript">
 
-var canvas ;
-var context ;
-var Val_max;
-var Val_min;
-var sections;
-var xScale;
+    var canvas ;
+    var context ;
+    var Val_max;
+    var Val_min;
+    var sections;
+    var xScale;
     var yScale;
     var colorSet = ["#404040C0", "#A0A0A0C0", "#EFEFEFC0", "#404040C0"];
 
     // Values for the M6 metrics, since Jan 2017 -- this is test data
-    var M6Data = [
-        ["M6.DNS.01", "DNS CLASSes", 33.3333, 33.84858132, 0, 0],
-        ["M6.DNS.02", "Resource Record (RR) TYPEs", 11.6279, 11.58239253, 0, 0],
-        ["M6.DNS.03", "DNS OpCodes", 40, 38.11261489, 0, 0],
-        ["M6.DNS.04", "DNS RCODEs", 23.8095, 24.17691587, 0, 0],
-        ["M6.DNS.05", "AFSDB RR Subtype", 0, 0, 0, 0],
-        ["M6.DNS.06", "DHCID RR Identifier Type Codes", 0, 0, 0, 0],
-        ["M6.DNS.07", "DNS Label Types", 50, 50.78748323, 0, 0],
-        ["M6.DNS.08", "DNS EDNS0 Option Codes (OPT)", 13.3333, 12.97025876, 0, 0],
-        ["M6.DNS.09", "DNS Header Flags", 33.3333, 31.68967715, 7.6748, 7.634283439],
-        ["M6.DNS.10", "EDNS Header Flags (16 bits)", 100, 100, 0, 0],
-        ["M6.DNS.11", "EDNS version Number (8 bits)", 100, 100, 0, 0],
-        ["M6.DNS.12", "Child Synchronization (CSYNC) Flags ", 0, 0, 0, 0],
-        ["M6.DNSSEC.1", "DNS Security Algorithm Numbers", 0, 0, 0, 0],
-        ["M6.DNSSEC.2", "DNS KEY Record Diffie-Hellman Prime Lengths", 0, 0, 0, 0],
-        ["M6.DNSSEC.3", "DNS KEY Record Diffie-Hellman Well-Known Prime/Generator Pairs", 23.5294, 24.68492142, 0, 0],
-        ["M6.DANE.1", "TLSA Certificate Usages", 0, 0, 0, 0],
-        ["M6.DANE.2", "TLSA Selectors", 0, 0, 0, 0],
-        ["M6.DANE.3", "TLSA Matching Types", 0, 0, 0, 0]];
+    var M6Data;
 
     function init() {
-
-        // Set the text values that depend on the current data
-        setDateElement();
-
-        // Set the table data
-        fillM6Table("tableM61", M6Data, 1);
-        fillM6Table("tableM62", M6Data, 2);
+        loadDoc();
     }
 
-    function setDateElement()
+    function loadDoc() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                M6Data = JSON.parse(this.responseText);
+                draw_page();
+            }
+        };
+        xhttp.open("GET", "M6Data.txt", true);
+        xhttp.send();
+    }
+
+    function draw_page() {
+
+        // Set the text values that depend on the current data
+        setDateElement(M6Data.date);
+
+        // Set the table data
+        fillM6Table("tableM61", M6Data.m6Val, 1);
+        fillM6Table("tableM62", M6Data.m6Val, 2);
+    }
+
+    function setDateElement(date)
     {
         dateElement = document.getElementById("dateHeading");
-        dateElement.innerHTML = "September 2017";
+        dateElement.innerHTML = date;
     }
 
     function fillM6Table(tableId, dataSet, subMetric)
@@ -108,7 +106,7 @@ var xScale;
         the Domain Name System (DNS) Parameters, the Domain Name System Security 
         (DNSSEC) Algorithm Numbers, and the DNS-Based Authentication of Named Entities 
         (DANE) Parameters. Each of these groups includes different parameter sets. We will 
-        track the health each of the these parameters by a set of metrics of the form “M6.N.X.*”, 
+        track the health of each of these parameters by a set of metrics of the form “M6.N.X.*”, 
         where “M6.N.X” is the metric index composed of the registry name “N” and the parameter 
         set index “X”. The following tables present the value of the metrics M6.N.X.1 and
         M6.N.X.2.

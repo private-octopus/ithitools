@@ -216,7 +216,7 @@ bool ithimetrics::SetDefaultRecursiveCaptureFile()
 
 bool ithimetrics::SetDefaultRootZoneFile()
 {
-    return SetDefaultCaptureFiles("M7", ".zone", &recursive_capture_file_name);
+    return SetDefaultCaptureFiles("M7", ".zone", &root_zone_file_name);
 }
 
 bool ithimetrics::SetDefaultCaptureFiles(char const * metric_name, char const * suffix, char ** p_file_name)
@@ -307,7 +307,7 @@ bool ithimetrics::GetMetrics() {
 
     if (recursive_capture_file_name == NULL)
     {
-        (void)SetDefaultRootCaptureFile();
+        (void)SetDefaultRecursiveCaptureFile();
     }
 
     if (recursive_capture_file_name != NULL && cm4.Load(recursive_capture_file_name))
