@@ -1,0 +1,4 @@
+{
+    "date" : "September 2017 (Fictitious data, for test and illustration only)",
+    "M7DataSet" : [85, 86.50, 89, 89, 89.30, 90, 89.50, 90, 90.50]
+}
