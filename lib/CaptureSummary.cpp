@@ -26,6 +26,137 @@
 #include "DnsStats.h"
 #include "CaptureSummary.h"
 
+static char const * frequently_leaked_tld[] = {
+    "HOME",
+    "JPG",
+    "LAN",
+    "HTML",
+    "_0x434f4d22",
+    "CORP",
+    "LOCALDOMAIN",
+    "BELKIN",
+    "DLINK",
+    "INTRA",
+    "HOMESTATION",
+    "DOMAIN",
+    "_0x434f4d0a",
+    "DLINKROUTER",
+    "CPE",
+    "LOC",
+    "INTERNAL",
+    "YU",
+    "SERVIDOR DE ALARME",
+    "HTM",
+    "UNIFI",
+    "_0x58494e20",
+    "_0x504c20",
+    "TP",
+    "SPEEDPORT_W_724V_09091602_00_006",
+    "TOTOLINK",
+    "GRP",
+    "DAVOLINK",
+    "ROUTER",
+    "PRIV",
+    "HOTSPOT300",
+    "WORKGROUP",
+    "_0x52550a",
+    "DOM",
+    "_0x4e45540a",
+    "NUPROSM",
+    "_0x4e455420202020",
+    "DHCP HOST",
+    "ASUS",
+    "PHP",
+    "NET/INDEX_REPACK",
+    "SYS",
+    "_0x302f3234a0",
+    "DHCP",
+    "SETUP",
+    "INTRANET",
+    "PRI",
+    "SOPRA",
+    "WPAD",
+    "PIXEL",
+    "WIRELESSAP",
+    "FCNAME",
+    "MAXPRINT",
+    "_TCP",
+    "DNS",
+    "GATEWAY",
+    "NONE",
+    "XML",
+    "SOCGEN",
+    "MULTILASERAP",
+    "MINIHUB",
+    "VDS",
+    "AN",
+    "TANKS",
+    "X",
+    "_0x83",
+    "ROOT",
+    "PNG",
+    "YABS",
+    "XN--3D5443G",
+    "_MSDCS",
+    "BLINKAP",
+    "WEIN",
+    "KROSSPRECISION",
+    "PVT",
+    "GOF",
+    "C3T",
+    "LCL",
+    "_0x36342f3236a0",
+    "MAIL",
+    "_0x3132382f3236a0",
+    "LD",
+    "_0x302f3231a0",
+    "OLX",
+    "OIWTECH",
+    "INTERN",
+    "DS",
+    "FFRGW",
+    "WWW",
+    "ALARMSERVER",
+    "YYY/LESWSSVV",
+    "_0x42590a",
+    "SNECMA",
+    "MYMAX",
+    "NULL",
+    "INTENO",
+    "F200",
+    "HTTP",
+    "DANET",
+    "DSLROUTER",
+    "UAPROM",
+    "INTRAXA",
+    "COM*",
+    "GREATEK",
+    "LVMH",
+    "ZYXEL-USG",
+    "AIS",
+    "(NONE)",
+    "WNET",
+    "UNIFIQUE",
+    "HARAXIOFFICE",
+    "GOTHAN",
+    "UFU",
+    "TLD",
+    "DEF",
+    "COMHTTP",
+    "AAAAAA",
+    "MP3",
+    "WAG320N",
+    "RBL",
+    "AJ",
+    "COTIA",
+    "_0x3735ca",
+    "COM_",
+    "NET/BARMAN",
+    "DA_FTP_SERVER",
+    "REJECT_RHSBL_CLIENT",
+    "TVV"
+};
+
 CaptureSummary::CaptureSummary()
 {
 }
@@ -443,108 +574,33 @@ bool CaptureSummary::Merge(size_t nb_files, char const ** file_name)
     return ret;
 }
 
-#if 0
-bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
-{
-    bool ret = true;
-    size_t max_size = 0;
-    size_t * indx = new size_t[nb_summaries];
-    CaptureLine current_line;
-
-    ret = indx != NULL;
-
-    /* Verify that all inputs are sorted, and compute a reasonable target size */
-    for (size_t i = 0; ret && i < nb_summaries; i++)
-    {
-        cs[i]->Sort();
-
-        if (cs[i]->Size() > max_size)
-        {
-            max_size = cs[i]->Size();
-        }
-
-        indx[i] = 0;
-    }
-
-    Reserve(max_size);
-
-    while (ret)
-    {
-        bool at_least_one = false;
-
-        for (size_t i = 0; ret && i < nb_summaries; i++)
-        {
-            if (indx[i] < cs[i]->Size())
-            {
-                if (!at_least_one)
-                {
-                    at_least_one = true;
-                    current_line = *cs[i]->summary[indx[i]];
-                }
-                else
-                {
-                    if (CaptureLineIsLower(cs[i]->summary[indx[i]], &current_line))
-                    {
-                        current_line = *cs[i]->summary[indx[i]];
-                    }
-                }
-            }
-        }
-
-        if (!at_least_one)
-        {
-            break;
-        }
-        else
-        {
-            // Compute the total count.
-            uint32_t total_count = 0;
-
-            for (size_t i = 0; ret && i < nb_summaries; i++)
-            {
-                if (indx[i] < cs[i]->Size() &&
-                    CaptureLineIsSameKey(cs[i]->summary[indx[i]], &current_line))
-                {
-                    total_count += cs[i]->summary[indx[i]]->count;
-                    indx[i] += 1;
-                }
-            }
-            current_line.count = total_count;
-
-            /* Add the merged line */
-            AddLine(&current_line, true);
-        }
-    }
-
-    if (indx != NULL)
-    {
-        delete[] indx;
-    }
-
-    return ret;
-}
-#else
 bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
 {
     bool ret = true;
     size_t max_size = 0;
     size_t complete_size = 0;
-    size_t * indx = new size_t[nb_summaries];
     std::vector<CaptureLine *> complete;
     std::vector<CaptureLine *> leaked_tld;
     std::vector<CaptureLine *> frequent_tld;
     char const * leak_tld_id = NULL;
     char const * frequent_tld_id = NULL;
+    char const * local_tld_id = NULL;
+    char const * leak_by_length_id = NULL;
     CaptureLine current_line;
+    uint64_t nb_locally_leaked_tld = 0;
+    CaptureLine *local_leak = new CaptureLine;
+    uint64_t skipped_tld_length[64];
 
-    ret = indx != NULL;
+    memset(skipped_tld_length, 0, sizeof(skipped_tld_length));
 
     if (ret)
     {
         leak_tld_id = DnsStats::GetTableName(REGISTRY_DNS_LeakedTLD);
         frequent_tld_id = DnsStats::GetTableName(REGISTRY_DNS_Frequent_TLD_Usage);
+        local_tld_id = DnsStats::GetTableName(REGISTRY_DNS_Local_TLD_Usage_Count);
+        leak_by_length_id = DnsStats::GetTableName(REGISTRY_DNS_LeakByLength);
 
-        ret = (leak_tld_id != NULL && frequent_tld_id != NULL);
+        ret = (leak_tld_id != NULL && frequent_tld_id != NULL && local_tld_id != NULL && leak_by_length_id != NULL && local_leak != NULL);
     }
 
     /* Compute the plausible max size and the complete size */
@@ -566,11 +622,84 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
         frequent_tld.reserve(16 * nb_summaries);
     }
 
-    for (size_t i = 0; ret && i < nb_summaries; i++) {
-        for (size_t j = 0; j < cs[i]->Size(); j++) {
-            complete.push_back(cs[i]->summary[j]);
+    if (frequentRootTld.GetCount() == 0)
+    {
+        /* Load the static values if nothing was programmed yet */
+        for (size_t i = 0; i < sizeof(frequently_leaked_tld) / sizeof(char const *); i++)
+        {
+            bool stored = false;
+            TldAsKey * tak = new
+                TldAsKey((uint8_t *)frequently_leaked_tld[i], strlen(frequently_leaked_tld[i]));
+
+            frequentRootTld.InsertOrAdd(tak, false, &stored);
+
+            if (!stored)
+            {
+                delete tak;
+            }
         }
     }
+
+    for (size_t i = 0; ret && i < nb_summaries; i++) {
+        for (size_t j = 0; j < cs[i]->Size(); j++) {
+            if (strcmp(cs[i]->summary[j]->registry_name, frequent_tld_id) == 0)
+            {
+                if (cs[i]->summary[j]->count <= 4)
+                {
+                    size_t len = strlen(cs[i]->summary[j]->key_value);
+
+                    if (len < 64)
+                    {
+                        skipped_tld_length[len]++;
+                    }
+                }
+                else
+                {
+                    TldAsKey key((uint8_t *)cs[i]->summary[j]->key_value, strlen(cs[i]->summary[j]->key_value));
+                    if (frequentRootTld.Retrieve(&key) != NULL)
+                    {
+                        complete.push_back(cs[i]->summary[j]);
+                    }
+                    else
+                    {
+                        nb_locally_leaked_tld += cs[i]->summary[j]->count;
+                    }
+                }
+            }
+            else if (strcmp(cs[i]->summary[j]->registry_name, leak_tld_id) == 0)
+            {
+                if (cs[i]->summary[j]->count <= 4)
+                {
+                    size_t len = strlen(cs[i]->summary[j]->key_value);
+
+                    if (len < 64)
+                    {
+                        skipped_tld_length[len]++;
+                    }
+                }
+                else
+                {
+                    complete.push_back(cs[i]->summary[j]);
+                }
+            }
+            else
+            {
+                complete.push_back(cs[i]->summary[j]);
+            }
+        }
+    }
+
+    if (ret && nb_locally_leaked_tld != 0)
+    {
+        local_leak->count = nb_locally_leaked_tld;
+        local_leak->key_type = 0;
+        local_leak->key_number = 0; 
+        
+        memcpy(local_leak->registry_name, local_tld_id, strlen(local_tld_id) + 1);
+
+        complete.push_back(local_leak);
+    }
+
     /* Sort the complete list */
     std::sort(complete.begin(), complete.end(), CaptureLineIsLower);
 
@@ -636,6 +765,44 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
         for (size_t i = 0; i < leaked_tld.size() && i < 128; i++) {
             AddLine(leaked_tld[i], true);
         }
+
+        for (size_t i = 128; i < leaked_tld.size() && i < 128; i++) {
+            size_t len = strlen(leaked_tld[i]->key_value);
+
+            if (len < 64)
+            {
+                skipped_tld_length[len]++;
+            }
+        }
+    }
+
+    /* Add the leaked length to the current counts */
+    for (size_t i = 0; i < summary.size(); i++)
+    {
+        if (strcmp(summary[i]->registry_name, leak_by_length_id) == 0 &&
+            summary[i]->key_number > 0 &&
+            summary[i]->key_number < 64)
+        {
+            summary[i]->count += skipped_tld_length[summary[i]->key_number];
+            skipped_tld_length[summary[i]->key_number] = 0;
+        }
+    }
+
+    for (int i = 0; i < 64; i++)
+    {
+        if (skipped_tld_length[i] != 0)
+        {
+            CaptureLine length_pattern;
+
+            length_pattern.count = skipped_tld_length[i];
+            length_pattern.key_type = 0;
+            length_pattern.key_number = i;
+
+            memcpy(length_pattern.registry_name, leak_by_length_id, strlen(leak_by_length_id) + 1);
+
+            AddLine(&length_pattern, true);
+            skipped_tld_length[i] = 0;
+        }
     }
 
     if (ret) {
@@ -663,9 +830,14 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
         }
     }
 
+    if (local_leak != NULL)
+    {
+        delete local_leak;
+        local_leak = NULL;
+    }
+
     return ret;
 }
-#endif
 
 int CaptureSummary::compare_string(char const * x, char const * y)
 {

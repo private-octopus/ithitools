@@ -25,6 +25,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <vector>
+#include "HashBinGeneric.h"
+#include "TldAsKey.h"
 
 typedef struct _capture_line
 {
@@ -68,6 +70,8 @@ public:
     static int compare_string(char const * x, char const * y);
 
     void MultiplyByConstantForTest(unsigned int multiplier);
+
+    BinHash<TldAsKey> frequentRootTld;
 
 private:
     std::vector<CaptureLine *> summary;

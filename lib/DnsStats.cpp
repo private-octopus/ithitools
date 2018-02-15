@@ -117,7 +117,8 @@ static char const * RegistryNameById[] = {
     "TldUsage",
     "RFC6761Usage",
     "Frequent-TLD-usage",
-    "TLD-Usage-Count"
+    "TLD-Usage-Count",
+    "Local_TLD_Usage_Count"
 };
 
 static uint32_t RegistryNameByIdNb = sizeof(RegistryNameById) / sizeof(char const*);

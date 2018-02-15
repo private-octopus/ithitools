@@ -66,7 +66,7 @@ private:
     char * abuse_file_name;
     char * root_zone_file_name;
 
-    bool ithimetrics::SetDefaultCaptureFiles(char const * metric_name, char const * suffix, char ** p_file_name);
+    bool SetDefaultCaptureFiles(char const * metric_name, char const * suffix, char ** p_file_name);
 
     static bool copy_name(char ** target, char const * name);
 };

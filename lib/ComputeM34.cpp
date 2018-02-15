@@ -24,6 +24,8 @@
 #include "DnsStats.h"
 #include "ComputeM34.h"
 
+static char const * leaked_local_names = "(local host names)";
+
 bool metric34_line_is_bigger(metric34_line_t x, metric34_line_t y)
 {
     bool ret = false;
@@ -354,6 +356,7 @@ bool ComputeM4::GetM4_X(uint32_t table_id, std::vector<metric34_line_t>* mstring
     if (nb_userqueries > 0)
     {
         GetStringM_X(&cs, table_id, mstring_x, nb_userqueries, min_share);
+
     }
     else
     {
@@ -415,6 +418,26 @@ bool ComputeM4::GetM4_3()
         }
 
         GetM4_X(REGISTRY_DNS_Frequent_TLD_Usage, &m4_3, min_val);
+
+        /* Add the count of locally defined domains */
+        std::vector<CaptureLine *> extract;
+
+        cs.Extract(
+            DnsStats::GetTableName(REGISTRY_DNS_Local_TLD_Usage_Count), &extract);
+
+        if (extract.size() != 0)
+        {
+            metric34_line_t line;
+
+            line.frequency = ((double)extract[0]->count) / ((double)nb_userqueries);
+
+            if (line.frequency >= min_val)
+            {
+                memcpy(line.domain, leaked_local_names, strlen(leaked_local_names) + 1);
+                m4_3.push_back(line);
+                std::sort(m4_3.begin(), m4_3.end(), metric34_line_is_bigger);
+            }
+        }
     }
     else
     {

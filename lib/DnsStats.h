@@ -30,6 +30,7 @@
 #include "AddressFilter.h"
 #include "HashBinGeneric.h"
 #include "CaptureSummary.h"
+#include "TldAsKey.h"
 
 /*
  * List of registry definitions 
@@ -74,6 +75,7 @@
 #define REGISTRY_DNS_RFC6761_Usage 37
 #define REGISTRY_DNS_Frequent_TLD_Usage 38
 #define REGISTRY_DNS_TLD_Usage_Count 39
+#define REGISTRY_DNS_Local_TLD_Usage_Count 40
 
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
@@ -121,30 +123,6 @@ public:
         uint32_t key_number;
         uint8_t key_value[64];
     };
-};
-
-class TldAsKey
-{
-public:
-    TldAsKey(uint8_t * tld, size_t tld_len);
-    ~TldAsKey();
-
-    bool IsSameKey(TldAsKey* key);
-    uint32_t Hash();
-    TldAsKey* CreateCopy();
-    void Add(TldAsKey* key);
-
-    TldAsKey * HashNext;
-    TldAsKey * MoreRecentKey;
-    TldAsKey * LessRecentKey;
-
-    size_t tld_len;
-    uint8_t tld[65];
-    uint32_t count;
-    uint32_t hash;
-
-    static void CanonicCopy(uint8_t * tldDest, size_t tldDestMax, size_t * tldDestLength, 
-        uint8_t * tldSrce, size_t tldSrceLength);
 };
 
 class TldAddressAsKey
