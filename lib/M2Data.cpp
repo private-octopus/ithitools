@@ -440,7 +440,7 @@ bool ComputeM2::Load(char const * single_file_name)
     {
         ret = m2Data.Load(single_file_name);
     }
-    return false;
+    return ret;
 }
 
 bool ComputeM2::Compute()
