@@ -259,7 +259,7 @@
                 <canvas id="colorBlobM43" height="32" width="32"></canvas>
             </td>
             <td>
-                <a href="#M43">M4.3:  % of queries directed at frequenctly used strings.</a>
+                <a href="#M43">M4.3:  % of queries directed at frequently used strings.</a>
             </td>
             <td align="right" id="valM43">
                 -
@@ -299,9 +299,18 @@
 
     <h3 id="M43">Queries to frequently leaked strings</h3>
     <p>
-        In the following table, the <em>current value</em> is the fraction of queries to the root
-        directed at frequently used strings in the current month. The <em>average value</em> is the average of
+        In the following table, the <em>current value</em> is the fraction of queries
+        directed  in the current month at frequently used strings instead of a delegated 
+        top level domain. The <em>average value</em> is the average of
         that fraction since the beginning of the year.
+    </p>
+    <p>
+        Many of the strings frequently used at recursive resolvers correspond to local
+        values, such as names of specific servers in the local network. We don't want to
+        publish these names for privacy reasons. The corresponding queries are 
+        tabulated under a generic category, "(local host names)". The only strings that
+        we list are those found in the top 128 strings leaked to the root, as measured
+        with metric M3.
     </p>
     <div id="m43Table">Table M43 not found</div>
 
