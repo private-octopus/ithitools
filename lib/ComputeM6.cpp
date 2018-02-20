@@ -190,13 +190,19 @@ static metric6_registered_t r_opt_code[] = {
     { 26946,"DeviceID" }
 };
 
+/*
+ * Header flags are defined by IANA as bit positions, from 5 to 11, but the capture
+ * program defines them as "shift positions", starting at 0. The number used
+ * here are the shift positions, off by one from the IANA numbers.
+ */
+
 static metric6_registered_t r_header_flags[] = {
-    { 5, "AA" },
-    { 6, "TC" },
-    { 7, "RD" },
-    { 8, "RA" },
-    { 10, "AD" },
-    { 11, "CD" }
+    { 4, "AA" },
+    { 5, "TC" },
+    { 6, "RD" },
+    { 7, "RA" },
+    { 9, "AD" },
+    { 10, "CD" }
 };
 
 static metric6_registered_t r_edns_header_flags[] = {
