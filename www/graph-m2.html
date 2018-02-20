@@ -187,10 +187,11 @@ function setScale(canvasId, v_max)
     context.moveTo(0, 0);
 
     for (i=0; i<l; i++) {
-        context.lineTo(i * xScale, dataSet[i]);
+	context.lineTo(i * xScale, dataSet[i]);
+        context.lineTo((i + 1) * xScale, dataSet[i]);
     }
 
-    context.lineTo((l-1) * xScale, 0);
+    context.lineTo((l) * xScale, 0);
     context.closePath();
     context.fill();
 }
