@@ -32,6 +32,7 @@
 #include "PluginTest.h"
 #include "CsvTest.h"
 #include "M2DataTest.h"
+#include "PublishTest.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -152,6 +153,15 @@ namespace ithiunit
         {
             // TODO: Your test code here
             M2DataTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(Publish)
+        {
+            // TODO: Your test code here
+            PublishTest test;
             bool ret = test.DoTest();
 
             Assert::AreEqual(ret, true);

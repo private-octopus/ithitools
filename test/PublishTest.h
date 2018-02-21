@@ -1,6 +1,6 @@
 /*
 * Author: Christian Huitema
-* Copyright (c) 2017, Private Octopus, Inc.
+* Copyright (c) 2018, Private Octopus, Inc.
 * All rights reserved.
 *
 * Permission to use, copy, modify, and distribute this software for any
@@ -19,44 +19,22 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef METRIC_TEST_H
-#define METRIC_TEST_H
+#ifndef METRIC_COLLECTION_TEST_H
+#define METRIC_COLLECTION_TEST_H
 
 #include "ithi_test_class.h"
 
-class MetricTest : public ithi_test_class
+class PublishTest : public ithi_test_class
 {
 public:
-    MetricTest();
-    ~MetricTest();
+    PublishTest();
+    ~PublishTest();
 
     bool DoTest() override;
 
-    static bool compare_files(char const * fname1, char const * fname2);
-    static bool compare_lines(char const * b1, char const * b2);
+    bool CreateTestDirectory(int metric_id, char const ** file_names, int nb_files);
+
+    bool CopyFileToDirectory(char const * file_name, char const * dir_name);
 };
 
-class MetricDateTest : public ithi_test_class
-{
-public:
-    MetricDateTest();
-    ~MetricDateTest();
-
-    bool DoTest();
-};
-
-class MetricCaptureFileTest : public ithi_test_class
-{
-public:
-    MetricCaptureFileTest();
-    ~MetricCaptureFileTest();
-
-    bool DoTest();
-
-    static bool CopyFileToDestination(char const * target_name, char const * source_name);
-    static bool CreateDirectoryIfAbsent(char const * dir_name);
-
-private:
-};
-
-#endif /* METRIC_TEST_H */
+#endif /* METRIC_COLLECTION_TEST_H */
