@@ -12,6 +12,7 @@ SET(ITHITOOLS_LIBRARY_FILES
    lib/CaptureSummary.cpp
    lib/DnsStats.cpp
    lib/ithimetrics.cpp
+   lib/ithipublisher.cpp
    lib/pcap_reader.cpp
    lib/UsefulTransaction.cpp
    lib/NamePattern.cpp
@@ -36,6 +37,7 @@ SET(ITHITOOLS_TEST_LIBRARY_FILES
    test/testRfc6761.cpp
    test/PatternTest.cpp
    test/PluginTest.cpp
+   test/PublishTest.cpp
    test/CsvTest.cpp
    test/ithi_test_class.cpp
 )
@@ -46,6 +48,7 @@ ADD_EXECUTABLE(ithitools
    lib/CaptureSummary.cpp
    lib/DnsStats.cpp
    lib/ithimetrics.cpp
+   lib/ithipublisher.cpp
    lib/pcap_reader.cpp
    lib/UsefulTransaction.cpp
    lib/NamePattern.cpp
@@ -64,6 +67,7 @@ ADD_EXECUTABLE(ithitest
    lib/CaptureSummary.cpp
    lib/DnsStats.cpp
    lib/ithimetrics.cpp
+   lib/ithipublisher.cpp
    lib/pcap_reader.cpp
    lib/UsefulTransaction.cpp
    lib/NamePattern.cpp
@@ -84,6 +88,7 @@ ADD_EXECUTABLE(ithitest
    test/testRfc6761.cpp
    test/PatternTest.cpp
    test/PluginTest.cpp
+   test/PublishTest.cpp
    test/CsvTest.cpp
    test/ithi_test_class.cpp
 )
