@@ -27,15 +27,22 @@
 #ifdef _WINDOWS
 static char const * publish_test_dir_ithi = ".\\ithi";
 static char const * publish_test_target = ".\\";
+static char const * publish_test_target_m2 = ".\\M2Data.txt";
 static char const * publish_test_target_m7 = ".\\M7Data.txt";
 #ifndef ITHI_FILE_PATH_SEP
 #define ITHI_FILE_PATH_SEP "\\"
 #endif
 #ifdef _WINDOWS64
+static char const * publish_test_m21 = "..\\..\\data\\M7-2017-01-31.csv";
+static char const * publish_test_m22 = "..\\..\\data\\M7-2017-02-28.csv";
+static char const * publish_ref_m2 = "..\\..\\data\\M2Data-test-ref.txt";
 static char const * publish_test_m71 = "..\\..\\data\\M7-2017-01-31.csv";
 static char const * publish_test_m72 = "..\\..\\data\\M7-2017-02-28.csv";
 static char const * publish_ref_m7 = "..\\..\\data\\M7Data-test-ref.txt";
 #else
+static char const * publish_test_m21 = "..\\data\\M2-2017-01-31.csv";
+static char const * publish_test_m22 = "..\\data\\M2-2017-02-28.csv";
+static char const * publish_ref_m2 = "..\\data\\M2Data-test-ref.txt";
 static char const * publish_test_m71 = "..\\data\\M7-2017-01-31.csv";
 static char const * publish_test_m72 = "..\\data\\M7-2017-02-28.csv";
 static char const * publish_ref_m7 = "..\\data\\M7Data-test-ref.txt";
@@ -43,6 +50,10 @@ static char const * publish_ref_m7 = "..\\data\\M7Data-test-ref.txt";
 #else
 static char const * metric_test_dir_ithi = "./ithi";
 static char const * publish_test_target = "./";
+static char const * publish_test_target_m2 = "./M2Data.txt";
+static char const * publish_test_m21 = "./data/M2-2017-01-31.csv";
+static char const * publish_test_m22 = "./data/M2-2017-02-28.csv";
+static char const * publish_ref_m2 = "./data/M2Data-test-ref.txt";
 static char const * publish_test_target_m7 = "./M7Data.txt";
 static char const * publish_test_m71 = "./data/M7-2017-01-31.csv";
 static char const * publish_test_m72 = "./data/M7-2017-02-28.csv";
@@ -61,28 +72,23 @@ PublishTest::~PublishTest()
 {
 }
 
-bool PublishTest::DoTest()
+bool PublishTest::DoOneTest(int metric_id, char const ** metric_files, size_t nb_files,
+    char const * target_file, char const * ref_file)
 {
-    /* Prepare the M7 test */
-    char const * m7_files[2] = { publish_test_m71, publish_test_m72 };
-    bool ret = CreateTestDirectory(7, m7_files, 2);
+
+    bool ret = CreateTestDirectory(metric_id, metric_files, nb_files);
 
     if (ret) {
-        ithipublisher pub(publish_test_dir_ithi, 7, "2017-02-28");
+        ithipublisher pub(publish_test_dir_ithi, metric_id, "2017-02-28");
 
         ret = pub.CollectMetricFiles();
 
-        if (ret && pub.nb_months != 2)
+        if (ret && pub.nb_months != nb_files)
         {
             ret = false;
         }
 
         if (ret && (pub.last_year != 2017 || pub.last_month != 2 || pub.last_day != 28))
-        {
-            ret = false;
-        }
-
-        if (ret && (pub.first_year != 2017 || pub.first_month != 1))
         {
             ret = false;
         }
@@ -94,12 +100,35 @@ bool PublishTest::DoTest()
 
         if (ret)
         {
-            ret = MetricTest::compare_files(publish_test_target_m7, publish_ref_m7);
+            ret = MetricTest::compare_files(target_file, ref_file);
         }
     }
 
     return ret;
 }
+
+bool PublishTest::DoTest()
+{
+    bool ret = true;
+    /* M2 test */
+    char const * m2_files[2] = { publish_test_m21, publish_test_m22 };
+
+    if (ret)
+    {
+        ret = DoOneTest(2, m2_files, 2, publish_test_target_m2, publish_ref_m2);
+    }
+
+    /* M7 test */
+    char const * m7_files[2] = { publish_test_m71, publish_test_m72 };
+
+    if (ret)
+    {
+        ret = DoOneTest(7, m7_files, 2, publish_test_target_m7, publish_ref_m7);
+    }
+
+    return ret;
+}
+
 
 bool PublishTest::CreateTestDirectory(int metric_id, char const ** file_names, int nb_files)
 {

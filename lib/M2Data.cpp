@@ -160,6 +160,8 @@ void M2Data::ComputeMetrics(double ithi_m2[4])
         {
             ithi_m2[j] /= (double)total_domains;
         }
+
+        ithi_m2[j] *= 10000;
     }
 }
 
@@ -456,7 +458,7 @@ bool ComputeM2::Write(FILE * F_out)
 
     for (int i = 0; i < 4; i++)
     {
-        ret &= (fprintf(F_out, "M2.%d, %6f,\n", i + 1, ithi_m2[i]) > 0);
+        ret &= (fprintf(F_out, "M2.%d, , %6f,\n", i + 1, ithi_m2[i]) > 0);
     }
 
     return ret;

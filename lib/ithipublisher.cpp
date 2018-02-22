@@ -42,6 +42,7 @@
 #include <ctype.h>
 #include <algorithm>
 #include "CsvHelper.h"
+#include "CaptureSummary.h"
 #include "ithipublisher.h"
 
 ithipublisher::ithipublisher(char const * ithi_folder, int metric_id, char const * date_string)
@@ -59,6 +60,19 @@ ithipublisher::ithipublisher(char const * ithi_folder, int metric_id, char const
 
 ithipublisher::~ithipublisher()
 {
+    for (size_t i = 0; i < file_list.size(); i++)
+    {
+        MetricFileHolder * pmfh = file_list[i];
+        delete pmfh;
+        file_list[i] = NULL;
+    }
+
+    for (size_t i = 0; i < line_list.size(); i++)
+    {
+        MetricLine * pml = line_list[i];
+        delete pml;
+        line_list[i] = NULL;
+    }
 }
 
 bool ithipublisher::CollectMetricFiles()
@@ -182,11 +196,12 @@ bool ithipublisher::CollectMetricFiles()
         /* Load the selected data */
         for (size_t i = 0; ret &&  i < file_list.size(); i++)
         {
+            ret = LoadFileData(i, dir_met_name);
+        }
 
-            char file_name[512];
-            bool ret = snprintf(file_name, sizeof(file_name), "%s%s", dir_met_name, file_list[i]->file_name) > 0;
-
-            ret = LoadFileData(file_name, &file_list[i]->line);
+        if (ret)
+        {
+            std::sort(line_list.begin(), line_list.end(), MetricLineIsLower);
         }
     }
 
@@ -265,19 +280,23 @@ bool ithipublisher::ParseFileName(MetricFileHolder * file, const char * name, in
     return ret;
 }
 
-bool ithipublisher::LoadFileData(char const * file_name, std::vector<MetricLine *> *lines)
+bool ithipublisher::LoadFileData(int file_index, char const * dir_met_name)
 {
     FILE* F;
     MetricLine * line;
     char buffer[512];
+    char file_name[512];
+    bool ret = snprintf(file_name, sizeof(file_name), "%s%s", dir_met_name, file_list[file_index]->file_name) > 0;
 
+    if (ret) {
 #ifdef _WINDOWS
-    errno_t err = fopen_s(&F, file_name, "r");
-    bool ret = (err == 0 && F != NULL);
+        errno_t err = fopen_s(&F, file_name, "r");
+        ret = (err == 0 && F != NULL);
 #else
-    F = fopen(file_name, "r");
-    bool ret = (F != NULL);
+        F = fopen(file_name, "r");
+        ret = (F != NULL);
 #endif
+    }
 
     while (ret && fgets(buffer, sizeof(buffer), F))
     {
@@ -293,10 +312,12 @@ bool ithipublisher::LoadFileData(char const * file_name, std::vector<MetricLine 
         start = CsvHelper::read_string(line->metric_name, sizeof(line->metric_name), start, buffer, sizeof(buffer));
         start = CsvHelper::read_string(line->key_value, sizeof(line->key_value), start, buffer, sizeof(buffer));
         start = CsvHelper::read_double(&line->frequency, start, buffer, sizeof(buffer));
+        line->year = file_list[file_index]->year;
+        line->month = file_list[file_index]->month;
 
         /* TODO: check that the parsing is good */
 
-        lines->push_back(line);
+        line_list.push_back(line);
     }
 
     if (F != NULL)
@@ -306,10 +327,45 @@ bool ithipublisher::LoadFileData(char const * file_name, std::vector<MetricLine 
     return ret;
 }
 
+
 bool ithipublisher::MetricFileIsEarlier(MetricFileHolder * f1, MetricFileHolder * f2)
 {
     return (f1->year < f2->year ||
         (f1->year == f2->year && f1->month < f2->month));
+}
+
+bool ithipublisher::MetricLineIsLower(MetricLine * x, MetricLine * y)
+{
+    bool ret = false;
+    int cmp;
+
+    cmp = CaptureSummary::compare_string(x->metric_name, y->metric_name);
+
+    if (cmp > 0)
+    {
+        ret = true;
+    }
+    else if (cmp == 0)
+    {
+        cmp = CaptureSummary::compare_string(x->key_value, y->key_value);
+        if (cmp > 0)
+        {
+            ret = true;
+        }
+        else if (cmp == 0)
+        {
+            if (x->year < y->year)
+            {
+                ret = true;
+            }
+            else if (x->year == y->year && x->month < y->month)
+            {
+                ret = true;
+            }
+        }
+    }
+
+    return ret;
 }
 
 bool ithipublisher::Publish(char const * web_folder)
@@ -345,6 +401,8 @@ bool ithipublisher::Publish(char const * web_folder)
                 ret = PublishDataM7(F);
                 break;
             case 2:
+                ret = PublishDataM2(F);
+                break;
             case 3:
             case 4:
             case 6:
@@ -371,22 +429,52 @@ bool ithipublisher::Publish(char const * web_folder)
 
 bool ithipublisher::GetVector(char const * metric_name, char const * key_value, double * metric)
 {
-    int file_index = 0;
+    size_t line_index = 0;
     int current_year = first_year;
     int current_month = first_month;
 
+    while (line_index < line_list.size())
+    {
+        int cmp = strcmp(line_list[line_index]->metric_name, metric_name);
+
+        if (cmp > 0)
+        {
+            break;
+        }
+        else if (cmp == 0)
+        {
+            if (key_value == NULL)
+            {
+                break;
+            }
+            else
+            {
+                cmp = strcmp(line_list[line_index]->key_value, key_value);
+                if (cmp <= 0)
+                {
+                    break;
+                }
+            }
+        }
+        line_index++;
+    }
+        
     for (int i = 0; i < nb_months; i++)
     {
-        if (file_list[file_index]->year > current_year ||
-            (file_list[file_index]->year == current_year &&
-                file_list[file_index]->month > current_month))
+
+        if (line_index > line_list.size() ||
+            strcmp(line_list[line_index]->metric_name, metric_name) != 0 ||
+            (key_value != NULL && strcmp(line_list[line_index]->key_value, key_value) != 0) ||
+            line_list[line_index]->year > current_year ||
+            (line_list[line_index]->year == current_year &&
+                line_list[line_index]->month > current_month))
         {
             metric[i] = 0;
         }
         else
         {
-            metric[i] = file_list[i]->GetFrequency(metric_name, key_value);
-            file_index++;
+            metric[i] = line_list[line_index]->frequency;
+            line_index++;
         }
         current_month++;
         if (current_month > 12)
@@ -398,6 +486,45 @@ bool ithipublisher::GetVector(char const * metric_name, char const * key_value, 
 
     return true;
 }
+
+bool ithipublisher::PublishDataM2(FILE * F)
+{
+    double m2x[12];
+    bool ret = true;
+    char const * subMet[4] = { "M2.1", "M2.2", "M2.3", "M2.4" };
+
+    fprintf(F, "\"m2Val\" : [\n");
+    for (int m = 0; m < 4; m++)
+    {
+        if (GetVector(subMet[m], NULL, m2x))
+        {
+            /* m2x is present */
+            fprintf(F, "[");
+            for (int i = 0; i < nb_months; i++)
+            {
+                if (i != 0)
+                {
+                    fprintf(F, ",");
+                }
+
+                ret &= fprintf(F, "%8f", m2x[i]) > 0;
+            }
+            if (m == 3) {
+                fprintf(F, "]");
+            } else {
+                fprintf(F, "],\n");
+            }
+        }
+        else
+        {
+            ret = false;
+        }
+    }
+    fprintf(F, "]\n");
+
+    return ret;
+}
+
 
 bool ithipublisher::PublishDataM7(FILE * F)
 {
@@ -415,48 +542,11 @@ bool ithipublisher::PublishDataM7(FILE * F)
                 fprintf(F, ",");
             }
 
-            ret &= fprintf(F, "%8f", m7[i]) > 0;
+            /* Multiply metric value by 100, since we want to display percentages */
+            ret &= fprintf(F, "%8f", 100*m7[i]) > 0;
         }
     }
     fprintf(F, "]\n");
 
     return ret;
-}
-
-
-MetricFileHolder::MetricFileHolder()
-    :
-    year(0),
-    month(0),
-    day(0)
-{
-    file_name[0] = 0;
-}
-
-MetricFileHolder::~MetricFileHolder()
-{
-    for (size_t i = 0; i < line.size(); i++)
-    {
-        MetricLine * pml = line[i];
-        delete pml;
-        line[i] = NULL;
-    }
-}
-
-double MetricFileHolder::GetFrequency(char const * metric_name, char const * key_value)
-{
-    double frequency = 0;
-
-    for (size_t i = 0; i < line.size(); i++)
-    {
-        if (strcmp(line[i]->metric_name, metric_name) == 0 &&
-            ((key_value == NULL && line[i]->key_value[0] == 0) ||
-            (key_value != NULL && strcmp(line[i]->key_value, key_value) == 0)))
-        {
-            frequency = line[i]->frequency;
-            break;
-        }
-    }
-
-    return frequency;
 }

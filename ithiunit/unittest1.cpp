@@ -124,7 +124,6 @@ namespace ithiunit
 
         TEST_METHOD(Pattern)
         {
-            // TODO: Your test code here
             PatternTest test;
             bool ret = test.DoTest();
 
@@ -133,7 +132,6 @@ namespace ithiunit
 
         TEST_METHOD(Plugin)
         {
-            // TODO: Your test code here
             PluginTest test;
             bool ret = test.DoTest();
 
@@ -142,7 +140,6 @@ namespace ithiunit
 
         TEST_METHOD(CsvHelper)
         {
-            // TODO: Your test code here
             CsvTest test;
             bool ret = test.DoTest();
 
@@ -151,7 +148,6 @@ namespace ithiunit
 
         TEST_METHOD(M2Data)
         {
-            // TODO: Your test code here
             M2DataTest test;
             bool ret = test.DoTest();
 
@@ -160,7 +156,6 @@ namespace ithiunit
 
         TEST_METHOD(Publish)
         {
-            // TODO: Your test code here
             PublishTest test;
             bool ret = test.DoTest();
 

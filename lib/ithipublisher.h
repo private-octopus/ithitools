@@ -31,23 +31,18 @@ typedef struct _metric_line
 {
     char metric_name[64];
     char key_value[64];
+    int year;
+    int month;
     double frequency;
 } MetricLine;
 
-class MetricFileHolder
-{
-public:
-    MetricFileHolder();
-    ~MetricFileHolder();
-
-    double GetFrequency(char const * metric_name, char const * key_value);
-
+typedef struct _MetricFileHolder {
     char file_name[256];
     int year;
     int month;
     int day;
     std::vector<MetricLine *> line;
-};
+} MetricFileHolder;
 
 class ithipublisher
 {
@@ -60,8 +55,7 @@ public:
     bool Publish(char const * web_folder);
 
     static bool ParseFileName(MetricFileHolder * file, const char * name, int metric_id);
-
-    static bool LoadFileData(char const * file_name, std::vector<MetricLine *> *lines);
+    bool LoadFileData(int file_index, char const * dir_met_name);
 
     char const * ithi_folder;
     int metric_id;
@@ -73,13 +67,16 @@ public:
     int first_year;
     int first_month;
     int nb_months;
+    std::vector<MetricLine*> line_list;
 
     static bool MetricFileIsEarlier(MetricFileHolder * f1, MetricFileHolder * f2);
+    static bool MetricLineIsLower(MetricLine * l1, MetricLine * l2);
 
     /* Get the nb_months values of a specific metric */
     bool GetVector(char const * metric_id, char const * key_value, double * metric);
 
     /* Metric specific publishers */
+    bool PublishDataM2(FILE * F);
     bool PublishDataM7(FILE * F);
 };
 

@@ -37,20 +37,21 @@ static char const * metric_test_input = "..\\data\\tiny-capture.csv";
 static char const * metric_test_output = "metric-test.csv";
 static char const * metric_test_ref = "..\\data\\tiny-metrics.csv";
 static char const * root_zone_file = "..\\data\\root.zone";
-
+static char const * tlds_test = "..\\data\\2017-01-31_tlds.csv";
 #else
 static char const * metric_test_input = "..\\..\\data\\tiny-capture.csv";
 static char const * metric_test_output = "metric-test.csv";
 static char const * metric_test_ref = "..\\..\\data\\tiny-metrics.csv";
 static char const * root_zone_file = "..\\..\\data\\root.zone";
+static char const * tlds_test = "..\\..\\data\\2017-01-31_tlds.csv";
 #endif
 #else
 static char const * metric_test_input = "data/tiny-capture.csv";
 static char const * metric_test_output = "metric-test.csv";
 static char const * metric_test_ref = "data/tiny-metrics.csv";
 static char const * root_zone_file = "data/root.zone";
+static char const * tlds_test = "data/2017-01-31_tlds.csv";
 #endif
-
 
 MetricTest::MetricTest()
 {
@@ -80,10 +81,15 @@ bool MetricTest::DoTest()
             ret = false;
             TEST_LOG("Could not set root zone file to %s\n", root_zone_file);
         }
-        if (!met.SetRootCaptureFileName(metric_test_input) || !met.SetRecursiveCaptureFileName(metric_test_input))
+        else if (!met.SetRootCaptureFileName(metric_test_input) || !met.SetRecursiveCaptureFileName(metric_test_input))
         {
             ret = false;
             TEST_LOG("Could not set capture file name to %s\n", metric_test_input);
+        }
+        else if (!met.SetAbuseFileName(tlds_test))
+        {
+            ret = false;
+            TEST_LOG("Could not set abuse file name to %s\n", tlds_test);
         }
         else
         {
