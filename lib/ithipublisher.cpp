@@ -368,6 +368,25 @@ bool ithipublisher::MetricLineIsLower(MetricLine * x, MetricLine * y)
     return ret;
 }
 
+bool ithipublisher::MetricNameLineIsBigger(MetricNameLine l1, MetricNameLine l2)
+{
+    bool ret = false;
+
+    if (l1.current > l2.current)
+    {
+        ret = true;
+    }
+    else if (l1.current == l2.current)
+    {
+        if (l1.average > l2.average)
+        {
+            ret = true;
+        }
+    }
+
+    return ret;
+}
+
 bool ithipublisher::Publish(char const * web_folder)
 {
     /* Create file name for the metric */
@@ -400,6 +419,9 @@ bool ithipublisher::Publish(char const * web_folder)
             case 2:
                 ret = PublishDataM2(F);
                 break;
+            case 4:
+                ret = PublishDataM4(F);
+                break;
             case 6:
                 ret = PublishDataM6(F);
                 break;
@@ -407,7 +429,6 @@ bool ithipublisher::Publish(char const * web_folder)
                 ret = PublishDataM7(F);
                 break;
             case 3:
-            case 4:
             default:
                 ret = fprintf(F, "// No data yet for metric M%d\n", metric_id) > 0;
                 break;
@@ -515,6 +536,77 @@ bool ithipublisher::GetAverageAndCurrent(char const * metric_name, char const * 
     return ret;
 }
 
+bool ithipublisher::GetNameList(char const * metric_name, std::vector<MetricNameLine>* name_list)
+{
+    size_t line_index = 0;
+    int current_year = first_year;
+    int current_month = first_month;
+    bool end_of_metric = true;
+    double sum = 0;
+    MetricNameLine current_name = { NULL, 0, 0 };
+
+    /* Skip to beginning of the metric */
+    while (line_index < line_list.size())
+    {
+        int cmp = strcmp(line_list[line_index]->metric_name, metric_name);
+
+        if (cmp > 0)
+        {
+            break;
+        }
+        else if (cmp == 0)
+        {
+            end_of_metric = false;
+            current_name.name = line_list[line_index]->key_value;
+            break;
+        }
+        line_index++;
+    }
+
+    /* Extract the lines and compute the averages */
+    while (line_index < line_list.size() && strcmp(line_list[line_index]->metric_name, metric_name) == 0)
+    {
+        if (strcmp(line_list[line_index]->key_value, current_name.name) != 0)
+        {
+            if (nb_months > 1)
+            {
+                current_name.average = sum / (nb_months - 1);
+            }
+            name_list->push_back(current_name);
+            current_name.name = line_list[line_index]->key_value;
+            current_name.average = 0;
+            current_name.current = 0;
+            sum = 0;
+        }
+        
+        if (line_list[line_index]->year == last_year &&
+            line_list[line_index]->month == last_month)
+        {
+            current_name.current = line_list[line_index]->frequency;
+        }
+        else
+        {
+            sum += line_list[line_index]->frequency;
+        }
+
+        line_index++;
+    }
+    /* Push the last entry if it was filled up */
+    if (current_name.name != NULL)
+    {
+        if (nb_months > 1)
+        {
+            current_name.average = sum / (nb_months - 1);
+        }
+        name_list->push_back(current_name);
+    }
+
+    /* Sort from bigger to lower */
+    std::sort(name_list->begin(), name_list->end(), ithipublisher::MetricNameLineIsBigger);
+
+    return true;
+}
+
 bool ithipublisher::PublishDataM2(FILE * F)
 {
     double m2x[12];
@@ -552,6 +644,52 @@ bool ithipublisher::PublishDataM2(FILE * F)
 
     return ret;
 }
+
+
+bool ithipublisher::PublishDataM4(FILE * F)
+{
+    bool ret = true;
+    double average, current;
+    const char * sub_met[3] = { "M4.1", "M4.2", "M4.3" };
+    const char * met_data_name[3] = { "M41Data", "M42DataSet", "M43DataSet" };
+
+    ret = GetAverageAndCurrent(sub_met[0], NULL, &average, &current);
+    if (ret)
+    {
+        ret = fprintf(F, "\"%s\" : [ %8f, %8f],\n", met_data_name[0], 100*current, 100*average) > 0;
+    }
+
+    for (int m=1; ret && m<3; m++)
+    {
+        std::vector<MetricNameLine> name_list;
+        ret = fprintf(F, "\"%s\" : [\n", met_data_name[m]) > 0;
+
+        if (ret)
+        {
+            ret = GetNameList(sub_met[m], &name_list);
+            for (size_t i = 0; ret && i < name_list.size(); i++)
+            {
+                if (i != 0)
+                {
+                    ret = fprintf(F, ",\n") > 0;
+                }
+                ret &= (fprintf(F, "[\"%s\", %8f, %8f]", name_list[i].name, 100 * name_list[i].current, 100 * name_list[i].average) > 0);
+            }
+        }
+
+        if (m == 2)
+        {
+            ret &= fprintf(F, "]\n") > 0;
+        }
+        else
+        {
+            ret &= fprintf(F, "],\n") > 0;
+        }
+    }
+
+    return ret;
+}
+
 
 bool ithipublisher::PublishDataM6(FILE * F)
 {
@@ -605,11 +743,11 @@ bool ithipublisher::PublishDataM6(FILE * F)
 
         if (m == 17)
         {
-            ret &= fprintf(F, "]]\n");
+            ret &= (fprintf(F, "]]\n") > 0);
         }
         else
         {
-            ret &= fprintf(F, "],\n");
+            ret &= (fprintf(F, "],\n") > 0);
         }
     }
 

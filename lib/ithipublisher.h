@@ -27,8 +27,7 @@
 #include <stdio.h>
 #include <vector>
 
-typedef struct _metric_line
-{
+typedef struct _metric_line {
     char metric_name[64];
     char key_value[64];
     int year;
@@ -41,8 +40,13 @@ typedef struct _MetricFileHolder {
     int year;
     int month;
     int day;
-    std::vector<MetricLine *> line;
 } MetricFileHolder;
+
+typedef struct _metric_name_line {
+    char const * name;
+    double current;
+    double average;
+} MetricNameLine;
 
 class ithipublisher
 {
@@ -71,13 +75,16 @@ public:
 
     static bool MetricFileIsEarlier(MetricFileHolder * f1, MetricFileHolder * f2);
     static bool MetricLineIsLower(MetricLine * l1, MetricLine * l2);
+    static bool MetricNameLineIsBigger(MetricNameLine l1, MetricNameLine l2);
 
     /* Get the nb_months values of a specific metric */
     bool GetVector(char const * metric_name, char const * key_value, double * metric);
     bool GetAverageAndCurrent(char const * metric_name, char const * key_value, double * average, double * current);
+    bool GetNameList(char const * metric_name, std::vector<MetricNameLine> * name_list);
 
     /* Metric specific publishers */
     bool PublishDataM2(FILE * F);
+    bool PublishDataM4(FILE * F);
     bool PublishDataM6(FILE * F);
     bool PublishDataM7(FILE * F);
 };
