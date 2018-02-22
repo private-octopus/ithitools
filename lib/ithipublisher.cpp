@@ -397,15 +397,17 @@ bool ithipublisher::Publish(char const * web_folder)
         {
             switch (metric_id)
             {
-            case 7:
-                ret = PublishDataM7(F);
-                break;
             case 2:
                 ret = PublishDataM2(F);
                 break;
+            case 6:
+                ret = PublishDataM6(F);
+                break;
+            case 7:
+                ret = PublishDataM7(F);
+                break;
             case 3:
             case 4:
-            case 6:
             default:
                 ret = fprintf(F, "// No data yet for metric M%d\n", metric_id) > 0;
                 break;
@@ -487,6 +489,32 @@ bool ithipublisher::GetVector(char const * metric_name, char const * key_value, 
     return true;
 }
 
+bool ithipublisher::GetAverageAndCurrent(char const * metric_name, char const * key_value, double * average, double * current)
+{
+    double val[12];
+    bool ret = GetVector(metric_name, key_value, val);
+    double sum = 0;
+
+    *average = 0;
+    *current = 0;
+
+    if (ret)
+    {
+        if (nb_months > 1)
+        {
+            for (int i = 0; i < nb_months - 1; i++)
+            {
+                sum += val[i];
+            }
+            *average = sum / (nb_months - 1);
+        }
+
+        *current = val[nb_months - 1];
+    }
+    
+    return ret;
+}
+
 bool ithipublisher::PublishDataM2(FILE * F)
 {
     double m2x[12];
@@ -525,6 +553,68 @@ bool ithipublisher::PublishDataM2(FILE * F)
     return ret;
 }
 
+bool ithipublisher::PublishDataM6(FILE * F)
+{
+    bool ret = true;
+    char subMetX[64];
+    char const * subMet[18] = {
+        "M6.DNS.01", "M6.DNS.02", "M6.DNS.03", "M6.DNS.04", "M6.DNS.05", "M6.DNS.06", 
+        "M6.DNS.07", "M6.DNS.08", "M6.DNS.09", "M6.DNS.10", "M6.DNS.11", "M6.DNS.12", 
+        "M6.DNSSEC.1", "M6.DNSSEC.2", "M6.DNSSEC.3", "M6.DANE.1", "M6.DANE.2", "M6.DANE.3"
+    };
+    char const * subName[18] = {
+        "DNS CLASSes",
+        "Resource Record (RR) TYPEs",
+        "DNS OpCodes",
+        "DNS RCODEs",
+        "AFSDB RR Subtype",
+        "DHCID RR Identifier Type Codes",
+        "DNS Label Types",
+        "DNS EDNS0 Option Codes (OPT)",
+        "DNS Header Flags",
+        "EDNS Header Flags (16 bits)",
+        "EDNS version Number (8 bits)",
+        "Child Synchronization (CSYNC) Flags ",
+        "DNS Security Algorithm Numbers",
+        "DNS KEY Record Diffie-Hellman Prime Lengths",
+        "DNS KEY Record Diffie-Hellman Well-Known Prime/Generator Pairs",
+        "TLSA Certificate Usages",
+        "TLSA Selectors",
+        "TLSA Matching Types"
+    };
+
+    ret = fprintf(F, "\"m6Val\" : [\n") > 0;
+    for (int m = 0; ret && m < 18; m++)
+    {
+        ret = fprintf(F, "[ \"%s\", \"%s\"", subMet[m], subName[m]) > 0;
+
+        for (int i = 1; ret && i < 3; i++)
+        {
+            ret = snprintf(subMetX, sizeof(subMetX), "%s.%d", subMet[m], i) > 0;
+
+            if (ret)
+            {
+                double average, current;
+
+                ret = GetAverageAndCurrent(subMetX, NULL, &average, &current);
+
+                /* Multiply metric value by 100, since we want to display percentages */
+                ret &= fprintf(F, ",%8f, %8f", 100*average, 100*current) > 0;
+            }
+        }
+
+        if (m == 17)
+        {
+            ret &= fprintf(F, "]]\n");
+        }
+        else
+        {
+            ret &= fprintf(F, "],\n");
+        }
+    }
+
+    return ret;
+}
 
 bool ithipublisher::PublishDataM7(FILE * F)
 {

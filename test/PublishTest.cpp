@@ -26,8 +26,9 @@
 
 #ifdef _WINDOWS
 static char const * publish_test_dir_ithi = ".\\ithi";
-static char const * publish_test_target = ".\\";
+static char const * publish_test_target = ".";
 static char const * publish_test_target_m2 = ".\\M2Data.txt";
+static char const * publish_test_target_m6 = ".\\M6Data.txt";
 static char const * publish_test_target_m7 = ".\\M7Data.txt";
 #ifndef ITHI_FILE_PATH_SEP
 #define ITHI_FILE_PATH_SEP "\\"
@@ -36,6 +37,9 @@ static char const * publish_test_target_m7 = ".\\M7Data.txt";
 static char const * publish_test_m21 = "..\\..\\data\\M7-2017-01-31.csv";
 static char const * publish_test_m22 = "..\\..\\data\\M7-2017-02-28.csv";
 static char const * publish_ref_m2 = "..\\..\\data\\M2Data-test-ref.txt";
+static char const * publish_test_m61 = "..\\..\\data\\M6-2017-01-31.csv";
+static char const * publish_test_m62 = "..\\..\\data\\M6-2017-02-28.csv";
+static char const * publish_ref_m6 = "..\\..\\data\\M6Data-test-ref.txt";
 static char const * publish_test_m71 = "..\\..\\data\\M7-2017-01-31.csv";
 static char const * publish_test_m72 = "..\\..\\data\\M7-2017-02-28.csv";
 static char const * publish_ref_m7 = "..\\..\\data\\M7Data-test-ref.txt";
@@ -43,17 +47,24 @@ static char const * publish_ref_m7 = "..\\..\\data\\M7Data-test-ref.txt";
 static char const * publish_test_m21 = "..\\data\\M2-2017-01-31.csv";
 static char const * publish_test_m22 = "..\\data\\M2-2017-02-28.csv";
 static char const * publish_ref_m2 = "..\\data\\M2Data-test-ref.txt";
+static char const * publish_test_m61 = "..\\data\\M6-2017-01-31.csv";
+static char const * publish_test_m62 = "..\\data\\M6-2017-02-28.csv";
+static char const * publish_ref_m6 = "..\\data\\M6Data-test-ref.txt";
 static char const * publish_test_m71 = "..\\data\\M7-2017-01-31.csv";
 static char const * publish_test_m72 = "..\\data\\M7-2017-02-28.csv";
 static char const * publish_ref_m7 = "..\\data\\M7Data-test-ref.txt";
 #endif
 #else
 static char const * metric_test_dir_ithi = "./ithi";
-static char const * publish_test_target = "./";
+static char const * publish_test_target = ".";
 static char const * publish_test_target_m2 = "./M2Data.txt";
 static char const * publish_test_m21 = "./data/M2-2017-01-31.csv";
 static char const * publish_test_m22 = "./data/M2-2017-02-28.csv";
 static char const * publish_ref_m2 = "./data/M2Data-test-ref.txt";
+static char const * publish_test_target_m6 = "./M6Data.txt";
+static char const * publish_test_m61 = "./data/M6-2017-01-31.csv";
+static char const * publish_test_m62 = "./data/M6-2017-02-28.csv";
+static char const * publish_ref_m6 = "./data/M6Data-test-ref.txt";
 static char const * publish_test_target_m7 = "./M7Data.txt";
 static char const * publish_test_m71 = "./data/M7-2017-01-31.csv";
 static char const * publish_test_m72 = "./data/M7-2017-02-28.csv";
@@ -116,6 +127,14 @@ bool PublishTest::DoTest()
     if (ret)
     {
         ret = DoOneTest(2, m2_files, 2, publish_test_target_m2, publish_ref_m2);
+    }
+
+    /* M6 test */
+    char const * m6_files[2] = { publish_test_m61, publish_test_m62 };
+
+    if (ret)
+    {
+        ret = DoOneTest(6, m6_files, 2, publish_test_target_m6, publish_ref_m6);
     }
 
     /* M7 test */

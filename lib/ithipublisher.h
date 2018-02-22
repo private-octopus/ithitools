@@ -73,10 +73,12 @@ public:
     static bool MetricLineIsLower(MetricLine * l1, MetricLine * l2);
 
     /* Get the nb_months values of a specific metric */
-    bool GetVector(char const * metric_id, char const * key_value, double * metric);
+    bool GetVector(char const * metric_name, char const * key_value, double * metric);
+    bool GetAverageAndCurrent(char const * metric_name, char const * key_value, double * average, double * current);
 
     /* Metric specific publishers */
     bool PublishDataM2(FILE * F);
+    bool PublishDataM6(FILE * F);
     bool PublishDataM7(FILE * F);
 };
 
