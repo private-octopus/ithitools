@@ -82,8 +82,12 @@ public:
     bool GetAverageAndCurrent(char const * metric_name, char const * key_value, double * average, double * current);
     bool GetNameList(char const * metric_name, std::vector<MetricNameLine> * name_list);
 
+    bool PrintVector(FILE * F, double * vx, double mult);
+    bool PrintNameList(FILE * F, std::vector<MetricNameLine> * name_list, double mult);
+
     /* Metric specific publishers */
     bool PublishDataM2(FILE * F);
+    bool PublishDataM3(FILE * F);
     bool PublishDataM4(FILE * F);
     bool PublishDataM6(FILE * F);
     bool PublishDataM7(FILE * F);
