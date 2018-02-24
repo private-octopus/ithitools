@@ -112,7 +112,7 @@ bool PublishTest::DoOneTest(int metric_id, char const ** metric_files, size_t nb
     bool ret = CreateTestDirectory(metric_id, metric_files, nb_files);
 
     if (ret) {
-        ithipublisher pub(publish_test_dir_ithi, metric_id, "2017-02-28");
+        ithipublisher pub(publish_test_dir_ithi, metric_id);
 
         ret = pub.CollectMetricFiles();
 

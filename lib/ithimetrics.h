@@ -8,6 +8,23 @@
 #include "ComputeM6.h"
 #include "M7Getter.h"
 
+
+#ifdef _WINDOWS
+#ifndef ITHI_DEFAULT_FOLDER
+#define ITHI_DEFAULT_FOLDER ".\\"
+#endif
+#ifndef ITHI_FILE_PATH_SEP
+#define ITHI_FILE_PATH_SEP "\\"
+#endif
+#else
+#ifndef ITHI_DEFAULT_FOLDER
+#define ITHI_DEFAULT_FOLDER "./"
+#endif
+#ifndef ITHI_FILE_PATH_SEP
+#define ITHI_FILE_PATH_SEP "/"
+#endif
+#endif
+
 class ithimetrics
 {
 public:

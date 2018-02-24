@@ -34,6 +34,7 @@
 #include "getopt.h"
 #include "CaptureSummary.h"
 #include "ithimetrics.h"
+#include "ithipublisher.h"
 
 int usage()
 {
@@ -154,7 +155,7 @@ int main(int argc, char ** argv)
     char const * metric_file = NULL;
     char const * summary_file = NULL;
     char const * capture_summary_list = NULL;
-    char const * ithi_file = NULL;
+    char const * ithi_folder = NULL;
     char const * accuracy_file = NULL;
     char const * abuse_file = NULL;
     char const * root_capture_file = NULL;
@@ -239,6 +240,7 @@ int main(int argc, char ** argv)
             fprintf(stderr, "Sorry, update list of special usage names (RFC6761) not implemented yet.\n");
             break;
         case 'i':
+            ithi_folder = optarg;
             if (!met.SetIthiFolder(optarg))
             {
                 fprintf(stderr, "Cannot set ITHI folder name = %s\n", optarg);
@@ -448,8 +450,39 @@ int main(int argc, char ** argv)
     }
     else if (exec_mode == ithi_mode_publish)
     {
-        fprintf(stderr, "Sorry, publish mode not implemented yet.\n");
-        exit_code = -1;
+        bool ret = true;
+
+        if (ithi_folder == NULL)
+        {
+            ithi_folder = ITHI_DEFAULT_FOLDER;
+        }
+
+        if (web_root == NULL)
+        {
+            web_root = ITHI_DEFAULT_FOLDER;
+        }
+
+        for (int metric_id = 1; ret && metric_id <= 7; metric_id++)
+        {
+            if (metric_id != 1 && metric_id != 5)
+            {
+                ithipublisher pub(ithi_folder, metric_id);
+                ret = pub.CollectMetricFiles();
+
+                if (!ret)
+                {
+                    fprintf(stderr, "Cannot collect metric file <%s%sM1>.\n", ithi_folder, ITHI_FILE_PATH_SEP, metric_id);
+                }
+                else
+                {
+                    ret = pub.Publish(web_root);
+                    if (!ret)
+                    {
+                        fprintf(stderr, "Cannot publish json file <%s%sM%d...>.\n", web_root, ITHI_FILE_PATH_SEP, metric_id);
+                    }
+                }
+            }
+        }
     }
 
     return exit_code;

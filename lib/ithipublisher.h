@@ -51,7 +51,7 @@ typedef struct _metric_name_line {
 class ithipublisher
 {
 public:
-    ithipublisher(char const * ithi_folder, int metric_id, char const * date_string);
+    ithipublisher(char const * ithi_folder, int metric_id);
     ~ithipublisher();
 
     bool CollectMetricFiles();
@@ -63,7 +63,6 @@ public:
 
     char const * ithi_folder;
     int metric_id;
-    char const * date_string;
     std::vector<MetricFileHolder*> file_list;
     int last_year;
     int last_month;

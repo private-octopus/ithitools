@@ -45,11 +45,10 @@
 #include "CaptureSummary.h"
 #include "ithipublisher.h"
 
-ithipublisher::ithipublisher(char const * ithi_folder, int metric_id, char const * date_string)
+ithipublisher::ithipublisher(char const * ithi_folder, int metric_id)
     :
     ithi_folder(ithi_folder),
     metric_id(metric_id),
-    date_string(date_string),
     last_year(0),
     last_month(0),
     first_year(0),
