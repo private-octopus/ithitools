@@ -51,6 +51,7 @@ static char const * libithicap_allowed = NULL;
 static char const * libithicap_banned = NULL;
 static int libithicap_nb_names_in_m4 = -1;
 static bool libithicap_enable_filtering = false;
+static bool libithicap_enable_tld_list = false;
 static DnsStats* libithicap_stats = NULL;
 static logerr_t* logerr = NULL;
 
@@ -70,6 +71,7 @@ extern "C"
         fprintf(stderr, "                     these addresses will be ignored when extracting traffic.\n");
         fprintf(stderr, "  -f	              Filter out address sources that generate too much traffic.\n");
         fprintf(stderr, "  -n number	      Number of strings in the list of leaking domains(M332).\n");
+        fprintf(stderr, "  -T                 Capture a list of TLD found in user queries.\n");
         fprintf(stderr, "  -t tld-file.txt    Text file containing a list of registered TLD, one per line.\n");
         fprintf(stderr, "  -u tld-file.txt	  Text file containing special usage TLD (RFC6761).\n");
     }
@@ -83,7 +85,7 @@ extern "C"
         int opt;
         int exit_code = 0;
 
-        while (exit_code == 0 && (opt = getopt(*argc, *argv, "o:r:a:x:n:t:u:hf")) != -1)
+        while (exit_code == 0 && (opt = getopt(*argc, *argv, "o:r:a:x:n:t:u:hfT")) != -1)
         {
             switch (opt)
             {
@@ -116,6 +118,9 @@ extern "C"
             }
             case 'f':
                 libithicap_enable_filtering = true;
+                break;
+            case 'T':
+                libithicap_enable_tld_list = true;
                 break;
             case 't':
                 fprintf(stderr, "Sorry, update list of registered TLD not implemented yet.\n");
@@ -162,6 +167,11 @@ extern "C"
             }
 
             libithicap_stats->enable_frequent_address_filtering = libithicap_enable_filtering;
+
+            if (libithicap_enable_tld_list)
+            {
+                libithicap_stats->dnsstat_flags |= dnsStateFlagListTldUsed;
+            }
         }
         return (libithicap_stats == NULL)?-1:0;
     }

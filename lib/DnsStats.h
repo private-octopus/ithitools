@@ -99,7 +99,8 @@ enum DnsStatsFlags
     dnsStateFlagCountTld = 2,
     dnsStateFlagCountQueryParms = 4,
     dnsStateFlagCountUnderlinedNames = 8,
-    dnsStateFlagCountPacketSizes = 16
+    dnsStateFlagCountPacketSizes = 16,
+    dnsStateFlagListTldUsed = 32
 };
 
 class DnsHashEntry {

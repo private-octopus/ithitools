@@ -58,6 +58,7 @@ int usage()
     fprintf(stderr, "  -x res-addr.txt    excluded list of resolver addresses. Traffic to or from\n");
     fprintf(stderr, "                     these addresses will be ignored when extracting traffic.\n");
     fprintf(stderr, "  -f                 Filter out address sources that generate too much traffic.\n");
+    fprintf(stderr, "  -T                 Capture a list of TLD found in user queries.\n");
     fprintf(stderr, "  -t tld-file.txt    Text file containing a list of registered TLD, one per line.\n");
     fprintf(stderr, "  -u tld-file.txt    Text file containing special usage TLD (RFC6761).\n");
     fprintf(stderr, "  -n number          Number of strings in the list of leaking domains(M4).\n");
@@ -170,7 +171,7 @@ int main(int argc, char ** argv)
 
     /* Get the parameters */
     int opt;
-    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:M:t:u:i:d:y:b:z:l:1:2:3:4:5:6:7:S:hfcsmp?")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:M:t:u:i:d:y:b:z:l:1:2:3:4:5:6:7:S:hfcsmpT?")) != -1)
     {
         switch (opt)
         {
@@ -232,6 +233,9 @@ int main(int argc, char ** argv)
             /* Summarization from list of files implies summary mode */
             capture_summary_list = optarg; 
             exit_code = check_execution_mode(ithi_mode_summary, &exec_mode);
+            break;
+        case 'T':
+            stats.dnsstat_flags |= dnsStateFlagListTldUsed;
             break;
         case 't':
             fprintf(stderr, "Sorry, update list of registered TLD not implemented yet.\n");

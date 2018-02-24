@@ -1344,6 +1344,10 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                 {
                     /* This is a registered TLD */
                     SubmitRegistryNumber(REGISTRY_DNS_TLD_Usage_Count, 1);
+                    if ((dnsstat_flags&dnsStateFlagListTldUsed) != 0)
+                    {
+                        SubmitRegistryString(REGISTRY_DNS_Tld_Usage, packet[tld_offset], packet + tld_offset + 1);
+                    }
                 }
                 else
                 {
