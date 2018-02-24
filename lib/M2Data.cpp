@@ -4,6 +4,18 @@
 #include "CsvHelper.h"
 #include "M2Data.h"
 
+/*
+ * The Metrics are in a different order as the columns in the capture file. 
+ * The following tables help converting between the two.
+ */
+
+static const abuseType M2CaptureOrder[] = {
+    Phishing,
+    Malware,
+    Spam,
+    Botnet
+};
+
 M2Data::M2Data()
     :
     year(0),
@@ -154,14 +166,15 @@ void M2Data::ComputeMetrics(double ithi_m2[4])
 
     for (int j = 0; j < 4; j++)
     {
-        ithi_m2[j] = (double)totals[j];
+        abuseType x = M2CaptureOrder[j];
+        ithi_m2[x] = (double)totals[j];
 
         if (total_domains > 0)
         {
-            ithi_m2[j] /= (double)total_domains;
+            ithi_m2[x] /= (double)total_domains;
         }
 
-        ithi_m2[j] *= 10000;
+        ithi_m2[x] *= 10000;
     }
 }
 

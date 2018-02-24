@@ -471,7 +471,7 @@ int main(int argc, char ** argv)
 
                 if (!ret)
                 {
-                    fprintf(stderr, "Cannot collect metric file <%s%sM1>.\n", ithi_folder, ITHI_FILE_PATH_SEP, metric_id);
+                    fprintf(stderr, "Cannot collect metric file <%s%sM%d>.\n", ithi_folder, ITHI_FILE_PATH_SEP, metric_id);
                 }
                 else
                 {

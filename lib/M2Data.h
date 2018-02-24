@@ -14,8 +14,8 @@ enum M2DataType {
 enum abuseType {
     Phishing = 0,
     Malware = 1,
-    Spam = 2,
-    Botnet = 3
+    Botnet = 2,
+    Spam = 3
 };
 
 typedef struct st_M2DataLine_t {
