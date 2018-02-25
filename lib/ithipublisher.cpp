@@ -778,9 +778,9 @@ bool ithipublisher::PublishDataM6(FILE * F)
         "EDNS Header Flags (16 bits)",
         "EDNS version Number (8 bits)",
         "Child Synchronization (CSYNC) Flags ",
-        "DNS Security Algorithm Numbers",
         "DNS KEY Record Diffie-Hellman Prime Lengths",
         "DNS KEY Record Diffie-Hellman Well-Known Prime/Generator Pairs",
+        "DNS Security Algorithm Numbers",
         "TLSA Certificate Usages",
         "TLSA Selectors",
         "TLSA Matching Types"
@@ -802,7 +802,7 @@ bool ithipublisher::PublishDataM6(FILE * F)
                 ret = GetAverageAndCurrent(subMetX, NULL, &average, &current);
 
                 /* Multiply metric value by 100, since we want to display percentages */
-                ret &= fprintf(F, ",%8f, %8f", 100*average, 100*current) > 0;
+                ret &= fprintf(F, ",%8f, %8f", 100 * current, 100*average) > 0;
             }
         }
 
