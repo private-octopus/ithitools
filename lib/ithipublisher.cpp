@@ -612,7 +612,7 @@ bool ithipublisher::PrintVector(FILE * F, double * vx, double mult)
     {
         if (i != 0)
         {
-            ret &= fprintf(F, ",") > 0;
+            ret &= fprintf(F, ", ") > 0;
         }
 
         ret &= fprintf(F, "%8f", mult*vx[i]) > 0;
@@ -666,25 +666,43 @@ bool ithipublisher::PublishDataM3(FILE * F)
 {
     bool ret = true;
     const char * sub_met[5] = { "M3.1", "M3.2", "M3.3.1", "M3.3.2", "M3.3.3" };
-    const char * met_data_name[5] = { "M31", "M32", "m331set", "m332set", "m333set"};
+    const char * met_data_name[5] = { "M31", "M32", "m331Set", "m332Set", "m333Set"};
+    double m31[12], m32[12];
+    
+    ret = fprintf(F, "\"%s\" : ", met_data_name[0]) > 0;
 
-    for (int m = 0; ret && m < 2; m++)
+    if (ret)
     {
-        double vx[12];
-        ret = fprintf(F, "\"%s\" : ", met_data_name[m]) > 0;
+        ret = GetVector(sub_met[0], NULL, m31);
 
         if (ret)
         {
-            ret = GetVector(sub_met[m], NULL, vx);
+            ret = PrintVector(F, m31, 100.0);
+        }
+    }
+    ret &= fprintf(F, ",\n") > 0;
 
-            if (ret)
+    ret = fprintf(F, "\"%s\" : ", met_data_name[1]) > 0;
+
+    if (ret)
+    {
+        ret = GetVector(sub_met[1], NULL, m32);
+
+        for (int i = 0; ret && i < nb_months; i++)
+        {
+            m32[i] *= (1 - m31[i]);
+            if (m32[i] < 0)
             {
-                ret = PrintVector(F, vx, 100.0);
+                m32[i] = 0;
             }
         }
 
-        ret &= fprintf(F, ",\n") > 0;
+        if (ret)
+        {
+            ret = PrintVector(F, m32, 100.0);
+        }
     }
+    ret &= fprintf(F, ",\n") > 0;
 
     for (int m = 2; ret && m<5; m++)
     {
@@ -802,7 +820,7 @@ bool ithipublisher::PublishDataM6(FILE * F)
                 ret = GetAverageAndCurrent(subMetX, NULL, &average, &current);
 
                 /* Multiply metric value by 100, since we want to display percentages */
-                ret &= fprintf(F, ",%8f, %8f", 100 * current, 100*average) > 0;
+                ret &= fprintf(F, ", %8f, %8f", 100 * current, 100*average) > 0;
             }
         }
 

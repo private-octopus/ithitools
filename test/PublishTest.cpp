@@ -119,23 +119,37 @@ bool PublishTest::DoOneTest(int metric_id, char const ** metric_files, size_t nb
         if (ret && pub.nb_months != nb_files)
         {
             ret = false;
+            TEST_LOG("For metric M%d, got %d metric files instead of %d\n", metric_id,
+                pub.nb_months, nb_files);
         }
 
         if (ret && (pub.last_year != 2017 || pub.last_month != 2 || pub.last_day != 28))
         {
             ret = false;
+            TEST_LOG("For metric M%d, dates do not match, %d/%d/%d instead of 2017/02/28\n", metric_id,
+                target_file, pub.last_year, pub.last_month, pub.last_day);
         }
 
         if (ret)
         {
             ret = pub.Publish(publish_test_target);
+            if (!ret)
+            {
+                TEST_LOG("For metric M%d, cannot publish %s in %s\n", metric_id, 
+                    target_file, publish_test_target);
+            }
         }
 
         if (ret)
         {
             ret = MetricTest::compare_files(target_file, ref_file);
+            if (!ret)
+            {
+                TEST_LOG("For metric M%d, %s != %s\n", metric_id, target_file, ref_file);
+            }
         }
     }
+
 
     return ret;
 }
