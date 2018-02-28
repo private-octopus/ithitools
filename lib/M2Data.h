@@ -4,12 +4,12 @@
 #include <vector>
 #include "ComputeMetric.h"
 
-enum M2DataType {
+typedef enum  {
     Unknown = 0,
     TLD,
     Registrar,
     TLD_old
-};
+} M2DataType;
 
 enum abuseType {
     Phishing = 0,
