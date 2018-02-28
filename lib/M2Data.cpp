@@ -20,7 +20,7 @@ M2Data::M2Data()
     :
     year(0),
     month(0),
-    M2Type(M2DataType::Unknown)
+    M2Type(Unknown)
 {
 }
 
@@ -91,7 +91,7 @@ bool M2Data::Load(char const * monthly_csv_file_name)
         int start = 0;
         memset(&line, 0, sizeof(M2DataLine_t));
 
-        if (M2Type == M2DataType::TLD_old)
+        if (M2Type == TLD_old)
         {
             start = CsvHelper::read_string(line.name + 1, sizeof(line.name) - 1, start, buffer, sizeof(buffer));
             if (line.name[1] == 0)
@@ -190,7 +190,7 @@ bool M2Data::Save()
     bool ret = false;
 
     if (0 > snprintf(file_name, sizeof(file_name), "M2-%4d-%2d-%2d-%s.csv",
-        year, month, day, (M2Type == M2DataType::Registrar) ? "-registrars" : "tlds"))
+        year, month, day, (M2Type == Registrar) ? "-registrars" : "tlds"))
     {
         ret = false;
     }
@@ -213,7 +213,7 @@ bool M2Data::Save()
 
     for (size_t i = 0; i < dataset.size(); i++)
     {
-        fprintf(F, "%s,", (M2Type == M2DataType::Registrar) ? "Registrar" : "TLD");
+        fprintf(F, "%s,", (M2Type == Registrar) ? "Registrar" : "TLD");
         fprintf(F, "\"%s\",", dataset[i].name);
         fprintf(F, "%d,", dataset[i].Domains);
         for (int j = 0; j < 4; j++)
@@ -252,7 +252,7 @@ static const int month_day[12] = {
 };
 
 static char const * file_suffix[3] = { "_tlds.csv", "_registrars.csv", "-tlds.csv" };
-static M2DataType const file_type[3] = { M2DataType::TLD, M2DataType::Registrar, M2DataType::TLD_old };
+static M2DataType const file_type[3] = { TLD, Registrar, TLD_old };
 
 #ifdef _WINDOWS
 static int file_sep = '\\';
