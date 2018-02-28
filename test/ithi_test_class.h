@@ -23,6 +23,13 @@
 #define ITHI_TEST_H
 #include <stdio.h>
 
+#if __cplusplus < 199711L
+#ifndef override
+#define override 
+#endif
+#endif
+
+
 void SET_LOG_FILE(FILE* f_log);
 FILE*  GET_LOG_FILE();
 void TEST_LOG(const char * fmt, ...);
