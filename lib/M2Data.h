@@ -4,19 +4,19 @@
 #include <vector>
 #include "ComputeMetric.h"
 
-typedef enum  {
+typedef enum M2DataType {
     Unknown = 0,
     TLD,
     Registrar,
     TLD_old
 } M2DataType;
 
-enum abuseType {
+typedef enum abuseType {
     Phishing = 0,
     Malware = 1,
     Botnet = 2,
     Spam = 3
-};
+} abuseType;
 
 typedef struct st_M2DataLine_t {
     char name[128];
