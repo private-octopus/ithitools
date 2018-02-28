@@ -47,41 +47,41 @@ ithi_test_class::~ithi_test_class()
 
 int ithi_test_class::get_number_of_tests()
 {
-    return test_list_enum::test_enum_max_number;
+    return test_enum_max_number;
 }
 
 char const * ithi_test_class::GetTestName(int number)
 {
     switch (number) {
-    case test_list_enum::test_enum_hash:
+    case test_enum_hash:
         return("hash");
-    case test_list_enum::test_enum_Rfc6761:
+    case test_enum_Rfc6761:
         return("rfc6761");
-    case test_list_enum::test_enum_Load:
+    case test_enum_Load:
         return("load");
-    case test_list_enum::test_enum_Save:
+    case test_enum_Save:
         return("save");
-    case test_list_enum::test_enum_Merge:
+    case test_enum_Merge:
         return("merge");
-    case test_list_enum::test_enum_Merge_List:
+    case test_enum_Merge_List:
         return("merge_list");
-    case test_list_enum::test_enum_Capture:
+    case test_enum_Capture:
         return("capture");
-    case test_list_enum::test_enum_Metric:
+    case test_enum_Metric:
         return("metric");
-    case test_list_enum::test_enum_MetricDate:
+    case test_enum_MetricDate:
         return("metricDate");
-    case test_list_enum::test_enum_MetricCaptureFile:
+    case test_enum_MetricCaptureFile:
         return("metricCaptureFile");
-    case test_list_enum::test_enum_Pattern:
+    case test_enum_Pattern:
         return("pattern");
-    case test_list_enum::test_enum_Plugin:
+    case test_enum_Plugin:
         return("plugin");
-    case test_list_enum::test_enum_Csv:
+    case test_enum_Csv:
         return("csv");
-    case test_list_enum::test_enum_M2Data:
+    case test_enum_M2Data:
         return("m2data");
-    case test_list_enum::test_enum_Publish:
+    case test_enum_Publish:
         return("publish");
     default:
         break;
@@ -91,7 +91,7 @@ char const * ithi_test_class::GetTestName(int number)
 
 int ithi_test_class::GetTestNumberByName(const char * name)
 {
-    for (int i = 0; i < test_list_enum::test_enum_max_number; i++)
+    for (int i = 0; i < test_enum_max_number; i++)
     {
 #ifdef _WINDOWS
         if (_strcmpi(name, GetTestName(i)) == 0)
@@ -102,57 +102,57 @@ int ithi_test_class::GetTestNumberByName(const char * name)
             return i;
         }
     }
-    return test_list_enum::test_enum_max_number;
+    return test_enum_max_number;
 }
 
 ithi_test_class * ithi_test_class::TestByNumber(int number)
 {
     ithi_test_class * test = NULL;
 
-    switch (number) {
-    case test_list_enum::test_enum_hash:
+    switch ((test_list_enum)number) {
+    case test_enum_hash:
         test = new hashtest();
         break;
-    case test_list_enum::test_enum_Rfc6761:
+    case test_enum_Rfc6761:
         test = new testRfc6761();
         break;
-    case test_list_enum::test_enum_Load:
+    case test_enum_Load:
         test = new LoadTest();
         break;
-    case test_list_enum::test_enum_Save:
+    case test_enum_Save:
         test = new SaveTest();
         break;
-    case test_list_enum::test_enum_Merge:
+    case test_enum_Merge:
         test = new MergeTest();
         break;
-    case test_list_enum::test_enum_Merge_List:
+    case test_enum_Merge_List:
         test = new MergeListTest();
         break;
-    case test_list_enum::test_enum_Capture:
+    case test_enum_Capture:
         test = new CaptureTest();
         break;
-    case test_list_enum::test_enum_Metric:
+    case test_enum_Metric:
         test = new MetricTest();
         break;
-    case test_list_enum::test_enum_MetricDate:
+    case test_enum_MetricDate:
         test = new MetricDateTest();
         break;
-    case test_list_enum::test_enum_MetricCaptureFile:
+    case test_enum_MetricCaptureFile:
         test = new MetricCaptureFileTest();
         break;
-    case test_list_enum::test_enum_Pattern:
+    case test_enum_Pattern:
         test = new PatternTest();
         break;
-    case test_list_enum::test_enum_Plugin:
+    case test_enum_Plugin:
         test = new PluginTest();
         break;
-    case test_list_enum::test_enum_Csv:
+    case test_enum_Csv:
         test = new CsvTest();
         break;
-    case test_list_enum::test_enum_M2Data:
+    case test_enum_M2Data:
         test = new M2DataTest();
         break;
-    case test_list_enum::test_enum_Publish:
+    case test_enum_Publish:
         test = new PublishTest();
         break;
     default:
