@@ -86,7 +86,7 @@ char const * ithi_test_class::GetTestName(int number)
     default:
         break;
     }
-    return nullptr;
+    return NULL;
 }
 
 int ithi_test_class::GetTestNumberByName(const char * name)
