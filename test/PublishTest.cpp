@@ -69,7 +69,7 @@ static char const * publish_test_m72 = "..\\data\\M7-2017-02-28.csv";
 static char const * publish_ref_m7 = "..\\data\\M7Data-test-ref.txt";
 #endif
 #else
-static char const * metric_test_dir_ithi = "./ithi";
+static char const * publish_test_dir_ithi = "./ithi";
 static char const * publish_test_target = ".";
 static char const * publish_test_target_m2 = "./M2Data.txt";
 static char const * publish_test_m21 = "./data/M2-2017-01-31.csv";
