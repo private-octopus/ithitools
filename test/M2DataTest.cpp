@@ -80,11 +80,11 @@ struct st_m2_data_test_case_t {
 };
 
 static const struct st_m2_data_test_case_t test_cases[] = {
-    { registrar_test, M2DataType::Registrar, 2017, 1, 31,
+    { registrar_test, Registrar, 2017, 1, 31,
     sizeof(registrar_cases) / sizeof(struct st_m2_data_test_case_result_t), registrar_cases},
-    { tlds_test, M2DataType::TLD, 2017, 1, 31,
+    { tlds_test, TLD, 2017, 1, 31,
     sizeof(tld_cases) / sizeof(struct st_m2_data_test_case_result_t), tld_cases },
-    {tlds_old_test, M2DataType::TLD_old, 2017, 2, 28,
+    {tlds_old_test, TLD_old, 2017, 2, 28,
     sizeof(tld_old_cases) / sizeof(struct st_m2_data_test_case_result_t), tld_old_cases }
 };
 
