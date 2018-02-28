@@ -25,6 +25,12 @@
 #include <stdint.h>
 #include "HashBinGeneric.h"
 
+#if __cplusplus < 199711L
+#ifndef override
+#define override 
+#endif
+#endif
+
 class IPAsKey
 {
 public:

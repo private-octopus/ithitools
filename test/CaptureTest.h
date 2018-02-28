@@ -24,6 +24,12 @@
 
 #include "ithi_test_class.h"
 
+#if __cplusplus < 199711L
+#ifndef override
+#define override 
+#endif
+#endif
+
 class CaptureTest: public ithi_test_class
 {
 public:

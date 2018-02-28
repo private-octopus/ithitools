@@ -22,6 +22,13 @@
 #ifndef COMPUTE_METRIC_H
 #define COMPUTE_METRIC_H
 
+
+#if __cplusplus < 199711L
+#ifndef override
+#define override 
+#endif
+#endif
+
 #include <stdio.h>
 
 class ComputeMetric
