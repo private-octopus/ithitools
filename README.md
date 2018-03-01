@@ -60,25 +60,51 @@ To build ITHITOOLS on Linux, you need to:
 
  * Clone and compile ITHITOOLS:
 ~~~
+   git clone https://github.com/private-octopus/ithitools/
+   cd ithitools
    cmake .
    make
 ~~~
  * Run the test program "ithitest" to verify the port.
 
+Of course, if you want to just update to the latest release, you don't need to install
+again. You will do something like:
+~~~
+   cd ithitools
+   git pull --all
+   cmake .
+   make
+~~~
+
+
 ### Build dependencies on Linux
 
 Building ITHITOOLS on Linux requires installation of CMAKE and of a C++ compiler. 
-The installation tools depend on the Linux version.
+The installation tools depend on the Linux version. We have tested the installation
+on Ubuntu (16 and 17) and on Centos (6.9 and 7).
 
+#### Ubuntu
 On Ubuntu, the recommended way to install the GCC/C++ compiler is by installing
 the "build essentials":
 ~~~
    sudo apt-get install build-essential
 ~~~
-The CMAKE package can of course be installed as:
+GIT and CMAKE can of course be installed as:
 ~~~
    sudo apt-get install cmake
+   sudo apt-get install git
 ~~~
+
+#### Centos
+On Centos, you will need the GCC/C++ compiler, CMAKE and git:
+~~~
+   sudo yum install gcc
+   sudo yum install gcc-c++
+   sudo yum install cmake
+   sudo yum install git
+~~~
+
+#### Compiling with CLANG
 By default, CMAKE will create a make file that reference the default C/C++
 compilers for your system, typically gcc/g++. If you want to use a different
 compiler, for example CLANG, you can either change your system's defaults,
