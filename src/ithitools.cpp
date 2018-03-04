@@ -163,7 +163,7 @@ int main(int argc, char ** argv)
     char const * recursive_capture_file = NULL;
     char const * lies_file = NULL;
     char const * root_zone_file = NULL;
-    char const * web_root = NULL;
+    char const * web_root = ".";
     char const * metric_output_files[7] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
     int nb_names_in_tld = 2048;
     char * extract_file = NULL;
@@ -415,77 +415,65 @@ int main(int argc, char ** argv)
                 }
                 else
                 {
-                    printf("Merge succeeded.\n");
+                    printf("Merge succeeded, data in %s.\n", out_file);
                 }
             }
         }
     }
-    else if (exec_mode == ithi_mode_metrics)
-    {
-        if (!met.GetMetrics())
-        {
+    else if (exec_mode == ithi_mode_metrics) {
+        if (!met.GetMetrics()) {
             fprintf(stderr, "Cannot compute the ITHI metrics.\n");
             exit_code = -1;
-        }
-        else
-        {
-            if (metric_file != NULL)
-            {
-                if (!met.Save(metric_file))
-                {
+        } else {
+            if (metric_file != NULL) {
+                if (!met.Save(metric_file)) {
                     fprintf(stderr, "Cannot save the ITHI metrics in <%s>.\n", metric_file);
                     exit_code = -1;
                 }
-                else
-                {
+                else {
                     printf("ITHI metrics computed and saved in <%s>\n", metric_file);
                 }
             }
-            else if (!met.SaveMetricFiles())
-            {
+            else if (!met.SaveMetricFiles()) {
                 fprintf(stderr, "Cannot save the ITHI metrics.\n");
                 exit_code = -1;
             }
-            else
-            {
-                printf("ITHI metrics computed and saved.\n");
+            else {
+                printf("ITHI metrics computed and saved in directory <%s>.\n",
+                    met.GetIthiFolderName());
             }
         }
     }
-    else if (exec_mode == ithi_mode_publish)
-    {
+    else if (exec_mode == ithi_mode_publish) {
         bool ret = true;
 
-        if (ithi_folder == NULL)
-        {
+        if (ithi_folder == NULL) {
             ithi_folder = ITHI_DEFAULT_FOLDER;
         }
 
-        if (web_root == NULL)
-        {
+        if (web_root == NULL) {
             web_root = ITHI_DEFAULT_FOLDER;
         }
 
-        for (int metric_id = 1; ret && metric_id <= 7; metric_id++)
-        {
-            if (metric_id != 1 && metric_id != 5)
-            {
+        for (int metric_id = 1; ret && metric_id <= 7; metric_id++) {
+            if (metric_id != 1 && metric_id != 5) {
                 ithipublisher pub(ithi_folder, metric_id);
                 ret = pub.CollectMetricFiles();
 
-                if (!ret)
-                {
+                if (!ret) {
                     fprintf(stderr, "Cannot collect metric file <%s%sM%d>.\n", ithi_folder, ITHI_FILE_PATH_SEP, metric_id);
                 }
                 else
                 {
                     ret = pub.Publish(web_root);
-                    if (!ret)
-                    {
+                    if (!ret) {
                         fprintf(stderr, "Cannot publish json file <%s%sM%d...>.\n", web_root, ITHI_FILE_PATH_SEP, metric_id);
                     }
                 }
             }
+        }
+        if (ret) {
+            printf("ITHI JSON Data saved in directory <%s>.\n", web_root);
         }
     }
 

@@ -34,6 +34,10 @@ public:
     bool GetMetrics();
 
     bool SetIthiFolder(char const * folder);
+    const char * GetIthiFolderName() {
+        return ithi_folder;
+    };
+
     bool SetMetricFileNames(int metric_number, char const * metric_file_name);
 
     bool SetRootCaptureFileName(char const * file_name);
