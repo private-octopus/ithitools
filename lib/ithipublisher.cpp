@@ -649,7 +649,7 @@ bool ithipublisher::PublishDataM2(FILE * F)
     fprintf(F, "\"m2Val\" : [\n");
     for (int m = 0; m < 4; m++)
     {
-        if (ret = GetVector(subMet[m], NULL, m2x))
+        if ((ret = GetVector(subMet[m], NULL, m2x)))
         {
             ret = PrintVector(F, m2x, 1.0);
             if (m != 3) {
