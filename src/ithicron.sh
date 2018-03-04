@@ -37,7 +37,7 @@ M46F2=/home/ubuntu/ithi/input/M46/M46-$LAST_LAST_DAY-summary.csv
 echo "Creating summary file in $M46F2"
 ./ithitools/ithitools -S m46_previous_month.txt -o $M46F2
 
-M7F1=/home/ubuntu/ithi/input/M3/M7-$LAST_DAY.zone
+M7F1=/home/ubuntu/ithi/input/M7/M7-$LAST_DAY.zone
 echo "Copying root zone file to $M7F1"
 wget https://www.internic.net/domain/root.zone >$M7F1
 
