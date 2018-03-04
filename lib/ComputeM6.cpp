@@ -347,6 +347,7 @@ bool ComputeM6::LoadMultipleFiles(char const ** in_files, int nb_files)
 bool ComputeM6::Compute()
 {
     size_t m6_size = sizeof(m6_metrics_list) / sizeof(metric6_def_t);
+    bool found_at_least_one = false;
 
     m6.reserve(m6_size);
 
@@ -370,6 +371,7 @@ bool ComputeM6::Compute()
             size_t count_present = 0;
             uint64_t count_instances = 0;
             uint64_t count_unregistered = 0;
+            found_at_least_one = true;
 
             for (size_t j = 0; j < extract.size(); j++)
             {
@@ -406,7 +408,7 @@ bool ComputeM6::Compute()
         m6.push_back(line);
     }
 
-    return true;
+    return found_at_least_one;
 }
 
 bool ComputeM6::Write(FILE * F_out)
