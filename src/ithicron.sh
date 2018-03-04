@@ -12,13 +12,12 @@ LAST_LAST_DAY=$(date -d"$(date +%Y-%m-01) -1 days" +%Y-%m-%d)
 echo "Last day of previous month: $LAST_LAST_DAY"
 
 find /home/rarends/data/$DATE* | grep ".csv" > m3_this_month.txt
-find /home/rarends/data/$PREVIOUS_DATE* | grep ".csv" > m3_previous_month.txt
-
 M3F1=/home/ubuntu/ithi/input/M3/M3-$LAST_DAY-summary.csv
 echo "Creating summary file in $M3F1"
-#echo "1,2,3" >$M3F1
 ./ithitools/ithitools -S m3_this_month.txt -o $M3F1
 
+
+find /home/rarends/data/$PREVIOUS_DATE* | grep ".csv" > m3_previous_month.txt
 M3F2=/home/ubuntu/ithi/input/M3/M3-$LAST_LAST_DAY-summary.csv
 echo "Creating summary file in $M3F2"
 ./ithitools/ithitools -S m3_previous_month.txt -o $M3F2
@@ -26,14 +25,18 @@ echo "Creating summary file in $M3F2"
 rm m46_this_month.txt
 find /home/matiasf/* | grep $DATE | grep ".csv" >> m46_this_month.txt
 M46F1=/home/ubuntu/ithi/input/M46/M46-$LAST_DAY-summary.csv
-echo "Creating summary file in $M46F2"
+echo "Creating summary file in $M46F1"
 ./ithitools/ithitools -S m46_this_month.txt -o $M46F1
 
 rm m46_previous_month.txt
 find /home/matiasf/* | grep $PREVIOUS_DATE | grep ".csv" >> m46_previous_month.txt
-M46F1=/home/ubuntu/ithi/input/M46/M46-$LAST_LAST_DAY-summary.csv
+M46F2=/home/ubuntu/ithi/input/M46/M46-$LAST_LAST_DAY-summary.csv
 echo "Creating summary file in $M46F2"
-./ithitools/ithitools -S m46_previous_month.txt -o $M46F1
+./ithitools/ithitools -S m46_previous_month.txt -o $M46F2
+
+M7F1=/home/ubuntu/ithi/input/M3/M7-$LAST_DAY.zone
+echo "Copying root zone file to $M7F1"
+wget https://www.internic.net/domain/root.zone >$M7F1
 
 echo "Computing metrics for $LAST_LAST_DAY"
 ./ithitools/ithitools -i /home/ubuntu/ithi -d $LAST_LAST_DAY -m
