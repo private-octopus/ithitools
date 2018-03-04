@@ -1,13 +1,44 @@
 # !/bin/bash
-DATE=$(date)
-echo $DATE
-MONTH=$(date +%Y)
-YEAR=$(date +%m)
-echo $MONTH
-echo $YEAR
+pwd
+cd /home/ubuntu
+pwd
+DATE=$(date +%Y%m)
+echo "This month selector: $DATE"
 PREVIOUS_DATE=$(date -d "-1 months" +%Y%m)
-echo $PREVIOUS_DATE
+echo "Previous month selector: $PREVIOUS_DATE"
 LAST_DAY=$(date -d "$(date -d "+1 months" +%Y-%m-01) -1 days" +%Y-%m-%d)
-echo $LAST_DAY
+echo "Last day of this month: $LAST_DAY"
 LAST_LAST_DAY=$(date -d"$(date +%Y-%m-01) -1 days" +%Y-%m-%d)
-echo $LAST_LAST_DAY
+echo "Last day of previous month: $LAST_LAST_DAY"
+
+find /home/rarends/data/$DATE* | grep ".csv" > m3_this_month.txt
+find /home/rarends/data/$PREVIOUS_DATE* | grep ".csv" > m3_previous_month.txt
+
+M3F1=/home/ubuntu/ithi/input/M3/M3-$LAST_DAY-summary.csv
+echo "Creating summary file in $M3F1"
+#echo "1,2,3" >$M3F1
+./ithitools/ithitools -S m3_this_month.txt -o $M3F1
+
+M3F2=/home/ubuntu/ithi/input/M3/M3-$LAST_LAST_DAY-summary.csv
+echo "Creating summary file in $M3F2"
+./ithitools/ithitools -S m3_previous_month.txt -o $M3F2
+
+rm m46_this_month.txt
+find /home/matiasf/* | grep $DATE | grep ".csv" >> m46_this_month.txt
+M46F1=/home/ubuntu/ithi/input/M46/M46-$LAST_DAY-summary.csv
+echo "Creating summary file in $M46F2"
+./ithitools/ithitools -S m46_this_month.txt -o $M46F1
+
+rm m46_previous_month.txt
+find /home/matiasf/* | grep $PREVIOUS_DATE | grep ".csv" >> m46_previous_month.txt
+M46F1=/home/ubuntu/ithi/input/M46/M46-$LAST_LAST_DAY-summary.csv
+echo "Creating summary file in $M46F2"
+./ithitools/ithitools -S m46_previous_month.txt -o $M46F1
+
+echo "Computing metrics for $LAST_LAST_DAY"
+./ithitools/ithitools -i /home/ubuntu/ithi -d $LAST_LAST_DAY -m
+echo "Computing metrics for $LAST_DAY"
+./ithitools/ithitools -i /home/ubuntu/ithi -d $LAST_DAY -m
+
+echo "Computing JSON Data for publication"
+./ithitools/ithitools -i /home/ubuntu/ithi -p
