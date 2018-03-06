@@ -319,7 +319,7 @@ bool ithimetrics::GetMetrics() {
     if (root_zone_file_name != NULL && cm7.Load(root_zone_file_name))
     {
         metric_is_available[6] = cm7.Compute();
-        ret = metric_is_available[6];
+        ret |= metric_is_available[6];
     }
 
     return ret;
