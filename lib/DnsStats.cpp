@@ -1048,16 +1048,18 @@ bool DnsStats::IsRfc6761Tld(uint8_t * tld, size_t length)
     {
         size_t j = 0;
         uint8_t * x = (uint8_t *)rfc6761_tld[i];
+        bool match = true;
 
         for (; j < length; j++)
         {
             if (x[j] != tld[j] && (x[j] - 'A' + 'a') != tld[j])
             {
+                match = false;
                 break;
             }
         }
 
-        if (j == length && x[j] == 0)
+        if (j == length && x[j] == 0 && match)
         {
             ret = true;
             break;

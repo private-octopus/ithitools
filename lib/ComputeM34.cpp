@@ -136,7 +136,10 @@ bool ComputeM3::Write(FILE * F_out)
 
     for (size_t i = 0; ret && i < m33_1.size(); i++)
     {
-        ret = fprintf(F_out, "M3.3.1, %s, %6f,\n", m33_1[i].domain, m33_1[i].frequency) > 0;
+        /* This is the RFC 6761 table. We need a check to fix a data collection bug. */
+        if (DnsStats::IsRfc6761Tld((uint8_t *)(m33_1[i].domain), strlen(m33_1[i].domain))) {
+            ret = fprintf(F_out, "M3.3.1, %s, %6f,\n", m33_1[i].domain, m33_1[i].frequency) > 0;
+        }
     }
 
     for (size_t i = 0; ret && i < m33_2.size(); i++)
