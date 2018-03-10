@@ -108,7 +108,10 @@ bool ComputeM3::Compute()
         m33_4 = m3_1;
 
         for (size_t i = 0; ret && i < m33_1.size(); i++) {
-            m33_4 -= m33_1[i].frequency;
+            /* Check for data collection bug */
+            if (DnsStats::IsRfc6761Tld((uint8_t *)(m33_1[i].domain), strlen(m33_1[i].domain))) {
+                m33_4 -= m33_1[i].frequency;
+            }
         }
 
         for (size_t i = 0; ret && i < m33_2.size(); i++) {
