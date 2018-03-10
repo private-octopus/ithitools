@@ -42,7 +42,11 @@ static char const * to_fail[] =
     "bofa",
     "bom",
     "xn--1qqw23a",
-    "xn--30rr7y"
+    "xn--30rr7y",
+    "TEST ",
+    "_0x5445535420",
+    "LO",
+    "LOC"
 };
 
 static const size_t size_to_fail = sizeof(to_fail) / sizeof(char const *);
@@ -62,13 +66,19 @@ bool testRfc6761::DoTest()
 
     for (size_t i = 0; ret && i < size_to_succeed; i++)
     {
-        ret = DnsStats::IsRfc6761Tld((uint8_t *)to_succeed[i], strlen(to_succeed[i]));
+        if (!DnsStats::IsRfc6761Tld((uint8_t *)to_succeed[i], strlen(to_succeed[i]))) {
+            TEST_LOG("Unexpected RFC 6761 fail to match: <%s>(%d)", to_succeed[i], (int)strlen(to_succeed[i]));
+            ret = false;
+        }
     }
 
 
     for (size_t i = 0; ret && i < size_to_fail; i++)
     {
-        ret = !DnsStats::IsRfc6761Tld((uint8_t *)to_fail[i], strlen(to_fail[i]));
+        if (DnsStats::IsRfc6761Tld((uint8_t *)to_fail[i], strlen(to_fail[i]))) {
+            TEST_LOG("Unexpected RFC 6761 match: <%s>(%d)", to_fail[i], (int)strlen(to_fail[i]));
+            ret = false;
+        }
     }
 
     return ret;
