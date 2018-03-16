@@ -6,6 +6,12 @@ DATE=$(date +%Y%m)
 echo "This month selector: $DATE"
 PREVIOUS_DATE=$(date -d "-1 months" +%Y%m)
 echo "Previous month selector: $PREVIOUS_DATE"
+
+DATE_DASH=$(date +%Y-%m)
+echo "This month selector: $DATE"
+PREVIOUS_DASH=$(date -d "-1 months" +%Y-%m)
+echo "Previous month selector: $PREVIOUS_DATE"
+
 LAST_DAY=$(date -d "$(date -d "+1 months" +%Y-%m-01) -1 days" +%Y-%m-%d)
 echo "Last day of this month: $LAST_DAY"
 LAST_LAST_DAY=$(date -d"$(date +%Y-%m-01) -1 days" +%Y-%m-%d)
@@ -25,6 +31,7 @@ echo "Creating summary file in $M3F2"
 
 >m46_this_month.txt
 find /home/matiasf/* | grep $DATE | grep ".csv" >> m46_this_month.txt
+find /home/uccgh/* | grep $DATE_DASH | grep ".csv" >> m46_this_month.txt
 echo "Found $(wc -l m46_this_month.txt) recursive resolver reports for $DATE*"
 M46F1=/home/ubuntu/ithi/input/M46/M46-$LAST_DAY-summary.csv
 echo "Creating summary file in $M46F1"
@@ -32,6 +39,7 @@ echo "Creating summary file in $M46F1"
 
 >m46_previous_month.txt
 find /home/matiasf/* | grep $PREVIOUS_DATE | grep ".csv" >> m46_previous_month.txt
+find /home/uccgh/* | grep $PREVIOUS_DASH | grep ".csv" >> m46_previous_month.txt
 echo "Found $(wc -l m46_previous_month.txt) recursive resolver reports for $PREVIOUS_DATE*"
 M46F2=/home/ubuntu/ithi/input/M46/M46-$LAST_LAST_DAY-summary.csv
 echo "Creating summary file in $M46F2"
