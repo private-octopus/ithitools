@@ -1,26 +1,11 @@
 <html>
 <head>
-    <style>
-        html {
-            font-family: Verdana;
-        }
 
-        table {
-            font-family: arial, sans-serif;
-            border-collapse: collapse;
-            width: 100%;
-        }
+<title>ITHI Metric M7</title>
 
-        td, th {
-            border: 1px solid #dddddd;
-            text-align: left;
-            padding: 8px;
-        }
+<link rel="stylesheet" type="text/css" href="ithistyle.css">
 
-        tr:nth-child(even) {
-            background-color: #dddddd;
-        }
-    </style>
+<script src="ithinav.js"></script>
 
 <script type="text/javascript">
 
@@ -35,6 +20,7 @@ var yScale;
 var M7Data; // Will be obtained from the web server.
 
     function init() {
+        initnav();
         loadDoc();
     }
 
@@ -178,6 +164,9 @@ var M7Data; // Will be obtained from the web server.
 </head>
 
 <body onLoad="init()">
+
+<nav id="navMenu"></nav>
+
 <h1>M7 – deployment of DNS SEC</h1>
 <h2 id="dateHeading">-</h2>
     <p>

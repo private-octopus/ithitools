@@ -1,28 +1,10 @@
 <html>
 <head>
-    <style>
-        html {
-            font-family: Verdana;
-        }
+<title>ITHI Metric M3</title>
 
-        table {
-            font-family: arial, sans-serif;
-            border-collapse: collapse;
-            width: 100%;
-        }
+<link rel="stylesheet" type="text/css" href="ithistyle.css">
 
-        td, th {
-            border: 1px solid #dddddd;
-            text-align: left;
-            padding: 8px;
-        }
-
-        tr:nth-child(even) {
-            background-color: #dddddd;
-        }
-    </style>
-
-    
+<script src="ithinav.js"></script>
         
 <script type="text/javascript">
 
@@ -39,6 +21,7 @@ var xScale;
     var M3Data;
 
     function init() {
+        initnav();
         loadDoc();
     }
 
@@ -364,6 +347,8 @@ var xScale;
 
 </script>
 </head>
+
+<nav id="navMenu"></nav>
 
 <body onLoad="init()">
 

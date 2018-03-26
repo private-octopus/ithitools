@@ -1,26 +1,10 @@
 <html>
 <head>
-    <style>
-        html {
-            font-family: Verdana;
-        }
-        
-        table {
-            font-family: arial, sans-serif;
-            border-collapse: collapse;
-            width: 100%;
-        }
+<title>ITHI Metric M4</title>
 
-        td, th {
-            border: 1px solid #dddddd;
-            text-align: left;
-            padding: 8px;
-        }
+<link rel="stylesheet" type="text/css" href="ithistyle.css">
 
-        tr:nth-child(even) {
-            background-color: #dddddd;
-        }
-    </style> 
+<script src="ithinav.js"></script>
 	
 <script type="text/javascript">
 
@@ -38,6 +22,7 @@
     var M4Data;
 
     function init() {
+        initnav();
         loadDoc();
     }
 
@@ -194,6 +179,8 @@
 </head>
 
 <body onLoad="init()">
+
+<nav id="navMenu"></nav>
 
 <h1>M4: Usage and misuse of TLD names by DNS clients</h1>
 

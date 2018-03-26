@@ -1,29 +1,12 @@
 <html>
 <head>
-    <style>
-        html {
-            font-family: Verdana;
-        }
 
-        table {
-            font-family: arial, sans-serif;
-            border-collapse: collapse;
-            width: 100%;
-        }
+<title>ITHI Metric M2</title>
 
-        td, th {
-            border: 1px solid #dddddd;
-            text-align: left;
-            padding: 8px;
-        }
+<link rel="stylesheet" type="text/css" href="ithistyle.css">
 
-        tr:nth-child(even) {
-            background-color: #dddddd;
-        }
-    </style>
+<script src="ithinav.js"></script>
 
-    
-        
 <script type="text/javascript">
 
     var canvas ;
@@ -41,6 +24,7 @@
     var M2DataMax = [5, 200, 5, 5];
 
     function init() {
+        initnav();
         loadDoc();
     }
 
@@ -200,6 +184,8 @@ function setScale(canvasId, v_max)
 </head>
 
 <body onLoad="init()">
+
+<nav id="navMenu"></nav>
 
 <h1>M2: Domain Name Abuses</h1>
 

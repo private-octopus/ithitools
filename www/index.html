@@ -2,48 +2,18 @@
 <head>
 <title>ITHI Project</title>
 
-    <style>
+<link rel="stylesheet" type="text/css" href="ithistyle.css">
 
-        html {
-
-            font-family: Verdana;
-
-        }
-
-
-        table {
-
-            font-family: arial, sans-serif;
-
-            border-collapse: collapse;
-
-            width: 100%;
-
-        }
-
-
-        td, th {
-
-            border: 1px solid #dddddd;
-
-            text-align: left;
-
-            padding: 8px;
-
-        }
-
-
-        tr:nth-child(even) {
-
-            background-color: #dddddd;
-
-        }
-    
-</style>
-
+<script src="ithinav.js"></script>
+<script type="text/javascript">
+    function init() {
+        initnav();
+    }
+</script>
 </head>
 
-<body>
+<body onload="init()">
+<nav id="navMenu"></nav>
 
 <h1>ITHI Project</h1>
 
