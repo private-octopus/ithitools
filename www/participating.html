@@ -1,0 +1,67 @@
+﻿<html>
+<head>
+<title>ITHI Project Participation</title>
+
+<link rel="stylesheet" type="text/css" href="ithistyle.css" />
+
+<script src="ithinav.js"></script>
+
+<script type="text/javascript">
+    function init() {
+        initnav();
+    }
+</script>
+
+</head>
+
+<body onload="init()">
+
+<nav id="navMenu"></nav>
+
+<h1>Participation in the ITHI study</h1>
+
+<p>Thank you for considering participation in the ITH study. The measurements of the DNS displayed in
+metrics M4 and M6 rely on statistics collected at recursive resolvers. We suppose that the traffic
+observed at different sites varies. It may depend on location, time of day, day of the week, and type
+of resolver, whether it is an enterprise, a University, an ISP, or a mobile network provider.
+We are also interested by collecting data at authoritative servers, as this will enable us
+to derive statistics on the type of load observed by these servers. The
+more sites particpate in the study, the more interesting the statistics.</p>
+
+<p>Participation in the study entails the following steps:</p>
+
+<ol>
+<li> Install the DNSCAP utility. Dnscap is maintained by <a href="https://www.dns-oarc.net/">DNS-OARC</a>. 
+     One option is to clone and build <a href="https://github.com/DNS-OARC/dnscap">from
+     github</a>. Another option is to <a href="https://www.dns-oarc.net/tools/dnscap">get
+     the tarball from DNS-OARC</a>, and to follow the build step specified in the
+     <a href="https://github.com/DNS-OARC/dnscap/blob/develop/README.md">DNSCAP
+     README on GitHub</a>.</li>
+
+<li> Download and build the ITHI tools, wich are
+     <a href="https://github.com/private-octopus/ithitools/">available on github</a>.
+     Follow the steps specified in the README file.</li>
+
+<li> Run a test script to verify that the capture tools work.</li>
+
+<li> Obtain an SSH account on the staging server, ithi.privateoctopus.com.
+     This requires mailing a copy of your SSH public key to Christian Huitema
+     (huitema at huitema.net).</li>
+
+<li> Set up a "cron" job that capture statistics several times a week and upload them to the
+     staging server using scp.</li>
+</ol>
+
+<p>Once this is in place, the data that you send will be used to compute the monthly metrics.
+And we will also of course credit your participation on this site.</p>
+
+<p>There are more details on the Wiki pages of the Github project "ithitools", including:</p>
+
+<ul>
+<li><p><a href="https://github.com/private-octopus/ithitools/wiki/Capture-of-DNS-statistics-using-dnscap-and-ithicap">How to use dnscap and the ithicap extension</a></p></li>
+<li><p><a href="https://github.com/private-octopus/ithitools/wiki/Comparing-capture-with-Wireshark-and-Dnscap">Comparing capture with Wireshark and Dnscap</a> </p></li>
+<li><p><a href="https://github.com/private-octopus/ithitools/wiki/How-to-set-up-capture-times">How to set up capture times</a></p></li>
+</ul>
+
+</body>
+</html>

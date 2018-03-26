@@ -14,7 +14,7 @@ document.getElementById("navMenu").innerHTML =
       '<a href="graph-m7.html">M7: DNSSEC</a>' +
     '</div>' +
   '</div>' +
-  '<a href="index.html">Participate</a>' +
+  '<a href="participating.html">Participate</a>' +
   '<a href="index.html">About</a>' +
  '</div>'
 }
