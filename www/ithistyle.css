@@ -3,20 +3,17 @@
             font-family: Verdana;
         }
 
-
         table {
             font-family: arial, sans-serif;
             border-collapse: collapse;
             width: 100%;
         }
 
-
         td, th {
             border: 1px solid #dddddd;
             text-align: left;
             padding: 8px;
         }
-
 
         tr:nth-child(even) {
             background-color: #dddddd;
@@ -26,7 +23,7 @@
 .navbar {
   overflow: hidden;
   background-color: #333;
-  font-family: Arial;
+  font-family: Verdana;
 }
 
 /* Links inside the navbar */
@@ -36,7 +33,7 @@
     text-align: center;
     padding: 14px 16px;
     text-decoration: none;
-    font-size: 17px;
+    font-size: 20px;
 }
 
 /* Change the color of links on hover */
@@ -53,7 +50,7 @@
 
 /* Dropdown button */
 .dropdown .dropbtn {
-  font-size: 16px;
+  font-size: 20px;
   border: none;
   outline: none;
   color: white;
