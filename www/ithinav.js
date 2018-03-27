@@ -15,6 +15,6 @@ document.getElementById("navMenu").innerHTML =
     '</div>' +
   '</div>' +
   '<a href="participating.html">Participate</a>' +
-  '<a href="index.html">About</a>' +
+  '<a href="about.html">About</a>' +
  '</div>'
 }
