@@ -63,5 +63,26 @@ And we will also of course credit your participation on this site.</p>
 <li><p><a href="https://github.com/private-octopus/ithitools/wiki/How-to-set-up-capture-times">How to set up capture times</a></p></li>
 </ul>
 
+<h2>Privacy considerations</h2>
+<p>
+We understand that the DNS traffic is privacy sensitive, and contains
+Personably Indentifiable Information such as:</p>
+<ul>
+<li>IP addresses of users</li>
+<li>Domain names of servers</li>
+<li>Patterns of user queries</li>
+</ul>
+<p>
+Our data collection methods are specifically designed to minimize the privacy issues.
+We do not collect IP the source IP addresses of queries, and only process the
+TLD part of queried domain names.
+A capture session will produce a CSV file that only contains statistical aggregates.
+The size may vary based on the amount and diversity of the
+traffic, but it is typically just a few kilobytes of text, maybe 8 to 16KB. An example
+of the file that we produce is available <a href="M46CollectionSample.csv">here</a>.</p>
+<p>
+The sources of our software are publicly available on GitHub, with an MIT license.
+They can be easily inspected, and if you wish you could use it to produce a local
+version of our web site, using your own data.</p>
 </body>
 </html>
