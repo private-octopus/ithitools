@@ -30,6 +30,8 @@ echo "Creating summary file in $M3F2"
 ./ithitools/ithitools -S m3_previous_month.txt -o $M3F2
 
 >m46_this_month.txt
+py ithitools/src/tlsaInput.py tlsa-data-$DATE_DASH.csv /home/viktor/data/tlsa-$DATE_DASH-*.csv
+echo tlsa-data-$DATE_DASH.csv >> m46_this_month.txt
 find /home/matiasf/* | grep $DATE | grep ".csv" >> m46_this_month.txt
 find /home/uccgh/* | grep $DATE_DASH | grep ".csv" >> m46_this_month.txt
 find /home/nawala/data/* | grep $DATE_DASH | grep ".csv" >> m46_this_month.txt
@@ -39,6 +41,8 @@ echo "Creating summary file in $M46F1"
 ./ithitools/ithitools -S m46_this_month.txt -o $M46F1
 
 >m46_previous_month.txt
+py ithitools/src/tlsaInput.py tlsa-data-$PREVIOUS_DASH.csv /home/viktor/data/tlsa-$PREVIOUS_DASH-*.csv
+echo tlsa-data-$PREVIOUS_DASH.csv >> m46_previous_month.txt
 find /home/matiasf/* | grep $PREVIOUS_DATE | grep ".csv" >> m46_previous_month.txt
 find /home/uccgh/* | grep $PREVIOUS_DASH | grep ".csv" >> m46_previous_month.txt
 find /home/nawala/data/* | grep $PREVIOUS_DASH | grep ".csv" >> m46_previous_month.txt
