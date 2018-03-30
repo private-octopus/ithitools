@@ -26,7 +26,6 @@ def write_list_to_file (file, list, list_name):
 
 def load_file_data (file_name, cert_usage, selector, matching_type):
     "Load the file content into the tables"
-    print("Opening input file " + file_name + "\n")
     line_count = 0
     csv = open(file_name, "r")
     for line in csv: 
@@ -38,7 +37,7 @@ def load_file_data (file_name, cert_usage, selector, matching_type):
             add_to_list(matching_type, tokens[3], tokens[0])
             line_count += int(tokens[0])
     csv.close()
-    print("Close file " + file_name  + " after " + str(line_count) + " records\n")
+    print("Close file " + file_name  + " after " + str(line_count) + " records")
     return(line_count)
 
 
@@ -51,7 +50,9 @@ selector = []
 matching_type = []
 total_count = 0
 
-for name in glob.glob(sys.argv[2]):
+pattern=sys.argv[2] + "-*.csv"
+print("Pattern matching to <" +  pattern + ">")
+for name in glob.glob(pattern):
     total_count += load_file_data(name, cert_usage, selector, matching_type)
 
 file = open(sys.argv[1], "w");

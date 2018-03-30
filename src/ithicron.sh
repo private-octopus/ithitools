@@ -2,15 +2,26 @@
 pwd
 cd /home/ubuntu
 pwd
+TODAY=$(date +%d)
 DATE=$(date +%Y%m)
 echo "This month selector: $DATE"
-PREVIOUS_DATE=$(date -d "-1 months" +%Y%m)
+if [ $TODAY -gt 15 ]
+    then
+        PREVIOUS_DATE=$(date -d "-31 days" +%Y%m)
+    else
+        PREVIOUS_DATE=$(date -d "-1 months" +%Y%m)
+    fi
 echo "Previous month selector: $PREVIOUS_DATE"
 
 DATE_DASH=$(date +%Y-%m)
-echo "This month selector: $DATE"
-PREVIOUS_DASH=$(date -d "-1 months" +%Y-%m)
-echo "Previous month selector: $PREVIOUS_DATE"
+echo "This month selector: $DASH"
+if [ $TODAY -gt 15 ]
+    then
+        PREVIOUS_DASH=$(date -d "-31 days" +%Y-%m)
+    else
+        PREVIOUS_DASH=$(date -d "-1 months" +%Y-%m)
+    fi
+echo "Previous month selector: $PREVIOUS_DASH"
 
 LAST_DAY=$(date -d "$(date -d "+1 months" +%Y-%m-01) -1 days" +%Y-%m-%d)
 echo "Last day of this month: $LAST_DAY"
@@ -30,7 +41,7 @@ echo "Creating summary file in $M3F2"
 ./ithitools/ithitools -S m3_previous_month.txt -o $M3F2
 
 >m46_this_month.txt
-py ithitools/src/tlsaInput.py tlsa-data-$DATE_DASH.csv /home/viktor/data/tlsa-$DATE_DASH-*.csv
+python ithitools/src/tlsaInput.py tlsa-data-$DATE_DASH.csv /home/viktor/data/tlsa-$DATE_DASH
 echo tlsa-data-$DATE_DASH.csv >> m46_this_month.txt
 find /home/matiasf/* | grep $DATE | grep ".csv" >> m46_this_month.txt
 find /home/uccgh/* | grep $DATE_DASH | grep ".csv" >> m46_this_month.txt
@@ -41,7 +52,7 @@ echo "Creating summary file in $M46F1"
 ./ithitools/ithitools -S m46_this_month.txt -o $M46F1
 
 >m46_previous_month.txt
-py ithitools/src/tlsaInput.py tlsa-data-$PREVIOUS_DASH.csv /home/viktor/data/tlsa-$PREVIOUS_DASH-*.csv
+python ithitools/src/tlsaInput.py tlsa-data-$PREVIOUS_DASH.csv /home/viktor/data/tlsa-$PREVIOUS_DASH
 echo tlsa-data-$PREVIOUS_DASH.csv >> m46_previous_month.txt
 find /home/matiasf/* | grep $PREVIOUS_DATE | grep ".csv" >> m46_previous_month.txt
 find /home/uccgh/* | grep $PREVIOUS_DASH | grep ".csv" >> m46_previous_month.txt
