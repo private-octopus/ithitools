@@ -43,6 +43,7 @@
 #include <algorithm>
 #include "CsvHelper.h"
 #include "CaptureSummary.h"
+#include "ComputeM6.h"
 #include "ithipublisher.h"
 
 ithipublisher::ithipublisher(char const * ithi_folder, int metric_id)
@@ -471,7 +472,7 @@ bool ithipublisher::GetVector(char const * metric_name, char const * key_value, 
             else
             {
                 cmp = strcmp(line_list[line_index]->key_value, key_value);
-                if (cmp <= 0)
+                if (cmp >= 0)
                 {
                     break;
                 }
@@ -483,7 +484,7 @@ bool ithipublisher::GetVector(char const * metric_name, char const * key_value, 
     for (int i = 0; i < nb_months; i++)
     {
 
-        if (line_index > line_list.size() ||
+        if (line_index >= line_list.size() ||
             strcmp(line_list[line_index]->metric_name, metric_name) != 0 ||
             (key_value != NULL && strcmp(line_list[line_index]->key_value, key_value) != 0) ||
             line_list[line_index]->year > current_year ||
@@ -820,8 +821,92 @@ bool ithipublisher::PublishDataM6(FILE * F)
                 ret = GetAverageAndCurrent(subMetX, NULL, &average, &current);
 
                 /* Multiply metric value by 100, since we want to display percentages */
-                ret &= fprintf(F, ", %8f, %8f", 100 * current, 100*average) > 0;
+                ret &= fprintf(F, ", %8f, %8f", 100 * current, 100 * average) > 0;
             }
+        }
+
+        if (ret) {
+#if 0
+            metric6_def_t const * table = ComputeM6::GetTable(subMet[m]);
+            char keyval[16];
+            bool first_line = true;
+
+            if (table != NULL) {
+
+                ret = fprintf(F, ",[") > 0;
+                if (ret) {
+                    ret = snprintf(subMetX, sizeof(subMetX), "%s.3", subMet[m]) > 0;
+                }
+                for (size_t l = 0; ret && l < table->nb_registered; l++) {
+                    double average, current;
+                    ret = snprintf(keyval, sizeof(keyval), "%d", table->registry[l].key) > 0;
+                    if (ret) {
+                        ret = GetAverageAndCurrent(subMetX, keyval, &average, &current);
+                        if (ret && average > 0 && current > 0) {
+                            ret = fprintf(F, "%s[%d, \"%s\", %8f, %8f]", (first_line) ? "\n" : ",\n",
+                                table->registry[l].key, table->registry[l].key_name,
+                                current, average) > 0;
+                            first_line = false;
+                        }
+                    }
+                }
+            }
+            ret &= fprintf(F, "]") > 0;
+#else
+            metric6_def_t const * table = ComputeM6::GetTable(subMet[m]);
+            std::vector<MetricNameLine> name_list;
+            double total_current = 0;
+            double total_average = 0;
+            double current_divider;
+            double average_divider;
+
+            ret = snprintf(subMetX, sizeof(subMetX), "%s.3", subMet[m]) > 0;
+
+            ret &= fprintf(F, ",[") > 0;
+
+            if (ret)
+            {
+                ret = GetNameList(subMetX, &name_list);
+            }
+
+            for (size_t l = 0; ret && l < name_list.size(); l++)
+            {
+                total_current += name_list[l].current;
+                total_average += name_list[l].average;
+            }
+            current_divider = (total_current > 0) ? 100.0 / total_current : 1.0;
+            average_divider = (total_average > 0) ? 100.0 / total_average : 1.0;
+
+            for (size_t l = 0; ret && l < name_list.size(); l++)
+            {
+                char const * key_name = "";
+
+                if (table != NULL) {
+                    int key_val = atoi(name_list[l].name);
+
+                    key_name = "???";
+
+                    for (size_t t = 0; t < table->nb_registered; t++) {
+                        if (table->registry[t].key == key_val) {
+                            key_name = table->registry[t].key_name;
+                            break;
+                        }
+                    }
+                }
+
+                if (l == 0) {
+                    ret = fprintf(F, "\n") > 0;
+                } else {
+                    ret = fprintf(F, ",\n") > 0;
+                }
+
+                ret &= (fprintf(F, "[%s, \"%s\", %1f, %1f]",
+                    name_list[l].name, key_name, 
+                    current_divider*name_list[l].current, average_divider*name_list[l].average) > 0);
+            }
+
+            ret &= fprintf(F, "]") > 0;
+#endif
         }
 
         if (m == 17)
