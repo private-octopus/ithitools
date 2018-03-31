@@ -58,9 +58,10 @@
 
     function fillM6Table(tableId, dataSet) {
         tableElem = document.getElementById(tableId);
-        tableText = "<table><tr><th rowspan=\"2\">Metric</th><th th rowspan=\"2\">Registry table name</th>";
+        tableText = "<table class=\"metrics\"><tr><th rowspan=\"2\">Metric</th><th th rowspan=\"2\">Registry table name</th>";
         tableText += "<th colspan=\"2\">M6.N.X.1: Usage</th> <th colspan=\"2\">M6.N.X.2: Squatting</th> </tr>";
-        tableText += "<tr><th>Current</th> <th>Average</th> <th>Current</th> <th>Average</th></tr>";
+        tableText += "<tr><th class=\"number\">Current</th> <th class=\"number\">Average</th>";
+        tableText += "<th class=\"number\">Current</th> <th class=\"number\">Average</th></tr>";
 
         for (i = 0; i < dataSet.length; i++) {
             lineSet = dataSet[i];
@@ -79,7 +80,7 @@
             }
 
             for (j = 2; j < 6 && j < lineSet.length; j++) {
-                tableText += "<td align=\"right\">" + lineSet[j].toFixed(2) + "%</td>";
+                tableText += "<td class=\"number\">" + lineSet[j].toFixed(2) + "%</td>";
             }
             tableText += "</tr>\n";
         }
@@ -103,15 +104,16 @@
             if (valueSet.length > 0) {
                 tableText += "<h3 id=\"" + lineSet[0] + "\">" + lineSet[0] + ": " + lineSet[1] + "</h3>\n";
 
-                tableText += "<table><tr><th>Key</th><th>Name</th><th>Current Value</th><th>Average Value</th></tr>\n";
+                tableText += "<table class=\"metrics\"><tr><th>Key</th><th>Name</th>";
+                tableText += "<th class=\"number\">Current Value</th> <th class=\"number\">Average Value</th></tr >\n";
 
                 for (j = 0; j < valueSet.length; j++) {
                     valueLine = valueSet[j];
                     if (valueLine.length >= 4) {
                         tableText += "<tr><td>" + valueLine[0] + "</td>";
                         tableText += "<td>" + valueLine[1] + "</td>";
-                        tableText += "<td>" + valueLine[2] + "%</td>";
-                        tableText += "<td>" + valueLine[3] + "%</td></tr>\n";
+                        tableText += "<td class=\"number\">" + valueLine[2].toFixed(3) + "%</td>";
+                        tableText += "<td class=\"number\">" + valueLine[3].toFixed(3) + "%</td></tr>\n";
                     }
                 }
 
