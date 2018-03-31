@@ -429,3 +429,17 @@ bool ComputeM6::Write(FILE * F_out)
 
     return ret;
 }
+
+metric6_def_t const * ComputeM6::GetTable(char const * m6_prefix)
+{
+    size_t m6_size = sizeof(m6_metrics_list) / sizeof(metric6_def_t);
+    metric6_def_t const * ret = NULL;
+
+    for (size_t i = 0; i < m6_size; i++) {
+        if (strcmp(m6_prefix, m6_metrics_list[i].m6_prefix) == 0) {
+            ret = &m6_metrics_list[i];
+        }
+    }
+
+    return ret;
+}
