@@ -327,7 +327,8 @@ var xScale;
     function fillMetricTable(tableName, tableId, dataSet)
     {
         tableElem = document.getElementById(tableId);
-        tableText = "<table><tr><th>" + tableName + "</th><th>Current value</th><th>Average value</th></tr>\n";
+        tableText = "<table class=\"metrics\"><tr><th>" + tableName + "</th>";
+        tableText += "<th class=\"number\">Current value</th> <th class=\"number\">Average value</th></tr >\n";
 
         for (i= 0; i < dataSet.length; i++)
         {
@@ -336,7 +337,7 @@ var xScale;
             
             for (j = 1; j < 3 && j < lineSet.length; j++)
             {
-                tableText += "<td align=\"right\">" + lineSet[j].toFixed(2)+"%</td>";
+                tableText += "<td class=\"number\">" + lineSet[j].toFixed(2)+"%</td>";
             }
             tableText += "</tr>\n";
         }
@@ -369,7 +370,7 @@ var xScale;
         over the 12 months preceeding this one -- or the average since the beginning
         of measurements if measurements started fewer than 12 months ago.
     </p>
-<table>
+<table class="metrics">
     <tr>
         <td rowspan="4">
             <canvas display="inline" id="pieChartM3" height="160" width="160"></canvas>
@@ -377,10 +378,10 @@ var xScale;
         <th colspan="2">
             Metric
         </th>
-        <th>
+        <th class="number">
             Current Value
         </th>
-        <th>
+        <th class="number">
             Average Value
         </th>
     </tr>
@@ -391,10 +392,10 @@ var xScale;
         <td>
             M3.1 (% No Such Domain queries)
         </td>
-        <td align="right" id="valM31">
+        <td class="number" id="valM31">
             -
         </td>
-        <td align="right" id="averageM31">
+        <td class="number" id="averageM31">
             -
         </td>
     </tr>
@@ -405,10 +406,10 @@ var xScale;
         <td>
             M3.2 (% cacheable queries)
         </td>
-        <td align="right" id="valM32">
+        <td class="number" id="valM32">
             -
         </td>
-        <td align="right" id="averageM32">
+        <td class="number" id="averageM32">
             -
         </td>
     </tr>
@@ -419,10 +420,10 @@ var xScale;
         <td>
             Core (100% - M3.1 - M3.2)
         </td>
-        <td align="right" id="valM3Zero">
+        <td class="number" id="valM3Zero">
             -
         </td>
-        <td align="right" id="averageM3Zero">
+        <td class="number" id="averageM3Zero">
             -
         </td>
     </tr>
@@ -449,14 +450,14 @@ var xScale;
         over the 12 months preceeding this one -- or the average since the beginning
         of measurements if measurements started fewer than 12 months ago.
     </p>
-    <table>
+    <table class="metrics">
         <tr>
             <td rowspan="5">
                 <canvas display="inline" id="pieChartM33" height="160" width="160"></canvas>
             </td>
             <th colspan="2"> Metric </th>
-            <th>Current Value</th>
-            <th>Average Value</th>
+            <th class="number">Current Value</th>
+            <th class="number">Average Value</th>
         </tr>
         <tr>
             <td>
@@ -465,10 +466,10 @@ var xScale;
             <td>
                 <a href="#M331">M3.3.1 (% Queries to RFC 6761 reserved names)</a>
             </td>
-            <td align="right" id="valM331">
+            <td class="number" id="valM331">
                 <b>-</b>
             </td>
-            <td align="right" id="averageM331">
+            <td class="number" id="averageM331">
                 <b>-</b>
             </td>
         </tr>
@@ -479,10 +480,10 @@ var xScale;
             <td>
                 <a href="#M332">M3.3.2 (% Queries to frequently leaked strings)</a>
             </td>
-            <td align="right" id="valM332">
+            <td class="number" id="valM332">
                 <b>-</b>
             </td>
-            <td align="right" id="averageM332">
+            <td class="number" id="averageM332">
                 <b>-</b>
             </td>
         </tr>
@@ -493,10 +494,10 @@ var xScale;
             <td >
                 <a href="#M333">M3.3.3 (% Queries to frequently found name patterns)</a>
             </td>
-            <td align="right" id="valM333">
+            <td class="number" id="valM333">
                 <b>-</b>
             </td>
-            <td align="right" id="averageM333">
+            <td class="number" id="averageM333">
                 <b>-</b>
             </td>
         </tr>
@@ -507,10 +508,10 @@ var xScale;
             <td>
                 M3.3.4(% Queries to other types of names)
             </td>
-            <td align="right" id="valM334">
+            <td class="number" id="valM334">
                 <b>-</b>
             </td>
-            <td align="right" id="averageM334">
+            <td class="number" id="averageM334">
                 <b>-</b>
             </td>
         </tr>

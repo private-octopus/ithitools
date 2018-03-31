@@ -19,6 +19,14 @@
             background-color: #dddddd;
         }
 
+        table.metrics td.number {
+            text-align: right;
+        }
+
+        table.metrics th.number {
+            text-align: right;
+        }
+
  /* Navbar container */
 .navbar {
   overflow: hidden;
