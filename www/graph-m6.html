@@ -43,9 +43,11 @@
         // Set the text values that depend on the current data
         setDateElement(M6Data.date);
 
-        // Set the table data
-        fillM6Table("tableM61", M6Data.m6Val, 1);
-        fillM6Table("tableM62", M6Data.m6Val, 2);
+        // Set main table data
+        fillM6Table("tableM6", M6Data.m6Val);
+
+        // Set the value tables
+        fillM63Tables("tableM63", M6Data.m6Val);
     }
 
     function setDateElement(date)
@@ -54,28 +56,69 @@
         dateElement.innerHTML = date;
     }
 
-    function fillM6Table(tableId, dataSet, subMetric)
-    {
+    function fillM6Table(tableId, dataSet) {
         tableElem = document.getElementById(tableId);
-        tableText = "<table><tr><th>Metric</th><th>Registry table name</th>";
-        tableText += "<th>Current value</th> <th>Average value</th> </tr>";
+        tableText = "<table><tr><th rowspan=\"2\">Metric</th><th th rowspan=\"2\">Registry table name</th>";
+        tableText += "<th colspan=\"2\">M6.N.X.1: Usage</th> <th colspan=\"2\">M6.N.X.2: Squatting</th> </tr>";
+        tableText += "<tr><th>Current</th> <th>Average</th> <th>Current</th> <th>Average</th></tr>";
 
-        metricColumn = subMetric * 2;
-
-        for (i= 0; i < dataSet.length; i++)
-        {
+        for (i = 0; i < dataSet.length; i++) {
             lineSet = dataSet[i];
-            tableText += "<tr><td>" + lineSet[0] + "." + subMetric + "</td>";
-            tableText += "<td>" + lineSet[1] + "</td>";
-            
-            for (j = metricColumn; j < metricColumn + 2 && j < lineSet.length; j++)
-            {
-                tableText += "<td align=\"right\">" + lineSet[j].toFixed(2)+"%</td>";
+            valueSet = [];
+
+            if (lineSet.length > 6) {
+                valueSet = lineSet[6];
+            }
+
+            if (valueSet.length > 0) {
+                tableText += "<tr><td><a href=\"#" + lineSet[0] + "\">" + lineSet[0] + "</a></td>";
+                tableText += "<td><a href=\"#" + lineSet[0] + "\">" + lineSet[1] + "</a></td>";
+            } else {
+                tableText += "<tr><td>" + lineSet[0] + "</td>";
+                tableText += "<td>" + lineSet[1] + "</td>";
+            }
+
+            for (j = 2; j < 6 && j < lineSet.length; j++) {
+                tableText += "<td align=\"right\">" + lineSet[j].toFixed(2) + "%</td>";
             }
             tableText += "</tr>\n";
         }
         tableText += "</table>\n";
-        
+
+        tableElem.innerHTML = tableText;
+    }
+
+    function fillM63Tables(tableId, dataSet) {
+        tableElem = document.getElementById(tableId);
+        tableText = "";
+
+        for (i = 0; i < dataSet.length; i++) {
+            lineSet = dataSet[i];
+            valueSet = [];
+
+            if (lineSet.length > 6) {
+                valueSet = lineSet[6];
+            }
+            
+            if (valueSet.length > 0) {
+                tableText += "<h3 id=\"" + lineSet[0] + "\">" + lineSet[0] + ": " + lineSet[1] + "</h3>\n";
+
+                tableText += "<table><tr><th>Key</th><th>Name</th><th>Current Value</th><th>Average Value</th></tr>\n";
+
+                for (j = 0; j < valueSet.length; j++) {
+                    valueLine = valueSet[j];
+                    if (valueLine.length >= 4) {
+                        tableText += "<tr><td>" + valueLine[0] + "</td>";
+                        tableText += "<td>" + valueLine[1] + "</td>";
+                        tableText += "<td>" + valueLine[2] + "%</td>";
+                        tableText += "<td>" + valueLine[3] + "%</td></tr>\n";
+                    }
+                }
+
+                tableText += "</table>";
+            }
+        }
+
         tableElem.innerHTML = tableText;
     }
 
@@ -84,27 +127,33 @@
 
 <body onLoad="init()">
 
-<nav id="navMenu"></nav>
+    <nav id="navMenu"></nav>
 
-<h1>M6: health of IANA registries for DNS parameters</h1>
+    <h1>M6: health of IANA registries for DNS parameters</h1>
 
-<h2 id="dateHeading">-</h2>
+    <h2 id="dateHeading">-</h2>
     <p>
-        The M6 metrics tracks the health of three set of registries maintained by IANA: 
-        the Domain Name System (DNS) Parameters, the Domain Name System Security 
-        (DNSSEC) Algorithm Numbers, and the DNS-Based Authentication of Named Entities 
-        (DANE) Parameters. Each of these groups includes different parameter sets. We will 
-        track the health of each of these parameters by a set of metrics of the form “M6.N.X.*”, 
-        where “M6.N.X” is the metric index composed of the registry name “N” and the parameter 
+        The M6 metrics tracks the health of three set of registries maintained by IANA:
+        the Domain Name System (DNS) Parameters, the Domain Name System Security
+        (DNSSEC) Algorithm Numbers, and the DNS-Based Authentication of Named Entities
+        (DANE) Parameters. Each of these groups includes different parameter sets. We will
+        track the health of each of these parameters by a set of metrics of the form “M6.N.X.*”,
+        where “M6.N.X” is the metric index composed of the registry name “N” and the parameter
         set index “X”. The following tables present the value of the metrics M6.N.X.1 and
-        M6.N.X.2.
+        M6.N.X.2:
     </p>
-    <h3>M6.N.X.1 - Usage</h3>
-    <p>
-        The metrics M6.N.X.1, which track "usage" as the ratio of the number of parameters 
-        found at least once in real traffic, divided by the total number of parameters found
-        registered in the table.
-    </p>
+    <ul>
+        <li>
+            The metrics M6.N.X.1 tracks "usage" as the ratio of the number of parameters
+            found at least once in real traffic, divided by the total number of parameters found
+            registered in the table.
+        </li>
+        <li>
+            The metrics M6.X.N.2 tracks "squatting" as the ratio of the total number of
+            instances of unregistered parameters (squat) found in real traffic, divided by the total
+            number of parameter instances found in real traffic.
+        </li>
+    </ul>
     <p>
         In the following table, the <em>current value</em> is the
         value of the usage metric for the current month.
@@ -113,27 +162,22 @@
         of measurements if measurements started fewer than 12 months ago.
     </p>
 
-    <div id="tableM61">
-        Table M6.X.N.1 not found.
+    <div id="tableM6">
+        Table M6 not found.
     </div>
 
-    <h3>M6.N.X.2 - Squatting</h3>
+    <h2>Metrics M6.X.N.3</h2>
     <p>
-        The metrics M6.X.N.2, which track "squatting" as the ratio of the total number of
-        instances of unregistered parameters (squat) found in real traffic, divided by the total
-        number of parameter instances found in real traffic.
-    </p>
-    <p>
-        In the following table, the <em>current value</em> is the
-        value of the squatting metric for the current month.
-        The <em>average value</em> is the average value of that metric
+        The metrics M6.X.N.3 track the occurences in live traffic of specific values defined
+        in the registries. In the following tables, we present for each registry the relative
+        frequency of each parameter.
+        The <em>average value</em> is the average value of that parameter's frequency
         over the 12 months preceeding this one -- or the average since the beginning
         of measurements if measurements started fewer than 12 months ago.
     </p>
 
-    <div id="tableM62">
-        Table M6.X.N.1 not found.
+    <div id="tableM63">
+        Table M63 not found.
     </div>
-
 </body>
 </html>
