@@ -3,25 +3,28 @@ pwd
 cd /home/ubuntu
 pwd
 TODAY=$(date +%d)
-DATE=$(date +%Y%m)
-echo "This month selector: $DATE"
-if [ $TODAY -gt 15 ]
-    then
-        PREVIOUS_DATE=$(date -d "-31 days" +%Y%m)
-    else
-        PREVIOUS_DATE=$(date -d "-1 months" +%Y%m)
-    fi
-echo "Previous month selector: $PREVIOUS_DATE"
 
-DATE_DASH=$(date +%Y-%m)
-echo "This month selector: $DASH"
-if [ $TODAY -gt 15 ]
+if [ $TODAY -lt 7 ]
     then
-        PREVIOUS_DASH=$(date -d "-31 days" +%Y-%m)
-    else
-        PREVIOUS_DASH=$(date -d "-1 months" +%Y-%m)
-    fi
-echo "Previous month selector: $PREVIOUS_DASH"
+	    DATE_CURRENT=$(date -d "-7 days" +%Y-%m-%d)
+		DATE_PREVIOUS=$(date -d "-38 days" +%Y-%m-%d)
+	else
+	    DATE_CURRENT=$(date +%Y-%m-%d)
+        if [ $TODAY -gt 15 ]
+		then
+		    DATE_PREVIOUS=$(date -d "-31 days" +%Y-%m-%d)
+		else
+		    DATE_PREVIOUS=$(date -d "-1 months" +%Y-%m-%d)
+		fi
+	fi
+
+DATE=$(date -D $DATE_CURRENT +%Y%m)
+PREVIOUS_DATE=$(date -d $DATE_PREVIOUS +%Y%m)
+DATE_DASH=$(date -D $DATE_CURRENT +%Y-%m)
+PREVIOUS_DASH=$(date -d $DATE_PREVIOUS +%Y-%m)
+
+echo "This month selector: $DATE (or $DATE_DASH)"
+echo "Previous month selector: $PREVIOUS_DATE (or $PREVIOUS_DASH)"
 
 LAST_DAY=$(date -d "$(date -d "+1 months" +%Y-%m-01) -1 days" +%Y-%m-%d)
 echo "Last day of this month: $LAST_DAY"
