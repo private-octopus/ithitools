@@ -35,7 +35,7 @@
 /*
  * List of registry definitions 
  */
-
+#define	REGISTRY_ITHITOOLS_VERSION	0
 #define	REGISTRY_DNS_CLASSES	1
 #define	REGISTRY_DNS_RRType	2
 #define	REGISTRY_DNS_OpCodes	3

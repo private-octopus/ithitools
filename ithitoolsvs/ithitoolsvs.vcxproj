@@ -186,6 +186,7 @@
     <ClInclude Include="..\lib\NamePattern.h" />
     <ClInclude Include="..\lib\pcap_reader.h" />
     <ClInclude Include="..\lib\UsefulTransaction.h" />
+    <ClInclude Include="..\lib\Version.h" />
     <ClInclude Include="..\src\targetver.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

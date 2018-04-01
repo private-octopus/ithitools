@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <algorithm>
 #include <string.h>
+#include "Version.h"
 #include "CsvHelper.h"
 #include "DnsStats.h"
 #include "CaptureSummary.h"
@@ -644,30 +645,22 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
         for (size_t j = 0; j < cs[i]->Size(); j++) {
             if (strcmp(cs[i]->summary[j]->registry_name, frequent_tld_id) == 0)
             {
-                if (cs[i]->summary[j]->count <= 4)
+                /* This is a TLD "frequently used" by a client. We will only consider it in the summary
+                 * if it is part of the TLD frequently leaked to the root.
+                 */    
+                TldAsKey key((uint8_t *)cs[i]->summary[j]->key_value, strlen(cs[i]->summary[j]->key_value));
+                if (frequentRootTld.Retrieve(&key) != NULL)
                 {
-                    size_t len = strlen(cs[i]->summary[j]->key_value);
-
-                    if (len < 64)
-                    {
-                        skipped_tld_length[len]++;
-                    }
+                    complete.push_back(cs[i]->summary[j]);
                 }
                 else
                 {
-                    TldAsKey key((uint8_t *)cs[i]->summary[j]->key_value, strlen(cs[i]->summary[j]->key_value));
-                    if (frequentRootTld.Retrieve(&key) != NULL)
-                    {
-                        complete.push_back(cs[i]->summary[j]);
-                    }
-                    else
-                    {
-                        nb_locally_leaked_tld += cs[i]->summary[j]->count;
-                    }
+                    nb_locally_leaked_tld += cs[i]->summary[j]->count;
                 }
             }
             else if (strcmp(cs[i]->summary[j]->registry_name, leak_tld_id) == 0)
             {
+                /* This is a TLD "frequently leaked" to the root */
                 if (cs[i]->summary[j]->count <= 4)
                 {
                     size_t len = strlen(cs[i]->summary[j]->key_value);
@@ -682,6 +675,7 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
                     complete.push_back(cs[i]->summary[j]);
                 }
             }
+            /* TODO: if local leak present, add to total */
             else
             {
                 complete.push_back(cs[i]->summary[j]);

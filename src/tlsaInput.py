@@ -55,12 +55,11 @@ print("Pattern matching to <" +  pattern + ">")
 for name in glob.glob(pattern):
     total_count += load_file_data(name, cert_usage, selector, matching_type)
 
-file = open(sys.argv[1], "w");
-
-write_list_to_file(file, cert_usage, "DANE_CertUsage")
-write_list_to_file(file, selector, "DANE_TlsaSelector")
-write_list_to_file(file, matching_type, "DANE_TlsaMatchingType")
-
-file.write("RR Type,0,52," + str(total_count) + ",\n")
+if (total_count > 0):
+    file = open(sys.argv[1], "w")
+    write_list_to_file(file, cert_usage, "DANE_CertUsage")
+    write_list_to_file(file, selector, "DANE_TlsaSelector")
+    write_list_to_file(file, matching_type, "DANE_TlsaMatchingType")
+    file.write("RR Type,0,52," + str(total_count) + ",\n")
 
 file.close();

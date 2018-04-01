@@ -826,33 +826,6 @@ bool ithipublisher::PublishDataM6(FILE * F)
         }
 
         if (ret) {
-#if 0
-            metric6_def_t const * table = ComputeM6::GetTable(subMet[m]);
-            char keyval[16];
-            bool first_line = true;
-
-            if (table != NULL) {
-
-                ret = fprintf(F, ",[") > 0;
-                if (ret) {
-                    ret = snprintf(subMetX, sizeof(subMetX), "%s.3", subMet[m]) > 0;
-                }
-                for (size_t l = 0; ret && l < table->nb_registered; l++) {
-                    double average, current;
-                    ret = snprintf(keyval, sizeof(keyval), "%d", table->registry[l].key) > 0;
-                    if (ret) {
-                        ret = GetAverageAndCurrent(subMetX, keyval, &average, &current);
-                        if (ret && average > 0 && current > 0) {
-                            ret = fprintf(F, "%s[%d, \"%s\", %8f, %8f]", (first_line) ? "\n" : ",\n",
-                                table->registry[l].key, table->registry[l].key_name,
-                                current, average) > 0;
-                            first_line = false;
-                        }
-                    }
-                }
-            }
-            ret &= fprintf(F, "]") > 0;
-#else
             metric6_def_t const * table = ComputeM6::GetTable(subMet[m]);
             std::vector<MetricNameLine> name_list;
             double total_current = 0;
@@ -906,7 +879,6 @@ bool ithipublisher::PublishDataM6(FILE * F)
             }
 
             ret &= fprintf(F, "]") > 0;
-#endif
         }
 
         if (m == 17)

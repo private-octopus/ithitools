@@ -26,6 +26,7 @@
 #include <vector>
 #include "pcap_reader.h"
 #include "DnsTypes.h"
+#include "Version.h"
 #include "DnsStats.h"
 
 DnsStats::DnsStats()
@@ -78,7 +79,7 @@ static char const * DefaultRootAddresses[] = {
 };
 
 static char const * RegistryNameById[] = {
-    "0",
+    "ITHITOOLS_VERSION",
     "CLASS",
     "RR Type",
     "OpCode",
@@ -1473,10 +1474,21 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
     /* Get the ordered list of domain string usage into the main hash */
     ExportStringUsage();
 
+    cs->Reserve(hashTable.GetCount()+1);
+
+    /* Export the version number */
+    {
+        CaptureLine line;
+        memcpy(line.registry_name, RegistryNameById[REGISTRY_ITHITOOLS_VERSION],
+            strlen(RegistryNameById[REGISTRY_ITHITOOLS_VERSION] + 1));
+        line.key_type = 0;
+        line.key_number = 0;
+        line.count = ITHITOOLS_VERSION;
+
+        cs->AddLine(&line, true);
+    }
 
     /* Export the stored values */
-    cs->Reserve(hashTable.GetCount());
-
     for (uint32_t i = 0; i < hashTable.GetSize(); i++)
     {
         entry = hashTable.GetEntry(i);
