@@ -52,10 +52,10 @@ total_count = 0
 
 pattern=sys.argv[2] + "-*.csv"
 print("Pattern matching to <" +  pattern + ">")
-for name in glob.glob(pattern):
-    total_count += load_file_data(name, cert_usage, selector, matching_type)
-
-if (total_count > 0):
+name_list = glob.glob(pattern)
+if (len(name_list) > 0):
+    for name in name_list:
+        total_count += load_file_data(name, cert_usage, selector, matching_type)
     file = open(sys.argv[1], "w")
     write_list_to_file(file, cert_usage, "DANE_CertUsage")
     write_list_to_file(file, selector, "DANE_TlsaSelector")
