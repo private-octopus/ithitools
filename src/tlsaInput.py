@@ -61,5 +61,4 @@ if (len(name_list) > 0):
     write_list_to_file(file, selector, "DANE_TlsaSelector")
     write_list_to_file(file, matching_type, "DANE_TlsaMatchingType")
     file.write("RR Type,0,52," + str(total_count) + ",\n")
-
-file.close();
+    file.close();
