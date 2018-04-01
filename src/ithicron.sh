@@ -18,17 +18,17 @@ if [ $TODAY -lt 7 ]
 		fi
 	fi
 
-DATE=$(date -D $DATE_CURRENT +%Y%m)
+DATE=$(date -d $DATE_CURRENT +%Y%m)
 PREVIOUS_DATE=$(date -d $DATE_PREVIOUS +%Y%m)
-DATE_DASH=$(date -D $DATE_CURRENT +%Y-%m)
+DATE_DASH=$(date -d $DATE_CURRENT +%Y-%m)
 PREVIOUS_DASH=$(date -d $DATE_PREVIOUS +%Y-%m)
 
 echo "This month selector: $DATE (or $DATE_DASH)"
 echo "Previous month selector: $PREVIOUS_DATE (or $PREVIOUS_DASH)"
 
-LAST_DAY=$(date -d "$(date -d "+1 months" +%Y-%m-01) -1 days" +%Y-%m-%d)
+LAST_DAY=$(date -d "$(date -d "$DATE_CURRENT +1 months" +%Y-%m-01) -1 days" +%Y-%m-%d)
 echo "Last day of this month: $LAST_DAY"
-LAST_LAST_DAY=$(date -d"$(date +%Y-%m-01) -1 days" +%Y-%m-%d)
+LAST_LAST_DAY=$(date -d "$(date -d $DATE_CURRENT +%Y-%m-01) -1 days" +%Y-%m-%d)
 echo "Last day of previous month: $LAST_LAST_DAY"
 
 find /home/rarends/data/$DATE* | grep ".csv" > m3_this_month.txt
