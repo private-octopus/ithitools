@@ -25,6 +25,7 @@
 #include "Version.h"
 #include "CsvHelper.h"
 #include "DnsStats.h"
+#include "Version.h"
 #include "CaptureSummary.h"
 
 static char const * frequently_leaked_tld[] = {
@@ -159,6 +160,8 @@ static char const * frequently_leaked_tld[] = {
 };
 
 CaptureSummary::CaptureSummary()
+    :
+    capture_version(ITHITOOLS_VERSION)
 {
 }
 
@@ -204,10 +207,16 @@ bool CaptureSummary::Load(char const * file_name)
         }
         (void)CsvHelper::read_number64(&line.count, start, buffer, sizeof(buffer));
 
+
         /* TODO: check that the parsing is good */
 
-        /* allocate data and add to vector */
-        ret = AddLine(&line, true);
+        /* Notice the version number */
+        if (strcmp(line.registry_name, DnsStats::GetTableName((uint32_t)REGISTRY_ITHITOOLS_VERSION)) == 0) {
+            capture_version = (int) line.count;
+        } else {
+            /* allocate data and add to vector */
+            ret = AddLine(&line, true);
+        }
     }
 
     if (F != NULL)
@@ -229,6 +238,8 @@ bool CaptureSummary::Save(char const * file_name)
     F = fopen(file_name, "w");
     ret = (F != NULL);
 #endif
+    /* TODO: write the version number */
+    fprintf(F, "\"%s\",0,0,%d,\n", DnsStats::GetTableName(REGISTRY_ITHITOOLS_VERSION), capture_version);
 
     for (size_t i = 0; ret && i < summary.size(); i++)
     {

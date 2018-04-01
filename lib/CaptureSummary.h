@@ -73,6 +73,8 @@ public:
 
     BinHash<TldAsKey> frequentRootTld;
 
+    int capture_version;
+
 private:
     std::vector<CaptureLine *> summary;
 

@@ -1476,18 +1476,6 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
 
     cs->Reserve(hashTable.GetCount()+1);
 
-    /* Export the version number */
-    {
-        CaptureLine line;
-        memcpy(line.registry_name, RegistryNameById[REGISTRY_ITHITOOLS_VERSION],
-            strlen(RegistryNameById[REGISTRY_ITHITOOLS_VERSION] + 1));
-        line.key_type = 0;
-        line.key_number = 0;
-        line.count = ITHITOOLS_VERSION;
-
-        cs->AddLine(&line, true);
-    }
-
     /* Export the stored values */
     for (uint32_t i = 0; i < hashTable.GetSize(); i++)
     {
