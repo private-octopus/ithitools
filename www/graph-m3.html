@@ -353,15 +353,18 @@ var xScale;
 
 <body onLoad="init()">
 
-<h1>M3: Usage of the root</h1>
+<h1>M3: DNS Root Traffic Analysis</h1>
 
 <h2 id="dateHeading">-</h2>
 
     <p>
-        The usage of the DNS root servers is tracked by measuring the number of requests to the root for
+        The usage of the DNS root servers is tracked by measuring the number of
+        requests to the root for
         non-existing TLD (M3.1) and the number of requests to the root
-        that would not have been necessary if the DNS resolvers cached the previous replies (M3.2).
-        The number of requests that would be necessary in any case is given by the difference: 100% - M3.1 - M3.2.
+        that would not have been necessary if the DNS resolvers cached
+        the previous replies (M3.2).
+        The number of requests that would be necessary in any case is given
+        by the difference: 100% - M3.1 - M3.2.
     </p>
     <p>
         In the following table, the <em>current value</em> is the

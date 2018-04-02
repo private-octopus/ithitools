@@ -40,6 +40,8 @@
 
     function draw_page() {
         // Compute the values of the metrics
+        var m41 = M4Data.M41Data[0];
+        average41 = M4Data.M41Data[1];
         var m42 = columnSum(M4Data.M42DataSet, 1);
         average42 = columnSum(M4Data.M42DataSet, 2);
         var m43 = columnSum(M4Data.M43DataSet, 1);
@@ -47,14 +49,24 @@
         var m44 = 100 - M4Data.M41Data[0] - m42 - m43;
         average44 = 100 - M4Data.M41Data[1] - average42 - average43;
 
-        var M4Set = [M4Data.M41Data[0], m42, m43, m44];
+        // Temporary fix until the root cause of the bug is found.
+        if (m44 < 0) {
+            m41 += m44;
+            m44 = 0;
+        }
+
+        if (average44  < 0) {
+            average41 += average44;
+            average44 = 0;
+        }
+        var M4Set = [m41, m42, m43, m44];
 
         // Set the text values that depend on the current data
 
         setDateElement(M4Data.date);
 
-        setValElement("valM41", M4Data.M41Data[0]);
-        setValElement("averageM41", M4Data.M41Data[1]);
+        setValElement("valM41", m41);
+        setValElement("averageM41", average41);
         setValElement("valM42", m42);
         setValElement("averageM42", average42);
         setValElement("valM43", m43);
@@ -183,12 +195,12 @@
 
 <nav id="navMenu"></nav>
 
-<h1>M4: Usage and misuse of TLD names by DNS clients</h1>
+<h1>M4: DNS Recursive Server Analysis</h1>
 
 <h2 id="dateHeading"> - </h2>
 
     <p>
-        The M4 metrics measure the usage of TLDs and leakage of undelegated strings by DNS users.
+        The M4 metrics analyze the DNS traffic at Recursive Servers.
         This is somewhat similar to the M3.3 set of metrics, with the difference that M3.3 analyze
         the traffic arriving to the root, which may be heavily filtered by the recursive resolvers. 
         M4 attempts to measure the original behavior of DNS clients. 
@@ -233,7 +245,7 @@
                 <canvas id="colorBlobM42" height="32" width="32"></canvas>
             </td>
             <td>
-                <a href="#M42">M4.2:  % of queries directed at that special use names, registered per RFC 6761.</a>
+                <a href="#M42">M4.2:  % of queries directed at RFC 6761 names.</a>
             </td>
             <td class="number" id="valM42">
                 -
@@ -261,7 +273,7 @@
                 <canvas id="colorBlobM44" height="32" width="32"></canvas>
             </td>
             <td>
-                M4.4: fraction of traffic that is not explained by M4.1, M4.2 or M4.3. 
+                M4.4: All other traffic. 
             </td>
             <td class="number" id="valM44">
                 -
@@ -277,10 +289,11 @@
         encountered as part of M4.2 and M4.3.
     </p>
 
-    <h3 id="M42">Queries to RFC 6761 reserved names</h3>
+    <h3 id="M42">Queries to RFC 6761 names</h3>
     <p>
-        In the following table, the <em>current value</em> is the fraction of queries to the root
-        directed at RFC 6761 names in the current month. The <em>average value</em> is the average of
+        In the following table, the <em>current value</em> is the fraction of queries
+        directed at RFC 6761 names in the current month. The <em>average value</em>
+        is the average of
         that fraction since the beginning of the year.
     </p>
     <div id="m42Table">Table M42 not found</div>
@@ -288,8 +301,8 @@
     <h3 id="M43">Queries to frequently leaked strings</h3>
     <p>
         In the following table, the <em>current value</em> is the fraction of queries
-        directed  in the current month at frequently used strings instead of a delegated 
-        top level domain. The <em>average value</em> is the average of
+        directed  in the current month at frequently used strings. 
+        The <em>average value</em> is the average of
         that fraction since the beginning of the year.
     </p>
     <p>
