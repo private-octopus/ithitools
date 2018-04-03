@@ -75,4 +75,4 @@ echo "Computing metrics for $LAST_DAY"
 ./ithitools/ithitools -i /home/ubuntu/ithi -d $LAST_DAY -m
 
 echo "Computing JSON Data for publication"
-./ithitools/ithitools -i /home/ubuntu/ithi -w /var/www/html/ithi/ -p
+./ithitools/ithitools -i /home/ubuntu/ithi -w /var/www/html/ithi -p
