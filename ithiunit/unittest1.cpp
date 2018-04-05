@@ -33,6 +33,7 @@
 #include "CsvTest.h"
 #include "M2DataTest.h"
 #include "PublishTest.h"
+#include "TldCountTest.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -161,5 +162,13 @@ namespace ithiunit
 
             Assert::AreEqual(ret, true);
         }
+
+        TEST_METHOD(TldCount)
+        {
+            TldCountTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }  
 	};
 }

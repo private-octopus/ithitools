@@ -39,6 +39,7 @@ SET(ITHITOOLS_TEST_LIBRARY_FILES
    test/PluginTest.cpp
    test/PublishTest.cpp
    test/CsvTest.cpp
+   test/TldCountTest.cpp
    test/ithi_test_class.cpp
 )
 
@@ -90,6 +91,7 @@ ADD_EXECUTABLE(ithitest
    test/PluginTest.cpp
    test/PublishTest.cpp
    test/CsvTest.cpp
+   test/TldCountTest.cpp
    test/ithi_test_class.cpp
 )
 

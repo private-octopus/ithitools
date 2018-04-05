@@ -17,6 +17,7 @@
 #include "M2DataTest.h"
 #include "ithi_test_class.h"
 #include "PublishTest.h"
+#include "TldCountTest.h"
 
 enum test_list_enum {
     test_enum_hash = 0,
@@ -34,6 +35,7 @@ enum test_list_enum {
     test_enum_Csv,
     test_enum_M2Data,
     test_enum_Publish,
+    test_enum_TldCount,
     test_enum_max_number
 };
 
@@ -83,6 +85,8 @@ char const * ithi_test_class::GetTestName(int number)
         return("m2data");
     case test_enum_Publish:
         return("publish");
+    case test_enum_TldCount:
+        return("TldCount");
     default:
         break;
     }
@@ -154,6 +158,9 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_enum_Publish:
         test = new PublishTest();
+        break;
+    case test_enum_TldCount:
+        test = new TldCountTest();
         break;
     default:
         break;

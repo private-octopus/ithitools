@@ -177,6 +177,7 @@
     <ClCompile Include="..\test\PluginTest.cpp" />
     <ClCompile Include="..\test\SaveTest.cpp" />
     <ClCompile Include="..\test\testRfc6761.cpp" />
+    <ClCompile Include="..\test\TldCountTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\ithicap.h" />
@@ -212,6 +213,7 @@
     <ClInclude Include="..\test\PluginTest.h" />
     <ClInclude Include="..\test\SaveTest.h" />
     <ClInclude Include="..\test\testRfc6761.h" />
+    <ClInclude Include="..\test\TldCountTest.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
