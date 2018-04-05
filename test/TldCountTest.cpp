@@ -20,6 +20,7 @@
 */
 
 #include <stdlib.h>
+#include <string.h>
 #include "DnsStats.h"
 #include "TldCountTest.h"
 
@@ -222,8 +223,8 @@ bool TldCountTest::DoTest()
     LruHash<TldAsKey> tldStringUsage;
     int count_per_string[nbTargetNames];
     const int initial_count = 0x800;
-    const int max_hash_size = 0x80;
-    const int max_delta_count = 0x40;
+    const int max_hash_size = 0x100;
+    const int max_delta_count = 0x10;
     int current_count = initial_count;
     int total_keys = 0;
     int dropped_keys = 0;
@@ -261,7 +262,7 @@ bool TldCountTest::DoTest()
 
         /* Random shuffle of the list to simulate random arrivals */
         for (int r = total_keys - 1; r >= 1; r--) {
-            int x = std::rand() % (r + 1);
+            int x = rand() % (r + 1);
 
             if (x != r) {
                 size_t rtx = rand_table[x];
