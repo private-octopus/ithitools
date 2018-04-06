@@ -282,7 +282,7 @@ bool ithipublisher::ParseFileName(MetricFileHolder * file, const char * name, in
 
 bool ithipublisher::LoadFileData(int file_index, char const * dir_met_name)
 {
-    FILE* F;
+    FILE* F = NULL;
     MetricLine * line;
     char buffer[512];
     char file_name[512];
@@ -565,7 +565,7 @@ bool ithipublisher::GetNameList(char const * metric_name, std::vector<MetricName
     /* Extract the lines and compute the averages */
     while (line_index < line_list.size() && strcmp(line_list[line_index]->metric_name, metric_name) == 0)
     {
-        if (strcmp(line_list[line_index]->key_value, current_name.name) != 0)
+        if (current_name.name != NULL && strcmp(line_list[line_index]->key_value, current_name.name) != 0)
         {
             if (nb_months > 1)
             {
@@ -669,6 +669,9 @@ bool ithipublisher::PublishDataM3(FILE * F)
     const char * sub_met[5] = { "M3.1", "M3.2", "M3.3.1", "M3.3.2", "M3.3.3" };
     const char * met_data_name[5] = { "M31", "M32", "m331Set", "m332Set", "m333Set"};
     double m31[12], m32[12];
+
+    memset(m31, 0, sizeof(m31));
+    memset(m32, 0, sizeof(m32));
     
     ret = fprintf(F, "\"%s\" : ", met_data_name[0]) > 0;
 

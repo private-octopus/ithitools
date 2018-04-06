@@ -356,11 +356,11 @@ bool ithimetrics::SaveMetricFiles()
             if (ret)
             {
 #ifdef _WINDOWS
-                snprintf(buffer, sizeof(buffer), "%s\\M%d\\M%d-%s.csv", ithi_folder, i + 1, i + 1, metric_date);
+                ret = snprintf(buffer, sizeof(buffer), "%s\\M%d\\M%d-%s.csv", ithi_folder, i + 1, i + 1, metric_date) > 0;
 #else
-                snprintf(buffer, sizeof(buffer), "%s/M%d/M%d-%s.csv", ithi_folder, i + 1, i + 1, metric_date);
+                ret = snprintf(buffer, sizeof(buffer), "%s/M%d/M%d-%s.csv", ithi_folder, i + 1, i + 1, metric_date) > 0;
 #endif
-                ret = SetMetricFileNames(i, buffer);
+                ret &= SetMetricFileNames(i, buffer);
             }
         }
 

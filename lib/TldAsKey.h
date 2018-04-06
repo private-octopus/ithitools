@@ -43,6 +43,7 @@ public:
 
     static void CanonicCopy(uint8_t * tldDest, size_t tldDestMax, size_t * tldDestLength,
         uint8_t * tldSrce, size_t tldSrceLength);
+    static bool CompareTldEntries(TldAsKey * x, TldAsKey * y);
 };
 
 #endif /* TLD_AS_KEY_H */

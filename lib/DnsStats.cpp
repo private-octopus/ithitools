@@ -890,7 +890,7 @@ void DnsStats::GetDestAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr,
     }
 }
 
-bool CompareTldEntries(TldAsKey * x, TldAsKey * y)
+bool TldAsKey::CompareTldEntries(TldAsKey * x, TldAsKey * y)
 {
     bool ret = x->count >  y->count;
 
@@ -946,7 +946,7 @@ void DnsStats::ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id,
         }
     }
 
-    std::sort(lines.begin(), lines.end(), CompareTldEntries);
+    std::sort(lines.begin(), lines.end(), TldAsKey::CompareTldEntries);
 
     /* Retain the N most interesting values */
     for (size_t i = 0; i < lines.size(); i++)

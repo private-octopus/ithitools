@@ -53,7 +53,7 @@ bool ComputeMetric::Save(char const * out_file)
 
 #ifdef _WINDOWS
     errno_t err = fopen_s(&F, out_file, "w");
-    ret = (err == 0);
+    ret = (err == 0 && F != NULL);
 #else
     F = fopen(out_file, "w");
     ret = (F != NULL);

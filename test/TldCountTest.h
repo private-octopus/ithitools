@@ -31,6 +31,7 @@ public:
     ~TldCountTest();
 
     bool DoTest() override;
+    int GetTldIndex(uint8_t * tld, size_t tld_len);
 };
 
 #endif

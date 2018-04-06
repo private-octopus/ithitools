@@ -238,8 +238,11 @@ bool CaptureSummary::Save(char const * file_name)
     F = fopen(file_name, "w");
     ret = (F != NULL);
 #endif
-    /* TODO: write the version number */
-    fprintf(F, "\"%s\",0,0,%d,\n", DnsStats::GetTableName(REGISTRY_ITHITOOLS_VERSION), capture_version);
+
+    if (ret) {
+        /* TODO: write the version number */
+        fprintf(F, "\"%s\",0,0,%d,\n", DnsStats::GetTableName(REGISTRY_ITHITOOLS_VERSION), capture_version);
+    }
 
     for (size_t i = 0; ret && i < summary.size(); i++)
     {

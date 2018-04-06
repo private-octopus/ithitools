@@ -186,8 +186,8 @@ void M2Data::Sort()
 bool M2Data::Save()
 {
     char file_name[256];
-    FILE* F;
-    bool ret = false;
+    FILE* F = NULL;
+    bool ret = true;
 
     if (0 > snprintf(file_name, sizeof(file_name), "M2-%4d-%2d-%2d-%s.csv",
         year, month, day, (M2Type == Registrar) ? "-registrars" : "tlds"))
@@ -211,7 +211,7 @@ bool M2Data::Save()
         printf("Cannot save <%s>\n", file_name);
     }
 
-    for (size_t i = 0; i < dataset.size(); i++)
+    for (size_t i = 0; ret && i < dataset.size(); i++)
     {
         fprintf(F, "%s,", (M2Type == Registrar) ? "Registrar" : "TLD");
         fprintf(F, "\"%s\",", dataset[i].name);

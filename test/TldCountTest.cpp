@@ -21,6 +21,8 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm>
+#include <vector>
 #include "DnsStats.h"
 #include "TldCountTest.h"
 
@@ -217,25 +219,155 @@ static char const * TargetNames[] = {
 
 static const size_t nbTargetNames = sizeof(TargetNames) / sizeof(char const *);
 
+typedef struct st_tld_count_test_hash_input_t {
+    int registry_id;
+    int key_type;
+    char const * key_text;
+    int key_number;
+    int count;
+} tld_count_test_hash_input_t;
+
+static tld_count_test_hash_input_t hash_input_table[] = {
+    {REGISTRY_DNS_CLASSES, 0, NULL, 1, 19282420},
+    { REGISTRY_DNS_CLASSES,0,NULL,3,38 },
+    { REGISTRY_DNSSEC_Algorithm_Numbers,0,NULL,5,83454 },
+    { REGISTRY_DNSSEC_Algorithm_Numbers,0,NULL,7,11587 },
+    { REGISTRY_DNSSEC_Algorithm_Numbers,0,NULL,8,359955 },
+    { REGISTRY_DNSSEC_Algorithm_Numbers,0,NULL,10,943 },
+    { REGISTRY_DNSSEC_Algorithm_Numbers,0,NULL,13,217 },
+    { REGISTRY_EDNS_Header_Flags,0,NULL,0,8632252 },
+    { REGISTRY_EDNS_Header_Flags,0,NULL,8,1 },
+    { REGISTRY_EDNS_Header_Flags,0,NULL,9,2 },
+    { REGISTRY_EDNS_OPT_CODE,0,NULL,3,1 },
+    { REGISTRY_EDNS_OPT_CODE,0,NULL,8,77504 },
+    { REGISTRY_EDNS_OPT_CODE,0,NULL,9,1 },
+    { REGISTRY_EDNS_OPT_CODE,0,NULL,10,129653 },
+    { REGISTRY_EDNS_OPT_CODE,0,NULL,100,2 },
+    { REGISTRY_EDNS_OPT_CODE,0,NULL,65001,80 },
+    { REGISTRY_EDNS_Version_number,0,NULL,0,8729785 },
+    { REGISTRY_EDNS_Version_number,0,NULL,1,2 },
+    { REGISTRY_DNS_Header_Flags,0,NULL,4,8433638 },
+    { REGISTRY_DNS_Header_Flags,0,NULL,5,15393 },
+    { REGISTRY_DNS_Header_Flags,0,NULL,6,4550902 },
+    { REGISTRY_DNS_LabelType,0,NULL,0,7352191 },
+    { REGISTRY_DNS_LabelType,0,NULL,192,16862187 },
+    { REGISTRY_DNS_OpCodes,0,NULL,0,17250000 },
+    { REGISTRY_DNS_RCODES,0,NULL,0,11802316 },
+    { REGISTRY_DNS_RCODES,0,NULL,1,1 },
+    { REGISTRY_DNS_RCODES,0,NULL,2,400287 },
+    { REGISTRY_DNS_RCODES,0,NULL,3,3560937 },
+    { REGISTRY_DNS_RCODES,0,NULL,5,1486457 },
+    { REGISTRY_DNS_RCODES,0,NULL,16,2 },
+    { REGISTRY_DNS_RFC6761_Usage,1,"LOCAL",0,16 },
+    { REGISTRY_DNS_RRType,0,NULL,1,4382558 },
+    { REGISTRY_DNS_RRType,0,NULL,2,6487796 },
+    { REGISTRY_DNS_RRType,0,NULL,5,174867 },
+    { REGISTRY_DNS_RRType,0,NULL,6,4431681 },
+    { REGISTRY_DNS_RRType,0,NULL,12,456825 },
+    { REGISTRY_DNS_RRType,0,NULL,15,1583235 },
+    { REGISTRY_DNS_RRType,0,NULL,16,2321 },
+    { REGISTRY_DNS_RRType,0,NULL,28,1104162 },
+    { REGISTRY_DNS_RRType,0,NULL,41,4362255 },
+    { REGISTRY_DNS_RRType,0,NULL,43,12832 },
+    { REGISTRY_DNS_RRType,0,NULL,46,409021 },
+    { REGISTRY_DNS_RRType,0,NULL,47,175187 },
+    { REGISTRY_DNS_RRType,0,NULL,48,34303 },
+    { REGISTRY_DNS_RRType,0,NULL,50,27670 },
+    { REGISTRY_DNS_TLD_Usage_Count,0,NULL,1,8573279 },
+    { REGISTRY_DNS_UsefulQueries,0,NULL,0,19 },
+    { REGISTRY_DNS_UsefulQueries,0,NULL,1,8 },
+    { REGISTRY_DNS_error_flag,0,NULL,0,17249987 },
+    { REGISTRY_DNS_error_flag,0,NULL,256,1 },
+    { REGISTRY_DNS_error_flag,0,NULL,384,12 },
+    { REGISTRY_DNS_root_QR,0,NULL,0,0 }
+};
+
+static const size_t nb_hash_input_table = sizeof(hash_input_table) / sizeof(tld_count_test_hash_input_t);
+
+static void fill_initial_table(BinHash<DnsHashEntry> * hashTable) {
+    for (size_t i = 0; i < nb_hash_input_table; i++) {
+        DnsHashEntry key;
+        bool stored = false;
+
+        key.count = hash_input_table[i].count;
+        key.registry_id = hash_input_table[i].registry_id;
+        if (hash_input_table[i].key_type == 0) {
+            key.key_length = sizeof(uint32_t);
+            key.key_type = 0; /* number */
+            key.key_number = hash_input_table[i].key_number;
+        } else {
+            key.key_length = strlen(hash_input_table[i].key_text);
+            key.key_type = 1; /* string */
+            memcpy(key.key_value, hash_input_table[i].key_text, key.key_length);
+            key.key_value[key.key_length] = 0;
+        }
+
+        (void)hashTable->InsertOrAdd(&key, true, &stored);
+    }
+}
+
+
+static uint32_t xorshift_state = 0xdeadbeef;
+
+static uint32_t xorshift32()
+{
+    /* Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs" */
+    uint32_t x = xorshift_state;
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    xorshift_state = x;
+    return x;
+}
+
+static uint32_t random_uniform(uint32_t range_max)
+{
+    uint32_t delta = 0xFFFFFFFF % range_max;
+    uint32_t rnd;
+
+    do {
+        rnd = xorshift32();
+    } while (rnd < delta);
+
+    return rnd % range_max;
+}
+
+#define RANDOM_TLD_LENGTH 16
+
+static char * random_tld(char n[RANDOM_TLD_LENGTH + 1])
+{
+    for (int i = 0; i < RANDOM_TLD_LENGTH; i++) {
+        n[i] = 'A' + random_uniform(26);
+    }
+    n[RANDOM_TLD_LENGTH] = 0;
+
+    return n;
+}
 
 bool TldCountTest::DoTest()
 {
     LruHash<TldAsKey> tldStringUsage;
-    int count_per_string[nbTargetNames];
-    const int initial_count = 0x800;
-    const int max_hash_size = 0x100;
-    const int max_delta_count = 0x10;
+    BinHash<DnsHashEntry> hashTable;
+    int count_per_string[nbTargetNames+1];
+    const int initial_count = 0x10000;
+    const int max_hash_size = 0x8000;
+    const int max_delta_count = 0x80;
+    const int max_tld_leakage_count = 0x80;
     int current_count = initial_count;
     int total_keys = 0;
     int dropped_keys = 0;
     int kept_keys = 0;
     int expected_count = 0;
+    int hashed_count = 0;
+    int hashed_total = 0;
     bool ret = true;
     size_t * rand_table = NULL;
 
-    for (size_t i = 0; i < nbTargetNames; i++) {
+    fill_initial_table(&hashTable);
+
+    for (size_t i = 1; i <= nbTargetNames; i++) {
         total_keys += current_count;
-        if (i < max_hash_size)
+        if (i <= max_tld_leakage_count)
         {
             expected_count += current_count;
         }
@@ -244,6 +376,9 @@ bool TldCountTest::DoTest()
             current_count >>= 1;
         }
     }
+
+    count_per_string[0] = 3*total_keys;
+    total_keys *= 4;
 
     /* Simulate random arrivals */
     rand_table = new size_t[total_keys];
@@ -254,7 +389,7 @@ bool TldCountTest::DoTest()
     } else {
         int table_rank = 0;
         /* Build a list of ID with desired size and repetition */
-        for (size_t i = 0; i < nbTargetNames; i++) {
+        for (size_t i = 0; i <= nbTargetNames; i++) {
             for (int c = 0; c < count_per_string[i] && table_rank < total_keys; c++) {
                 rand_table[table_rank++] = i;
             }
@@ -262,7 +397,7 @@ bool TldCountTest::DoTest()
 
         /* Random shuffle of the list to simulate random arrivals */
         for (int r = total_keys - 1; r >= 1; r--) {
-            int x = rand() % (r + 1);
+            int x = random_uniform((uint32_t)(r + 1));
 
             if (x != r) {
                 size_t rtx = rand_table[x];
@@ -275,8 +410,19 @@ bool TldCountTest::DoTest()
         for (int i = 0; i < total_keys; i++)
         {
             bool stored = false;
-            char const * tld = TargetNames[rand_table[i]];
+            char rand_name[RANDOM_TLD_LENGTH + 1];
+            char const * tld = (rand_table[i] == 0)? random_tld(rand_name): TargetNames[rand_table[i]-1];
             TldAsKey key((uint8_t *)tld, strlen(tld));
+            TldAsKey * inserted = NULL;
+            DnsHashEntry counter_entry;
+
+            counter_entry.registry_id = REGISTRY_DNS_TLD_Usage_Count;
+            counter_entry.key_type = 0;
+            counter_entry.key_length = sizeof(uint32_t);
+            counter_entry.key_number = 0;
+            counter_entry.count = 1;
+
+            (void)hashTable.InsertOrAdd(&counter_entry, true, &stored);
 
             if (tldStringUsage.GetCount() >= max_hash_size)
             {
@@ -287,38 +433,186 @@ bool TldCountTest::DoTest()
                     delete removed;
                 }
             }
-
-            tldStringUsage.InsertOrAdd(&key, true, &stored);
+            inserted = tldStringUsage.InsertOrAdd(&key, true, &stored);
+            if (inserted != NULL && rand_table[i] > 0 && (int)inserted->count > count_per_string[rand_table[i]]) {
+                TEST_LOG("TLD %s, count %d instead of %d\n",
+                    TargetNames[rand_table[i] - 1], inserted->count, count_per_string[rand_table[i]]);
+            }
         }
 
         /* Simulate extraction */
-        for (size_t i = 0; i < tldStringUsage.GetSize(); i++)
-        {
-            TldAsKey *tld_entry = tldStringUsage.GetEntry(i);
+        if (tldStringUsage.GetCount() > 0) {
+            TldAsKey *tld_entry;
+            std::vector<TldAsKey *> lines(tldStringUsage.GetCount());
+            int vector_index = 0;
+            uint32_t export_count = 0;
 
-            while (tld_entry != NULL)
+
+            for (uint32_t i = 0; i < tldStringUsage.GetSize(); i++)
             {
-                kept_keys += tld_entry->count;
-                tld_entry = tld_entry->HashNext;
+                tld_entry = tldStringUsage.GetEntry(i);
+
+                while (tld_entry != NULL)
+                {
+                    int tld_index = GetTldIndex(tld_entry->tld, tld_entry->tld_len);
+                    if (tld_index >= 0) {
+                        if (tld_index < max_tld_leakage_count &&
+                            count_per_string[tld_index + 1] != tld_entry->count) {
+                            TEST_LOG("TLD %s, count %d instead of %d\n",
+                                TargetNames[tld_index], tld_entry->count, count_per_string[tld_index + 1]);
+                            if ((int)tld_entry->count > count_per_string[tld_index + 1]) {
+                                ret = false;
+                            }
+                        }
+                    }
+
+                    lines[vector_index] = tld_entry;
+                    vector_index++;
+                    tld_entry = tld_entry->HashNext;
+                }
+            }
+
+            std::sort(lines.begin(), lines.end(), TldAsKey::CompareTldEntries);
+
+            /* Retain the N most interesting values */
+            for (size_t i = 0; i < lines.size(); i++)
+            {
+                if (export_count < max_tld_leakage_count)
+                {
+                    kept_keys += lines[i]->count;
+                    export_count++;
+                    int tld_index = GetTldIndex(lines[i]->tld, lines[i]->tld_len);
+                    DnsHashEntry key;
+                    bool stored = false;
+
+                    key.count = lines[i]->count;
+                    key.registry_id = REGISTRY_DNS_Frequent_TLD_Usage;
+                    key.key_length = lines[i]->tld_len;
+                    key.key_type = 1; /* string */
+                    memcpy(key.key_value, lines[i]->tld, lines[i]->tld_len);
+                    key.key_value[lines[i]->tld_len] = 0;
+
+                    (void)hashTable.InsertOrAdd(&key, true, &stored);
+
+                    if (tld_index < 0) {
+                        if (lines[i]->count > 1) {
+                            TEST_LOG("rank %d, random name, length %d, count %d\n",
+                                i, lines[i]->tld_len, lines[i]->count);
+                        }
+                    } else {
+                        if (count_per_string[tld_index + 1] != lines[i]->count) {
+                            TEST_LOG("rank %d, %s, count %d instead of %d\n",
+                                i, TargetNames[tld_index], lines[i]->count, count_per_string[tld_index + 1]);
+                            if ((int)lines[i]->count > count_per_string[tld_index + 1]) {
+                                ret = false;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    dropped_keys += lines[i]->count;
+                }
             }
         }
 
         /* Verify count */
-        ret = ((kept_keys + dropped_keys) == total_keys);
+        ret &= ((kept_keys + dropped_keys) == total_keys);
 
         if (!ret) {
             TEST_LOG("Tld count test, kept_keys + dropped_keys: %d + %d = %d != total: %d\n",
                 kept_keys, dropped_keys, kept_keys + dropped_keys, total_keys);
-        }
-        else {
+        } else {
             int delta_count = expected_count - kept_keys;
 
-            ret = (delta_count <= max_delta_count);
+            ret = (delta_count <= max_delta_count) && (-delta_count <= max_delta_count);
             if (!ret) {
                 TEST_LOG("Tld count test, expected_count: %d >> kept_keys: %d\n",
                     expected_count, kept_keys);
             }
         }
+
+        if (ret){
+            /* Verify the values from the hash table */
+            DnsHashEntry *entry;
+
+            for (uint32_t i = 0; i < hashTable.GetSize(); i++)
+            {
+                entry = hashTable.GetEntry(i);
+
+                while (entry != NULL)
+                {
+                    if (entry->registry_id == REGISTRY_DNS_Frequent_TLD_Usage) {
+                        hashed_count += entry->count;
+                    }
+                    else if (entry->registry_id == REGISTRY_DNS_TLD_Usage_Count) {
+                        hashed_total = entry->count;
+                    }
+
+                    entry = entry->HashNext;
+                }
+            }
+
+            if (hashed_count != kept_keys) {
+                TEST_LOG("Tld sum count after hash: %d  != kept_keys: %d\n",
+                    hashed_count, kept_keys);
+                ret = false;
+            } else if (hashed_total != total_keys) {
+                TEST_LOG("Tld total from hash: %d  != total_keys: %d\n",
+                    hashed_total, total_keys);
+                ret = false;
+            }
+        }
     }
     return ret;
+}
+
+int TldCountTest::GetTldIndex(uint8_t * tld, size_t tld_len)
+{
+    int low = -1;
+    int high = nbTargetNames;
+    int middle;
+    int found = -1;
+
+    while (found == -1 && low < high) {
+        uint8_t * r;
+        size_t r_len;
+        int cmp = 0;
+
+        middle = low + (high - low) / 2;
+
+        if (middle == low || middle == high) {
+            break;
+        }
+
+        r = (uint8_t *) TargetNames[middle];
+        r_len = strlen(TargetNames[middle]);
+
+
+        for (size_t i = 0; cmp == 0 &&  i < tld_len; i++) {
+            if (i > r_len || tld[i] > r[i]) {
+                cmp = 1; /* Tld is below middle */
+            }
+            else if (tld[i] < r[i]) {
+                cmp = -1; /* Tld is above middle */
+            }
+        }
+        if (cmp == 0 && r_len > tld_len) {
+            cmp = -1; /* name is longer, tld is below it  */
+        }
+
+        switch (cmp) {
+        case -1:
+            high = middle;
+            break;
+        case 0:
+            found = middle;
+            break;
+        case 1:
+            low = middle;
+            break;
+        }
+    }
+
+    return found;
 }
