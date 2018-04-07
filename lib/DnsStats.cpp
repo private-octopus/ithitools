@@ -40,7 +40,8 @@ DnsStats::DnsStats()
     max_tld_leakage_count(0x80),
     max_tld_leakage_table_count(0x8000),
     max_tld_string_usage_count(0x8000),
-    enable_frequent_address_filtering(false)
+    enable_frequent_address_filtering(false),
+    is_capture_stopped(false)
 {
 }
 
@@ -974,11 +975,13 @@ void DnsStats::ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id,
 void DnsStats::ExportLeakedDomains()
 {
     ExportDomains(&tldLeakage, REGISTRY_DNS_LeakedTLD, true);
+    tldLeakage.Clear();
 }
 
 void DnsStats::ExportStringUsage()
 {
     ExportDomains(&tldStringUsage, REGISTRY_DNS_Frequent_TLD_Usage, false);
+    tldStringUsage.Clear();
 }
 
 void DnsStats::LoadRegisteredTLD_from_memory()

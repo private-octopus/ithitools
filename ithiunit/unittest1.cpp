@@ -139,6 +139,13 @@ namespace ithiunit
             Assert::AreEqual(ret, true);
         }
 
+        TEST_METHOD(BadPlugin)
+        {
+            PluginTestBad test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
         TEST_METHOD(CsvHelper)
         {
             CsvTest test;

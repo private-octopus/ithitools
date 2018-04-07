@@ -31,9 +31,23 @@ public:
     ~PluginTest();
 
     bool DoTest() override;
+    bool DoOneTest(int nb_repeat);
+    
 private:
     bool LoadPcapFile(char const * fileName);
     void LoadOpt(int argc, char * argv[]);
+};
+
+class PluginTestBad : public ithi_test_class
+{
+public:
+    PluginTestBad();
+    ~PluginTestBad();
+
+    bool DoTest() override;
+
+private:
+    PluginTest p_test;
 };
 
 #endif /* PLUGIN_TEST_H */

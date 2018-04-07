@@ -32,6 +32,7 @@ enum test_list_enum {
     test_enum_MetricCaptureFile,
     test_enum_Pattern,
     test_enum_Plugin,
+    test_enum_BadPlugin,
     test_enum_Csv,
     test_enum_M2Data,
     test_enum_Publish,
@@ -79,6 +80,8 @@ char const * ithi_test_class::GetTestName(int number)
         return("pattern");
     case test_enum_Plugin:
         return("plugin");
+    case test_enum_BadPlugin:
+        return ("badPlugin");
     case test_enum_Csv:
         return("csv");
     case test_enum_M2Data:
@@ -149,6 +152,9 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_enum_Plugin:
         test = new PluginTest();
+        break;
+    case test_enum_BadPlugin:
+        test = new PluginTestBad();
         break;
     case test_enum_Csv:
         test = new CsvTest();

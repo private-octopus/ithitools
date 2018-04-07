@@ -197,10 +197,18 @@ extern "C"
      * collection interval, which might be based on a period
      * of time or a number of packets.  In the original code,
      * this is where we opened an output pcap file.
+     *
+     * The plugin is designed to capture only the first set or
+     * the first interval.
      */
     int libithicap_open(my_bpftimeval ts)
     {
-        /* Todo: reset stats object to initial state */
+        /* Check that this is not a double open */
+        if (libithicap_stats == NULL) {
+            return -1;
+        } else if (libithicap_stats->IsCaptureStopped()) {
+            return -1;
+        }
         return 0;
     }
 
@@ -210,32 +218,41 @@ extern "C"
      * collection interval, which might be based on a period
      * of time or on a number of packets.  In the original code
      * this is where we closed an output pcap file.
+     *
+     * The first interval closes the capture. If the capture is
+     * already closed, return an error.
      */
     int libithicap_close(my_bpftimeval ts)
     {
         int exit_code = 0;
         CaptureSummary cs;
 
-        if (!libithicap_stats->ExportToCaptureSummary(&cs))
-        {
-
-            if (logerr != NULL)
-            {
-                logerr("libithicap cannot process the capture summary.\n");
-            }
+        if (libithicap_stats == NULL ||
+            libithicap_stats->IsCaptureStopped()) {
             exit_code = -1;
+        } else {
+            libithicap_stats->StopCapture();
 
-        }
-        else if (!cs.Save(libithicap_out_file))
-        {
-            if (logerr != NULL)
+            if (!libithicap_stats->ExportToCaptureSummary(&cs))
             {
-                logerr("libithicap cannot save the capture summary on <%s>.\n",
-                    libithicap_out_file);
-            }
-            exit_code = -1;
-        }
 
+                if (logerr != NULL)
+                {
+                    logerr("libithicap cannot process the capture summary.\n");
+                }
+                exit_code = -1;
+
+            }
+            else if (!cs.Save(libithicap_out_file))
+            {
+                if (logerr != NULL)
+                {
+                    logerr("libithicap cannot save the capture summary on <%s>.\n",
+                        libithicap_out_file);
+                }
+                exit_code = -1;
+            }
+        }
         return exit_code;
     }
 
@@ -258,6 +275,11 @@ extern "C"
         size_t source_addr_length;
         uint8_t * dest_addr;
         size_t dest_addr_length;
+
+        if (libithicap_stats == NULL ||
+            libithicap_stats->IsCaptureStopped()) {
+            return;
+        }
 
         if ((flags & DNSCAP_OUTPUT_ISDNS) == 0)
         {

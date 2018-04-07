@@ -129,8 +129,12 @@ bool PluginTest::LoadPcapFile(char const * fileName)
                     /* If not open yet, open it */
                     if (!is_open)
                     {
-                        libithicap_open(ts);
-                        is_open = true;
+                        if (libithicap_open(ts) != 0) {
+                            ret = false;
+                            break;
+                        } else {
+                            is_open = true;
+                        }
                     }
 
                     /* Submit to the plugin */
@@ -148,7 +152,10 @@ bool PluginTest::LoadPcapFile(char const * fileName)
 
         if (is_open)
         {
-            libithicap_close(ts);
+            if (libithicap_close(ts) != 0)
+            {
+                ret = false;
+            }
         }
     }
 
@@ -156,6 +163,11 @@ bool PluginTest::LoadPcapFile(char const * fileName)
 }
 
 bool PluginTest::DoTest()
+{
+    return DoOneTest(1);
+}
+
+bool PluginTest::DoOneTest(int nb_repeat)
 {
     bool ret = true;
     int argc = 3;
@@ -172,7 +184,13 @@ bool PluginTest::DoTest()
     libithicap_start(NULL);
     
     /* Load the data, which will deal with open and close */
-    ret = LoadPcapFile(pcap_input_test);
+    for (int i = 0; ret && i < nb_repeat; i++) {
+        ret = LoadPcapFile(pcap_input_test);
+    }
+
+    if (nb_repeat > 1) {
+        ret = !ret;
+    }
 
     /* Stop the plugin */
     libithicap_stop();
@@ -199,4 +217,17 @@ bool PluginTest::DoTest()
     }
 
     return ret;
+}
+
+PluginTestBad::PluginTestBad()
+{
+}
+
+PluginTestBad::~PluginTestBad()
+{
+}
+
+bool PluginTestBad::DoTest()
+{
+    return p_test.DoOneTest(10);
 }

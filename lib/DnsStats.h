@@ -173,7 +173,13 @@ public:
     /* For the command line tools */
     bool LoadPcapFiles(size_t nb_files, char const ** fileNames);
     bool ExportToCaptureSummary(CaptureSummary * cs);
+
+    bool IsCaptureStopped() { return is_capture_stopped; };
+    void StopCapture() { is_capture_stopped = true; }
     
+
+
+    bool is_capture_stopped;
     bool enable_frequent_address_filtering;
     uint32_t frequent_address_max_count;
     uint32_t max_tld_leakage_count; 
