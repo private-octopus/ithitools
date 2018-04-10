@@ -21,7 +21,17 @@
     
     var M2Data;
 
-    var M2DataMax = [5, 200, 5, 5];
+    var M2DataMax = [10, 10, 10, 200, 10, 10, 10, 200];
+    var M2DisplayPilot = [
+        ["valM2111", "averageM2111", "valM2112", "valM2113", "graphM211"],
+        ["valM2121", "averageM2121", "valM2122", "valM2123", "graphM212"],
+        ["valM2131", "averageM2131", "valM2132", "valM2133", "graphM213"],
+        ["valM2141", "averageM2141", "valM2142", "valM2143", "graphM214"],
+        ["valM2211", "averageM2211", "valM2212", "valM2213", "graphM221"],
+        ["valM2221", "averageM2221", "valM2222", "valM2223", "graphM222"],
+        ["valM2231", "averageM2231", "valM2232", "valM2233", "graphM223"],
+        ["valM2241", "averageM2241", "valM2242", "valM2243", "graphM224"],
+    ];
 
     function init() {
         initnav();
@@ -44,20 +54,22 @@
 
         // Set the text values that depend on the current data
         setDateElement(M2Data.date);
-        setValElement("valM21", getLastElement(M2Data.m2Val[0]));
-        setValElement("valM22", getLastElement(M2Data.m2Val[1]));
-        setValElement("valM23", getLastElement(M2Data.m2Val[2]));
-        setValElement("valM24", getLastElement(M2Data.m2Val[3]));
-        setValElement("averageM21", getAverageElement(M2Data.m2Val[0]));
-        setValElement("averageM22", getAverageElement(M2Data.m2Val[1]));
-        setValElement("averageM23", getAverageElement(M2Data.m2Val[2]));
-        setValElement("averageM24", getAverageElement(M2Data.m2Val[3]));
 
-        // Draw the relevant graphs
-        plotGraphM2("graphM21", M2Data.m2Val[0], 10, "#404040C0");
-        plotGraphM2("graphM22", M2Data.m2Val[1], 10, "#404040C0");
-        plotGraphM2("graphM23", M2Data.m2Val[2], 10, "#404040C0");
-        plotGraphM2("graphM24", M2Data.m2Val[3], 200, "#404040C0");    
+        if (M2Data.m2Val.length >= 8 && M2DisplayPilot.length >= 8 && M2DataMax.length >= length) {
+            for (xMet = 0; xMet < 8; xMet++) {
+                setM2MetricLine(M2Data.m2Val[xMet], M2DisplayPilot[xMet], M2DataMax[xMet], "#404040C0");
+            }
+        }
+    }
+
+    function setM2MetricLine(metricLine, pilotLine, valmax, graphColor) {
+        if (metricLine.length >= 3 && pilotLine.length >= 5) {
+            setValElement(pilotLine[0], getLastElement(metricLine[0]));
+            setValElement(pilotLine[1], getAverageElement(metricLine[0]));
+            setValElement(pilotLine[2], metricLine[1]);
+            setValElement(pilotLine[3], metricLine[2]);
+            plotGraphM2(pilotLine[4], metricLine[0], valmax, graphColor);
+        }
     }
 
     function setDateElement(dateValue)
@@ -102,9 +114,9 @@
                 first = dataSet.length - 13;
             }
             average = 0;
-            for (i = first; i <= last; i++)
+            for (iAv = first; iAv <= last; iAv++)
             {
-                average += dataSet[i];
+                average += dataSet[iAv];
             }
             average /= (last + 1 - first);
 
@@ -185,120 +197,285 @@ function setScale(canvasId, v_max)
 
 <body onLoad="init()">
 
-<nav id="navMenu"></nav>
+    <nav id="navMenu"></nav>
 
-<h1>M2: Domain Name Abuse</h1>
+    <h1>M2: Domain Name Abuse</h1>
 
-<h2 id="dateHeading">-</h2>
+    <h2 id="dateHeading">-</h2>
 
     <p>
         The domain name abuses are tracked by measuring the number of registered domain
-        names used in four kinds of abuse: phishing, malware distribution,  
-        command and control of botnets, and spam. M2 comprises 4 different sub metrics, 
-        one for each type of abuse. For each of these abuse, the metric is defined
-        as the number of domains engaged in that type of abuse for 10000 domains.
+        names used in four kinds of abuse: phishing, malware distribution,
+        command and control of botnets, and spam. The number of abusive domains are tabulated
+        either based on the TLD in which they are registered (Measures M2.1.*.*) or based
+        on the registrar that registered tham (Measures M2.2.*.*). The values measured
+        each way differ. One reason for the difference is the inclusion of "parked"
+        domains in the TLD counts. These domains are known to be used for abuse, have
+        been taken over by law enforcement or by other regulation systems, and are 
+        "parked" in specialized registrars. These specialized registrars are not included
+        in the metrics "per registrar".
+        </p>
+    <p>
+        Each subset of M2 comprises 4 different sub metrics,
+        one for each type of abuse. For each of these abuse, the first metric (M2.*.*.1) is defined
+        as the number of domains engaged in that type of abuse for 10000 domains. The second and third 
+        metric measure the "shape" of the distribution of abuse with two key values: the minimum number
+        of agents (TLD or registrars) that account for 50% of this type of abuse, and the minimum
+        number that account for 90% of the abuse.
     </p>
-    <p> The following table provides the value observed 
-        for these metrics in the current month, as well as the average value over the
-        12 months preceeding this one -- or the average since the beginning of 
-        measurements if measurements started fewer than 12 months ago.
+    <p>
+        The following table provides the value observed
+        for the "abuse per 10,000 domains" metric in the current month, as well as the average value over the
+        12 months preceeding this one -- or the average since the beginning of
+        measurements if measurements started fewer than 12 months ago. The columns "Nb 50%"
+        and "Nb 90%" provide the minimum number of TLD or Registrars that account for 50% or 90%
+        of the abuse.
     </p>
 
-<table class="metrics">
-    <tr>
-        <th>M2 metric name</th>
-        <th  class="number">Current value</th>
-        <th class="number">Average value</th>
-    </tr>
-    <tr>
-        <td>
-            <a href="#M21">
-                M2.1 = number of Phishing Domains per 10000 registered domain names
-            </a>
-        </td>
-        <td align="right" id="valM21" class="number">
-            -
-        </td>
-        <td align="right" id="averageM21"  class="number">
-            -
-        </td>
-    </tr>
-    <tr>
-        <td>
-            <a href="#M22">
-                M2.2 = number of Malware Domains per 10,000 registered domain names
-             </a>
-        </td>
-        <td align="right" id="valM22"  class="number">
-            -
-        </td>
-        <td align="right" id="averageM22" class="number">
-            -
-        </td>
-    </tr>
-    <tr>
-        <td>
-            <a href="#M21">
-                M2.3 = number of Botnet C&C Domains per 10,000 registered domain names
-            </a>
-        </td>
-        <td align="right" id="valM23" class="number">
-            -
-        </td>
-        <td align="right" id="averageM23" class="number">
-            -
-        </td>
-    </tr>
-    <tr>
-        <td>
-            <a href="#M24">
-                M2.4 = number of Spam Domains per 10,000 registered domain names
-            </a>
-        </td>
-        <td align="right" id="valM24" class="number">
-            -
-        </td>
-        <td align="right" id="averageM24" class="number">
-            -
-        </td>
-    </tr>
-</table>
+    <table class="metrics">
+        <tr>
+            <th>M2 metric name</th>
+            <th class="number">Current</th>
+            <th class="number">Average</th>
+            <th class="number">Nb 50%</th>
+            <th class="number">Nb 90%</th>
+        </tr>
+        <tr>
+            <th colspan="5"><em>Metrics for Registries (TLD)</em></th>
+        </tr>
+        <tr>
+            <td>
+                <a href="#M211">
+                    M2.1 = number of Phishing Domains per 10000 domain names
+                </a>
+            </td>
+            <td align="right" id="valM2111" class="number">
+                -
+            </td>
+            <td align="right" id="averageM2111" class="number">
+                -
+            </td>
+            <td align="right" id="valM2112" class="number">
+                -
+            </td>
+            <td align="right" id="valM2113" class="number">
+                -
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <a href="#M212">
+                    M2.2 = number of Malware Domains per 10,000 domain names
+                </a>
+            </td>
+            <td align="right" id="valM2121" class="number">
+                -
+            </td>
+            <td align="right" id="averageM2121" class="number">
+                -
+            </td>
+            <td align="right" id="valM2122" class="number">
+                -
+            </td>
+            <td align="right" id="valM2123" class="number">
+                -
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <a href="#M213">
+                    M2.3 = number of Botnet C&C Domains per 10,000 domain names
+                </a>
+            </td>
+            <td align="right" id="valM2131" class="number">
+                -
+            </td>
+            <td align="right" id="averageM2131" class="number">
+                -
+            </td>
+            <td align="right" id="valM2132" class="number">
+                -
+            </td>
+            <td align="right" id="valM2133" class="number">
+                -
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <a href="#M214">
+                    M2.4 = number of Spam Domains per 10,000 domain names
+                </a>
+            </td>
+            <td align="right" id="valM2141" class="number">
+                -
+            </td>
+            <td align="right" id="averageM2141" class="number">
+                -
+            </td>
+            <td align="right" id="valM2142" class="number">
+                -
+            </td>
+            <td align="right" id="valM2143" class="number">
+                -
+            </td>
+        </tr>
+        <tr><td colspan="5"> </td></tr>
+        <tr>
+            <th colspan="5"><em>Metrics for registrars</em></th>
+        </tr>
+        <tr>
+            <td>
+                <a href="#M221">
+                    M2.1 = number of Phishing Domains per 10000 registered domain names
+                </a>
+            </td>
+            <td align="right" id="valM2211" class="number">
+                -
+            </td>
+            <td align="right" id="averageM2211" class="number">
+                -
+            </td>
+            <td align="right" id="valM2212" class="number">
+                -
+            </td>
+            <td align="right" id="valM2213" class="number">
+                -
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <a href="#M222">
+                    M2.2 = number of Malware Domains per 10,000 registered domain names
+                </a>
+            </td>
+            <td align="right" id="valM2221" class="number">
+                -
+            </td>
+            <td align="right" id="averageM2221" class="number">
+                -
+            </td>
+            <td align="right" id="valM2222" class="number">
+                -
+            </td>
+            <td align="right" id="valM2223" class="number">
+                -
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <a href="#M223">
+                    M2.3 = number of Botnet C&C Domains per 10,000 registered domain names
+                </a>
+            </td>
+            <td align="right" id="valM2231" class="number">
+                -
+            </td>
+            <td align="right" id="averageM2231" class="number">
+                -
+            </td>
+            <td align="right" id="valM2232" class="number">
+                -
+            </td>
+            <td align="right" id="valM2233" class="number">
+                -
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <a href="#M224">
+                    M2.4 = number of Spam Domains per 10,000 registered domain names
+                </a>
+            </td>
+            <td align="right" id="valM2241" class="number">
+                -
+            </td>
+            <td align="right" id="averageM2241" class="number">
+                -
+            </td>
+            <td align="right" id="valM2242" class="number">
+                -
+            </td>
+            <td align="right" id="valM2243" class="number">
+                -
+            </td>
+        </tr>
+    </table>
     <p>
-        The following graphs show the evolution over time of these 4 metrics. 
+        The following graphs show the evolution over time of these 4 metrics.
         Please pay attention to the scale, as the number of spam domains is much
-        larger than the number of domains used in the other forms of malware.
+        larger than the number of domains involved in the other forms of malware.
     </p>
 
-    <h3 id="M21">M2.1 = number of Phishing Domains per 10000 registered domain names</h3>
+    <h2>Evolution of metrics per registry (TLD)</h2>
+
+    <h3 id="M211">M2.1.1 = number of Phishing Domains per 10000 domain names</h3>
     <p>
-        The following graph shows the evolution of the phishing domain metric M2.1 over time:
+        The following graph shows the evolution of the phishing domain metric M2.1.1 over time.
+        This metric is measured on a set of tracked GTLD.
     </p>
 
-    <canvas id="graphM21" height="400" width="650"></canvas>
+    <canvas id="graphM211" height="400" width="650"></canvas>
 
 
-    <h3 id="M22">M2.2 = number of Malware Domains per 10,000 registered domain names</h3>
+    <h3 id="M212">M2.1.2 = number of Malware Domains per 10,000 domain names</h3>
     <p>
-        The following graph shows the evolution of the malware domain metric M2.2 over time:
+        The following graph shows the evolution of the malware domain metric M2.1.2 over time.
+        This metric is measured on a set of tracked GTLD.
     </p>
 
-    <canvas id="graphM22" height="400" width="650"></canvas>
+    <canvas id="graphM212" height="400" width="650"></canvas>
 
 
-    <h3 id="M23">M2.3 = number of Botnet C&C Domains per 10,000 registered domain names</h3>
+    <h3 id="M213">M2.1.3 = number of Botnet C&C Domains per 10,000 domain names</h3>
     <p>
-        The following graph shows the evolution of the botnet command and control domain metric M2.3 over time:
+        The following graph shows the evolution of the botnet command and control domain metric M2.1.3 over time.
+        This metric is measured on a set of tracked GTLD.
     </p>
 
-    <canvas id="graphM23" height="400" width="650"></canvas>
+    <canvas id="graphM213" height="400" width="650"></canvas>
 
 
-    <h3 id="M24">M2.4 = number of Spam Domains per 10,000 registered domain names</h3>
+    <h3 id="M214">M2.1.4 = number of Spam Domains per 10,000 domain names</h3>
     <p>
-        The following graph shows the evolution of the spam domain metric M2.4 over time:
+        The following graph shows the evolution of the spam domain metric M2.1.4 over time.
+        This metric is measured on a set of tracked GTLD.
     </p>
 
-    <canvas id="graphM24" height="400" width="650"> - </canvas>
+    <canvas id="graphM214" height="400" width="650"> - </canvas>
+
+    <h2>Evolution of metrics M2.2.* per registrar</h2>
+
+    <h3 id="M221">M2.2.1 = number of Phishing Domains per 10000 registered domain names</h3>
+    <p>
+        The following graph shows the evolution of the phishing domain metric M2.2.1 over time.
+        This metric is measured on a set of tracked registrars.
+    </p>
+
+    <canvas id="graphM221" height="400" width="650"></canvas>
+
+    <h3 id="M222">M2.2.2 = number of Malware Domains per 10,000 registered domain names</h3>
+    <p>
+        The following graph shows the evolution of the malware domain metric M2.2.2 over time.
+        This metric is measured on a set of tracked registrars.
+    </p>
+
+    <canvas id="graphM222" height="400" width="650"></canvas>
+
+    <h3 id="M223">M2.2.3 = number of Botnet C&C Domains per 10,000 registered domain names</h3>
+    <p>
+        The following graph shows the evolution of the botnet command and control domain metric M2.2.3 over time.
+        This metric is measured on a set of tracked registrars.
+    </p>
+
+    <canvas id="graphM223" height="400" width="650"></canvas>
+
+    <h3 id="M224">M2.2.4 = number of Spam Domains per 10,000 registered domain names</h3>
+    <p>
+        The following graph shows the evolution of the spam domain metric M2.2.4 over time.
+        This metric is measured on a set of tracked registrars.
+    </p>
+
+    <canvas id="graphM224" height="400" width="650"> - </canvas>
 
 </body>
 </html>
