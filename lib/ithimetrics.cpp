@@ -41,7 +41,8 @@ ithimetrics::ithimetrics()
     ithi_folder(NULL),
     root_capture_file_name(NULL),
     recursive_capture_file_name(NULL),
-    abuse_file_name(NULL),
+    abuse_file_name_tlds(NULL),
+    abuse_file_name_registrars(NULL),
     root_zone_file_name(NULL)
 {
     for (int i = 0; i < 7; i++) {
@@ -61,9 +62,14 @@ ithimetrics::~ithimetrics() {
         ithi_folder = NULL;
     }
 
-    if (abuse_file_name == NULL) {
-        free(abuse_file_name);
-        abuse_file_name = NULL;
+    if (abuse_file_name_tlds == NULL) {
+        free(abuse_file_name_tlds);
+        abuse_file_name_tlds = NULL;
+    }
+
+    if (abuse_file_name_registrars == NULL) {
+        free(abuse_file_name_registrars);
+        abuse_file_name_registrars = NULL;
     }
 
     for (int i = 0; i < 7; i++) {
@@ -147,9 +153,10 @@ bool ithimetrics::SetDefaultDate(time_t current_time)
     return ret;
 }
 
-bool ithimetrics::SetDefaultAbuseFileName(time_t current_time)
-{
-    bool ret = (abuse_file_name == NULL);
+bool ithimetrics::SetDefaultAbuseFileName(time_t current_time, M2DataType f_type)
+{ 
+    bool ret = (f_type == TLD || f_type == Registrar);
+    bool is_set = (GetAbuseFileName(f_type) != NULL);
     char file_name_buffer[512];
 
     if (ret && ithi_folder == NULL)
@@ -162,19 +169,56 @@ bool ithimetrics::SetDefaultAbuseFileName(time_t current_time)
         ret = SetDefaultDate(time(0));
     }
 
-    if (ret)
+    if (ret && !is_set)
     {
         ret = snprintf(file_name_buffer, sizeof(file_name_buffer),
-            "%s%sinput%sM2%s%s_tlds.csv", 
-            ithi_folder, ITHI_FILE_PATH_SEP, ITHI_FILE_PATH_SEP, ITHI_FILE_PATH_SEP, metric_date) > 0;
+            "%s%sinput%sM2%s%s%s", 
+            ithi_folder, ITHI_FILE_PATH_SEP, ITHI_FILE_PATH_SEP, ITHI_FILE_PATH_SEP, 
+            metric_date, M2Data::get_file_suffix(f_type)) > 0;
 
         if (ret)
         {
-            ret = SetAbuseFileName(file_name_buffer);
+            ret = SetAbuseFileName(file_name_buffer, f_type);
         }
     }
 
     return ret;
+}
+
+bool ithimetrics::SetAbuseFileName(char const * abuse_file_name, M2DataType f_type)
+{
+    bool ret = false;
+
+    switch (f_type) {
+    case TLD:
+        ret = copy_name(&this->abuse_file_name_tlds, abuse_file_name);
+        break;
+    case Registrar:
+        ret = copy_name(&this->abuse_file_name_registrars, abuse_file_name);
+        break;
+    default:
+        break;
+    }
+
+    return ret;
+}
+
+const char * ithimetrics::GetAbuseFileName(M2DataType f_type)
+{
+    const char * name = NULL;
+
+    switch (f_type) {
+    case TLD:
+        name = abuse_file_name_tlds;
+        break;
+    case Registrar:
+        name = abuse_file_name_registrars;
+        break;
+    default:
+        break;
+    }
+
+    return name;
 }
 
 bool ithimetrics::SetRootCaptureFileName(char const * file_name)
@@ -271,12 +315,17 @@ bool ithimetrics::copy_name(char ** target, char const * name)
 bool ithimetrics::GetMetrics() {
     bool ret = false;
 
-    if (abuse_file_name == NULL)
+    if (abuse_file_name_tlds == NULL)
     {
-        (void)SetDefaultAbuseFileName(time(0));
+        (void)SetDefaultAbuseFileName(time(0),TLD);
     }
 
-    if (abuse_file_name != NULL && cm2.Load(abuse_file_name))
+    if (abuse_file_name_registrars == NULL)
+    {
+        (void)SetDefaultAbuseFileName(time(0), Registrar);
+    }
+
+    if (abuse_file_name_tlds != NULL != NULL && cm2.LoadTwoFiles(abuse_file_name_tlds, abuse_file_name_registrars))
     {
         metric_is_available[1] = cm2.Compute();
         ret |= metric_is_available[1];
@@ -403,13 +452,6 @@ bool ithimetrics::Save(char const * file_name)
     {
         fclose(F);
     }
-
-    return ret;
-}
-
-bool ithimetrics::SetAbuseFileName(char const * abuse_file_name)
-{
-    bool ret = copy_name(&this->abuse_file_name, abuse_file_name);
 
     return ret;
 }

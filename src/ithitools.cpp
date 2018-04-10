@@ -74,7 +74,9 @@ int usage()
     fprintf(stderr, "                     If not specified, use current day.\n");
     fprintf(stderr, "  -y accuracy.csv    CSV file containing accuracy data needed for M1.\n");
     fprintf(stderr, "                     If not specified, M1 data is read from (ITHI)/input/M1/\n");
-    fprintf(stderr, "  -b abuse.csv       CSV file containing abuse data needed for M2.\n");
+    fprintf(stderr, "  -b abuse.csv       CSV file containing TLD abuse data needed for M2.\n");
+    fprintf(stderr, "                     If not specified, M2 data is read from (ITHI)/input/M2/\n");
+    fprintf(stderr, "  -B abuse.csv       CSV file containing Registrars abuse data needed for M2.\n");
     fprintf(stderr, "                     If not specified, M2 data is read from (ITHI)/input/M2/\n");
     fprintf(stderr, "  -r summary.csv     CSV file containing summary of root server traffic\n");
     fprintf(stderr, "                     for M3. If not specified, data is read from\n");
@@ -158,7 +160,6 @@ int main(int argc, char ** argv)
     char const * capture_summary_list = NULL;
     char const * ithi_folder = NULL;
     char const * accuracy_file = NULL;
-    char const * abuse_file = NULL;
     char const * root_capture_file = NULL;
     char const * recursive_capture_file = NULL;
     char const * lies_file = NULL;
@@ -171,7 +172,7 @@ int main(int argc, char ** argv)
 
     /* Get the parameters */
     int opt;
-    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:M:t:u:i:d:y:b:z:l:1:2:3:4:5:6:7:S:w:hfcsmpT?")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:M:t:u:i:d:y:b:B:z:l:1:2:3:4:5:6:7:S:w:hfcsmpT?")) != -1)
     {
         switch (opt)
         {
@@ -261,10 +262,15 @@ int main(int argc, char ** argv)
             fprintf(stderr, "Sorry, Metric M1 not implemented yet.\n");
             break;
         case 'b':
-            abuse_file = optarg;
-            if (!met.SetAbuseFileName(optarg))
+            if (!met.SetAbuseFileName(optarg, TLD))
             {
-                fprintf(stderr, "Cannot set abuse file name = %s\n", optarg);
+                fprintf(stderr, "Cannot set TLD abuse file name = %s\n", optarg);
+            }
+            break;
+        case 'B':
+            if (!met.SetAbuseFileName(optarg, Registrar))
+            {
+                fprintf(stderr, "Cannot set Registrar abuse file name = %s\n", optarg);
             }
             break;
         case 'r':

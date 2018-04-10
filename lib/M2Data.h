@@ -41,11 +41,11 @@ public:
 
     static bool IsSooner(M2Data * x, M2Data * y);
     static bool TldIsSmaller(M2DataLine_t x, M2DataLine_t y);
-    static bool IsReservedRegistry(int registrar_id);
+    static bool IsReservedRegistrarId(int registrar_id);
 
     bool Load(char const * monthly_csv_file_name);
 
-    void ComputeMetrics(double ithi_m2[4]);
+    void ComputeMetrics(double ithi_m2[4], double ithi_media[4], double ithi_ninety[4]);
 
     void Sort();
 
@@ -53,6 +53,7 @@ public:
 
     char const * get_file_name(char const * monthly_csv_file_path);
     bool parse_file_name(char const * monthly_csv_file_name);
+    static char const * get_file_suffix(M2DataType f_type);
 
     std::vector<M2DataLine_t> dataset;
     int year;
@@ -61,6 +62,7 @@ public:
     M2DataType M2Type;
 };
 
+
 class ComputeM2 : public ComputeMetric
 {
 public:
@@ -68,10 +70,21 @@ public:
     ~ComputeM2();
 
     bool Load(char const * single_file_name) override;
+    bool LoadMultipleFiles(char const ** in_files, int nb_files) override;
+    bool LoadTwoFiles(char const * tld_file_name, char const * registrars_file_name);
     bool Compute() override;
     bool Write(FILE * F_out) override;
 
 private:
-    M2Data m2Data;
-    double ithi_m2[4];
+    M2Data m2Data_tlds;
+    M2Data m2Data_registrars;
+
+    bool ComputeM2::LoadSingleFile(char const * single_file_name, M2Data * f_data);
+
+    double ithi_m2_tlds[4];
+    double ithi_median_tlds[4];
+    double ithi_ninety_tlds[4];
+    double ithi_m2_registrars[4];
+    double ithi_median_registrars[4];
+    double ithi_ninety_registrars[4];
 };

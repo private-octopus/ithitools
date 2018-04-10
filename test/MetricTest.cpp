@@ -37,20 +37,23 @@ static char const * metric_test_input = "..\\data\\tiny-capture.csv";
 static char const * metric_test_output = "metric-test.csv";
 static char const * metric_test_ref = "..\\data\\tiny-metrics.csv";
 static char const * root_zone_file = "..\\data\\root.zone";
-static char const * tlds_test = "..\\data\\2017-01-31_tlds.csv";
+static char const * tlds_test_tlds = "..\\data\\2017-01-31_tlds.csv";
+static char const * tlds_test_registrars = "..\\data\\2017-01-31_registrars.csv";
 #else
 static char const * metric_test_input = "..\\..\\data\\tiny-capture.csv";
 static char const * metric_test_output = "metric-test.csv";
 static char const * metric_test_ref = "..\\..\\data\\tiny-metrics.csv";
 static char const * root_zone_file = "..\\..\\data\\root.zone";
-static char const * tlds_test = "..\\..\\data\\2017-01-31_tlds.csv";
+static char const * tlds_test_tlds = "..\\..\\data\\2017-01-31_tlds.csv";
+static char const * tlds_test_registrars = "..\\..\\data\\2017-01-31_registrars.csv";
 #endif
 #else
 static char const * metric_test_input = "data/tiny-capture.csv";
 static char const * metric_test_output = "metric-test.csv";
 static char const * metric_test_ref = "data/tiny-metrics.csv";
 static char const * root_zone_file = "data/root.zone";
-static char const * tlds_test = "data/2017-01-31_tlds.csv";
+static char const * tlds_test_tlds = "data/2017-01-31_tlds.csv";
+static char const * tlds_test_registrars = "data/2017-01-31_registrars.csv";
 #endif
 
 MetricTest::MetricTest()
@@ -86,10 +89,15 @@ bool MetricTest::DoTest()
             ret = false;
             TEST_LOG("Could not set capture file name to %s\n", metric_test_input);
         }
-        else if (!met.SetAbuseFileName(tlds_test))
+        else if (!met.SetAbuseFileName(tlds_test_tlds, TLD))
         {
             ret = false;
-            TEST_LOG("Could not set abuse file name to %s\n", tlds_test);
+            TEST_LOG("Could not set TLD abuse file name to %s\n", tlds_test_tlds);
+        }
+        else if (!met.SetAbuseFileName(tlds_test_registrars, Registrar))
+        {
+            ret = false;
+            TEST_LOG("Could not set Registrars abuse file name to %s\n", tlds_test_tlds);
         }
         else
         {

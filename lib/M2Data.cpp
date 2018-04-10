@@ -45,24 +45,24 @@ bool M2Data::TldIsSmaller(M2DataLine_t x, M2DataLine_t y)
  * which is used to park malware domains while taking down botnets and the like.
  */
 
-static const int m2data_reserved_registry[] = {
+static const int m2data_reserved_registrar_id[] = {
     1, 3, 8, 119, 376, 2482, 9995, 9996, 9997, 9998, 9999, 10009, 4000001, 8888888
 };
 
-static const size_t nb_m2data_reserved_registry = sizeof(m2data_reserved_registry) / sizeof(int);
+static const size_t nb_m2data_reserved_registrar_id = sizeof(m2data_reserved_registrar_id) / sizeof(int);
 
-bool M2Data::IsReservedRegistry(int registrar_id)
+bool M2Data::IsReservedRegistrarId(int registrar_id)
 {
     bool ret = false;
 
-    for (size_t i = 0; i < nb_m2data_reserved_registry; i++)
+    for (size_t i = 0; i < nb_m2data_reserved_registrar_id; i++)
     {
-        if (registrar_id == m2data_reserved_registry[i])
+        if (registrar_id == m2data_reserved_registrar_id[i])
         {
             ret = true;
             break;
         }
-        else if (registrar_id < m2data_reserved_registry[i])
+        else if (registrar_id < m2data_reserved_registrar_id[i])
         {
             break;
         }
@@ -76,6 +76,10 @@ bool M2Data::Load(char const * monthly_csv_file_name)
     FILE* F;
     M2DataLine_t line;
     char buffer[512];
+
+    if (M2Type == Unknown) {
+        parse_file_name(monthly_csv_file_name);
+    }
 
 #ifdef _WINDOWS
     errno_t err = fopen_s(&F, monthly_csv_file_name, "r");
@@ -134,9 +138,10 @@ bool M2Data::Load(char const * monthly_csv_file_name)
         start = CsvHelper::read_number(&line.LastMonthAbusiveDomains, start, buffer, sizeof(buffer));
         start = CsvHelper::read_double(&line.LastMonthAbuseScore, start, buffer, sizeof(buffer));
 
-        /* TODO: check that the parsing is good */
-        if (line.name[0] != 0 && line.Domains != 0)
-        {
+        if (M2Type == Registrar && IsReservedRegistrarId(line.RegistrarId)) {
+            /* Ignore data relative to parking registries */
+            continue;
+        } else if (line.name[0] != 0 && line.Domains != 0) {
             /* allocate data and add to vector */
             dataset.push_back(line);
         }
@@ -149,16 +154,23 @@ bool M2Data::Load(char const * monthly_csv_file_name)
     return ret;
 }
 
-void M2Data::ComputeMetrics(double ithi_m2[4])
+void M2Data::ComputeMetrics(double ithi_m2[4], double ithi_median[4], double ithi_ninety[4])
 {
     int totals[4] = { 0,0,0,0 };
+    std::vector<double> point_list[4];
     int total_domains = 0;
+
+    for (int i = 0; i < 4; i++) {
+        point_list[i].reserve(dataset.size());
+    }
 
     for (size_t i = 0; i < dataset.size(); i++)
     {
         for (int j = 0; j < 4; j++)
         {
             totals[j] += dataset[i].abuse_count[j];
+            /* Push negative value so sort will start from biggest negative to smallest*/
+            point_list[j].push_back(-1.0*(double)dataset[i].abuse_count[j]);
         }
 
         total_domains += dataset[i].Domains;
@@ -167,14 +179,33 @@ void M2Data::ComputeMetrics(double ithi_m2[4])
     for (int j = 0; j < 4; j++)
     {
         abuseType x = M2CaptureOrder[j];
-        ithi_m2[x] = (double)totals[j];
 
-        if (total_domains > 0)
-        {
+        ithi_m2[x] = (double)totals[j];
+        if (total_domains > 0) {
             ithi_m2[x] /= (double)total_domains;
         }
-
         ithi_m2[x] *= 10000;
+
+        if (totals[j] > 0 && point_list[j].size() > 0) {
+            double abuse_median = -0.5 * (double)totals[j];
+            double abuse_ninety = -0.9 * (double)totals[j];
+            double running_total = 0;
+            size_t abuse_rank = 0;
+            std::sort(point_list[j].begin(), point_list[j].end());
+
+            while (running_total > abuse_median && abuse_rank < point_list[j].size()) {
+                running_total += point_list[j][abuse_rank++];
+            }
+            ithi_median[x] = (double)abuse_rank;
+
+            while (running_total > abuse_ninety && abuse_rank < point_list[j].size()) {
+                running_total += point_list[j][abuse_rank++];
+            }
+            ithi_ninety[x] = (double)abuse_rank;
+        } else {
+            ithi_median[x] = 0;
+            ithi_ninety[x] = 0;
+        }
     }
 }
 
@@ -426,11 +457,33 @@ bool M2Data::parse_file_name(char const * monthly_csv_file_name)
     return ret;
 }
 
+char const * M2Data::get_file_suffix(M2DataType f_type)
+{
+    char const * suffix = NULL;
+
+    switch (f_type) {
+    case Registrar:
+        suffix = file_suffix[1];
+        break;
+    case TLD:
+        suffix = file_suffix[0];
+        break;
+    default:
+        break;
+    }
+    return suffix;
+}
+
 ComputeM2::ComputeM2()
 {
     for (int i = 0; i < 4; i++)
     {
-        ithi_m2[i] = 0;
+        ithi_m2_tlds[i] = 0;
+        ithi_median_tlds[i] = 0;
+        ithi_ninety_tlds[i] = 0;
+        ithi_m2_registrars[i] = 0;
+        ithi_median_registrars[i] = 0; 
+        ithi_ninety_registrars[i] = 0;
     }
 }
 
@@ -438,29 +491,48 @@ ComputeM2::~ComputeM2()
 {
 }
 
-bool ComputeM2::Load(char const * single_file_name)
+bool ComputeM2::LoadSingleFile(char const * single_file_name, M2Data * f_data)
 {
     bool ret = true;
     char const * file_name = NULL;
 
-    if ((file_name = m2Data.get_file_name(single_file_name)) == NULL)
+    if ((file_name = f_data->get_file_name(single_file_name)) == NULL)
     {
         ret = false;
     }
-    else if (!m2Data.parse_file_name(file_name))
+    else if (!f_data->parse_file_name(file_name))
     {
         ret = false;
     }
     else
     {
-        ret = m2Data.Load(single_file_name);
+        ret = f_data->Load(single_file_name);
     }
+    return ret;
+}
+
+bool ComputeM2::Load(char const * single_file_name)
+{
+    return false;
+}
+
+bool ComputeM2::LoadMultipleFiles(char const ** in_files, int nb_files)
+{
+    return false;
+}
+
+bool ComputeM2::LoadTwoFiles(char const * tld_file_name, char const * registrars_file_name)
+{
+    bool ret = m2Data_tlds.Load(tld_file_name);
+    ret &= m2Data_registrars.Load(registrars_file_name);
+
     return ret;
 }
 
 bool ComputeM2::Compute()
 {
-    m2Data.ComputeMetrics(ithi_m2);
+    m2Data_tlds.ComputeMetrics(ithi_m2_tlds, ithi_median_tlds, ithi_ninety_tlds);
+    m2Data_registrars.ComputeMetrics(ithi_m2_registrars, ithi_median_registrars, ithi_ninety_registrars);
 
     return true;
 }
@@ -469,10 +541,25 @@ bool ComputeM2::Write(FILE * F_out)
 {
     bool ret = true;
 
-    for (int i = 0; i < 4; i++)
-    {
-        ret &= (fprintf(F_out, "M2.%d, , %6f,\n", i + 1, ithi_m2[i]) > 0);
-    }
+    for (int m = 1; m < 3; m++) {
+        double * average, *median, *ninety;
 
+        if (m == 1) {
+            average = ithi_m2_tlds;
+            median = ithi_median_tlds;
+            ninety = ithi_ninety_tlds;
+        } else {
+            average = ithi_m2_registrars;
+            median = ithi_median_registrars;
+            ninety = ithi_ninety_registrars;
+        }
+
+        for (int i = 0; i < 4; i++)
+        {
+            ret &= (fprintf(F_out, "M2.%d.%d.1, , %6f,\n", m, i + 1, average[i]) > 0);
+            ret &= (fprintf(F_out, "M2.%d.%d.2, , %6f,\n", m, i + 1, median[i]) > 0);
+            ret &= (fprintf(F_out, "M2.%d.%d.3, , %6f,\n", m, i + 1, ninety[i]) > 0);
+        }
+    }
     return ret;
 }
