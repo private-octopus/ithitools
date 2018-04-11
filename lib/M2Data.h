@@ -79,7 +79,7 @@ private:
     M2Data m2Data_tlds;
     M2Data m2Data_registrars;
 
-    bool ComputeM2::LoadSingleFile(char const * single_file_name, M2Data * f_data);
+    bool LoadSingleFile(char const * single_file_name, M2Data * f_data);
 
     double ithi_m2_tlds[4];
     double ithi_median_tlds[4];
