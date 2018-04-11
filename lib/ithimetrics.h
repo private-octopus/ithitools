@@ -3,6 +3,7 @@
 
 #include <time.h>
 #include "CaptureSummary.h"
+#include "M1Data.h"
 #include "M2Data.h"
 #include "ComputeM34.h"
 #include "ComputeM6.h"
@@ -64,14 +65,19 @@ public:
     const char * GetMetricDate() { return (const char *)metric_date; };
 
     bool SetAbuseFileName(char const * abuse_file_name, M2DataType f_type);
-    bool SetDefaultAbuseFileName(time_t current_time, M2DataType f_type);
+    bool SetDefaultAbuseFileName(M2DataType f_type);
     const char * GetAbuseFileName(M2DataType f_type);
+
+    bool SetComplianceFileName(char const * compliance_file_name);
+    bool SetDefaultComplianceFileName();
+    const char * GetComplianceFileName() { return (const char *)compliance_file_name; };
 
     bool SaveMetricFiles();
 
     bool Save(char const * file_name);
 
 private:
+    ComputeM1 cm1;
     ComputeM2 cm2;
     ComputeM3 cm3;
     ComputeM4 cm4;
@@ -82,6 +88,7 @@ private:
     char * ithi_folder;
     char * metric_file[7];
     bool metric_is_available[7];
+    char * compliance_file_name;
     char * root_capture_file_name;
     char * recursive_capture_file_name;
     char * abuse_file_name_tlds;

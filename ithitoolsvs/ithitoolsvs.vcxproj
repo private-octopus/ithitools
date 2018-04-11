@@ -157,6 +157,7 @@
     <ClCompile Include="..\lib\getopt.c" />
     <ClCompile Include="..\lib\ithimetrics.cpp" />
     <ClCompile Include="..\lib\ithipublisher.cpp" />
+    <ClCompile Include="..\lib\M1Data.cpp" />
     <ClCompile Include="..\lib\M2Data.cpp" />
     <ClCompile Include="..\lib\M7Getter.cpp" />
     <ClCompile Include="..\lib\NamePattern.cpp" />
@@ -181,6 +182,7 @@
     <ClInclude Include="..\lib\ithimetrics.h" />
     <ClInclude Include="..\lib\ithipublisher.h" />
     <ClInclude Include="..\lib\linktype.h" />
+    <ClInclude Include="..\lib\M1Data.h" />
     <ClInclude Include="..\lib\M2Data.h" />
     <ClInclude Include="..\lib\M7Getter.h" />
     <ClInclude Include="..\lib\NamePattern.h" />

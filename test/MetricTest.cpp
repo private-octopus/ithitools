@@ -39,6 +39,7 @@ static char const * metric_test_ref = "..\\data\\tiny-metrics.csv";
 static char const * root_zone_file = "..\\data\\root.zone";
 static char const * tlds_test_tlds = "..\\data\\2017-01-31_tlds.csv";
 static char const * tlds_test_registrars = "..\\data\\2017-01-31_registrars.csv";
+static char const * compliance_file = "..\\data\\M1-2017-01-31-compliance.csv";
 #else
 static char const * metric_test_input = "..\\..\\data\\tiny-capture.csv";
 static char const * metric_test_output = "metric-test.csv";
@@ -46,6 +47,7 @@ static char const * metric_test_ref = "..\\..\\data\\tiny-metrics.csv";
 static char const * root_zone_file = "..\\..\\data\\root.zone";
 static char const * tlds_test_tlds = "..\\..\\data\\2017-01-31_tlds.csv";
 static char const * tlds_test_registrars = "..\\..\\data\\2017-01-31_registrars.csv";
+static char const * compliance_file = "..\\..\\data\\M1-2017-01-31-compliance.csv";
 #endif
 #else
 static char const * metric_test_input = "data/tiny-capture.csv";
@@ -54,6 +56,7 @@ static char const * metric_test_ref = "data/tiny-metrics.csv";
 static char const * root_zone_file = "data/root.zone";
 static char const * tlds_test_tlds = "data/2017-01-31_tlds.csv";
 static char const * tlds_test_registrars = "data/2017-01-31_registrars.csv";
+static char const * compliance_file = "data/M1-2017-01-31-compliance.csv";
 #endif
 
 MetricTest::MetricTest()
@@ -79,6 +82,11 @@ bool MetricTest::DoTest()
     {
         ithimetrics met;
 
+        if (!met.SetComplianceFileName(compliance_file))
+        {
+            ret = false;
+            TEST_LOG("Could not set compliance file to %s\n", root_zone_file);
+        }
         if (!met.SetRootZoneFileName(root_zone_file))
         {
             ret = false;

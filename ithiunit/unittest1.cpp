@@ -31,6 +31,7 @@
 #include "PatternTest.h"
 #include "PluginTest.h"
 #include "CsvTest.h"
+#include "M1DataTest.h"
 #include "M2DataTest.h"
 #include "PublishTest.h"
 #include "TldCountTest.h"
@@ -149,6 +150,14 @@ namespace ithiunit
         TEST_METHOD(CsvHelper)
         {
             CsvTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(M1Data)
+        {
+            M1DataTest test;
             bool ret = test.DoTest();
 
             Assert::AreEqual(ret, true);
