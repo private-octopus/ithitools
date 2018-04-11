@@ -78,6 +78,7 @@ public:
 
     /* Get the nb_months values of a specific metric */
     bool GetVector(char const * metric_name, char const * key_value, double * metric);
+    bool GetCurrent(char const * metric_name, char const * key_value, double * current);
     bool GetAverageAndCurrent(char const * metric_name, char const * key_value, double * average, double * current);
     bool GetNameList(char const * metric_name, std::vector<MetricNameLine> * name_list);
 

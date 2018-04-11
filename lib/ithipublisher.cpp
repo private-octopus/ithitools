@@ -509,6 +509,17 @@ bool ithipublisher::GetVector(char const * metric_name, char const * key_value, 
     return true;
 }
 
+bool ithipublisher::GetCurrent(char const * metric_name, char const * key_value, double * current)
+{
+    double val[12];
+    bool ret = GetVector(metric_name, key_value, val);
+    double sum = 0;
+
+    *current = val[nb_months - 1];
+
+    return ret;
+}
+
 bool ithipublisher::GetAverageAndCurrent(char const * metric_name, char const * key_value, double * average, double * current)
 {
     double val[12];
@@ -645,20 +656,38 @@ bool ithipublisher::PublishDataM2(FILE * F)
 {
     double m2x[12];
     bool ret = true;
-    char const * subMet[4] = { "M2.1", "M2.2", "M2.3", "M2.4" };
+    char const * subMet[8] = { "M2.1.1", "M2.1.2", "M2.1.3", "M2.1.4", "M2.2.1", "M2.2.2", "M2.2.3", "M2.2.4" };
+    char subsubmet[32];
 
-    fprintf(F, "\"m2Val\" : [\n");
-    for (int m = 0; m < 4; m++)
+    ret &= fprintf(F, "\"m2Val\" : [") > 0;
+    for (int m = 0; m < 8; m++)
     {
-        if ((ret = GetVector(subMet[m], NULL, m2x)))
-        {
-            ret = PrintVector(F, m2x, 1.0);
-            if (m != 3) {
-                ret &= fprintf(F, ",\n") > 0;
+        ret &= fprintf(F, "%s[", (m==0)?"\n":",\n") > 0;
+
+        ret &= snprintf(subsubmet, sizeof(subsubmet), "%s.1", subMet[m]) > 0;
+        
+        if (ret) {
+            if ((ret = GetVector(subsubmet, NULL, m2x))) {
+                ret = PrintVector(F, m2x, 1.0);
             }
         }
+
+        for (int m2s = 2; ret && m2s < 4; m2s++) {
+            ret &= fprintf(F, ",") > 0;
+            ret &= snprintf(subsubmet, sizeof(subsubmet), "%s.%d", subMet[m], m2s) > 0;
+            if (ret) {
+                double v = 0;
+
+                ret = GetCurrent(subsubmet, NULL, &v);
+
+                ret &= fprintf(F, "%f", v) > 0;
+            }
+        }
+
+        ret &= fprintf(F, "]") > 0;
     }
-    fprintf(F, "]\n");
+    
+    ret &= fprintf(F, "]\n") > 0;
 
     return ret;
 }
