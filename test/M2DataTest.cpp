@@ -50,7 +50,7 @@ static const struct st_m2_data_test_case_result_t tld_cases[] = {
     { ".IJK", 432109,{ 34, 45, 1234, 23 } },
     { ".TEST", 1234567,{ 45, 34, 456, 12 } },
     { ".XN--A01B02", 234567,{ 4, 0, 345, 0 } },
-    { ".WXYZT", 123456,{ 0, 12345, 43210, 10203 } }
+    { ".WXYZT", 12345,{ 0, 1234, 4321, 1020 } }
 };
 
 static const struct st_m2_data_test_case_result_t tld_old_cases[] = {
@@ -58,15 +58,14 @@ static const struct st_m2_data_test_case_result_t tld_old_cases[] = {
     { ".EFGHIJ", 432109, { 34, 45, 1234, 23}},
     { ".EFGHIJK", 1234567, {45, 34, 456, 12}},
     { ".LMNO", 234567, { 4, 0, 345, 0}},
-    { ".PQRSTU", 123456, { 0, 12345, 43210, 10203}}
+    { ".PQRSTU", 123456,{ 0, 12345, 43210, 10203 } }
 };
 
 static const struct st_m2_data_test_case_result_t registrar_cases[] = {
     { "Abcdef.xyzt, LLC", 6789123,{ 234, 345, 21111, 123 } },
     { "1&amp;1 BlaBlaBla XY", 432109,{ 34, 45, 1234, 23 } },
     { "Ghijkl Technologies, Inc. Foo - Subsidiary of Ghijkl, Inc. USA", 1234567,{ 45, 34, 456, 12 } },
-    { "Absurdistan Economic &amp; Industry Co., Ltd", 234567,{ 4, 0, 345, 0 } },
-    { "Reserved for non-billable transactions where Registry Operator acts as Registrar", 123456,{ 0, 12345, 43210, 10203 } }
+    { "Absurdistan Economic &amp; Industry Co., Ltd", 234567,{ 4, 0, 345, 0 } }
 };
 
 struct st_m2_data_test_case_t {

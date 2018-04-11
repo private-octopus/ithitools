@@ -63,9 +63,9 @@ public:
     bool SetDefaultDate(time_t current_time);
     const char * GetMetricDate() { return (const char *)metric_date; };
 
-    bool SetAbuseFileName(char const * abuse_file_name);
-    bool SetDefaultAbuseFileName(time_t current_time);
-    const char * GetAbuseFileName() { return (const char *)abuse_file_name; };
+    bool SetAbuseFileName(char const * abuse_file_name, M2DataType f_type);
+    bool SetDefaultAbuseFileName(time_t current_time, M2DataType f_type);
+    const char * GetAbuseFileName(M2DataType f_type);
 
     bool SaveMetricFiles();
 
@@ -84,7 +84,8 @@ private:
     bool metric_is_available[7];
     char * root_capture_file_name;
     char * recursive_capture_file_name;
-    char * abuse_file_name;
+    char * abuse_file_name_tlds;
+    char * abuse_file_name_registrars;
     char * root_zone_file_name;
 
     bool SetDefaultCaptureFiles(char const * metric_name, char const * suffix, char ** p_file_name);
