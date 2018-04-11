@@ -325,7 +325,7 @@ bool ithimetrics::GetMetrics() {
         (void)SetDefaultAbuseFileName(time(0), Registrar);
     }
 
-    if (abuse_file_name_tlds != NULL != NULL && cm2.LoadTwoFiles(abuse_file_name_tlds, abuse_file_name_registrars))
+    if (abuse_file_name_tlds != NULL && abuse_file_name_registrars != NULL && cm2.LoadTwoFiles(abuse_file_name_tlds, abuse_file_name_registrars))
     {
         metric_is_available[1] = cm2.Compute();
         ret |= metric_is_available[1];
