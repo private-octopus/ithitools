@@ -416,6 +416,9 @@ bool ithipublisher::Publish(char const * web_folder)
         {
             switch (metric_id)
             {
+            case 1:
+                ret = PublishDataM1(F);
+                break;
             case 2:
                 ret = PublishDataM2(F);
                 break;
@@ -648,6 +651,29 @@ bool ithipublisher::PrintNameList(FILE * F, std::vector<MetricNameLine>* name_li
         ret &= (fprintf(F, "[\"%s\", %8f, %8f]", 
             (*name_list)[i].name, mult * (*name_list)[i].current, mult * (*name_list)[i].average) > 0);
     }
+
+    return ret;
+}
+
+bool ithipublisher::PublishDataM1(FILE * F)
+{
+    double m1x[12];
+    bool ret = true;
+    char const * subMet[3] = { "M1.1", "M1.2", "M1.3"};
+
+    ret &= fprintf(F, "\"m1Val\" : [") > 0;
+    for (int m = 0; m < 3; m++)
+    {
+        ret &= fprintf(F, "%s", (m == 0) ? "\n" : ",\n") > 0;
+
+        if (ret) {
+            if ((ret = GetVector(subMet[m], NULL, m1x))) {
+                ret = PrintVector(F, m1x, 1.0);
+            }
+        }
+    }
+
+    ret &= fprintf(F, "]\n") > 0;
 
     return ret;
 }

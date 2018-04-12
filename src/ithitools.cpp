@@ -462,7 +462,7 @@ int main(int argc, char ** argv)
         }
 
         for (int metric_id = 1; ret && metric_id <= 7; metric_id++) {
-            if (metric_id != 1 && metric_id != 5) {
+            if (metric_id != 5) {
                 ithipublisher pub(ithi_folder, metric_id);
                 ret = pub.CollectMetricFiles();
 

@@ -86,6 +86,7 @@ public:
     bool PrintNameList(FILE * F, std::vector<MetricNameLine> * name_list, double mult);
 
     /* Metric specific publishers */
+    bool PublishDataM1(FILE * F);
     bool PublishDataM2(FILE * F);
     bool PublishDataM3(FILE * F);
     bool PublishDataM4(FILE * F);
