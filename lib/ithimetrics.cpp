@@ -234,7 +234,7 @@ bool ithimetrics::SetComplianceFileName(char const * compliance_file_name)
 
 bool ithimetrics::SetDefaultComplianceFileName()
 {
-    return SetDefaultCaptureFiles("M3", "-summary.csv", &root_capture_file_name);
+    return SetDefaultCaptureFiles("M1", "-compliance.csv", &compliance_file_name);
 }
 
 bool ithimetrics::SetRootCaptureFileName(char const * file_name)
