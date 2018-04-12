@@ -61,7 +61,7 @@ bool M1Data::Load(char const * monthly_compliance_file_name)
     bool ret = (err == 0 && F != NULL);
 #else
     bool ret;
-    F = fopen(monthly_csv_file_name, "r");
+    F = fopen(monthly_compliance_file_name, "r");
     ret = (F != NULL);
 #endif
 
