@@ -40,15 +40,13 @@
 
         if (M1Data.m1Val.length >= 3) {
             setValElement("valM11", getLastElement(M1Data.m1Val[0]));
-            setValElement("averageM11", getAverageElement(M1Data.m1Val[0]));
-
             setValElement("valM12", getLastElement(M1Data.m1Val[1]));
-            setValElement("averageM12", getAverageElement(M1Data.m1Val[1]));
-
             setValElement("valM13", getLastElement(M1Data.m1Val[2]));
-            setValElement("averageM13", getAverageElement(M1Data.m1Val[2]));
 
             if (M1Data.m1Val[0].length > 1) {
+                setValElement("averageM11", getAverageElement(M1Data.m1Val[0]));
+                setValElement("averageM12", getAverageElement(M1Data.m1Val[1]));
+                setValElement("averageM13", getAverageElement(M1Data.m1Val[2]));
                 plotGraphM1("graphM11", M1Data.m1Val[0], 200, "#404040C0");
             }
         }
