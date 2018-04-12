@@ -14,6 +14,7 @@
 #include "PatternTest.h"
 #include "PluginTest.h"
 #include "CsvTest.h"
+#include "M1DataTest.h"
 #include "M2DataTest.h"
 #include "ithi_test_class.h"
 #include "PublishTest.h"
@@ -34,6 +35,7 @@ enum test_list_enum {
     test_enum_Plugin,
     test_enum_BadPlugin,
     test_enum_Csv,
+    test_enum_M1Data,
     test_enum_M2Data,
     test_enum_Publish,
     test_enum_TldCount,
@@ -84,6 +86,8 @@ char const * ithi_test_class::GetTestName(int number)
         return ("badPlugin");
     case test_enum_Csv:
         return("csv");
+    case test_enum_M1Data:
+        return("m1data");
     case test_enum_M2Data:
         return("m2data");
     case test_enum_Publish:
@@ -158,6 +162,9 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_enum_Csv:
         test = new CsvTest();
+        break;
+    case test_enum_M1Data:
+        test = new M1DataTest();
         break;
     case test_enum_M2Data:
         test = new M2DataTest();

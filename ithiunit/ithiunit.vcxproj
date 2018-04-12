@@ -166,6 +166,7 @@
     <ClInclude Include="..\lib\ithimetrics.h" />
     <ClInclude Include="..\lib\ithipublisher.h" />
     <ClInclude Include="..\lib\linktype.h" />
+    <ClInclude Include="..\lib\M1Data.h" />
     <ClInclude Include="..\lib\M2Data.h" />
     <ClInclude Include="..\lib\M7Getter.h" />
     <ClInclude Include="..\lib\NamePattern.h" />
@@ -176,6 +177,7 @@
     <ClInclude Include="..\test\hashtest.h" />
     <ClInclude Include="..\test\ithi_test_class.h" />
     <ClInclude Include="..\test\LoadTest.h" />
+    <ClInclude Include="..\test\M1DataTest.h" />
     <ClInclude Include="..\test\M2DataTest.h" />
     <ClInclude Include="..\test\MergeTest.h" />
     <ClInclude Include="..\test\MetricTest.h" />
@@ -200,6 +202,7 @@
     <ClCompile Include="..\lib\getopt.c" />
     <ClCompile Include="..\lib\ithimetrics.cpp" />
     <ClCompile Include="..\lib\ithipublisher.cpp" />
+    <ClCompile Include="..\lib\M1Data.cpp" />
     <ClCompile Include="..\lib\M2Data.cpp" />
     <ClCompile Include="..\lib\M7Getter.cpp" />
     <ClCompile Include="..\lib\NamePattern.cpp" />
@@ -211,6 +214,7 @@
     <ClCompile Include="..\test\ithitest.cpp" />
     <ClCompile Include="..\test\ithi_test_class.cpp" />
     <ClCompile Include="..\test\LoadTest.cpp" />
+    <ClCompile Include="..\test\M1DataTest.cpp" />
     <ClCompile Include="..\test\M2DataTest.cpp" />
     <ClCompile Include="..\test\MergeTest.cpp" />
     <ClCompile Include="..\test\MetricTest.cpp" />

@@ -43,7 +43,8 @@ ithimetrics::ithimetrics()
     recursive_capture_file_name(NULL),
     abuse_file_name_tlds(NULL),
     abuse_file_name_registrars(NULL),
-    root_zone_file_name(NULL)
+    root_zone_file_name(NULL),
+    compliance_file_name(NULL)
 {
     for (int i = 0; i < 7; i++) {
         metric_file[i] = NULL;
@@ -93,6 +94,11 @@ ithimetrics::~ithimetrics() {
     if (root_zone_file_name != NULL) {
         free(root_zone_file_name);
         root_zone_file_name = NULL;
+    }
+
+    if (compliance_file_name != NULL) {
+        free(compliance_file_name);
+        compliance_file_name = NULL;
     }
 }
 
@@ -153,7 +159,7 @@ bool ithimetrics::SetDefaultDate(time_t current_time)
     return ret;
 }
 
-bool ithimetrics::SetDefaultAbuseFileName(time_t current_time, M2DataType f_type)
+bool ithimetrics::SetDefaultAbuseFileName(M2DataType f_type)
 { 
     bool ret = (f_type == TLD || f_type == Registrar);
     bool is_set = (GetAbuseFileName(f_type) != NULL);
@@ -219,6 +225,16 @@ const char * ithimetrics::GetAbuseFileName(M2DataType f_type)
     }
 
     return name;
+}
+
+bool ithimetrics::SetComplianceFileName(char const * compliance_file_name)
+{
+    return copy_name(&this->compliance_file_name, compliance_file_name);
+}
+
+bool ithimetrics::SetDefaultComplianceFileName()
+{
+    return SetDefaultCaptureFiles("M3", "-summary.csv", &root_capture_file_name);
 }
 
 bool ithimetrics::SetRootCaptureFileName(char const * file_name)
@@ -315,14 +331,26 @@ bool ithimetrics::copy_name(char ** target, char const * name)
 bool ithimetrics::GetMetrics() {
     bool ret = false;
 
+
+    if (compliance_file_name == NULL)
+    {
+        (void)SetDefaultComplianceFileName();
+    }
+
+    if (compliance_file_name != NULL && cm1.Load(compliance_file_name))
+    {
+        metric_is_available[0] = cm1.Compute();
+        ret |= metric_is_available[0];
+    }
+
     if (abuse_file_name_tlds == NULL)
     {
-        (void)SetDefaultAbuseFileName(time(0),TLD);
+        (void)SetDefaultAbuseFileName(TLD);
     }
 
     if (abuse_file_name_registrars == NULL)
     {
-        (void)SetDefaultAbuseFileName(time(0), Registrar);
+        (void)SetDefaultAbuseFileName(Registrar);
     }
 
     if (abuse_file_name_tlds != NULL && abuse_file_name_registrars != NULL && cm2.LoadTwoFiles(abuse_file_name_tlds, abuse_file_name_registrars))
@@ -378,7 +406,7 @@ bool ithimetrics::SaveMetricFiles()
 {
     bool ret = true;
     char buffer[512];
-    ComputeMetric * cm[7] = { NULL, &cm2, &cm3, &cm4, NULL, &cm6, &cm7 };
+    ComputeMetric * cm[7] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7 };
 
 
     if (ret && ithi_folder == NULL)
@@ -427,7 +455,7 @@ bool ithimetrics::SaveMetricFiles()
 bool ithimetrics::Save(char const * file_name)
 {
 
-    ComputeMetric * cm[7] = { NULL, &cm2, &cm3, &cm4, NULL, &cm6, &cm7 };
+    ComputeMetric * cm[7] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7 };
     FILE* F;
 #ifdef _WINDOWS
     errno_t err = fopen_s(&F, file_name, "w");

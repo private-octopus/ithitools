@@ -1,0 +1,38 @@
+Confidential Data - for Internal Use only to generate Aggregate Statistical data for ITHI 
+, , , , , For the month of January - the total complaints by queue
+ITHI Category, registrar_name, iana_id, Domain Count, "Total Complaints Received in January 2017", Total 1st Notices, Total 3rd Notices, Total Breaches, Total Suspensions, Total Terminations, Total Non-Renewals
+BULK SUBMISION, "Whatever, LLC", 2013, "952,652", 3, 8, 0, 0, 0, 0, 0
+, "Com-what, Ltd.", 2203, "292,749", 1, 1, 0, 0, 0, 0, 0
+, "X435, Inc.", 4236, "852,270", 2, 3, 0, 0, 0, 0, 0
+, "Oops.xyz, Inc.", 4838, "765,808", 2, 2, 0, 0, 0, 0, 0
+, "Foo.Info, Inc.", 6660, "8,908", 0, 2, 0, 0, 0, 0, 0
+, Yet another Ltd, 7867, "478,080", 0, 27, 0, 0, 0, 0, 0
+, ALphaBeta Ltd. d/b/a AlphaRegistry.com, 7870, "55,590", 10, 9, 0, 0, 0, 0, 0
+INDIVIDUAL SUBMISSION, "Tech toch, Ltd.", 1698, "975,371", 12, 0, 0, 0, 0, 0, 0
+, "Whatever, LLC", 2013, "952,652", 533, 463, 0, 0, 0, 0, 0
+, "Com-what, Ltd.", 2203, "292,749", 1, 2, 0, 0, 0, 0, 0
+, Test1 Internet.com, 2216, "546,676", 3, 69, 0, 0, 0, 0, 0
+, "X435, Inc.", 4236, "852,270", 17, 49, 0, 0, 0, 0, 0
+, "Oops.xyz, Inc.", 4838, "765,808", 25, 36, 0, 0, 0, 0, 0
+, "Bitmore, LLC", 4939, "136,772", 1, 0, 0, 0, 0, 0, 0
+, Blah Internet X.Y., 4943, "796,238", 0, 1, 0, 0, 0, 0, 0
+, Yack yack Inc., 6142, "219,097", 1, 0, 0, 0, 0, 0, 0
+, Megacorp Ltd., 6243, "740,194", 1, 4, 0, 0, 0, 0, 0
+, "Foo.Info, Inc.", 6660, "8,908", 1, 0, 0, 0, 0, 0, 0
+, "Networks World, Ltd.", 7367, "80,081", 0, 2, 0, 0, 0, 0, 0
+, "Another Domain, Inc.", 7466, "616,749", 14, 5, 0, 0, 0, 0, 0
+, "X1234, LLC", 7469, "542,325", 98, 26, 0, 0, 0, 0, 0
+, Yet another Ltd, 7867, "478,080", 1, 0, 0, 0, 0, 0, 0
+, ALphaBeta Ltd. d/b/a AlphaRegistry.com, 7870, "55,590", 298, 71, 0, 0, 0, 0, 0
+, "Blah.com, Inc.", 8176, "519,111", 1, 3, 0, 0, 0, 0, 0
+, TLDS L.L.C. d/b/a SRSPlus, 9587, "366,858", 2, 1, 0, 0, 0, 0, 0
+, Unknown Registrar, 999999, "633,780", 209, 0, 0, 0, 0, 0, 0
+WHOIS ARS, "Tech toch, Ltd.", 1698, "975,371", 0, 1, 0, 0, 0, 0, 0
+, "Whatever, LLC", 2013, "952,652", 0, 5, 0, 0, 0, 0, 0
+, Test1 Internet.com, 2216, "546,676", 0, 8, 0, 0, 0, 0, 0
+, "X435, Inc.", 4236, "852,270", 0, 2, 0, 0, 0, 0, 0
+, "Oops.xyz, Inc.", 4838, "765,808", 0, 0, 0, 0, 0, 0, 0
+, "X1234, LLC", 7469, "542,325", 0, 1, 0, 0, 0, 0, 0
+, ALphaBeta Ltd. d/b/a AlphaRegistry.com, 7870, "55,590", 0, 7, 0, 0, 0, 0, 0
+WHOIS QUALITY REVIEW, Megacorp Ltd., 6243, "740,194", 1, 1, 0, 0, 0, 0, 0
+Grand Total, , , "9,060,717", "1,236", 809, 0, 0, 0, 0, 0

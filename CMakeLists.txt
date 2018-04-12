@@ -20,6 +20,7 @@ SET(ITHITOOLS_LIBRARY_FILES
    lib/DnscapPlugIn.cpp
    lib/M7Getter.cpp
    lib/CsvHelper.cpp
+   lib/M1Data.cpp
    lib/M2Data.cpp
    lib/ComputeMetric.cpp
    lib/ComputeM34.cpp
@@ -32,6 +33,7 @@ SET(ITHITOOLS_TEST_LIBRARY_FILES
    test/LoadTest.cpp
    test/MergeTest.cpp
    test/MetricTest.cpp
+   test/M1DataTest.cpp
    test/M2DataTest.cpp
    test/SaveTest.cpp
    test/testRfc6761.cpp
@@ -56,6 +58,7 @@ ADD_EXECUTABLE(ithitools
    lib/M7Getter.cpp
    lib/getopt.c
    lib/CsvHelper.cpp
+   lib/M1Data.cpp
    lib/M2Data.cpp
    lib/ComputeMetric.cpp
    lib/ComputeM34.cpp
@@ -75,6 +78,7 @@ ADD_EXECUTABLE(ithitest
    lib/DnscapPlugIn.cpp
    lib/M7Getter.cpp
    lib/CsvHelper.cpp
+   lib/M1Data.cpp
    lib/M2Data.cpp
    lib/ComputeMetric.cpp
    lib/ComputeM34.cpp
@@ -84,6 +88,7 @@ ADD_EXECUTABLE(ithitest
    test/LoadTest.cpp
    test/MergeTest.cpp
    test/MetricTest.cpp
+   test/M1DataTest.cpp
    test/M2DataTest.cpp
    test/SaveTest.cpp
    test/testRfc6761.cpp
