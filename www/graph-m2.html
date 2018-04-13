@@ -91,7 +91,7 @@
     function getLastElement(dataSet)
     {
         if (dataSet.length < 1) {
-            return "-";
+            return 0;
         }
         else
         {
@@ -103,7 +103,11 @@
     {
         if (dataSet.length <= 1)
         {
-            return "-";
+            if (dataSet.length == 0) {
+                return 0;
+            } else {
+                return dataSet[0];
+            }
         }
         else
         {
