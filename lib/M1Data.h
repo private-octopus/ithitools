@@ -31,6 +31,7 @@ typedef struct st_M1DataLine_t {
     int category_index; /* ITHI Category */
     char name[128]; /* registrar_name */
     int RegistrarId; /* iana_id */
+    char complaint[128]; /* complaint type */
     int Domains; /* Domain Count */
     int Complaints; /* Total Complaints Received in January 2017... */
     int nb1stNotices; /* Total 1st Notices */

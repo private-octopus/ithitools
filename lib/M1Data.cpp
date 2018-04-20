@@ -83,6 +83,7 @@ bool M1Data::Load(char const * monthly_compliance_file_name)
         start = CsvHelper::read_string(category, sizeof(category), start, buffer, sizeof(buffer));
         start = CsvHelper::read_string(line.name, sizeof(line.name), start, buffer, sizeof(buffer));
         start = CsvHelper::read_number(&line.RegistrarId, start, buffer, sizeof(buffer));
+        start = CsvHelper::read_string(line.complaint, sizeof(line.complaint), start, buffer, sizeof(buffer));
         start = CsvHelper::read_number(&line.Domains, start, buffer, sizeof(buffer));
         start = CsvHelper::read_number(&line.Complaints, start, buffer, sizeof(buffer));
         start = CsvHelper::read_number(&line.nb1stNotices, start, buffer, sizeof(buffer));
