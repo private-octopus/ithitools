@@ -19,6 +19,7 @@
 #include "ithi_test_class.h"
 #include "PublishTest.h"
 #include "TldCountTest.h"
+#include "DnsPrefixTest.h"
 
 enum test_list_enum {
     test_enum_hash = 0,
@@ -39,6 +40,7 @@ enum test_list_enum {
     test_enum_M2Data,
     test_enum_Publish,
     test_enum_TldCount,
+    test_enum_DnsPrefix,
     test_enum_max_number
 };
 
@@ -94,6 +96,8 @@ char const * ithi_test_class::GetTestName(int number)
         return("publish");
     case test_enum_TldCount:
         return("TldCount");
+    case test_enum_DnsPrefix:
+        return("DnsPrefix");
     default:
         break;
     }
@@ -174,6 +178,9 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_enum_TldCount:
         test = new TldCountTest();
+        break;
+    case test_enum_DnsPrefix:
+        test = new DnsPrefixTest();
         break;
     default:
         break;

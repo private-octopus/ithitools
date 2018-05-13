@@ -191,6 +191,9 @@
     <ClInclude Include="..\lib\Version.h" />
     <ClInclude Include="..\src\targetver.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\lib\DnsPrefixList.inc" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

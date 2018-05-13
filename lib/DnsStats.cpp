@@ -1807,3 +1807,135 @@ void DnsHashEntry::Add(DnsHashEntry * key)
 {
     count += key->count;
 }
+
+DnsPrefixEntry::DnsPrefixEntry()
+    :
+    hash(0),
+    dnsPrefix(NULL),
+    dnsPrefixClass(DnsPrefixStd),
+    HashNext(NULL)
+{
+}
+
+DnsPrefixEntry::~DnsPrefixEntry()
+{
+}
+
+bool DnsPrefixEntry::IsSameKey(DnsPrefixEntry * key)
+{
+    return strcmp(dnsPrefix, key->dnsPrefix) == 0;
+}
+
+uint32_t DnsPrefixEntry::Hash()
+{
+    if (hash == 0)
+    {
+        size_t l = strlen(dnsPrefix);
+
+        hash = 0xCACAB0B0;
+
+        for (size_t i = 0; i < l; i++)
+        {
+            hash = hash * 101 + dnsPrefix[i];
+        }
+    }
+
+    return hash;
+}
+
+DnsPrefixEntry * DnsPrefixEntry::CreateCopy()
+{
+    return nullptr;
+}
+
+void DnsPrefixEntry::Add(DnsPrefixEntry * key)
+{
+}
+
+#include "DnsPrefixList.inc"
+
+void DnsStats::LoadPrefixTable_from_memory()
+{
+    for (size_t i = 0; i < nbDnsPrefixList; i++) {
+        char const * x = dnsPrefixList[i];
+        DnsPrefixEntry * dpe = new DnsPrefixEntry();
+        bool stored = false;
+
+        if (x[0] == '!') {
+            dpe->dnsPrefix = (char *)(x + 1);
+            dpe->dnsPrefixClass = DnsPrefixException;
+        } else if (x[0] == '*') {
+            dpe->dnsPrefix = (char *)(x + 2);
+            dpe->dnsPrefixClass = DnsPrefixOneLevel;
+        } else {
+            dpe->dnsPrefix = (char *)(x);
+            dpe->dnsPrefixClass = DnsPrefixStd;
+        }
+
+        dnsPrefixTable.InsertOrAdd(dpe, false, &stored);
+
+        if (!stored)
+        {
+            delete dpe;
+        }
+    }
+}
+
+const char * DnsStats::GetZonePrefix(const char * dnsName)
+{
+    const char * ret = NULL;
+    DnsPrefixEntry dpe;
+    DnsPrefixEntry * retrieved;
+    int prefixOffset = 0;
+    int previousOffset = -1;
+    int previousPreviousOffset = -1;
+
+    if (dnsPrefixTable.GetSize() == 0) {
+        LoadPrefixTable_from_memory();
+    }
+
+    while (ret == NULL && dnsName != NULL && dnsName[prefixOffset] != '.') {
+        dpe.dnsPrefix = (char *)(dnsName + prefixOffset);
+        dpe.hash = 0;
+
+        if ((retrieved = dnsPrefixTable.Retrieve(&dpe)) != NULL)
+        {
+            switch (retrieved->dnsPrefixClass) {
+            case DnsPrefixOneLevel:
+                if (previousPreviousOffset >= 0) {
+                    ret = dnsName + previousPreviousOffset;
+                }
+                break;
+            case DnsPrefixException:
+                ret = dnsName + prefixOffset;
+                break;
+            case DnsPrefixStd:
+            default:
+                if (previousOffset >= 0) {
+                    ret = dnsName + previousOffset;
+                }
+                break;
+            }
+            break;
+        } else {
+            int offset = prefixOffset;
+
+            while (dnsName[offset] != 0 && dnsName[offset] != '.') {
+                offset++;
+            }
+
+            if (dnsName[offset] == 0) {
+                if (previousOffset >= 0) {
+                    ret = dnsName + previousOffset;
+                }
+                break;
+            } else {
+                previousPreviousOffset = previousOffset;
+                previousOffset = prefixOffset;
+                prefixOffset = offset + 1; /* Add 1 to skip the dot */
+            }
+        }
+    }
+
+    return ret;
+}

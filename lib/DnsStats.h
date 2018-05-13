@@ -126,6 +126,29 @@ public:
     };
 };
 
+enum DnsPrefixClass {
+    DnsPrefixStd = 0,
+    DnsPrefixOneLevel,
+    DnsPrefixException
+};
+
+class DnsPrefixEntry {
+public:
+    DnsPrefixEntry();
+    ~DnsPrefixEntry();
+
+    bool IsSameKey(DnsPrefixEntry* key);
+    uint32_t Hash();
+    DnsPrefixEntry* CreateCopy();
+    void Add(DnsPrefixEntry* key);
+
+    DnsPrefixEntry * HashNext;
+
+    uint32_t hash;
+    char * dnsPrefix;
+    DnsPrefixClass dnsPrefixClass;
+};
+
 class TldAddressAsKey
 {
 public:
@@ -165,6 +188,8 @@ public:
     BinHash<TldAsKey> registeredTld;
     LruHash<TldAsKey> tldStringUsage;
 
+    BinHash<DnsPrefixEntry> dnsPrefixTable;
+
     /* For the plug in */
     void SubmitPacket(uint8_t * packet, uint32_t length,
         uint8_t * source_addr, size_t source_addr_length,
@@ -177,8 +202,6 @@ public:
     bool IsCaptureStopped() { return is_capture_stopped; };
     void StopCapture() { is_capture_stopped = true; }
     
-
-
     bool is_capture_stopped;
     bool enable_frequent_address_filtering;
     uint32_t frequent_address_max_count;
@@ -196,6 +219,7 @@ public:
     static bool IsRfc6761Tld(uint8_t * tld, size_t length);
     static void SetToUpperCase(uint8_t * domain, size_t length);
     static char const * GetTableName(uint32_t tableId);
+    const char * GetZonePrefix(const char * dnsName);
 
 private:
     bool LoadPcapFile(char const * fileName);
@@ -236,6 +260,8 @@ private:
     void LoadRegisteredTLD_from_memory();
 
     bool CheckAddress(uint8_t* addr, size_t addr_len);
+
+    void LoadPrefixTable_from_memory();
 };
 
 #endif /* DNSTAT_H */
