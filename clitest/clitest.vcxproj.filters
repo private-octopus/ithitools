@@ -117,6 +117,9 @@
     <ClCompile Include="..\test\DnsPrefixTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\test\GetNameTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\AddressFilter.h">
@@ -228,6 +231,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\test\DnsPrefixTest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\test\GetNameTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

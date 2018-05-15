@@ -36,6 +36,7 @@
 #include "PublishTest.h"
 #include "TldCountTest.h"
 #include "DnsPrefixTest.h"
+#include "GetNameTest.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -191,6 +192,14 @@ namespace ithiunit
         TEST_METHOD(DnsPrefix)
         {
             DnsPrefixTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(GetName)
+        {
+            GetNameTest test;
             bool ret = test.DoTest();
 
             Assert::AreEqual(ret, true);

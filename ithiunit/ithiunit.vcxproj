@@ -175,6 +175,7 @@
     <ClInclude Include="..\test\CaptureTest.h" />
     <ClInclude Include="..\test\CsvTest.h" />
     <ClInclude Include="..\test\DnsPrefixTest.h" />
+    <ClInclude Include="..\test\GetNameTest.h" />
     <ClInclude Include="..\test\hashtest.h" />
     <ClInclude Include="..\test\ithi_test_class.h" />
     <ClInclude Include="..\test\LoadTest.h" />
@@ -212,6 +213,7 @@
     <ClCompile Include="..\test\CaptureTest.cpp" />
     <ClCompile Include="..\test\CsvTest.cpp" />
     <ClCompile Include="..\test\DnsPrefixTest.cpp" />
+    <ClCompile Include="..\test\GetNameTest.cpp" />
     <ClCompile Include="..\test\hashtest.cpp" />
     <ClCompile Include="..\test\ithitest.cpp" />
     <ClCompile Include="..\test\ithi_test_class.cpp" />

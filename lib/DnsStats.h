@@ -149,6 +149,26 @@ public:
     DnsPrefixClass dnsPrefixClass;
 };
 
+class DnssecPrefixEntry {
+public:
+    DnssecPrefixEntry();
+    ~DnssecPrefixEntry();
+
+    bool IsSameKey(DnssecPrefixEntry* key);
+    uint32_t Hash();
+    DnssecPrefixEntry* CreateCopy();
+    void Add(DnssecPrefixEntry* key);
+
+    DnssecPrefixEntry * HashNext;
+
+    uint32_t hash;
+    uint8_t * prefix;
+    size_t prefix_len;
+    bool is_dnssec;
+};
+
+
+
 class TldAddressAsKey
 {
 public:
@@ -189,6 +209,8 @@ public:
     LruHash<TldAsKey> tldStringUsage;
 
     BinHash<DnsPrefixEntry> dnsPrefixTable;
+    BinHash<DnssecPrefixEntry> dnssecPrefixTable;
+    BinHash<DnssecPrefixEntry> dnssecAddressTable;
 
     /* For the plug in */
     void SubmitPacket(uint8_t * packet, uint32_t length,
@@ -214,12 +236,23 @@ public:
     int query_count;
     int response_count;
     uint32_t error_flags;
+    bool is_do_flag_set;
 
 
     static bool IsRfc6761Tld(uint8_t * tld, size_t length);
     static void SetToUpperCase(uint8_t * domain, size_t length);
     static char const * GetTableName(uint32_t tableId);
     const char * GetZonePrefix(const char * dnsName);
+
+    void RegisterDnssecUsageByAddress(uint8_t * source_addr, size_t source_addr_length);
+    void RegisterDnssecUsageByName(uint8_t * packet, uint32_t length, uint32_t name_start,
+        bool is_dnssec);
+
+    int GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
+        uint8_t * name, size_t name_max, size_t * name_length);
+
+    static void GetSourceAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
+    static void GetDestAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
 
 private:
     bool LoadPcapFile(char const * fileName);
@@ -245,10 +278,11 @@ private:
 
     int GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t *offset);
 
+
+
     void NormalizeNamePart(uint32_t length, uint8_t * value, uint8_t * normalized, uint32_t * flags);
 
-    void GetSourceAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
-    void GetDestAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
+
 
     bool IsNumericDomain(uint8_t * tld, uint32_t length);
 
@@ -262,6 +296,10 @@ private:
     bool CheckAddress(uint8_t* addr, size_t addr_len);
 
     void LoadPrefixTable_from_memory();
+
+    void RegisterDnssecUsageByPrefix(
+        BinHash<DnssecPrefixEntry> * dnssecTable,
+        uint8_t * prefix, size_t prefix_length, bool is_dnssec);
 };
 
 #endif /* DNSTAT_H */

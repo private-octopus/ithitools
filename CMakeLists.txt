@@ -31,6 +31,7 @@ SET(ITHITOOLS_TEST_LIBRARY_FILES
    test/CaptureTest.cpp 
    test/DnsPrefixTest.cpp
    test/hashtest.cpp
+   test/GetNameTest.cpp
    test/LoadTest.cpp
    test/MergeTest.cpp
    test/MetricTest.cpp
@@ -87,6 +88,7 @@ ADD_EXECUTABLE(ithitest
    test/CaptureTest.cpp
    test/DnsPrefixTest.cpp
    test/hashtest.cpp
+   test/GetNameTest.cpp
    test/LoadTest.cpp
    test/MergeTest.cpp
    test/MetricTest.cpp

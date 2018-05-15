@@ -529,6 +529,8 @@ void DnsStats::SubmitOPTRecord(uint32_t flags, uint8_t * content, uint32_t lengt
 
     for (int i = 0; i < 16; i++)
     {
+        is_do_flag_set = (flags & 1) != 0;
+
         if ((flags & (1 << i)) != 0)
         {
             SubmitRegistryNumber(REGISTRY_EDNS_Header_Flags, 15 - i);
@@ -788,6 +790,103 @@ int DnsStats::GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t
     }
 
     return start;
+}
+
+int DnsStats::GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
+    uint8_t * name, size_t name_max, size_t * name_length)
+{
+    int ret = 0;
+    uint32_t l = 0;
+    uint32_t previous = 0;
+    uint32_t name_start = start;
+    uint32_t start_next = 0;
+    size_t name_index = 0;
+
+    while (start <length && name_index < name_max) {
+        l = packet[start];
+
+        if (l == 0)
+        {
+            /* end of parsing*/
+            start++;
+
+            if (start_next == 0) {
+                start_next = start;
+            }
+            break;
+        }
+        else if ((l & 0xC0) == 0xC0)
+        {
+            if ((start + 2) > length)
+            {
+                /* error */
+                start_next = length;
+                break;
+            }
+            else
+            {
+                uint32_t new_start = ((l & 63) << 8) + packet[start + 1];
+
+                if (new_start < name_start)
+                {
+                    if (start_next == 0) {
+                        start_next = start + 2;
+                    }
+                    start = new_start;
+                } else {
+                    /* Basic restriction to avoid name decoding loops */
+                    name_index = 0;
+                    start_next = length;
+                    break;
+                }
+            }
+        }
+        else if (l > 0x3F)
+        {
+            /* found an extension. Don't know how to parse it! */
+            name_index = 0;
+            start_next = length;
+            break;
+        }
+        else
+        {
+            /* add a label to the name. */
+            if (start + l + 1 > length ||
+                name_index + l + 2 > name_max)
+            {
+                /* format error */
+                name_index = 0;
+                start_next = length;
+                break;
+            }
+            else
+            {
+                uint32_t flags;
+                if (name_index > 0) {
+                    name[name_index++] = '.';
+                }
+
+                NormalizeNamePart(l, &packet[start + 1], name + name_index, &flags);
+
+                if ((flags & 3) == 0) {
+                    start += l + 1;
+                    name_index += l;
+                } else {
+                    /* format error */
+                    name_index = 0;
+                    start_next = length;
+                    break;
+                }
+            }
+        }
+    }
+
+    name[name_index] = 0;
+
+    *name_length = name_index;
+
+    return start_next;
+
 }
 
 void DnsStats::NormalizeNamePart(uint32_t length, uint8_t * value,
@@ -1211,6 +1310,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     bool unfiltered = false;
 
     error_flags = 0;
+    is_do_flag_set = false;
 
     if (rootAddresses.GetCount() == 0)
     {
@@ -1938,4 +2038,109 @@ const char * DnsStats::GetZonePrefix(const char * dnsName)
     }
 
     return ret;
+}
+
+void DnsStats::RegisterDnssecUsageByAddress(uint8_t * source_addr, size_t source_addr_length)
+{
+    RegisterDnssecUsageByPrefix(&dnssecAddressTable, source_addr, source_addr_length, is_do_flag_set);
+}
+
+void DnsStats::RegisterDnssecUsageByName(uint8_t * packet, uint32_t length, uint32_t name_start,
+    bool is_dnssec)
+{
+    /* Get the query name */
+    uint8_t name[256];
+    size_t name_len = 0; 
+    const char * zone_prefix = NULL;
+
+    (void)GetDnsName(packet, length, name_start, name, sizeof(name), &name_len);
+
+    /* Get the query prefix */
+    if (name_len > 0) {
+        SetToUpperCase(name, name_len);
+        zone_prefix = GetZonePrefix((const char *)name);
+    }
+
+    /* Register */
+    if (zone_prefix != NULL) {
+        RegisterDnssecUsageByPrefix(&dnssecPrefixTable,
+            (uint8_t *)zone_prefix, strlen(zone_prefix), is_dnssec);
+    }
+}
+
+void DnsStats::RegisterDnssecUsageByPrefix(
+    BinHash<DnssecPrefixEntry> * dnssecTable,
+    uint8_t * prefix, size_t prefix_length, bool is_dnssec)
+{
+    DnssecPrefixEntry dpe;
+    bool stored = false;
+
+    dpe.prefix = prefix;
+    dpe.prefix_len = prefix_length;
+    dpe.is_dnssec = is_dnssec;
+
+    dnssecTable->InsertOrAdd(&dpe, true, &stored);
+}
+
+DnssecPrefixEntry::DnssecPrefixEntry() :
+    HashNext(NULL),
+    hash(0),
+    prefix(NULL),
+    prefix_len(0),
+    is_dnssec(false)
+{
+}
+
+DnssecPrefixEntry::~DnssecPrefixEntry()
+{
+}
+
+bool DnssecPrefixEntry::IsSameKey(DnssecPrefixEntry * key)
+{
+    return (prefix_len == key->prefix_len &&
+        ((prefix_len == 0 && prefix == NULL && key->prefix == NULL) ||
+        (prefix_len > 0 && prefix != NULL && key->prefix != NULL &&
+            memcmp(prefix, key->prefix, prefix_len) == 0)));
+}
+
+uint32_t DnssecPrefixEntry::Hash()
+{
+    if (hash == 0)
+    {
+        hash = 0xCACAB0B0;
+
+        for (size_t i = 0; i < prefix_len; i++)
+        {
+            hash = hash * 101 + prefix[i];
+        }
+    }
+
+    return hash;
+}
+
+DnssecPrefixEntry * DnssecPrefixEntry::CreateCopy()
+{
+
+    DnssecPrefixEntry * key = new DnssecPrefixEntry();
+
+    if (key != NULL)
+    {
+        key->is_dnssec = is_dnssec;
+        key->prefix_len = prefix_len;
+        if (prefix_len > 0) {
+            key->prefix = new uint8_t[prefix_len];
+
+            if (key->prefix = NULL) {
+                delete key;
+                key = NULL;
+            }
+        }
+    }
+
+    return key;
+}
+
+void DnssecPrefixEntry::Add(DnssecPrefixEntry * key)
+{
+    is_dnssec |= key->is_dnssec;
 }
