@@ -43,7 +43,9 @@ enum DnsRtype {
     DnsRtype_OPT = 41, /* EDNS0 OPT record */
     DnsRtype_DS = 43, /* DNSSEC DS */
     DnsRtype_RRSIG = 46, /* DNSSEC RRSIG */
+    DnsRtype_NSEC = 47, /* DNSSEC NSEC */
     DnsRtype_DNSKEY = 48, /* DNSSEC KEY */
+    DnsRtype_NSEC3 = 50, /* DNSSEC NSEC3 */
     DnsRtype_TLSA = 52, /* DANE Certificate */ 
     DnsRtype_TSIG = 250, /* Transaction Signature */
     DnsRtype_ANY = 255, /*Not a DNS type, but a DNS query type, meaning "all types"*/

@@ -76,6 +76,8 @@
 #define REGISTRY_DNS_Frequent_TLD_Usage 38
 #define REGISTRY_DNS_TLD_Usage_Count 39
 #define REGISTRY_DNS_Local_TLD_Usage_Count 40
+#define REGISTRY_DNSSEC_Client_Usage 41
+#define REGISTRY_DNSSEC_Zone_Usage 42
 
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
@@ -236,6 +238,7 @@ public:
     int query_count;
     int response_count;
     uint32_t error_flags;
+    uint32_t dnssec_name_index;
     bool is_do_flag_set;
 
 
@@ -247,6 +250,7 @@ public:
     void RegisterDnssecUsageByAddress(uint8_t * source_addr, size_t source_addr_length);
     void RegisterDnssecUsageByName(uint8_t * packet, uint32_t length, uint32_t name_start,
         bool is_dnssec);
+    void ExportDnssecUsage();
 
     int GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
         uint8_t * name, size_t name_max, size_t * name_length);
@@ -300,6 +304,8 @@ private:
     void RegisterDnssecUsageByPrefix(
         BinHash<DnssecPrefixEntry> * dnssecTable,
         uint8_t * prefix, size_t prefix_length, bool is_dnssec);
+
+    void ExportDnssecUsageByTable(BinHash<DnssecPrefixEntry> * dnssecTable, uint32_t registry_id);
 };
 
 #endif /* DNSTAT_H */

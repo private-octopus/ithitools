@@ -22,3 +22,5 @@ x64
 */*.xbf
 */*.ilk
 
+/clitest/save_test.csv
+/clitest/capture_list.txt

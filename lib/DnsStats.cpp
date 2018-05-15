@@ -120,7 +120,9 @@ static char const * RegistryNameById[] = {
     "RFC6761Usage",
     "Frequent-TLD-usage",
     "TLD-Usage-Count",
-    "Local_TLD_Usage_Count"
+    "Local_TLD_Usage_Count",
+    "DNSSEC_Client_Usage",
+    "DNSSEC_Zone_Usage"
 };
 
 static uint32_t RegistryNameByIdNb = sizeof(RegistryNameById) / sizeof(char const*);
@@ -412,6 +414,17 @@ int DnsStats::SubmitRecord(uint8_t * packet, uint32_t length, uint32_t start,
                     SubmitRegistryNumber(REGISTRY_DNS_Q_RRType, rrtype);
                 }
 
+                /* For records of type RRSIG, NSEC, NSEC3, DNSKEY, DS,
+                 * mark the domain as supporting DNSSEC */
+                if (dnssec_name_index == 0 && (
+                    rrtype == DnsRtype_DNSKEY ||
+                    rrtype == DnsRtype_RRSIG ||
+                    rrtype == DnsRtype_NSEC ||
+                    rrtype == DnsRtype_NSEC3 || 
+                    rrtype == DnsRtype_DS)) {
+                    dnssec_name_index = name_start;
+                }
+             
                 /* Further parsing for OPT, DNSKEY, RRSIG, DS,
                  * and maybe also AFSDB, NSEC3, DHCID, RSYNC types */
                 switch (rrtype)
@@ -527,10 +540,12 @@ void DnsStats::SubmitOPTRecord(uint32_t flags, uint8_t * content, uint32_t lengt
         *e_rcode = (flags >> 24) & 0xFF;
     }
 
+    /* Register whether the DO bit was set */
+    is_do_flag_set = (flags & (1<<15)) != 0;
+
+    /* Add flags to registration */
     for (int i = 0; i < 16; i++)
     {
-        is_do_flag_set = (flags & 1) != 0;
-
         if ((flags & (1 << i)) != 0)
         {
             SubmitRegistryNumber(REGISTRY_EDNS_Header_Flags, 15 - i);
@@ -1311,6 +1326,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
 
     error_flags = 0;
     is_do_flag_set = false;
+    dnssec_name_index = 0;
 
     if (rootAddresses.GetCount() == 0)
     {
@@ -1566,6 +1582,22 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     }
 
     SubmitRegistryNumber(REGISTRY_DNS_error_flag, error_flags);
+
+    if (has_header && is_response && opcode == DNS_OPCODE_QUERY &&
+        rcode == DNS_RCODE_NOERROR && error_flags == 0 &&
+        !rootAddresses.IsInList(source_addr, source_addr_length)) {
+        /* Do not perform client statistic on root traffic, but do it
+         * for all other sources of traffic */
+        RegisterDnssecUsageByAddress(dest_addr, dest_addr_length);
+
+        if (is_do_flag_set) {
+            if (dnssec_name_index == 0) {
+                RegisterDnssecUsageByName(packet, length, 12, false);
+            } else {
+                RegisterDnssecUsageByName(packet, length, dnssec_name_index, true);
+            }
+        }
+    }
 }
 
 bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
@@ -1576,7 +1608,10 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
     ExportLeakedDomains();
     /* Get the ordered list of domain string usage into the main hash */
     ExportStringUsage();
+    /* get the counts of DNSSEC usage per address and per zone */
+    ExportDnssecUsage();
 
+    /* Export the data */
     cs->Reserve(hashTable.GetCount()+1);
 
     /* Export the stored values */
@@ -2068,6 +2103,14 @@ void DnsStats::RegisterDnssecUsageByName(uint8_t * packet, uint32_t length, uint
     }
 }
 
+void DnsStats::ExportDnssecUsage()
+{
+    ExportDnssecUsageByTable(&dnssecAddressTable, REGISTRY_DNSSEC_Client_Usage);
+    dnssecAddressTable.Clear();
+    ExportDnssecUsageByTable(&dnssecPrefixTable, REGISTRY_DNSSEC_Zone_Usage);
+    dnssecPrefixTable.Clear();
+}
+
 void DnsStats::RegisterDnssecUsageByPrefix(
     BinHash<DnssecPrefixEntry> * dnssecTable,
     uint8_t * prefix, size_t prefix_length, bool is_dnssec)
@@ -2080,6 +2123,31 @@ void DnsStats::RegisterDnssecUsageByPrefix(
     dpe.is_dnssec = is_dnssec;
 
     dnssecTable->InsertOrAdd(&dpe, true, &stored);
+}
+
+void DnsStats::ExportDnssecUsageByTable(BinHash<DnssecPrefixEntry>* dnssecTable, uint32_t registry_id)
+{
+    DnssecPrefixEntry *dpe;
+    uint32_t usage_count = 0;
+    uint32_t nonusage_count = 0;
+
+    for (uint32_t i = 0; i < dnssecTable->GetSize(); i++)
+    {
+        dpe = dnssecTable->GetEntry(i);
+
+        while (dpe != NULL)
+        {
+            if (dpe->is_dnssec) {
+                usage_count++;
+            } else {
+                nonusage_count++;
+            }
+            dpe = dpe->HashNext;
+        }
+    }
+    
+    SubmitRegistryNumberAndCount(registry_id, 0, nonusage_count);
+    SubmitRegistryNumberAndCount(registry_id, 1, usage_count);
 }
 
 DnssecPrefixEntry::DnssecPrefixEntry() :
@@ -2130,9 +2198,12 @@ DnssecPrefixEntry * DnssecPrefixEntry::CreateCopy()
         if (prefix_len > 0) {
             key->prefix = new uint8_t[prefix_len];
 
-            if (key->prefix = NULL) {
+            if (key->prefix == NULL) {
                 delete key;
                 key = NULL;
+            }
+            else {
+                memcpy(key->prefix, key, prefix_len);
             }
         }
     }
