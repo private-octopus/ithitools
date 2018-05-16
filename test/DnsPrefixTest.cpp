@@ -20,6 +20,7 @@
 */
 #include <stdio.h>
 #include <ctype.h>
+#include <string.h>
 #include "DnsStats.h"
 #include "DnsPrefixTest.h"
 
