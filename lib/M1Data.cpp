@@ -51,10 +51,12 @@ bool M1Data::Load(char const * monthly_compliance_file_name)
     M1RegSummary_t reg_summary;
     char buffer[512];
     char category[512];
+    char month[64];
     double half_sum = 0;
     double ninety_mark = 0;
     double current_sum = 0;
     size_t current_reg = 0;
+    bool skip_month_column = false;
 
 #ifdef _WINDOWS
     errno_t err = fopen_s(&F, monthly_compliance_file_name, "r");
@@ -84,6 +86,9 @@ bool M1Data::Load(char const * monthly_compliance_file_name)
         start = CsvHelper::read_string(line.name, sizeof(line.name), start, buffer, sizeof(buffer));
         start = CsvHelper::read_number(&line.RegistrarId, start, buffer, sizeof(buffer));
         start = CsvHelper::read_string(line.complaint, sizeof(line.complaint), start, buffer, sizeof(buffer));
+        if (skip_month_column) {
+            start = CsvHelper::read_string(month, sizeof(month), start, buffer, sizeof(buffer));
+        }
         start = CsvHelper::read_number(&line.Domains, start, buffer, sizeof(buffer));
         start = CsvHelper::read_number(&line.Complaints, start, buffer, sizeof(buffer));
         start = CsvHelper::read_number(&line.nb1stNotices, start, buffer, sizeof(buffer));
@@ -94,6 +99,17 @@ bool M1Data::Load(char const * monthly_compliance_file_name)
         start = CsvHelper::read_number(&line.nbNonRenewals, start, buffer, sizeof(buffer));
 
         if (line.RegistrarId > 0) {
+            /* Some files have an extra month column before the domain count */
+            if (!skip_month_column && line.Domains == 0) {
+                skip_month_column = true;
+                line.Domains = line.Complaints;
+                line.nb1stNotices = line.nb3rdNotices;
+                line.nb3rdNotices = line.nbBreaches;
+                line.nbBreaches = line.nbSuspensions;
+                line.nbSuspensions = line.nbTerminations;
+                line.nbTerminations = line.nbNonRenewals;
+                start = CsvHelper::read_number(&line.nbNonRenewals, start, buffer, sizeof(buffer));
+            }
             /* allocate data and add to vector */
             dataset.push_back(line);
         }
