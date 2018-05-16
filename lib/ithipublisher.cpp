@@ -954,16 +954,32 @@ bool ithipublisher::PublishDataM6(FILE * F)
 
 bool ithipublisher::PublishDataM7(FILE * F)
 {
-    double m7[12];
+    double m7x[12];
+    char subMetX[16];
     bool ret = true;
 
-    fprintf(F, "\"M7DataSet\" : ");
-    if (GetVector("M7", NULL, m7))
-    {
-        /* M7 is present */
-        ret = PrintVector(F, m7, 100.0);
+    fprintf(F, "\"M7DataSet\" : [\n");
+
+    for (int i = 1; ret && i <= 4; i++) {
+
+        ret = snprintf(subMetX, sizeof(subMetX), "M7.%d", i) > 0;
+
+        if (ret) {
+            if (GetVector(subMetX, NULL, m7x))
+            {
+                /* M7.x is present */
+                ret = PrintVector(F, m7x, 100.0);
+
+                if (i == 4) {
+                    ret &= (fprintf(F, "\n") > 0);
+                }
+                else {
+                    ret &= (fprintf(F, ",\n") > 0);
+                }
+            }
+        }
     }
-    fprintf(F, "\n");
+    fprintf(F, "]\n");
 
     return ret;
 }
