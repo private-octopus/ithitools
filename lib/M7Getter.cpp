@@ -4,6 +4,8 @@
 #include <string.h>
 #include <stdint.h>
 #include "HashBinGeneric.h"
+#include "CaptureSummary.h"
+#include "DnsStats.h"
 #include "M7Getter.h"
 
 
@@ -12,7 +14,9 @@
 M7Getter::M7Getter()
     :
     nb_tld_queried(0),
-    nb_ds_present(0)
+    nb_ds_present(0),
+    nb_cc_tld_queried(0),
+    nb_cc_ds_present(0)
 {
 }
 
@@ -79,6 +83,15 @@ bool M7Getter::GetM7(char const * root_zone_file_name)
                 if (key->ds_count > 0)
                 {
                     nb_ds_present++;
+                }
+
+                if (key->name_len == 2) {
+                    nb_cc_tld_queried++;
+
+                    if (key->ds_count > 0)
+                    {
+                        nb_cc_ds_present++;
+                    }
                 }
 
                 key = key->HashNext;
@@ -281,7 +294,10 @@ void TldDSAsKey::Add(TldDSAsKey * key)
 
 ComputeM7::ComputeM7()
     :
-    m7(0)
+    m71(0),
+    m72(0),
+    m73(0),
+    m74(0)
 {
 }
 
@@ -294,13 +310,58 @@ bool ComputeM7::Load(char const * single_file_name)
     return m7Getter.GetM7(single_file_name);
 }
 
+double M7MetricFromExtract(std::vector<CaptureLine*> * extract)
+{
+    double ret = 0;
+    uint64_t total = 0;
+    uint64_t support = 0;
+
+    for (size_t i = 0; i < extract->size(); i++) {
+        total += (*extract)[i]->count;
+        if ((*extract)[i]->key_type == 0 && (*extract)[i]->key_number == 1) {
+            support += (*extract)[i]->count;
+        }
+    }
+
+    if (total > 0) {
+        ret = (double)support;
+        ret /= (double)total;
+    }
+
+    return ret;
+}
+
+bool ComputeM7::LoadRecursiveCapture(char const * capture_file_name)
+{
+    bool ret = false;
+    CaptureSummary cs;
+    std::vector<CaptureLine*> extractClientOccurence;
+    std::vector<CaptureLine*> extractZoneOccurence;
+
+
+    if (cs.Load(capture_file_name)) {
+        ret = true;
+
+        cs.Extract(DnsStats::GetTableName(REGISTRY_DNSSEC_Client_Usage), &extractClientOccurence);
+        m73 = M7MetricFromExtract(&extractClientOccurence);
+        cs.Extract(DnsStats::GetTableName(REGISTRY_DNSSEC_Zone_Usage), &extractZoneOccurence);
+        m74 = M7MetricFromExtract(&extractZoneOccurence);
+    }
+
+    return ret;
+}
+
 bool ComputeM7::Compute()
 {
     bool ret = true;
 
     if (m7Getter.nb_tld_queried > 0)
     {
-        m7 = ((double)m7Getter.nb_ds_present) / ((double)m7Getter.nb_tld_queried);
+        m71 = ((double)m7Getter.nb_ds_present) / ((double)m7Getter.nb_tld_queried);
+
+        if (m7Getter.nb_cc_tld_queried > 0) {
+            m72 = ((double)m7Getter.nb_cc_ds_present) / ((double)m7Getter.nb_cc_tld_queried);
+        }
     }
     else
     {
@@ -314,7 +375,10 @@ bool ComputeM7::Write(FILE * F_out)
 {
     bool ret = true;
 
-    ret = (fprintf(F_out, "M7, , %6f,\n", m7) > 0);
+    ret = (fprintf(F_out, "M7.1, , %6f,\n", m71) > 0);
+    ret &= (fprintf(F_out, "M7.2, , %6f,\n", m72) > 0);
+    ret &= (fprintf(F_out, "M7.3, , %6f,\n", m73) > 0);
+    ret &= (fprintf(F_out, "M7.4, , %6f,\n", m74) > 0);
 
     return ret;
 }

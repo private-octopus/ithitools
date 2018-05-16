@@ -32,6 +32,9 @@ public:
     bool GetM7(char const * root_zone_file_name);
     int nb_tld_queried;
     int nb_ds_present;
+    int nb_cc_tld_queried;
+    int nb_cc_ds_present;
+
 
 private:
 
@@ -45,12 +48,16 @@ public:
     ~ComputeM7();
 
     bool Load(char const * single_file_name) override;
+    bool LoadRecursiveCapture(char const * capture_file_name);
     bool Compute() override;
     bool Write(FILE * F_out) override;
 
 private:
     M7Getter m7Getter;
-    double m7;
+    double m71;
+    double m72;
+    double m73;
+    double m74;
 };
 
 #endif
