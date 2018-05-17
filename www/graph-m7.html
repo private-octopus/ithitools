@@ -9,15 +9,15 @@
 
 <script type="text/javascript">
 
-var canvas ;
-var context ;
-var Val_max;
-var Val_min;
-var sections;
-var xScale;
-var yScale;
+    var canvas ;
+    var context ;
+    var Val_max;
+    var Val_min;
+    var sections;
+    var xScale;
+    var yScale;
 
-var M7Data; // Will be obtained from the web server.
+    var M7Data; // Will be obtained from the web server.
 
     function init() {
         initnav();
@@ -37,17 +37,29 @@ var M7Data; // Will be obtained from the web server.
     }
 
     function draw_page() {
-        // set these values for your data 
+        // set these values for your data
+
         setDateElement(M7Data.date);
-        setValElement("valM7", getLastElement(M7Data.M7DataSet));
-        setValElement("averageM7", getAverageElement(M7Data.M7DataSet));
 
-        // Plot the chart
-        setScale("graphM7");
+        elementRefList = ["valM71", "valM72", "valM73", "valM74"];
+        elementAverageList = ["averageM71", "averageM72", "averageM73", "averageM74"];
+        elementRefVal = [getLastElement(M7Data.M7DataSet[0]), getLastElement(M7Data.M7DataSet[1]), getLastElement(M7Data.M7DataSet[2]), getLastElement(M7Data.M7DataSet[3])];
+        elementAverageVal = [getAverageElement(M7Data.M7DataSet[0]), getAverageElement(M7Data.M7DataSet[1]), getAverageElement(M7Data.M7DataSet[2]), getAverageElement(M7Data.M7DataSet[3])];
+        
+        for (i = 0; i < 4; i++) {
+            dataM7x = M7Data.M7DataSet[i];
+            setValElement(elementRefList[i], elementRefVal[i]);
+            setValElement(elementAverageList[i], elementAverageVal[i]);
+        }
+        
+        // Plot the charts
 
-        plotGraphM7(M7Data.M7DataSet, "#404040C0");
+        plotGraphM7("graphM71", M7Data.M7DataSet[0], "#404040C0");
+        plotGraphM7("graphM72", M7Data.M7DataSet[1], "#404040C0");
+        plotGraphM7("graphM73", M7Data.M7DataSet[2], "#404040C0");
+        plotGraphM7("graphM74", M7Data.M7DataSet[3], "#404040C0");
     }
-
+    
     function setDateElement(date) {
         dateElement = document.getElementById("dateHeading");
         dateElement.innerHTML = date;
@@ -74,8 +86,8 @@ var M7Data; // Will be obtained from the web server.
     }
 
     function getAverageElement(dataSet) {
-        if (dataSet.length <= 1) {
-            return "-";
+        if (dataSet.length <= 2) {
+            return dataSet[0];
         }
         else {
             last = dataSet.length - 2;
@@ -136,7 +148,9 @@ var M7Data; // Will be obtained from the web server.
         context.scale(1, -1 * yScale);
     }
 
-    function plotGraphM7(dataSet, graphColor) {
+    function plotGraphM7(canvasId, dataSet, graphColor) {
+        setScale(canvasId);
+
         l = dataSet.length;
 
         if (l > sections) {
@@ -165,17 +179,49 @@ var M7Data; // Will be obtained from the web server.
 
 <body onLoad="init()">
 
-<nav id="navMenu"></nav>
+    <nav id="navMenu"></nav>
 
-<h1>M7: DNSSEC Deployment</h1>
-<h2 id="dateHeading">-</h2>
+    <h1>M7: DNSSEC Deployment</h1>
+    <h2 id="dateHeading">-</h2>
     <p>
-        We track the deployment of DNSSEC by measuring the number of top level domains 
-        that are signed according to DNSSEC. The data is measured by parsing a 
-        copy of the root zone. The metric M7 is defined as the ratio of the number of 
-        TLD for which at least one DS record is present over the total number of TLD 
-        in the root zone.
+        We track the deployment of DNSSEC by tracking four metrics:
     </p>
+    <ul>
+        <li>
+            M7.1: the fraction of Top Level Domain zones signed with DNSSEC. This is
+            measured by parsing a
+            copy of the root zone. The metric M7.1 is defined as the ratio of the number of
+            TLD for which at least one DS record is present over the total number of TLD
+            in the root zone.
+        </li>
+        <li>
+            M7.2: the fraction of Country Code Top Level Domain zones signed with DNSSEC.
+            Ths is also measured parsing a
+            copy of the root zone. The metric M7.1 is defined as the ratio of the number of
+            CC TLD for which at least one DS record is present over the total number of CC TLD
+            in the root zone.
+        </li>
+        <li>
+            M7.3: the fraction of DNS Clients ready for DNSSEC.
+            This is computed at recursive resolvers.
+            We compute the ratio of the number of clients that sent requests with the EDNS "DNSSEC OK"
+            option set, over the total number of clients. Clients are identified by IP address,
+            and a given IP address is only counted once. The ratios measured at recursive
+            resolvers are then averaged to compute the metric.
+        </li>
+        <li>
+            M7.4: the fraction of Zones publishing DNSSEC records.
+            This is also computed at recursive resolvers.
+            We compute the ratio of the number of DNS zones for which we saw at
+            least one DNSSEC record (DNSKEY, RRSIG, NSEC, NSEC3 or DS) over the
+            total number of zones queried at the recursive resolver.
+            Zones are identified by a prefix, computed using
+            <a href="https://publicsuffix.org/">Mozilla's Public Suffix List</a>.
+            Each prefix is only counted once.
+            The ratios measured at recursive
+            resolvers are then averaged to compute the metric.
+        </li>
+    </ul>
     <p>
         In the following table, the <em>current value</em> is the
         value of the metric for the current month.
@@ -192,22 +238,85 @@ var M7Data; // Will be obtained from the web server.
         </tr>
         <tr>
             <td>
-                M7: % of TLDs signed with DNSSEC
+                <a href="#M71">M7.1: % of TLDs signed with DNSSEC</a>
             </td>
-            <td class="number" id="valM7">
+            <td class="number" id="valM71">
                 -
             </td>
-            <td class="number" id="averageM7">
+            <td class="number" id="averageM71">
+                -
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <a href="#M72">M7.2: % of CC TLDs signed with DNSSEC</a>
+            </td>
+            <td class="number" id="valM72">
+                -
+            </td>
+            <td class="number" id="averageM72">
+                -
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <a href="#M73">M7.3: % of Clients ready for DNSSEC</a>
+            </td>
+            <td class="number" id="valM73">
+                -
+            </td>
+            <td class="number" id="averageM73">
+                -
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <a href="#M74">M7.4: % of Zones publishing DNSSEC</a>
+            </td>
+            <td class="number" id="valM74">
+                -
+            </td>
+            <td class="number" id="averageM74">
                 -
             </td>
         </tr>
     </table>
+
+    <h3 id="M71">M7.1: % of TLDs signed with DNSSEC</h3>
     <p>
-        The following graph shows the evolution of M7 over time.
+        The following graph shows the evolution of the DNSSEC metric M7.1 over time.
     </p>
 
-    <canvas id="graphM7" height="400" width="650">
-        No M7 data available
+    <canvas id="graphM71" height="400" width="650">
+        No M7.1 data available
     </canvas>
+
+    <h3 id="M72">M7.2: % of CC TLDs signed with DNSSEC</h3>
+    <p>
+        The following graph shows the evolution of the DNSSEC metric M7.2 over time.
+    </p>
+
+    <canvas id="graphM72" height="400" width="650">
+        No M7.2 data available
+    </canvas>
+
+    <h3 id="M73">M7.3: % of Clients ready for DNSSEC</h3>
+    <p>
+        The following graph shows the evolution of the DNSSEC metric M7.3 over time.
+    </p>
+
+    <canvas id="graphM73" height="400" width="650">
+        No M7.3 data available
+    </canvas>
+
+    <h3 id="M74">M7.4: % of Zones publishing DNSSEC</h3>
+    <p>
+        The following graph shows the evolution of the DNSSEC metric M7.4 over time.
+    </p>
+
+    <canvas id="graphM74" height="400" width="650">
+        No M7.4 data available
+    </canvas>
+
 </body>
 </html>
