@@ -2203,7 +2203,7 @@ DnssecPrefixEntry * DnssecPrefixEntry::CreateCopy()
                 key = NULL;
             }
             else {
-                memcpy(key->prefix, key, prefix_len);
+                memcpy(key->prefix, prefix, prefix_len);
             }
         }
     }
