@@ -1,0 +1,6 @@
+PACKAGE (1.02.ppa1) UNRELEASED; urgency=medium
+
+  * Version 1.02 is the first version for which the PPA package is
+    attempted
+
+ -- Christian Huitema <huitema@huitema.net>  Wed, 23 May 2018 00:32:58 -0700
