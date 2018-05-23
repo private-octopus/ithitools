@@ -1,4 +1,4 @@
-PACKAGE (1.02.ppa1) UNRELEASED; urgency=medium
+ithitools (1.02.ppa1) unstable; urgency=medium
 
   * Version 1.02 is the first version for which the PPA package is
     attempted
