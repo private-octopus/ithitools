@@ -17,14 +17,14 @@ manpage.1: manpage.sgml
   -->
 
   <!-- Fill in your name for FIRSTNAME and SURNAME. -->
-  <!ENTITY dhfirstname "<firstname>FIRSTNAME</firstname>">
-  <!ENTITY dhsurname   "<surname>SURNAME</surname>">
+  <!ENTITY dhfirstname "<firstname>Christian</firstname>">
+  <!ENTITY dhsurname   "<surname>Huitema</surname>">
   <!-- Please adjust the date whenever revising the manpage. -->
   <!ENTITY dhdate      "<date>May 23 2018</date>">
   <!-- SECTION should be 1-8, maybe w/ subsection other parameters are
        allowed: see man(7), man(1). -->
-  <!ENTITY dhsection   "<manvolnum>SECTION</manvolnum>">
-  <!ENTITY dhemail     "<email>christian@unknown</email>">
+  <!ENTITY dhsection   "<manvolnum>7</manvolnum>">
+  <!ENTITY dhemail     "<email>huitema@huitema.net</email>">
   <!ENTITY dhusername  "Christian Huitema">
   <!ENTITY dhucpackage "<refentrytitle>Ithitools</refentrytitle>">
   <!ENTITY dhpackage   "ithitools">
