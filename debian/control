@@ -2,7 +2,7 @@ Source: ithitools
 Priority: optional
 Section: net
 Maintainer: Christian Huitema <huitema@huitema.net>
-Build-Depends: debhelper (>=9)
+Build-Depends: cmake, build-essential
 Standards-Version: 3.9.7
 Homepage: https://github.com/private-octopus/ithitools/
 #Vcs-Git: git://anonscm.debian.org/collab-maint/ithitools.git
@@ -10,7 +10,7 @@ Homepage: https://github.com/private-octopus/ithitools/
 
 Package: ithitools
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends:
 Description: ITHITOOLS, set of tools for ICANN's ITHI metrics
  The ITHITOOLS program include a set of tools designed to compute some of
  "Identifier Technology Health Indicators" (ITHI) metrics defined by ICANN.
@@ -18,4 +18,3 @@ Description: ITHITOOLS, set of tools for ICANN's ITHI metrics
  presentation of the ITHI work is available here: https://www.icann.org/ithi.
  The capture part of the tools are focused on a subset of the ITHI problem, 
  specifically the computation of the IHTI metrics M3, M4, M6 and M7.
-
