@@ -5,6 +5,7 @@ Release: 1
 
 License: MIT
 URL: https://github.com/private-octopus/ithitools
+Source0:        %{name}_%{version}.orig.tar.gz
 
 BuildRequires: cmake
 
