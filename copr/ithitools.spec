@@ -16,3 +16,19 @@ The identifiers include Names, Numbers, and Protocol Parameters. A general
 presentation of the ITHI work is available here: https://www.icann.org/ithi.
 The capture part of the tools are focused on a subset of the ITHI problem,
 specifically the computation of the IHTI metrics M3, M4, M6 and M7.
+
+
+%prep
+%setup -q -n %{name}_%{version}
+
+%build
+cmake .
+make
+
+%install
+make install DESTDIR=$RPM_BUILD_ROOT
+
+%changelog
+* Fri May 25 2016 Christian Huitema <huitema@huitema.net> 1.02
+- Initial package
+
