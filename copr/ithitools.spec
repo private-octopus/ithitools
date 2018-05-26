@@ -5,8 +5,7 @@ Release: 1
 
 License: MIT
 URL: https://github.com/private-octopus/ithitools
-VCS:        {{{ git_vcs }}}
-Source: {{{ git_pack }}}
+Source0: https://github.com/private-octopus/ithitools/archive/master.tar.gz#/%{name}-%{version}-%{release}.tar.gz
 
 BuildRequires: cmake
 
@@ -20,7 +19,7 @@ specifically the computation of the IHTI metrics M3, M4, M6 and M7.
 
 
 %prep
-{{{ git_setup_macro }}}
+%autosetup -n %{name}-master
 
 %build
 cmake .
