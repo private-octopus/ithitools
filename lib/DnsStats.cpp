@@ -1980,7 +1980,7 @@ uint32_t DnsPrefixEntry::Hash()
 
 DnsPrefixEntry * DnsPrefixEntry::CreateCopy()
 {
-    return nullptr;
+    return NULL;
 }
 
 void DnsPrefixEntry::Add(DnsPrefixEntry * key)

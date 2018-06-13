@@ -31,8 +31,6 @@ make
 make install DESTDIR=$RPM_BUILD_ROOT
 
 %files
-/usr/lib/debug/usr/local/bin/ithitools-1.02-1.02-1.x86_64.debug
-/usr/lib/debug/usr/local/lib/libithicap.so.1.02-1.02-1.x86_64.debug
 /usr/local/bin/ithitools
 /usr/local/bin/ithitools-1.02
 /usr/local/include/ithicap.h
