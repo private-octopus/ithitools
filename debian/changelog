@@ -1,3 +1,20 @@
+ithitools (1.02.ppa4-0ubuntu1) xenial; urgency=medium
+
+  [ Christian Huitema ]
+  * Fix dhhelper dependencies
+
+ -- Christian Huitema <huitema@huitema.net>  Thu, 14 Jun 2018 16:17:19 -0700
+
+ithitools (1.02.ppa3-0ubuntu1) xenial; urgency=medium
+
+  [ Christian Huitema ]
+  * Fix version dependencies
+
+  [ Christian Huitema <huitema@huitema.net> ]
+  * Install multiple binaries
+
+ -- Christian Huitema <huitema@huitema.net>  Thu, 14 Jun 2018 15:15:19 -0700
+
 ithitools (1.02.ppa1-0ubuntu1) xenial; urgency=medium
 
   * Version 1.02 is the first version for which the PPA package is

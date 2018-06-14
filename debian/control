@@ -2,7 +2,7 @@ Source: ithitools
 Priority: optional
 Section: net
 Maintainer: Christian Huitema <huitema@huitema.net>
-Build-Depends: cmake, build-essential
+Build-Depends: cmake, debhelper (>=9) 
 Standards-Version: 3.9.7
 Homepage: https://github.com/private-octopus/ithitools/
 #Vcs-Git: git://anonscm.debian.org/collab-maint/ithitools.git
