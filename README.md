@@ -35,7 +35,8 @@ The "ithicap" capture options can be displayed with the option -h, as in:
 ~~~
     dnscap <dnscap-parameters> -P libithicap.so -h
 ~~~ 
-
+More information on configuring dnscap and the ithicap plugin can be found on
+the [DBS capture settings wiki page](https://github.com/private-octopus/ithitools/wiki/Capture-of-DNS-statistics-using-dnscap-and-ithicap).
 
 # Building ITHITOOLS
 
@@ -114,3 +115,28 @@ or set explicit arguments to CMAKE, such as:
 ~~~
 The exact value of the arguments depend of course of where the compilers
 are installed.
+
+# Binary downloads
+
+Binary downloads are supported on selected distributions of Linux.
+
+## Linux CentOS and Fedora
+
+Ithitools can be obtained through the [COPR](https://pagure.io/copr/copr) service on CentOS versions 6 and 7,
+and on Fedora versions 26, 27, 28 and Rawhide. The process has three steps:
+
+1) Subscribe to the ithitools project:
+```
+dnf copr enable chuitema/ithitools
+```
+2) Install ithitools:
+```
+dnf install ithitools
+```
+3) Once the package is installed, Linux will occasionally prompt for updates. This
+should be automatic, but just in case the command will be:
+```
+dnf update ithitools
+```
+On older systems, the "dnf" command is not supported -- use "yum" instead. These are
+system commands, so you may need to use "sudo" as appropriate.
