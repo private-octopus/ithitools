@@ -1,3 +1,10 @@
+ithitools (1.02.ppa5-0ubuntu1) xenial; urgency=medium
+
+  [ Christian Huitema ]
+  * Prepare sources without running cmake locally
+
+ -- Christian Huitema <huitema@huitema.net>  Thu, 14 Jun 2018 17:02:19 -0700
+
 ithitools (1.02.ppa4-0ubuntu1) xenial; urgency=medium
 
   [ Christian Huitema ]
