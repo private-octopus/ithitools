@@ -140,3 +140,19 @@ dnf update ithitools
 ```
 On older systems, the "dnf" command is not supported -- use "yum" instead. These are
 system commands, so you may need to use "sudo" as appropriate.
+
+## Ubuntu
+
+Ithitools can be obtained through the [Launchpad](https://launchpad.net/) service for recent Ubuntu builds.
+The process has two steps:
+
+1) Subscribe to the ithitools project and get it:
+```
+sudo add-apt-repository ppa:chuitema/ppa
+sudo apt-get update
+```
+2) Updates should arrive as part of the regular updates for Ubuntu packages.
+
+## Other distributions
+
+Sorry, but for the other distributions you will have to clone the sources from Github and compile.
