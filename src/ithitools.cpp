@@ -71,7 +71,7 @@ int usage()
     fprintf(stderr, "  -i ithi/folder     File path of the ITHI folder (ITHI).\n");
     fprintf(stderr, "                     If not specified, use the current directory.\n");
     fprintf(stderr, "  -d yyyy-mm-dd      Date for which the metrics shall be computed.");
-    fprintf(stderr, "                     If not specified, use current day.\n");
+    fprintf(stderr, "                     If not specified, use last day of the current month.\n");
     fprintf(stderr, "  -y accuracy.csv    CSV file containing accuracy data needed for M1.\n");
     fprintf(stderr, "                     If not specified, M1 data is read from (ITHI)/input/M1/\n");
     fprintf(stderr, "  -b abuse.csv       CSV file containing TLD abuse data needed for M2.\n");
