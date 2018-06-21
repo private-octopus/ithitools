@@ -172,7 +172,7 @@ int main(int argc, char ** argv)
 
     /* Get the parameters */
     int opt;
-    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:M:t:u:i:d:y:b:B:z:l:1:2:3:4:5:6:7:S:w:hfcsmpT?")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:hfcsmpT?")) != -1)
     {
         switch (opt)
         {
@@ -280,7 +280,7 @@ int main(int argc, char ** argv)
                 fprintf(stderr, "Cannot set root capture file name = %s\n", optarg);
             }
             break;
-        case 'e':
+        case 'k':
             recursive_capture_file = optarg;
             if (!met.SetRecursiveCaptureFileName(optarg))
             {
