@@ -85,7 +85,7 @@ bool MetricTest::DoTest()
         if (!met.SetComplianceFileName(compliance_file))
         {
             ret = false;
-            TEST_LOG("Could not set compliance file to %s\n", root_zone_file);
+            TEST_LOG("Could not set compliance file to %s\n", compliance_file);
         }
         if (!met.SetRootZoneFileName(root_zone_file))
         {
