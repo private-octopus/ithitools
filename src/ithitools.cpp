@@ -109,7 +109,7 @@ int usage()
     fprintf(stderr, "  -i ithi/folder     File path of the ITHI folder (ITHI).\n");
     fprintf(stderr, "                     If not specified, use the current directory.\n");
     fprintf(stderr, "  -w web/folder      File path where to write web pages.\n");
-    fprintf(stderr, "                     If not specified, use (ITHI)/www.\n");
+    fprintf(stderr, "                     If not specified, use the current directory.\n");
 
     return -1;
 }
