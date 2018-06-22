@@ -1,0 +1,9 @@
+sudo: false
+language: cpp
+compiler:
+  - gcc
+  - clang
+script:
+  - CXXFLAGS="-Wall -Wextra -Wpedantic" CFLAGS="-Wall -Wextra -Wpedantic" cmake .
+  - make
+  - ./ithitest
