@@ -37,7 +37,9 @@
  */
 #include "config.h"
 #include "DnsStats.h"
-#ifndef HAVE_GETOPT
+#ifdef HAVE_GETOPT
+#include <unistd.h>
+#else
 #include "getopt.h"
 #endif
 #include "dnscap_common.h"

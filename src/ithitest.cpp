@@ -26,7 +26,9 @@
 #include <stdlib.h>
 #include "pcap_reader.h"
 #include "DnsStats.h"
-#ifndef HAVE_GETOPT
+#ifdef HAVE_GETOPT
+#include <unistd.h>
+#else
 #include "getopt.h"
 #endif
 #include "CaptureSummary.h"
