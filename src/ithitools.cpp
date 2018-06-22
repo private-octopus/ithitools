@@ -28,10 +28,13 @@
 #include "stdio.h"
 #endif
 
+#include "config.h"
 #include <stdlib.h>
 #include "pcap_reader.h"
 #include "DnsStats.h"
+#ifndef HAVE_GETOPT
 #include "getopt.h"
+#endif
 #include "CaptureSummary.h"
 #include "ithimetrics.h"
 #include "ithipublisher.h"
