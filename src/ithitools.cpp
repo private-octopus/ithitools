@@ -71,7 +71,7 @@ int usage()
     fprintf(stderr, "  -i ithi/folder     File path of the ITHI folder (ITHI).\n");
     fprintf(stderr, "                     If not specified, use the current directory.\n");
     fprintf(stderr, "  -d yyyy-mm-dd      Date for which the metrics shall be computed.");
-    fprintf(stderr, "                     If not specified, use current day.\n");
+    fprintf(stderr, "                     If not specified, use last day of the current month.\n");
     fprintf(stderr, "  -y accuracy.csv    CSV file containing accuracy data needed for M1.\n");
     fprintf(stderr, "                     If not specified, M1 data is read from (ITHI)/input/M1/\n");
     fprintf(stderr, "  -b abuse.csv       CSV file containing TLD abuse data needed for M2.\n");
@@ -109,7 +109,7 @@ int usage()
     fprintf(stderr, "  -i ithi/folder     File path of the ITHI folder (ITHI).\n");
     fprintf(stderr, "                     If not specified, use the current directory.\n");
     fprintf(stderr, "  -w web/folder      File path where to write web pages.\n");
-    fprintf(stderr, "                     If not specified, use (ITHI)/www.\n");
+    fprintf(stderr, "                     If not specified, use the current directory.\n");
 
     return -1;
 }
@@ -172,7 +172,7 @@ int main(int argc, char ** argv)
 
     /* Get the parameters */
     int opt;
-    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:M:t:u:i:d:y:b:B:z:l:1:2:3:4:5:6:7:S:w:hfcsmpT?")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:hfcsmpT?")) != -1)
     {
         switch (opt)
         {
@@ -280,7 +280,7 @@ int main(int argc, char ** argv)
                 fprintf(stderr, "Cannot set root capture file name = %s\n", optarg);
             }
             break;
-        case 'e':
+        case 'k':
             recursive_capture_file = optarg;
             if (!met.SetRecursiveCaptureFileName(optarg))
             {
