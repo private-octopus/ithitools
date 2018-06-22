@@ -21,12 +21,16 @@
 
 // ithitest.cpp : Defines the entry point for the test application.
 //
-
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "pcap_reader.h"
 #include "DnsStats.h"
+#ifdef HAVE_GETOPT
+#include <unistd.h>
+#else
 #include "getopt.h"
+#endif
 #include "CaptureSummary.h"
 #include "ithimetrics.h"
 

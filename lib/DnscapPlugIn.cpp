@@ -35,10 +35,17 @@
  * This code provides an implementation of the required functions, which
  * will link to a static set of C++ objects for doing the capture.
  */
-
+#include "config.h"
 #include "DnsStats.h"
+#ifdef HAVE_GETOPT
+#include <unistd.h>
+#else
 #include "getopt.h"
+#endif
 #include "dnscap_common.h"
+#ifndef _WINDOWS
+#include <sys/socket.h>
+#endif
 
 /*
  * Common static variables. They have to be initialized and deleted as captures 
