@@ -54,7 +54,8 @@ static char const * DefaultRootAddresses[] = {
     "2001:503:ba3e::2:30",
     "198.41.0.4",
     "2001:500:200::b",
-    "192.228.79.201",
+    "192.228.79.201", /* Since 2017-10-24, b.root-servers.net changed from 192.228.79.201 to 199.9.14.201 */
+    "199.9.14.201",   /* See https://b.root-servers.org/news/2017/08/09/new-ipv4.html */
     "2001:500:2::c",
     "192.33.4.12",
     "2001:500:2d::d",
