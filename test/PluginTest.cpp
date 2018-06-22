@@ -25,6 +25,9 @@
 #include "pcap_reader.h"
 #include "CaptureSummary.h"
 #include "PluginTest.h"
+#ifndef _WINDOWS
+#include <sys/socket.h>
+#endif
 
 #ifdef _WINDOWS
 #ifndef _WINDOWS64
