@@ -181,43 +181,46 @@ bool pcap_reader::ReadNext()
         }
     }
 
-    if (ret && header.network == 1)
+    if (ret && (header.network == 1 || header.network == 101))
     {
-        /* Ethernet */
-        int payload_type = (buffer[12] << 8) | (buffer[13]);
+	int ip_length;
 
-        ip_offset = 14;
+	if (header.network == 1)
+	{
+	    /* Ethernet */
+	    int payload_type = (buffer[12] << 8) | (buffer[13]);
 
-        switch (payload_type)
+	    ip_offset = 14;
+	    ip_version = payload_type == 0x0800 && buffer[ip_offset] >> 4 == 4 ? 4
+	               : payload_type == 0x86DD && buffer[ip_offset] >> 4 == 6 ? 6
+	               : -1;
+	}
+	else
+	{
+	    /* Raw */
+	    ip_offset = 0;
+	    ip_version = buffer[ip_offset] >> 4;
+	}
+        switch (ip_version)
         {
-        case 0x800:
+        case 4:
             /* IPv4 */
-            if ((buffer[ip_offset] >> 4) == 4)
-            {
-                int ip_length = (buffer[ip_offset + 2] << 8) | (buffer[ip_offset + 3]);
-                is_fragment = ((buffer[ip_offset + 6] & 0x20) != 0);
-                fragment_length = (is_fragment) ?
-                    ((buffer[ip_offset + 6] & 0x1F) << 8) | (buffer[ip_offset + 7]) :
-                    ip_length;
+	    ip_length = (buffer[ip_offset + 2] << 8) | (buffer[ip_offset + 3]);
+	    is_fragment = ((buffer[ip_offset + 6] & 0x20) != 0);
+	    fragment_length = (is_fragment) ?
+		((buffer[ip_offset + 6] & 0x1F) << 8) | (buffer[ip_offset + 7]) :
+		ip_length;
 
-
-                ip_version = 4;
-
-                tp_offset = ip_offset + 20;
-                tp_version = buffer[ip_offset + 9];
-                tp_length = ip_length - (tp_offset - ip_offset);
-            }
+	    tp_offset = ip_offset + 20;
+	    tp_version = buffer[ip_offset + 9];
+	    tp_length = ip_length - (tp_offset - ip_offset);
             break;
-        case 0x86DD:
-            /* IPv6, 1 0 0 0 0 1 1 0 1 1 0 1 1 1 0 1 */
-            if ((buffer[ip_offset] >> 4) == 6)
-            {
-                ip_version = 6;
 
-                tp_offset = ip_offset + 40;
-                tp_version = buffer[ip_offset + 6];
-                tp_length = (buffer[ip_offset + 4] << 8) | (buffer[ip_offset + 5]);
-            }
+        case 6:
+            /* IPv6, 1 0 0 0 0 1 1 0 1 1 0 1 1 1 0 1 */
+            tp_offset = ip_offset + 40;
+            tp_version = buffer[ip_offset + 6];
+            tp_length = (buffer[ip_offset + 4] << 8) | (buffer[ip_offset + 5]);
             break;
         default:
             break;
