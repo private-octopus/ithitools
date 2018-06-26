@@ -35,7 +35,7 @@ class IPAsKey
 {
 public:
     IPAsKey(uint8_t * addr, size_t addr_len);
-    ~IPAsKey();
+    virtual ~IPAsKey();
 
     bool IsSameKey(IPAsKey* key);
     uint32_t Hash();

@@ -401,8 +401,3 @@ int CsvHelper::read_double(double * number, size_t start, char const * buffer, s
 
     return (int)start;
 }
-
-int CsvHelper::copy_quoted_string(char * text, int text_max, size_t start, char * buffer, size_t buffer_max)
-{
-    return 0;
-}

@@ -428,7 +428,7 @@ uint64_t CaptureSummary::GetCountByNumber(char const * table_name, uint32_t numb
     {
         if (compare_string(table_name, summary[i]->registry_name) == 0 &&
             summary[i]->key_type == 0 &&
-            summary[i]->key_number == number)
+            summary[i]->key_number == (int)number)
         {
             count = summary[i]->count;
             break;

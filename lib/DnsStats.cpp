@@ -31,17 +31,17 @@
 
 DnsStats::DnsStats()
     :
+    is_capture_stopped(false),
+    enable_frequent_address_filtering(false),
+    frequent_address_max_count(128),
+    max_tld_leakage_count(0x80),
+    max_tld_leakage_table_count(0x8000),
+    max_query_usage_count(0x8000),
+    max_tld_string_usage_count(0x8000),
     record_count(0),
     query_count(0),
     response_count(0),
-    dnsstat_flags(0),
-    frequent_address_max_count(128),
-    max_query_usage_count(0x8000),
-    max_tld_leakage_count(0x80),
-    max_tld_leakage_table_count(0x8000),
-    max_tld_string_usage_count(0x8000),
-    enable_frequent_address_filtering(false),
-    is_capture_stopped(false)
+    dnsstat_flags(0)
 {
 }
 

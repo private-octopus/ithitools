@@ -91,7 +91,7 @@ bool LoadTest::DoGoodTest()
 
         if (ret)
         {
-            ret = nb_lines = cs.Size();
+            ret = (nb_lines == cs.Size());
         }
     }
 

@@ -328,10 +328,10 @@ public:
         :
         count(1),
         hash(0),
+        indx(indx),
         HashNext(NULL),
         LessRecentKey(NULL),
-        MoreRecentKey(NULL),
-        indx(indx)
+        MoreRecentKey(NULL)
     {
         if (text_len > 16)
         {

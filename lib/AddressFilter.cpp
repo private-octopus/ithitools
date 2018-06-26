@@ -183,7 +183,6 @@ void AddressFilter::AddToList(char const * addrText)
     size_t addr_len = 0;
     struct in_addr ipv4_addr;
     struct in6_addr ipv6_addr;
-    bool ret = 0;
 
     if (inet_pton(AF_INET, addrText, &ipv4_addr) == 1)
     {

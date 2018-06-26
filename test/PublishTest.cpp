@@ -127,7 +127,7 @@ bool PublishTest::DoOneTest(int metric_id, char const ** metric_files, size_t nb
 
         ret = pub.CollectMetricFiles();
 
-        if (ret && pub.nb_months != nb_files)
+        if (ret && pub.nb_months != (int)nb_files)
         {
             ret = false;
             TEST_LOG("For metric M%d, got %d metric files instead of %d\n", metric_id,

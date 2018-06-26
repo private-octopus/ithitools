@@ -22,20 +22,20 @@
 
 pcap_reader::pcap_reader()
     :
-    F_pcap(NULL),
-    F_extract(NULL),
     is_wrong_endian(false),
     buffer_size(0),
     buffer (NULL),
     ip_version (0),
     ip_offset(0),
+    tp_length(0),
     tp_version(0),
     tp_offset(0),
-    tp_length(0),
     tp_port1(0),
     tp_port2(0),
     is_fragment(false),
-    fragment_length(0)
+    fragment_length(0),
+    F_pcap(NULL),
+    F_extract(NULL)
 {
 }
 
