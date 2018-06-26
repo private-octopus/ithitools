@@ -32,6 +32,10 @@
 #include "CaptureSummary.h"
 #include "TldAsKey.h"
 
+#ifndef UNREFERENCED_PARAMETER
+#define UNREFERENCED_PARAMETER(x) (void)(x)
+#endif
+
 /*
  * List of registry definitions 
  */

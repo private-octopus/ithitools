@@ -224,7 +224,7 @@ bool ithipublisher::ParseFileName(MetricFileHolder * file, const char * name, in
     {
         while (name[ch_index] != 0)
         {
-            if (file->file_name[ch_index] == ITHI_FILE_PATH_SEP[0])
+            if (name[ch_index] == ITHI_FILE_PATH_SEP[0])
             {
                 char_after_sep_index = ch_index + 1;
             }
@@ -232,7 +232,7 @@ bool ithipublisher::ParseFileName(MetricFileHolder * file, const char * name, in
         }
 
         /* Check that the name is well formed */
-        ret &= (char_after_sep_index + 17) < sizeof(file->file_name);
+        ret &= (char_after_sep_index + 17u) <= name_len;
     }
 
     if (ret)

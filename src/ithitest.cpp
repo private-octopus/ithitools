@@ -21,7 +21,9 @@
 
 // ithitest.cpp : Defines the entry point for the test application.
 //
+#ifndef _WINDOWS
 #include "config.h"
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include "pcap_reader.h"

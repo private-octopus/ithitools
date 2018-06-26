@@ -26,9 +26,10 @@
 #include "stdafx.h"
 #else
 #include "stdio.h"
+#include "config.h"
 #endif
 
-#include "config.h"
+
 #include <stdlib.h>
 #include "pcap_reader.h"
 #include "DnsStats.h"

@@ -38,10 +38,10 @@ DnsStats::DnsStats()
     max_tld_leakage_table_count(0x8000),
     max_query_usage_count(0x8000),
     max_tld_string_usage_count(0x8000),
+    dnsstat_flags(0),
     record_count(0),
     query_count(0),
-    response_count(0),
-    dnsstat_flags(0)
+    response_count(0)
 {
 }
 
@@ -317,6 +317,10 @@ int DnsStats::SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start, boo
     int rrtype = 0;
     uint32_t name_start = start;
 
+    /* TODO: if we decide to tabulate parameters in queries, will need
+     * to check "is_response" value and controlling flag */
+    UNREFERENCED_PARAMETER(is_response);
+
     start = SubmitName(packet, length, start, false);
 
     if (start + 4 <= length)
@@ -460,8 +464,6 @@ int DnsStats::SubmitRecord(uint8_t * packet, uint32_t length, uint32_t start,
 int DnsStats::SubmitName(uint8_t * packet, uint32_t length, uint32_t start, bool should_tabulate)
 {
     uint32_t l = 0;
-    uint32_t offset = 0;
-    uint32_t name_start = start;
 
     while (start < length)
     {
@@ -662,8 +664,6 @@ void DnsStats::SubmitRegistryString(uint32_t registry_id, uint32_t length, uint8
 int DnsStats::CheckForUnderline(uint8_t * packet, uint32_t length, uint32_t start)
 {
     uint32_t l = 0;
-    uint32_t offset = 0;
-    uint32_t previous = 0;
     uint32_t name_start = start;
 
     while (start < length)
@@ -726,7 +726,6 @@ int DnsStats::CheckForUnderline(uint8_t * packet, uint32_t length, uint32_t star
                         SubmitRegistryString(REGISTRY_DNS_txt_underline, l, underlined_name);
                     }
                 }
-                previous = start;
                 start += l + 1;
             }
         }
@@ -811,9 +810,7 @@ int DnsStats::GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t
 int DnsStats::GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
     uint8_t * name, size_t name_max, size_t * name_length)
 {
-    int ret = 0;
     uint32_t l = 0;
-    uint32_t previous = 0;
     uint32_t name_start = start;
     uint32_t start_next = 0;
     size_t name_index = 0;
@@ -1322,7 +1319,6 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     uint32_t arcount = 0;
     uint32_t parse_index = 0;
     uint32_t e_length = 512;
-    uint32_t tc_bit = 0;
     bool unfiltered = false;
 
     error_flags = 0;
@@ -1876,13 +1872,13 @@ void TldAddressAsKey::Add(TldAddressAsKey * key)
 
 DnsHashEntry::DnsHashEntry()
     :
+    HashNext(NULL),
     hash(0),
     registry_id(0),
     count(0),
     key_type(0),
     key_length(0),
-    key_number(0),
-    HashNext(NULL)
+    key_number(0)
 {
 }
 
@@ -1946,10 +1942,10 @@ void DnsHashEntry::Add(DnsHashEntry * key)
 
 DnsPrefixEntry::DnsPrefixEntry()
     :
+    HashNext(NULL),
     hash(0),
     dnsPrefix(NULL),
-    dnsPrefixClass(DnsPrefixStd),
-    HashNext(NULL)
+    dnsPrefixClass(DnsPrefixStd)
 {
 }
 
@@ -1986,6 +1982,7 @@ DnsPrefixEntry * DnsPrefixEntry::CreateCopy()
 
 void DnsPrefixEntry::Add(DnsPrefixEntry * key)
 {
+    UNREFERENCED_PARAMETER(key);
 }
 
 #include "DnsPrefixList.inc"

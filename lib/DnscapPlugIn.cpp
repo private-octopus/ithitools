@@ -35,8 +35,9 @@
  * This code provides an implementation of the required functions, which
  * will link to a static set of C++ objects for doing the capture.
  */
+#ifndef _WINDOWS
 #include "config.h"
-#include "DnsStats.h"
+#endif
 #ifdef HAVE_GETOPT
 #include <unistd.h>
 #else
@@ -46,6 +47,8 @@
 #ifndef _WINDOWS
 #include <sys/socket.h>
 #endif
+
+#include "DnsStats.h"
 
 /*
  * Common static variables. They have to be initialized and deleted as captures 
@@ -61,10 +64,6 @@ static bool libithicap_enable_filtering = false;
 static bool libithicap_enable_tld_list = false;
 static DnsStats* libithicap_stats = NULL;
 static logerr_t* logerr = NULL;
-
-#ifndef UNREFERENCED_PARAMETER
-#define UNREFERENCED_PARAMETER(x) (void)(x)
-#endif
 
 extern "C"
 {
@@ -291,6 +290,7 @@ extern "C"
         uint8_t * dest_addr;
         size_t dest_addr_length;
 
+        UNREFERENCED_PARAMETER(descr);
         UNREFERENCED_PARAMETER(proto);
         UNREFERENCED_PARAMETER(sport);
         UNREFERENCED_PARAMETER(dport);
