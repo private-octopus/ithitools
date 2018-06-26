@@ -20,11 +20,16 @@ if [ $TODAY -lt 7 ]
 
 DATE=$(date -d $DATE_CURRENT +%Y%m)
 PREVIOUS_DATE=$(date -d $DATE_PREVIOUS +%Y%m)
+YEAR=$(date -d $DATE_CURRENT +%Y)
+MM=$(date -d $DATE_CURRENT +%m)
 DATE_DASH=$(date -d $DATE_CURRENT +%Y-%m)
 PREVIOUS_DASH=$(date -d $DATE_PREVIOUS +%Y-%m)
+PREVIOUS_YEAR=$(date -d $DATE_PREVIOUS +%Y)
+PREVIOUS_MM=$(date -d $DATE_PREVIOUS +%m)
 
-echo "This month selector: $DATE (or $DATE_DASH)"
-echo "Previous month selector: $PREVIOUS_DATE (or $PREVIOUS_DASH)"
+
+echo "This month selector: $DATE (or $DATE_DASH), Year: $YEAR, Month: $MM"
+echo "Previous month selector: $PREVIOUS_DATE (or $PREVIOUS_DASH), Year: $PREVIOUS_YEAR, Month: $PREVIOUS_MM"
 
 LAST_DAY=$(date -d "$(date -d "$DATE_CURRENT +1 months" +%Y-%m-01) -1 days" +%Y-%m-%d)
 echo "Last day of this month: $LAST_DAY"
@@ -73,6 +78,12 @@ echo "Computing metrics for $LAST_LAST_DAY"
 ./ithitools/ithitools -i /home/ubuntu/ithi -d $LAST_LAST_DAY -m
 echo "Computing metrics for $LAST_DAY"
 ./ithitools/ithitools -i /home/ubuntu/ithi -d $LAST_DAY -m
+
+echo "Ingesting M5 for $LAST_LAST_DAY"
+python ithitools/src/m5ingest.py /home/gih/data/$PREVIOUS_YEAR/$PREVIOUS_MM/ /home/ubuntu/ithi/M5/M5-$LAST_LAST_DAY.csv
+
+echo "Ingesting M5 for $LAST_DAY"
+python ithitools/src/m5ingest.py /home/gih/data/$YEAR/$MM/ /home/ubuntu/ithi/M5/M5-$LAST_DAY.csv
 
 echo "Computing JSON Data for publication"
 ./ithitools/ithitools -i /home/ubuntu/ithi -w /var/www/html/ithi -p
