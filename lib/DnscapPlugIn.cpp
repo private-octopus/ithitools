@@ -62,6 +62,10 @@ static bool libithicap_enable_tld_list = false;
 static DnsStats* libithicap_stats = NULL;
 static logerr_t* logerr = NULL;
 
+#ifndef UNREFERENCED_PARAMETER
+#define UNREFERENCED_PARAMETER(x) (void)(x)
+#endif
+
 extern "C"
 {
     void libithicap_usage()
@@ -210,6 +214,8 @@ extern "C"
      */
     int libithicap_open(my_bpftimeval ts)
     {
+        UNREFERENCED_PARAMETER(ts);
+
         /* Check that this is not a double open */
         if (libithicap_stats == NULL) {
             return -1;
@@ -233,6 +239,8 @@ extern "C"
     {
         int exit_code = 0;
         CaptureSummary cs;
+
+        UNREFERENCED_PARAMETER(ts);
 
         if (libithicap_stats == NULL ||
             libithicap_stats->IsCaptureStopped()) {
@@ -282,6 +290,13 @@ extern "C"
         size_t source_addr_length;
         uint8_t * dest_addr;
         size_t dest_addr_length;
+
+        UNREFERENCED_PARAMETER(proto);
+        UNREFERENCED_PARAMETER(sport);
+        UNREFERENCED_PARAMETER(dport);
+        UNREFERENCED_PARAMETER(ts);
+        UNREFERENCED_PARAMETER(olen);
+
 
         if (libithicap_stats == NULL ||
             libithicap_stats->IsCaptureStopped()) {

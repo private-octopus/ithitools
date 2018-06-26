@@ -126,6 +126,10 @@ bool PublishTest::DoOneTest(int metric_id, char const ** metric_files, size_t nb
         ithipublisher pub(publish_test_dir_ithi, metric_id);
 
         ret = pub.CollectMetricFiles();
+        if (!ret) 
+        {
+            TEST_LOG("For metric M%d, cannot collect metric files\n", metric_id);
+        }
 
         if (ret && pub.nb_months != (int)nb_files)
         {
