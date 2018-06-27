@@ -25,7 +25,9 @@
 #include "CsvHelper.h"
 #include "M1Data.h"
 
-const int summary_registrar_id = 999999;
+#ifndef UNREFERENCED_PARAMETER
+#define UNREFERENCED_PARAMETER(x) (void)(x)
+#endif
 
 M1Data::M1Data()
     :
@@ -170,7 +172,7 @@ bool M1Data::Load(char const * monthly_compliance_file_name)
     return ret;
 }
 
-int M1Data::GetCategoryIndex(char const * category, int lastCategoryIndex)
+int M1Data::GetCategoryIndex(char const * category)
 {
     int ret = -1;
 
@@ -196,6 +198,8 @@ int M1Data::GetCategoryIndex(char const * category, int lastCategoryIndex)
 
 bool M1Data::ParseFileName(char const * monthly_compliance_file_name)
 {
+    UNREFERENCED_PARAMETER(monthly_compliance_file_name);
+
     return false;
 }
 

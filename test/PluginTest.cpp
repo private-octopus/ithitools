@@ -178,8 +178,6 @@ bool PluginTest::DoOneTest(int nb_repeat)
                       (char *) "-o",
                       (char *) pcap_test_debug };
 
-    my_bpftimeval ts = { 0, 0 };
-
     /* Set the arguments */
     LoadOpt(argc, argv);
 

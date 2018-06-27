@@ -26,9 +26,10 @@
 #include "stdafx.h"
 #else
 #include "stdio.h"
+#include "config.h"
 #endif
 
-#include "config.h"
+
 #include <stdlib.h>
 #include "pcap_reader.h"
 #include "DnsStats.h"
@@ -152,28 +153,12 @@ int main(int argc, char ** argv)
     ithimetrics met;
     CaptureSummary cs;
     DnsStats stats;
-    char const * default_inputFile = "smalltest.pcap";
-    char const * inputFile = default_inputFile;
     char const * default_csv_file = "smalltest.csv";
     char const * out_file = default_csv_file;
-    char const * root_address_file = NULL;
-    char const * allowed_addr_file = NULL;
-    char const * excluded_addr_file = NULL;
-    char const * table_version_addr_file = NULL;
     char const * metric_file = NULL;
-    char const * summary_file = NULL;
     char const * capture_summary_list = NULL;
     char const * ithi_folder = NULL;
-    char const * accuracy_file = NULL;
-    char const * root_capture_file = NULL;
-    char const * recursive_capture_file = NULL;
-    char const * lies_file = NULL;
-    char const * root_zone_file = NULL;
     char const * web_root = ".";
-    char const * metric_output_files[7] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
-    int nb_names_in_tld = 2048;
-    char * extract_file = NULL;
-    int extract_by_error_type[512] = { 0 };
 
     /* Get the parameters */
     int opt;
@@ -198,7 +183,6 @@ int main(int argc, char ** argv)
             out_file = optarg;
             break;
         case 'R':
-            root_address_file = optarg;
             fprintf(stderr, "The root addresses redefinition option is not yet implemented.\n");
             break;
         case 'a':
@@ -208,7 +192,6 @@ int main(int argc, char ** argv)
             stats.bannedAddresses.AddToList(optarg);
             break;
         case 'v':
-            table_version_addr_file = optarg;
             fprintf(stderr, "The table redefinition option is not yet implemented.\n");
             break;
         case 'n':
@@ -279,21 +262,18 @@ int main(int argc, char ** argv)
             }
             break;
         case 'r':
-            root_capture_file = optarg;
             if (!met.SetRootCaptureFileName(optarg))
             {
                 fprintf(stderr, "Cannot set root capture file name = %s\n", optarg);
             }
             break;
         case 'k':
-            recursive_capture_file = optarg;
             if (!met.SetRecursiveCaptureFileName(optarg))
             {
                 fprintf(stderr, "Cannot set recursive capture file name = %s\n", optarg);
             }
             break;
         case 'z':
-            root_zone_file = optarg;
             if (!met.SetRootZoneFileName(optarg))
             {
                 fprintf(stderr, "Cannot set root zone file name = %s\n", optarg);

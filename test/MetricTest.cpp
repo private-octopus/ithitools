@@ -224,8 +224,6 @@ bool MetricTest::compare_files(char const * fname1, char const * fname2)
 
 bool MetricTest::compare_lines(char const * b1, char const * b2)
 {
-    bool ret = true;
-
     while (*b1 != 0 && *b2 != 0)
     {
         if (*b1 != *b2)

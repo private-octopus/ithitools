@@ -7,7 +7,7 @@ class TldDSAsKey
 {
 public:
     TldDSAsKey(const char * name, size_t name_len, bool has_ds);
-    ~TldDSAsKey();
+    virtual ~TldDSAsKey();
 
     bool IsSameKey(TldDSAsKey* key);
     uint32_t Hash();

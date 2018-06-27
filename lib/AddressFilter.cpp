@@ -76,8 +76,8 @@
 
 IPAsKey::IPAsKey(uint8_t * addr, size_t addr_len)
     :
-    count(1),
     HashNext(NULL),
+    count(1),
     hash(0)
 {
     if (addr_len > 16)
@@ -183,7 +183,6 @@ void AddressFilter::AddToList(char const * addrText)
     size_t addr_len = 0;
     struct in_addr ipv4_addr;
     struct in6_addr ipv6_addr;
-    bool ret = 0;
 
     if (inet_pton(AF_INET, addrText, &ipv4_addr) == 1)
     {
@@ -302,9 +301,9 @@ uint32_t AddressUseTracker::Check(uint8_t * addr, size_t len)
 
 IPAsKeyLRU::IPAsKeyLRU(uint8_t * addr, size_t addr_len)
     :
+    IPAsKey(addr, addr_len),
     MoreRecentKey(NULL),
-    LessRecentKey(NULL),
-    IPAsKey(addr, addr_len)
+    LessRecentKey(NULL)
 {
 }
 

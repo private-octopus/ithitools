@@ -380,7 +380,7 @@ bool ComputeM6::Compute()
 
                 for (size_t k = 0; k < m6_metrics_list[i].nb_registered; k++)
                 {
-                    if (m6_metrics_list[i].registry[k].key == extract[j]->key_number)
+                    if ((int)m6_metrics_list[i].registry[k].key == extract[j]->key_number)
                     {
                         registered = true;
                         break;

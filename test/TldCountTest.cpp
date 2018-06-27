@@ -457,7 +457,7 @@ bool TldCountTest::DoTest()
                     int tld_index = GetTldIndex(tld_entry->tld, tld_entry->tld_len);
                     if (tld_index >= 0) {
                         if (tld_index < max_tld_leakage_count &&
-                            count_per_string[tld_index + 1] != tld_entry->count) {
+                            count_per_string[tld_index + 1] != (int)tld_entry->count) {
                             TEST_LOG("TLD %s, count %d instead of %d\n",
                                 TargetNames[tld_index], tld_entry->count, count_per_string[tld_index + 1]);
                             if ((int)tld_entry->count > count_per_string[tld_index + 1]) {
@@ -500,7 +500,7 @@ bool TldCountTest::DoTest()
                                 i, lines[i]->tld_len, lines[i]->count);
                         }
                     } else {
-                        if (count_per_string[tld_index + 1] != lines[i]->count) {
+                        if (count_per_string[tld_index + 1] != (int)lines[i]->count) {
                             TEST_LOG("rank %d, %s, count %d instead of %d\n",
                                 i, TargetNames[tld_index], lines[i]->count, count_per_string[tld_index + 1]);
                             if ((int)lines[i]->count > count_per_string[tld_index + 1]) {

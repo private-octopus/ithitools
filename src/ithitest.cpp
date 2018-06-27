@@ -21,7 +21,9 @@
 
 // ithitest.cpp : Defines the entry point for the test application.
 //
+#ifndef _WINDOWS
 #include "config.h"
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include "pcap_reader.h"
@@ -69,22 +71,22 @@ bool do_one_test(int i, FILE* f_log)
     return ret;
 }
 
-void Usage(int argc, char ** argv, FILE* f_log)
+void Usage(char ** argv, FILE* f_log)
 {
-    fprintf(stderr, "Usage: %s [test_name]\n", argv[0]);
-    fprintf(stderr, "   Possible test names:\n");
+    fprintf(f_log, "Usage: %s [test_name]\n", argv[0]);
+    fprintf(f_log, "   Possible test names:\n");
     for (int j = 0; j < ithi_test_class::get_number_of_tests();)
     {
-        fprintf(stderr, "       ");
+        fprintf(f_log, "       ");
         for (int k = 0; k < 6 && j < ithi_test_class::get_number_of_tests(); k++, j++)
         {
-            fprintf(stderr, "%s", ithi_test_class::GetTestName(j));
+            fprintf(f_log, "%s", ithi_test_class::GetTestName(j));
             if (j < ithi_test_class::get_number_of_tests())
             {
-                fprintf(stderr, ", ");
+                fprintf(f_log, ", ");
             }
         }
-        fprintf(stderr, "\n");
+        fprintf(f_log, "\n");
     }
 }
 
@@ -132,7 +134,7 @@ int main(int argc, char ** argv)
             else
             {
                 fprintf(stderr, "Unknow test name: %s\n", argv[i]);
-                Usage(argc, argv, stderr);
+                Usage(argv, stderr);
                 break;
             }
         }

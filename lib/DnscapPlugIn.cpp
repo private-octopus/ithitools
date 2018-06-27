@@ -35,8 +35,9 @@
  * This code provides an implementation of the required functions, which
  * will link to a static set of C++ objects for doing the capture.
  */
+#ifndef _WINDOWS
 #include "config.h"
-#include "DnsStats.h"
+#endif
 #ifdef HAVE_GETOPT
 #include <unistd.h>
 #else
@@ -46,6 +47,8 @@
 #ifndef _WINDOWS
 #include <sys/socket.h>
 #endif
+
+#include "DnsStats.h"
 
 /*
  * Common static variables. They have to be initialized and deleted as captures 
@@ -210,6 +213,8 @@ extern "C"
      */
     int libithicap_open(my_bpftimeval ts)
     {
+        UNREFERENCED_PARAMETER(ts);
+
         /* Check that this is not a double open */
         if (libithicap_stats == NULL) {
             return -1;
@@ -233,6 +238,8 @@ extern "C"
     {
         int exit_code = 0;
         CaptureSummary cs;
+
+        UNREFERENCED_PARAMETER(ts);
 
         if (libithicap_stats == NULL ||
             libithicap_stats->IsCaptureStopped()) {
@@ -282,6 +289,15 @@ extern "C"
         size_t source_addr_length;
         uint8_t * dest_addr;
         size_t dest_addr_length;
+
+        UNREFERENCED_PARAMETER(descr);
+        UNREFERENCED_PARAMETER(proto);
+        UNREFERENCED_PARAMETER(sport);
+        UNREFERENCED_PARAMETER(dport);
+        UNREFERENCED_PARAMETER(ts);
+        UNREFERENCED_PARAMETER(pkt_copy);
+        UNREFERENCED_PARAMETER(olen);
+
 
         if (libithicap_stats == NULL ||
             libithicap_stats->IsCaptureStopped()) {

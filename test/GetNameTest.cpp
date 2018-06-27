@@ -99,7 +99,6 @@ bool GetNameTest::LoadPcapFile(char const * fileName)
     bool ret = true;
     pcap_reader reader;
     size_t nb_records_read = 0;
-    size_t nb_udp_dns_frag = 0;
     size_t nb_udp_dns = 0;
 
     if (!reader.Open(fileName, NULL))
@@ -197,10 +196,6 @@ void GetNameTest::SubmitPacket(uint8_t * packet, uint32_t length)
 
 int GetNameTest::SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start)
 {
-    int rrclass = 0;
-    int rrtype = 0;
-    uint32_t name_start = start;
-
     start = SubmitName(packet, length, start);
 
     if (start + 4 <= length)
@@ -218,7 +213,6 @@ int GetNameTest::SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start)
 int GetNameTest::SubmitRecord(uint8_t * packet, uint32_t length, uint32_t start)
 {
     int ldata = 0;
-    int name_start = start;
 
     /* Labels are only tabulated in responses, to avoid polluting data with erroneous packets */
     start = SubmitName(packet, length, start);
@@ -248,7 +242,6 @@ int GetNameTest::SubmitName(uint8_t * packet, uint32_t length, uint32_t start)
 {
     uint8_t name[256];
     size_t name_len = 0;
-    const char * zone_prefix = NULL;
     
     start = stats->GetDnsName(packet, length, start, name, sizeof(name), &name_len);
 

@@ -32,6 +32,10 @@
 #include "CaptureSummary.h"
 #include "TldAsKey.h"
 
+#ifndef UNREFERENCED_PARAMETER
+#define UNREFERENCED_PARAMETER(x) (void)(x)
+#endif
+
 /*
  * List of registry definitions 
  */
@@ -280,7 +284,7 @@ private:
 
     int CheckForUnderline(uint8_t * packet, uint32_t length, uint32_t start);
 
-    int GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t *offset);
+    bool GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t *offset);
 
 
 

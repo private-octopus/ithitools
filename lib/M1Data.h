@@ -56,7 +56,7 @@ public:
 
     bool Load(char const * monthly_compliance_file_name);
 
-    int GetCategoryIndex(char const * category, int lastCategoryIndex);
+    int GetCategoryIndex(char const * category);
 
     bool ParseFileName(char const * monthly_compliance_file_name);
 
