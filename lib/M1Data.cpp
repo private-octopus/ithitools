@@ -29,8 +29,6 @@
 #define UNREFERENCED_PARAMETER(x) (void)(x)
 #endif
 
-const int summary_registrar_id = 999999;
-
 M1Data::M1Data()
     :
     totalDomain(0),
