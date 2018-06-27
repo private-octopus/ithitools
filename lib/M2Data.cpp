@@ -25,6 +25,10 @@
 #include "CsvHelper.h"
 #include "M2Data.h"
 
+#ifndef UNREFERENCED_PARAMETER
+#define UNREFERENCED_PARAMETER(x) (void)(x)
+#endif
+
 /*
  * The Metrics are in a different order as the columns in the capture file. 
  * The following tables help converting between the two.
@@ -534,11 +538,16 @@ bool ComputeM2::LoadSingleFile(char const * single_file_name, M2Data * f_data)
 
 bool ComputeM2::Load(char const * single_file_name)
 {
+    UNREFERENCED_PARAMETER(single_file_name);
+
     return false;
 }
 
 bool ComputeM2::LoadMultipleFiles(char const ** in_files, int nb_files)
 {
+    UNREFERENCED_PARAMETER(in_files);
+    UNREFERENCED_PARAMETER(nb_files);
+
     return false;
 }
 

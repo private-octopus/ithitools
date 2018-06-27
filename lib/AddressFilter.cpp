@@ -76,8 +76,8 @@
 
 IPAsKey::IPAsKey(uint8_t * addr, size_t addr_len)
     :
-    count(1),
     HashNext(NULL),
+    count(1),
     hash(0)
 {
     if (addr_len > 16)

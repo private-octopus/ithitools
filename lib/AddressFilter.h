@@ -82,9 +82,9 @@ public:
 
     IPAsKeyLRU* CreateCopy() override;
 
-    IPAsKeyLRU * HashNext;
     IPAsKeyLRU * MoreRecentKey;
     IPAsKeyLRU * LessRecentKey;
+    IPAsKeyLRU * HashNext;
 };
 
 class AddressUseTracker

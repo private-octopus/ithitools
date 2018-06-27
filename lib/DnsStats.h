@@ -284,7 +284,7 @@ private:
 
     int CheckForUnderline(uint8_t * packet, uint32_t length, uint32_t start);
 
-    int GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t *offset);
+    bool GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t *offset);
 
 
 

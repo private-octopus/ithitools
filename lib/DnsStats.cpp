@@ -734,9 +734,9 @@ int DnsStats::CheckForUnderline(uint8_t * packet, uint32_t length, uint32_t star
     return start;
 }
 
-int DnsStats::GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t * offset)
+bool DnsStats::GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t * offset)
 {
-    int ret = 0;
+    bool ret = true;
     uint32_t l = 0;
     uint32_t previous = 0;
     uint32_t name_start = start;
@@ -755,7 +755,7 @@ int DnsStats::GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t
             }
             else
             {
-                ret = -1;
+                *offset = start;
             }
             break;
         }
@@ -764,7 +764,7 @@ int DnsStats::GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t
             /* Name compression */
             if ((start + 2) > length)
             {
-                ret = -1;
+                ret = false;
                 break;
             }
             else
@@ -777,7 +777,7 @@ int DnsStats::GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t
                 }
                 else
                 {
-                    ret = -1;
+                    ret = false;
                 }
                 break;
             }
@@ -785,7 +785,7 @@ int DnsStats::GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t
         else if (l > 0x3F)
         {
             /* Unexpected name part */
-            ret = -1;
+            ret = false;
             break;
         }
         else
@@ -793,7 +793,7 @@ int DnsStats::GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t
             if (start + l + 1 > length)
             {
                 /* malformed name part */
-                ret = -1;
+                ret = false;
                 break;
             }
             else
@@ -804,7 +804,7 @@ int DnsStats::GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t
         }
     }
 
-    return start;
+    return ret;
 }
 
 int DnsStats::GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
@@ -1375,7 +1375,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
         {
 
             uint32_t tld_offset = 0;
-            int gotTld = GetTLD(packet, length, 12, &tld_offset);
+            bool gotTld = GetTLD(packet, length, 12, &tld_offset);
 
             if (gotTld)
             {
@@ -1390,7 +1390,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
 
                 if (gotTld)
                 {
-                    if (rcode == DNS_RCODE_NXDOMAIN)
+                    if (rcode == DNS_RCODE_NXDOMAIN && packet[tld_offset] != 0)
                     {
                         /* Analysis of domain leakage */
                         if (IsRfc6761Tld(packet + tld_offset + 1, packet[tld_offset]))
@@ -1826,7 +1826,7 @@ TldAddressAsKey::~TldAddressAsKey()
 bool TldAddressAsKey::IsSameKey(TldAddressAsKey * key)
 {
     bool ret = (this->tld_len == key->tld_len &&
-        memcmp(this->tld, key->tld, this->tld_len) == 0 &&
+        (this->tld_len == 0 || memcmp(this->tld, key->tld, this->tld_len) == 0) &&
         this->addr_len == key->addr_len &&
         memcmp(this->addr, key->addr, this->addr_len) == 0);
 

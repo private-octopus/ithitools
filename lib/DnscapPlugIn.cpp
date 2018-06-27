@@ -295,6 +295,7 @@ extern "C"
         UNREFERENCED_PARAMETER(sport);
         UNREFERENCED_PARAMETER(dport);
         UNREFERENCED_PARAMETER(ts);
+        UNREFERENCED_PARAMETER(pkt_copy);
         UNREFERENCED_PARAMETER(olen);
 
 
