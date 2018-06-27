@@ -39,12 +39,12 @@ ithimetrics::ithimetrics()
     :
     metric_date(NULL),
     ithi_folder(NULL),
+    compliance_file_name(NULL),
     root_capture_file_name(NULL),
     recursive_capture_file_name(NULL),
     abuse_file_name_tlds(NULL),
     abuse_file_name_registrars(NULL),
-    root_zone_file_name(NULL),
-    compliance_file_name(NULL)
+    root_zone_file_name(NULL)
 {
     for (int i = 0; i < 7; i++) {
         metric_file[i] = NULL;

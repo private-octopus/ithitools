@@ -71,7 +71,7 @@ bool do_one_test(int i, FILE* f_log)
     return ret;
 }
 
-void Usage(int argc, char ** argv, FILE* f_log)
+void Usage(char ** argv, FILE* f_log)
 {
     fprintf(stderr, "Usage: %s [test_name]\n", argv[0]);
     fprintf(stderr, "   Possible test names:\n");
@@ -134,7 +134,7 @@ int main(int argc, char ** argv)
             else
             {
                 fprintf(stderr, "Unknow test name: %s\n", argv[i]);
-                Usage(argc, argv, stderr);
+                Usage(argv, stderr);
                 break;
             }
         }

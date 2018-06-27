@@ -516,7 +516,6 @@ bool ithipublisher::GetCurrent(char const * metric_name, char const * key_value,
 {
     double val[12];
     bool ret = GetVector(metric_name, key_value, val);
-    double sum = 0;
 
     *current = val[nb_months - 1];
 
@@ -552,9 +551,6 @@ bool ithipublisher::GetAverageAndCurrent(char const * metric_name, char const * 
 bool ithipublisher::GetNameList(char const * metric_name, std::vector<MetricNameLine>* name_list)
 {
     size_t line_index = 0;
-    int current_year = first_year;
-    int current_month = first_month;
-    bool end_of_metric = true;
     double sum = 0;
     MetricNameLine current_name = { NULL, 0, 0 };
 
@@ -569,7 +565,6 @@ bool ithipublisher::GetNameList(char const * metric_name, std::vector<MetricName
         }
         else if (cmp == 0)
         {
-            end_of_metric = false;
             current_name.name = line_list[line_index]->key_value;
             break;
         }
@@ -913,7 +908,7 @@ bool ithipublisher::PublishDataM6(FILE * F)
                 char const * key_name = "";
 
                 if (table != NULL) {
-                    int key_val = atoi(name_list[l].name);
+                    uint32_t key_val = (uint32_t)atoi(name_list[l].name);
 
                     key_name = "???";
 

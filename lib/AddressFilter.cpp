@@ -301,9 +301,9 @@ uint32_t AddressUseTracker::Check(uint8_t * addr, size_t len)
 
 IPAsKeyLRU::IPAsKeyLRU(uint8_t * addr, size_t addr_len)
     :
+    IPAsKey(addr, addr_len),
     MoreRecentKey(NULL),
-    LessRecentKey(NULL),
-    IPAsKey(addr, addr_len)
+    LessRecentKey(NULL)
 {
 }
 
