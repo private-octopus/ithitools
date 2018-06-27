@@ -153,7 +153,6 @@ int main(int argc, char ** argv)
     ithimetrics met;
     CaptureSummary cs;
     DnsStats stats;
-    char const * default_inputFile = "smalltest.pcap";
     char const * default_csv_file = "smalltest.csv";
     char const * out_file = default_csv_file;
     char const * metric_file = NULL;
