@@ -52,7 +52,7 @@ script:
           git reset --hard
           scan-build cmake .
           mkdir -p /tmp/ithipages/analysis
-          scan-build -o /tmp/ithipages/analysis --status-bugs -stats make
+          scan-build -o /tmp/ithipages/analysis --status-bugs make
         )
       fi
 after_script:

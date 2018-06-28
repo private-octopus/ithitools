@@ -311,7 +311,7 @@ bool ithipublisher::LoadFileData(int file_index, char const * dir_met_name)
 
         start = CsvHelper::read_string(line->metric_name, sizeof(line->metric_name), start, buffer, sizeof(buffer));
         start = CsvHelper::read_string(line->key_value, sizeof(line->key_value), start, buffer, sizeof(buffer));
-        start = CsvHelper::read_double(&line->frequency, start, buffer, sizeof(buffer));
+        CsvHelper::read_double(&line->frequency, start, buffer, sizeof(buffer));
         line->year = file_list[file_index]->year;
         line->month = file_list[file_index]->month;
 
@@ -736,7 +736,7 @@ bool ithipublisher::PublishDataM3(FILE * F)
     }
     ret &= fprintf(F, ",\n") > 0;
 
-    ret = fprintf(F, "\"%s\" : ", met_data_name[1]) > 0;
+    ret &= fprintf(F, "\"%s\" : ", met_data_name[1]) > 0;
 
     if (ret)
     {
