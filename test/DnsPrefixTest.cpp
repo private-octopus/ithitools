@@ -154,13 +154,14 @@ bool DnsPrefixTest::DoOneTest(DnsStats * stats, char const * test_input, char co
     bool ret = true;
     char tiu[256];
     char teu[256];
+    char * ti;
     char * te;
     const char * tr;
 
-    (void)ToUpper(test_input, tiu, sizeof(tiu));
+    ti = ToUpper(test_input, tiu, sizeof(tiu));
     te = ToUpper(expected, teu, sizeof(teu));
 
-    tr = stats->GetZonePrefix(tiu);
+    tr = stats->GetZonePrefix(ti);
 
     if (tr == NULL) {
         if (te != NULL) {
