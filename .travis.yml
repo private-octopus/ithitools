@@ -5,7 +5,6 @@ addons:
     packages:
       - python
       - valgrind
-      - clang-tools
 matrix:
   include:
     - os: linux
