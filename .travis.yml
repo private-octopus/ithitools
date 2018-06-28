@@ -2,7 +2,7 @@ sudo: false
 language: cpp
 before_install:
   - |
-      if $ANALYSIS ; then
+      if $ANALYSIS || $COVERAGE; then
         openssl aes-256-cbc -K $encrypted_e845a59f36e1_key -iv $encrypted_e845a59f36e1_iv -in travis/ithipages-publish-key.enc -out ~/.ssh/ithipages-publish-key -d
         chmod u=rw,og= ~/.ssh/ithipages-publish-key
         echo "Host github.com" >> ~/.ssh/config
@@ -17,23 +17,28 @@ addons:
     packages:
       - python
       - valgrind
+      - lcov
 matrix:
   include:
     - os: linux
       compiler: gcc
-      env: VALGRIND=true  ANALYSIS=true
+      env: VALGRIND=true  ANALYSIS=true  COVERAGE=true
     - os: linux
       compiler: clang
-      env: VALGRIND=true  ANALYSIS=false
+      env: VALGRIND=true  ANALYSIS=false COVERAGE=false
     - os: osx
       compiler: gcc
-      env: VALGRIND=false ANALYSIS=false
+      env: VALGRIND=false ANALYSIS=false COVERAGE=false
     - os: osx
       compiler: clang
-      env: VALGRIND=false ANALYSIS=false
+      env: VALGRIND=false ANALYSIS=false COVERAGE=false
 script:
   - |
-      if $VALGRIND ; then
+      if $COVERAGE ; then
+        CXXFLAGS="-Wall -Wextra -Wpedantic -Werror -g -fprofile-arcs -ftest-coverage -O0" \
+          CFLAGS="-Wall -Wextra -Wpedantic -Werror -g -fprofile-arcs -ftest-coverage -O0" \
+         LDFLAGS="-lgcov --coverage" cmake .
+      elif $VALGRIND ; then
         CXXFLAGS="-Wall -Wextra -Wpedantic -Werror -g" \
           CFLAGS="-Wall -Wextra -Wpedantic -Werror -g" cmake .
       else
@@ -55,11 +60,24 @@ script:
           scan-build -o /tmp/ithipages/analysis --status-bugs make
         )
       fi
+  - |
+      if $COVERAGE ; then
+        geninfo .  -o ithitest.info
+        lcov --remove ithitest.info '/usr/include/*' -o ithi.info
+        if [ $TRAVIS_PULL_REQUEST = "false" ] ; then
+          THIS_BRANCH=$TRAVIS_BRANCH
+        else
+          THIS_BRANCH=$TRAVIS_PULL_REQUEST_BRANCH
+        fi
+        mkdir -p /tmp/ithipages/coverage/$THIS_BRANCH
+        genhtml ithi.info --output-directory /tmp/ithipages/coverage/$THIS_BRANCH
+      fi
 after_script:
-      if $ANALYSIS ; then
+      if $ANALYSIS || $COVERAGE ; then
         ( cd /tmp/ithipages
 	  ./mkindex.sh
           [ -d analysis ] && git add analysis
+          [ -d coverage ] && git add coverage
           git commit -a -m "update from travis at `date`" \
           && git push
         )
