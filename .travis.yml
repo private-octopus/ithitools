@@ -1,5 +1,9 @@
 sudo: false
 language: cpp
+addons:
+  apt:
+    packages:
+      - python
 os:
   - linux
   - osx
@@ -12,3 +16,4 @@ script:
         CFLAGS="-Wall -Wextra -Wpedantic -Werror" cmake .
   - make -j 4
   - ./ithitest
+  - python travis/check-dnsstats-tables.py
