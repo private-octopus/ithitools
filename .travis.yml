@@ -7,6 +7,8 @@ compiler:
   - gcc
   - clang
 script:
-  - CXXFLAGS="-Wall -Wextra -Wpedantic" CFLAGS="-Wall -Wextra -Wpedantic" cmake .
-  - make
+  - |
+      CXXFLAGS="-Wall -Wextra -Wpedantic -Werror" \
+        CFLAGS="-Wall -Wextra -Wpedantic -Werror" cmake .
+  - make -j 4
   - ./ithitest
