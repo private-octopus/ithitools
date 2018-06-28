@@ -73,9 +73,10 @@ script:
         genhtml ithi.info --output-directory /tmp/ithipages/coverage/$THIS_BRANCH
       fi
 after_script:
+  - |
       if $ANALYSIS || $COVERAGE ; then
         ( cd /tmp/ithipages
-	  ./mkindex.sh
+          ./mkindex.sh
           [ -d analysis ] && git add analysis
           [ -d coverage ] && git add coverage
           git commit -a -m "update from travis at `date`" \
