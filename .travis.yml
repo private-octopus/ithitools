@@ -1,5 +1,17 @@
 sudo: false
 language: cpp
+before_install:
+  - |
+      if $ANALYSIS ; then
+        openssl aes-256-cbc -K $encrypted_e845a59f36e1_key -iv $encrypted_e845a59f36e1_iv -in travis/ithipages-publish-key.enc -out ~/.ssh/ithipages-publish-key -d
+        chmod u=rw,og= ~/.ssh/ithipages-publish-key
+        echo "Host github.com" >> ~/.ssh/config
+        echo "  IdentityFile ~/.ssh/ithipages-publish-key" >> ~/.ssh/config
+        ( cd /tmp
+          git clone git@github.com:wtoorop/ithipages.git
+          ls -l
+        )
+      fi
 addons:
   apt:
     packages:
@@ -41,5 +53,13 @@ script:
           scan-build cmake .
           mkdir -p /tmp/ithipages/analysis
           scan-build -o /tmp/ithipages/analysis --status-bugs -stats make
+        )
+      fi
+after_script:
+      if $ANALYSIS ; then
+        ( cd /tmp/ithipages
+          [ -d analysis ] && git add analysis
+          git commit -m "update from travis at `date`" \
+          && git push
         )
       fi
