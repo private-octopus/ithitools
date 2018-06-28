@@ -5,20 +5,21 @@ addons:
     packages:
       - python
       - valgrind
+      - clang-tools
 matrix:
   include:
     - os: linux
       compiler: gcc
-      env: VALGRIND=true
+      env: VALGRIND=true  ANALYSIS=true
     - os: linux
       compiler: clang
-      env: VALGRIND=true
+      env: VALGRIND=true  ANALYSIS=false
     - os: osx
       compiler: gcc
-      env: VALGRIND=false
+      env: VALGRIND=false ANALYSIS=false
     - os: osx
       compiler: clang
-      env: VALGRIND=false
+      env: VALGRIND=false ANALYSIS=false
 script:
   - |
       if $VALGRIND ; then
@@ -32,3 +33,14 @@ script:
   - ./ithitest
   - python travis/check-dnsstats-tables.py
   - if $VALGRIND ; then valgrind -v --error-exitcode=1 ./ithitest ; fi
+  - |
+      if $ANALYSIS ; then
+        mkdir analysis
+        ( cd analysis
+          echo "gitdir: ../.git" > .git
+          git reset --hard
+          scan-build cmake .
+          mkdir -p /tmp/ithipages/analysis
+          scan-build -o /tmp/ithipages/analysis --status-bugs -stats make
+        )
+      fi
