@@ -58,8 +58,9 @@ script:
 after_script:
       if $ANALYSIS ; then
         ( cd /tmp/ithipages
+	  ./mkindex.sh
           [ -d analysis ] && git add analysis
-          git commit -m "update from travis at `date`" \
+          git commit -a -m "update from travis at `date`" \
           && git push
         )
       fi
