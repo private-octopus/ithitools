@@ -4,16 +4,31 @@ addons:
   apt:
     packages:
       - python
-os:
-  - linux
-  - osx
-compiler:
-  - gcc
-  - clang
+      - valgrind
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+      env: VALGRIND=true
+    - os: linux
+      compiler: clang
+      env: VALGRIND=true
+    - os: osx
+      compiler: gcc
+      env: VALGRIND=false
+    - os: osx
+      compiler: clang
+      env: VALGRIND=false
 script:
   - |
-      CXXFLAGS="-Wall -Wextra -Wpedantic -Werror" \
-        CFLAGS="-Wall -Wextra -Wpedantic -Werror" cmake .
+      if $VALGRIND ; then
+        CXXFLAGS="-Wall -Wextra -Wpedantic -Werror -g" \
+          CFLAGS="-Wall -Wextra -Wpedantic -Werror -g" cmake .
+      else
+        CXXFLAGS="-Wall -Wextra -Wpedantic -Werror" \
+          CFLAGS="-Wall -Wextra -Wpedantic -Werror" cmake .
+      fi
   - make -j 4
   - ./ithitest
   - python travis/check-dnsstats-tables.py
+  - if $VALGRIND ; then valgrind -v --error-exitcode=1 ./ithitest ; fi
