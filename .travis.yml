@@ -76,7 +76,11 @@ script:
       fi
   - |
       if $DOXYGEN ; then
-        doxygen travis/Doxyfile
+        if [ $TRAVIS_PULL_REQUEST = "false" ] ; then
+	  if [ $TRAVIS_BRANCH = "master" ] ; then
+            doxygen travis/Doxyfile
+	  fi
+        fi
       fi
 after_script:
   - |
