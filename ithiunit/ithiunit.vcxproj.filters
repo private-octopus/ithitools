@@ -78,9 +78,6 @@
     <ClInclude Include="..\test\PatternTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\getopt.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\test\PluginTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -132,7 +129,7 @@
     <ClInclude Include="..\test\GetNameTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\config.h">
+    <ClInclude Include="..\lib\ithi_getopt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

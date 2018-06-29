@@ -157,15 +157,14 @@
     <ClInclude Include="..\lib\ComputeM34.h" />
     <ClInclude Include="..\lib\ComputeM6.h" />
     <ClInclude Include="..\lib\ComputeMetric.h" />
-    <ClInclude Include="..\lib\config.h" />
     <ClInclude Include="..\lib\CsvHelper.h" />
     <ClInclude Include="..\lib\DnsStats.h" />
     <ClInclude Include="..\lib\DnsTypes.h" />
-    <ClInclude Include="..\lib\getopt.h" />
     <ClInclude Include="..\lib\HashBinGeneric.h" />
     <ClInclude Include="..\lib\HashWriteOnceGeneric.h" />
     <ClInclude Include="..\lib\ithimetrics.h" />
     <ClInclude Include="..\lib\ithipublisher.h" />
+    <ClInclude Include="..\lib\ithi_getopt.h" />
     <ClInclude Include="..\lib\linktype.h" />
     <ClInclude Include="..\lib\M1Data.h" />
     <ClInclude Include="..\lib\M2Data.h" />

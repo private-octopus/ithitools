@@ -194,10 +194,10 @@
     <ClInclude Include="..\lib\CsvHelper.h" />
     <ClInclude Include="..\lib\DnsStats.h" />
     <ClInclude Include="..\lib\DnsTypes.h" />
-    <ClInclude Include="..\lib\getopt.h" />
     <ClInclude Include="..\lib\HashBinGeneric.h" />
     <ClInclude Include="..\lib\ithimetrics.h" />
     <ClInclude Include="..\lib\ithipublisher.h" />
+    <ClInclude Include="..\lib\ithi_getopt.h" />
     <ClInclude Include="..\lib\linktype.h" />
     <ClInclude Include="..\lib\M1Data.h" />
     <ClInclude Include="..\lib\M2Data.h" />
