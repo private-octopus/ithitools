@@ -161,7 +161,7 @@ bool M2Data::Load(char const * monthly_csv_file_name)
         }
         start = CsvHelper::read_number(&line.NewlyAbusiveDomains, start, buffer, sizeof(buffer));
         start = CsvHelper::read_number(&line.LastMonthAbusiveDomains, start, buffer, sizeof(buffer));
-        start = CsvHelper::read_double(&line.LastMonthAbuseScore, start, buffer, sizeof(buffer));
+        CsvHelper::read_double(&line.LastMonthAbuseScore, start, buffer, sizeof(buffer));
 
         if (M2Type == Registrar && IsReservedRegistrarId(line.RegistrarId)) {
             /* Ignore data relative to parking registries */

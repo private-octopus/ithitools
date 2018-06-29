@@ -1,12 +1,45 @@
 sudo: false
 language: cpp
-os:
-  - linux
-  - osx
-compiler:
-  - gcc
-  - clang
+addons:
+  apt:
+    packages:
+      - python
+      - valgrind
+matrix:
+  include:
+    - os: linux
+      compiler: gcc
+      env: VALGRIND=true  ANALYSIS=true
+    - os: linux
+      compiler: clang
+      env: VALGRIND=true  ANALYSIS=false
+    - os: osx
+      compiler: gcc
+      env: VALGRIND=false ANALYSIS=false
+    - os: osx
+      compiler: clang
+      env: VALGRIND=false ANALYSIS=false
 script:
-  - CXXFLAGS="-Wall -Wextra -Wpedantic" CFLAGS="-Wall -Wextra -Wpedantic" cmake .
-  - make
+  - |
+      if $VALGRIND ; then
+        CXXFLAGS="-Wall -Wextra -Wpedantic -Werror -g" \
+          CFLAGS="-Wall -Wextra -Wpedantic -Werror -g" cmake .
+      else
+        CXXFLAGS="-Wall -Wextra -Wpedantic -Werror" \
+          CFLAGS="-Wall -Wextra -Wpedantic -Werror" cmake .
+      fi
+  - make -j 4
   - ./ithitest
+  - python travis/check-dnsstats-tables.py
+  - if $VALGRIND ; then valgrind -v --error-exitcode=1 ./ithitest ; fi
+  - |
+      if $ANALYSIS ; then
+        mkdir analysis
+        ( cd analysis
+          echo "gitdir: ../.git" > .git
+          git reset --hard
+          scan-build cmake .
+          mkdir -p /tmp/ithipages/analysis
+          scan-build -o /tmp/ithipages/analysis --status-bugs make
+        )
+      fi

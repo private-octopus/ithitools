@@ -168,7 +168,7 @@ static double Tld_Dga_Eval_T_A(size_t len, uint8_t * val)
 
     for (size_t i = 0; i<len; i++)
     {
-        uint8_t t_group_index = transition_group[val[len] - 10];
+        uint8_t t_group_index = transition_group[val[i] - 10];
 
         if (previous_group < 2)
         {

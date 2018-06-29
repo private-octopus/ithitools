@@ -110,7 +110,7 @@ bool M1Data::Load(char const * monthly_compliance_file_name)
                 line.nbBreaches = line.nbSuspensions;
                 line.nbSuspensions = line.nbTerminations;
                 line.nbTerminations = line.nbNonRenewals;
-                start = CsvHelper::read_number(&line.nbNonRenewals, start, buffer, sizeof(buffer));
+                CsvHelper::read_number(&line.nbNonRenewals, start, buffer, sizeof(buffer));
             }
             /* allocate data and add to vector */
             dataset.push_back(line);
