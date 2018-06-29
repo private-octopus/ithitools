@@ -428,6 +428,9 @@ bool ithipublisher::Publish(char const * web_folder)
             case 4:
                 ret = PublishDataM4(F);
                 break;
+            case 5:
+                ret = PublishDataM5(F);
+                break;
             case 6:
                 ret = PublishDataM6(F);
                 break;
@@ -823,6 +826,39 @@ bool ithipublisher::PublishDataM4(FILE * F)
             ret &= fprintf(F, "],\n") > 0;
         }
     }
+
+    return ret;
+}
+
+bool ithipublisher::PublishDataM5(FILE * F)
+{
+    bool ret = true;
+    const char * subMet[] = { "M5.1.1", "M5.1.2", "M5.1.3", "M5.1.4", "M5.1.5", "M5.1.6",
+        "M5.2.1", "M5.2.2", "M5.2.3", "M5.3.1", "M5.3.2", "M5.4.1", "M5.4.2", "M5.5" };
+    const size_t nbSubMet = sizeof(subMet) / sizeof(const char *);
+
+    ret &= fprintf(F, "\"M5\" : [") > 0;
+
+    for (size_t i=0; i<nbSubMet; i++) {
+        double mvec[12];
+        memset(mvec, 0, sizeof(mvec));
+
+        ret = GetVector(subMet[i], NULL, mvec);
+
+        if (i != 0) {
+            ret &= fprintf(F, ",\n") > 0;
+        }
+
+        ret &= fprintf(F, "{ \"v\" : ") > 0;
+
+        if (ret)
+        {
+            ret = PrintVector(F, mvec, 1.0);
+        }
+
+        ret &= fprintf(F, "}") > 0;
+    }
+    ret &= fprintf(F, "]\n") > 0;
 
     return ret;
 }

@@ -6,19 +6,413 @@
 
 <script src="ithinav.js"></script>
 <script type="text/javascript">
+    var M5valId = [
+        "valM511", "valM512", "valM513", "valM514", "valM515", "valM516",
+        "valM521", "valM522", "valM522",
+        "valM531", "valM532",
+        "valM541", "valM542",
+        "valM551"
+    ];
+    var M5averageId = [
+        "averageM511", "averageM512", "averageM513", "averageM514", "averageM515", "averageM516",
+        "averageM521", "averageM522", "averageM522",
+        "averageM531", "averageM532",
+        "averageM541", "averageM542",
+        "averageM551"
+    ];
+
+    var M5Data;
+
     function init() {
         initnav();
+        loadDoc();
     }
+
+    function loadDoc() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                M5Data = JSON.parse(this.responseText);
+                draw_page();
+            }
+        };
+        xhttp.open("GET", "M5Data.txt", true);
+        xhttp.send();
+    }
+
+    function draw_page() {
+        // Set the date
+        setDateElement(M5Data.date);
+        // Compute and set the values of the metrics
+        rowSet = M5Data.M5;
+
+        for (i = 0; i < rowSet.length; i++) {
+            currentRow = rowSet[i].v;
+            if (i < M5valId.length) {
+                setValElement(M5valId[i], getLastElement(currentRow));
+            }
+
+            if (i < M5averageId.length) {
+                setValElement(M5averageId[i], getAverageElement(currentRow));
+            }
+        }
+    }
+
+    function setDateElement(date)
+    {
+        dateElement = document.getElementById("dateHeading");
+        dateElement.innerHTML = date;
+    }
+
+    function setValElement(valElementId, x) {
+        elm = document.getElementById(valElementId);
+        if (x.toFixed(2)) {
+            elm.innerHTML = "<b>" + x.toFixed(2) + "%</b>";
+        }
+        else
+        {
+            elm.innerHTML = "<b>" + x + "</b>";
+        }
+    }
+
+    function getLastElement(dataSet) {
+        if (dataSet.length < 1) {
+            return 0;
+        } else {
+            return dataSet[dataSet.length - 1];
+        }
+    }
+
+    function getAverageElement(dataSet) {
+        if (dataSet.length <= 1) {
+            return 0;
+        }
+        else if (dataSet.length == 2) {
+            return dataSet[0];
+        }
+        else {
+            last = dataSet.length - 2;
+            first = 0;
+            if (dataSet.length > 13) {
+                first = dataSet.length - 13;
+            }
+            average = 0;
+            for (i = first; i <= last; i++) {
+                average += dataSet[i];
+            }
+            average /= (last + 1 - first);
+
+            return average;
+        }
+    }
+
+
 </script>
 </head>
 
 <body onload="init()">
 <nav id="navMenu"></nav>
 
-<h1>ITHI Metric M5, TBD</h1>
+<h1>ITHI Metric M5, Recursive Resolver Integrity</h1>
 
-<p>TBD.
+<h2 id="dateHeading">-</h2>
+
+<p>The M5 metrics measure the "integrity" with which resolvers process queries. The metric is
+computed by sending specially crafted queries at DNS resolvers from a large number of clients,
+including queries to domains under the experimenters' control. This allows us to analyze how
+recursive resolvers manage key part of the service, and how well responses sent to stub
+resolvers track data updates by the authoritative servers.
 </p>
+<p>
+There are two ways of measuring these metrics: either as a fraction of the user
+population behind resolvers that follow the SOA's TTL; or, as a fraction of
+the total number of resolvers that follow the SOA's TTL. We provide both
+evaluations.
+</p>
+<p>
+There are five components in the M5 metric:
+</p>
+<ul>
+<li>
+The metric M5.1 measures the % of visible recursive resolvers that refresh
+their local cache in accordance with the time specified in the SOA TTL, and the effect on users.
+For each population, we compute the fraction of users or resolvers
+that re-fetch erlier than the stated TTL, and the fraction that re-fetch according to
+the TTL. These two numbers do not add to 100%, because there is also a fraction of
+resolvers for which our measurements are inconclusive.
+</li>
+<li>
+The metric M5.2 measure the % of visible recursive resolvers that refresh their local 
+cache automatically (without a triggering user query), as well as the estimated query
+load % due to automated cache refresh and the % of users using resolvers that
+auto-refresh their cache.
+</li>
+<li>
+The Metric M5.3 measures the % of visible recursive resolvers that set the DO (DNSSEC OK) 
+bit in their queries, as well as the fraction of users using resolvers that set 
+the DO bit in queries.
+</li>
+<li>
+The Metric M54 measures the % of visible recursive resolvers that perform DNSSEC validation of
+responses, as well as the fraction of users using resolvers that perform DNSSEC validation of
+responses.
+</li>
+<li>
+The metric M5 provide a distribution of the estimated client size of 
+the 10,000 largest visible recursive resolvers.
+</li>
+</ul>
+<p>
+In the following table, the <em>current value</em> is the
+value of the metric for the current month.
+The <em>average value</em> is the average value of that metric
+over the 12 months preceeding this one -- or the average since the beginning
+of measurements if measurements started fewer than 12 months ago.
+</p>
+<table display="inline" class="metrics" >
+<tr>
+   <th colspan=2>M5.1 (% alignment of cache time to SOA TTL)</th>
+
+   <th>Current value</th>
+   <th>Average value</th>
+</tr>
+<tr>
+
+   <td class="number">
+   M5.1.1
+   </td>
+   <td>
+   % of users using resolvers that re-fetch early
+   </td>
+   <td class="number" id="valM511">
+   -
+   </td>
+   <td class="number" id="averageM511">
+   -
+   </td>
+</tr>
+<tr>
+   <td class="number">
+   M5.1.2
+   </td>
+   <td>
+   % of users using resolvers that re-fetch according to TTL
+   </td>
+   <td class="number" id="valM512">
+   -
+   </td>
+   <td class="number" id="averageM512">
+   -
+   </td>
+</tr>
+<tr>
+   <td class="number">
+   M5.1.3
+   </td>
+   <td>
+   % of users using indeterminate resolvers
+   </td>
+   <td class="number" id="valM513">
+   -
+   </td>
+   <td class="number" id="averageM513">
+   -
+   </td>
+</tr>
+<tr>
+   <td class="number">
+   M5.1.4
+   </td>
+   <td>
+   % of resolvers that re-fetch early
+   </td>
+   <td class="number" id="valM514">
+   -
+   </td>
+   <td class="number" id="averageM514">
+   -
+   </td>
+</tr>
+<tr>
+   <td class="number">
+   M5.1.5
+   </td>
+   <td>
+   % of resolvers that re-fetch according to TTL
+   </td>
+   <td class="number" id="valM515">
+   -
+   </td>
+   <td class="number" id="averageM515">
+   -
+   </td>
+</tr>
+<tr>
+   <td class="number">
+   M5.1.6
+   </td>
+   <td>
+   % of resolvers where cache time is indeterminate
+   </td>
+   <td class="number" id="valM516">
+   -
+   </td>
+   <td class="number" id="averageM516">
+   -
+   </td>
+</tr>
+<tr></tr>
+<tr>
+   <th colspan=2>
+   M5.2 (% auto cache refresh)
+   </th>
+   <th>Current value</th>
+   <th>Average value</th>
+</tr>
+        <tr>
+            <td class="number">
+                M5.2.1
+            </td>
+            <td>
+                % of users using resolvers that auto-refresh their cache
+            </td>
+            <td class="number" id="valM521">
+                -
+            </td>
+            <td class="number" id="averageM521">
+                -
+            </td>
+        </tr>
+
+        <tr>
+            <td class="number">
+                M5.2.2
+            </td>
+            <td>
+                % of query load due to cache refresh
+            </td>
+            <td class="number" id="valM522">
+                -
+            </td>
+            <td class="number" id="averageM522">
+                -
+            </td>
+        </tr>
+
+        <tr>
+            <td class="number">
+                M5.2.3
+            </td>
+            <td>
+                % of resolvers that auto-refresh their cache
+            </td>
+            <td class="number" id="valM523">
+                -
+            </td>
+            <td class="number" id="averageM523">
+                -
+            </td>
+        </tr>
+<tr>
+   <th colspan=2>
+   M5.3 (% EDNS0 DO query rate)
+   </th>
+   <th>Current value</th>
+   <th>Average value</th>
+</tr>
+
+        <tr>
+            <td class="number">
+                M5.3.1
+            </td>
+            <td>
+                % of users using resolvers that set the DO bit in queries
+            </td>
+            <td class="number" id="valM531">
+                -
+            </td>
+            <td class="number" id="averageM531">
+                -
+            </td>
+        </tr>
+
+        <tr>
+            <td class="number">
+                M5.3.2
+            </td>
+            <td>
+                % of resolvers that set the DO bit in queries
+            </td>
+            <td class="number" id="valM532">
+                -
+            </td>
+            <td class="number" id="averageM532">
+                -
+            </td>
+        </tr>
+<tr></tr>
+<tr>
+   <th colspan=2>
+   M5.4 (%DNSSEC Validation rate)
+   </th>
+   <th>Current value</th>
+   <th>Average value</th>
+</tr>
+
+        <tr>
+            <td class="number">
+                M5.4.1
+            </td>
+            <td>
+                % of users using resolvers that perform DNSSEC validation
+            </td>
+            <td class="number" id="valM541">
+                -
+            </td>
+            <td class="number" id="averageM541">
+                -
+            </td>
+        </tr>
+
+        <tr>
+            <td class="number">
+                M5.4.2
+            </td>
+            <td>
+                % of resolvers that perform DNSSEC validation
+            </td>
+            <td class="number" id="valM542">
+                -
+            </td>
+            <td class="number" id="averageM542">
+                -
+            </td>
+        </tr>
+<tr></tr>
+<tr>
+   <th colspan=2>
+   M5.5 (Distribution of resolver use)
+   </th>
+   <th>Current value</th>
+   <th>Average value</th>
+</tr>
+
+        <tr>
+            <td class="number">
+                M5.5
+            </td>
+            <td>
+                % of users using one of the top 10,000 resolvers
+            </td>
+            <td class="number" id="valM551">
+                -
+            </td>
+            <td class="number" id="averageM551">
+                -
+            </td>
+        </tr>
+
+    </table>
 
 </body>
 </html>

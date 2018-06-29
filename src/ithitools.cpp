@@ -447,19 +447,17 @@ int main(int argc, char ** argv)
         }
 
         for (int metric_id = 1; ret && metric_id <= 7; metric_id++) {
-            if (metric_id != 5) {
-                ithipublisher pub(ithi_folder, metric_id);
-                ret = pub.CollectMetricFiles();
+            ithipublisher pub(ithi_folder, metric_id);
+            ret = pub.CollectMetricFiles();
 
+            if (!ret) {
+                fprintf(stderr, "Cannot collect metric file <%s%sM%d>.\n", ithi_folder, ITHI_FILE_PATH_SEP, metric_id);
+            }
+            else
+            {
+                ret = pub.Publish(web_root);
                 if (!ret) {
-                    fprintf(stderr, "Cannot collect metric file <%s%sM%d>.\n", ithi_folder, ITHI_FILE_PATH_SEP, metric_id);
-                }
-                else
-                {
-                    ret = pub.Publish(web_root);
-                    if (!ret) {
-                        fprintf(stderr, "Cannot publish json file <%s%sM%d...>.\n", web_root, ITHI_FILE_PATH_SEP, metric_id);
-                    }
+                    fprintf(stderr, "Cannot publish json file <%s%sM%d...>.\n", web_root, ITHI_FILE_PATH_SEP, metric_id);
                 }
             }
         }
