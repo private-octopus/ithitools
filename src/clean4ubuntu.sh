@@ -9,5 +9,5 @@ rm -r copr
 rm -r data
 rm -r testfiles
 rm -r www
-sudo rm -r .git
+sudo rm -r .git* .tra*
 
