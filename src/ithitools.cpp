@@ -24,10 +24,10 @@
 
 #ifdef _WINDOWS
 #include "stdafx.h"
-#else
-#include "stdio.h"
-#include "config.h"
 #endif
+#include <stdio.h>
+#include "config.h"
+
 
 
 #include <stdlib.h>
@@ -36,7 +36,7 @@
 #ifdef HAVE_GETOPT
 #include <unistd.h>
 #else
-#include "getopt.h"
+#include "ithi_getopt.h"
 #endif
 #include "CaptureSummary.h"
 #include "ithimetrics.h"

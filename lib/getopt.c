@@ -32,11 +32,13 @@
 * SUCH DAMAGE.
 */
 
+#include "config.h"
+
 #ifndef HAVE_GETOPT
 
 #include <string.h>
 #include <stdio.h>
-#include "getopt.h"
+#include "ithi_getopt.h"
 
 
 int     opterr = 1,             /* if error message should be printed */

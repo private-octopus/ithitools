@@ -31,7 +31,7 @@
 #ifdef HAVE_GETOPT
 #include <unistd.h>
 #else
-#include "getopt.h"
+#include "ithi_getopt.h"
 #endif
 #include "CaptureSummary.h"
 #include "ithimetrics.h"
