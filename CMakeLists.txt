@@ -88,6 +88,7 @@ ADD_EXECUTABLE(ithitest
    lib/ComputeMetric.cpp
    lib/ComputeM34.cpp
    lib/ComputeM6.cpp
+   lib/getopt.c
    test/CaptureTest.cpp
    test/DnsPrefixTest.cpp
    test/hashtest.cpp
@@ -116,6 +117,7 @@ ADD_LIBRARY(ithicap SHARED
    lib/NamePattern.cpp
    lib/CsvHelper.cpp
    lib/DnscapPlugIn.cpp
+   lib/getopt.c
 )
 
 SET_TARGET_PROPERTIES(ithicap PROPERTIES
