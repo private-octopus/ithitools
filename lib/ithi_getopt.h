@@ -1,5 +1,8 @@
 #ifndef GETOPT_H
-#ifndef __APPLE__
+#ifndef HAVE_GETOPT
+#ifdef __APPLE__
+#define HAVE_GETOPT
+#else
 
 #define GETOPT_H
 
@@ -19,5 +22,6 @@ extern const char *optarg;  /* argument associated with option */
 #endif
 
 
+#endif
 #endif
 #endif

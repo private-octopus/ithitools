@@ -21,6 +21,5 @@ x64
 */*.dll
 */*.xbf
 */*.ilk
-/lib/config.h
 /clitest/save_test.csv
 /clitest/capture_list.txt

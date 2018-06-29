@@ -1,4 +1,3 @@
-#include "getopt.h"
 
 /*
 * Copyright (c) 1987, 1993, 1994
@@ -33,8 +32,14 @@
 * SUCH DAMAGE.
 */
 
+#include "config.h"
+
+#ifndef HAVE_GETOPT
+
 #include <string.h>
 #include <stdio.h>
+#include "ithi_getopt.h"
+
 
 int     opterr = 1,             /* if error message should be printed */
         optind = 1,             /* index into parent argv vector */
@@ -104,3 +109,5 @@ int getopt(int nargc, char * const nargv[], const char *ostr)
   }
   return (optopt);                        /* dump back option letter */
 }
+
+#endif /* HAVE_GETOPT */
