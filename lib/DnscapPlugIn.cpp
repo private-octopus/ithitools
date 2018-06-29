@@ -35,13 +35,12 @@
  * This code provides an implementation of the required functions, which
  * will link to a static set of C++ objects for doing the capture.
  */
-#ifndef _WINDOWS
 #include "config.h"
-#endif
+
 #ifdef HAVE_GETOPT
 #include <unistd.h>
 #else
-#include "getopt.h"
+#include "ithi_getopt.h"
 #endif
 #include "dnscap_common.h"
 #ifndef _WINDOWS
