@@ -171,6 +171,7 @@
     <ClInclude Include="..\lib\ComputeM34.h" />
     <ClInclude Include="..\lib\ComputeM6.h" />
     <ClInclude Include="..\lib\ComputeMetric.h" />
+    <ClInclude Include="..\lib\config.h" />
     <ClInclude Include="..\lib\CsvHelper.h" />
     <ClInclude Include="..\lib\dnscap_common.h" />
     <ClInclude Include="..\lib\DnsStatHash.h" />
