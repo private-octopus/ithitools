@@ -8,14 +8,14 @@
 <script type="text/javascript">
     var M5valId = [
         "valM511", "valM512", "valM513", "valM514", "valM515", "valM516",
-        "valM521", "valM522", "valM522",
+        "valM521", "valM522", "valM523",
         "valM531", "valM532",
         "valM541", "valM542",
         "valM551"
     ];
     var M5averageId = [
         "averageM511", "averageM512", "averageM513", "averageM514", "averageM515", "averageM516",
-        "averageM521", "averageM522", "averageM522",
+        "averageM521", "averageM522", "averageM523",
         "averageM531", "averageM532",
         "averageM541", "averageM542",
         "averageM551"
@@ -122,12 +122,12 @@ computed by sending specially crafted queries at DNS resolvers from a large numb
 including queries to domains under the experimenters' control. This allows us to analyze how
 recursive resolvers manage key part of the service, and how well responses sent to stub
 resolvers track data updates by the authoritative servers.
-</p>
-<p>
 There are two ways of measuring these metrics: either as a fraction of the user
-population behind resolvers that follow the SOA's TTL; or, as a fraction of
-the total number of resolvers that follow the SOA's TTL. We provide both
-evaluations.
+population; or, as a fraction of
+the total number of resolvers. We provide both
+evaluations based on estimation of the population size behind each of the resolvers
+that we track. We also provide an estimate of the fraction of the global population
+behind the 10000 largest resolvers.
 </p>
 <p>
 There are five components in the M5 metric:
