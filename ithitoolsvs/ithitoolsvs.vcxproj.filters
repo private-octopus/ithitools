@@ -113,9 +113,6 @@
     <ClInclude Include="..\lib\dnscap_common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\getopt.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\M7Getter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -141,6 +138,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\lib\M1Data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\ithi_getopt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
