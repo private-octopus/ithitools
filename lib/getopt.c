@@ -34,7 +34,9 @@
 
 #include "config.h"
 
-#ifndef HAVE_GETOPT
+#ifdef HAVE_GETOPT
+typedef int have_getopt_make_iso_compilers_happy;
+#else
 
 #include <string.h>
 #include <stdio.h>
