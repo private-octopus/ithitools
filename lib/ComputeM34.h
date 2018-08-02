@@ -60,7 +60,6 @@ private:
     bool GetM33_3();
 };
 
-
 class ComputeM4 : public ComputeMetric
 {
 public:
@@ -92,4 +91,26 @@ private:
     bool GetM4_DNSSEC();
 };
 
+class ComputeM8 : public ComputeMetric
+{
+public:
+    ComputeM8();
+    ~ComputeM8();
+
+    bool Load(char const * single_file_name) override;
+    bool LoadMultipleFiles(char const ** in_files, int nb_files) override;
+    bool Compute() override;
+    bool Write(FILE * F_out) override;
+
+private:
+    CaptureSummary cs;
+
+    double m8_1;
+    double m8_2;
+    double m8_3;
+
+    bool GetM8_1();
+    bool GetM8_2();
+    bool GetM8_3();
+};
 #endif /* COMPUTE_M346_H */

@@ -92,7 +92,8 @@ bool MetricTest::DoTest()
             ret = false;
             TEST_LOG("Could not set root zone file to %s\n", root_zone_file);
         }
-        else if (!met.SetRootCaptureFileName(metric_test_input) || !met.SetRecursiveCaptureFileName(metric_test_input))
+        else if (!met.SetRootCaptureFileName(metric_test_input) || !met.SetRecursiveCaptureFileName(metric_test_input)
+            || !met.SetAuthoritativeCaptureFileName(metric_test_input))
         {
             ret = false;
             TEST_LOG("Could not set capture file name to %s\n", metric_test_input);
