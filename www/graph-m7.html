@@ -40,13 +40,12 @@
         // set these values for your data
 
         setDateElement(M7Data.date);
-
-        elementRefList = ["valM71", "valM72", "valM73", "valM74"];
-        elementAverageList = ["averageM71", "averageM72", "averageM73", "averageM74"];
-        elementRefVal = [getLastElement(M7Data.M7DataSet[0]), getLastElement(M7Data.M7DataSet[1]), getLastElement(M7Data.M7DataSet[2]), getLastElement(M7Data.M7DataSet[3])];
-        elementAverageVal = [getAverageElement(M7Data.M7DataSet[0]), getAverageElement(M7Data.M7DataSet[1]), getAverageElement(M7Data.M7DataSet[2]), getAverageElement(M7Data.M7DataSet[3])];
+        elementRefList = ["valM71", "valM72"];
+        elementAverageList = ["averageM71", "averageM72"];
+        elementRefVal = [ getLastElement(M7Data.M7DataSet[0]), getLastElement(M7Data.M7DataSet[1])];
+        elementAverageVal = [getAverageElement(M7Data.M7DataSet[0]), getAverageElement(M7Data.M7DataSet[1])];
         
-        for (i = 0; i < 4; i++) {
+        for (i = 0; i < 2; i++) {
             dataM7x = M7Data.M7DataSet[i];
             setValElement(elementRefList[i], elementRefVal[i]);
             setValElement(elementAverageList[i], elementAverageVal[i]);
@@ -56,8 +55,6 @@
 
         plotGraphM7("graphM71", M7Data.M7DataSet[0], "#404040C0");
         plotGraphM7("graphM72", M7Data.M7DataSet[1], "#404040C0");
-        plotGraphM7("graphM73", M7Data.M7DataSet[2], "#404040C0");
-        plotGraphM7("graphM74", M7Data.M7DataSet[3], "#404040C0");
     }
     
     function setDateElement(date) {
@@ -90,6 +87,8 @@
             return dataSet[0];
         }
         else {
+            var i = 0;
+
             last = dataSet.length - 2;
             first = 0;
             if (dataSet.length > 13) {
@@ -258,28 +257,6 @@
                 -
             </td>
         </tr>
-        <tr>
-            <td>
-                <a href="#M73">M7.3: % of Clients ready for DNSSEC</a>
-            </td>
-            <td class="number" id="valM73">
-                -
-            </td>
-            <td class="number" id="averageM73">
-                -
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <a href="#M74">M7.4: % of Zones publishing DNSSEC</a>
-            </td>
-            <td class="number" id="valM74">
-                -
-            </td>
-            <td class="number" id="averageM74">
-                -
-            </td>
-        </tr>
     </table>
 
     <h3 id="M71">M7.1: % of TLDs signed with DNSSEC</h3>
@@ -298,24 +275,6 @@
 
     <canvas id="graphM72" height="400" width="650">
         No M7.2 data available
-    </canvas>
-
-    <h3 id="M73">M7.3: % of Clients ready for DNSSEC</h3>
-    <p>
-        The following graph shows the evolution of the DNSSEC metric M7.3 over time.
-    </p>
-
-    <canvas id="graphM73" height="400" width="650">
-        No M7.3 data available
-    </canvas>
-
-    <h3 id="M74">M7.4: % of Zones publishing DNSSEC</h3>
-    <p>
-        The following graph shows the evolution of the DNSSEC metric M7.4 over time.
-    </p>
-
-    <canvas id="graphM74" height="400" width="650">
-        No M7.4 data available
     </canvas>
 
 </body>
