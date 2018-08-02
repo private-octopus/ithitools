@@ -89,8 +89,8 @@ public:
     bool PublishDataM1(FILE * F);
     bool PublishDataM2(FILE * F);
     bool PublishDataM3(FILE * F);
-    bool PublishDataM5(FILE * F);
     bool PublishDataM4(FILE * F);
+    bool PublishDataM5(FILE * F);
     bool PublishDataM6(FILE * F);
     bool PublishDataM7(FILE * F);
 };

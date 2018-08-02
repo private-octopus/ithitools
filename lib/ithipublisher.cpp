@@ -793,8 +793,9 @@ bool ithipublisher::PublishDataM4(FILE * F)
 {
     bool ret = true;
     double average, current;
-    const char * sub_met[3] = { "M4.1", "M4.2", "M4.3" };
-    const char * met_data_name[3] = { "M41Data", "M42DataSet", "M43DataSet" };
+    double mdns[12];
+    const char * sub_met[5] = { "M4.1", "M4.2", "M4.3", "M4.5", "M4.6" };
+    const char * met_data_name[5] = { "M41Data", "M42DataSet", "M43DataSet", "M45Data", "M46Data" };
 
     ret = GetAverageAndCurrent(sub_met[0], NULL, &average, &current);
     if (ret)
@@ -816,16 +817,28 @@ bool ithipublisher::PublishDataM4(FILE * F)
                 ret = PrintNameList(F, &name_list, 100.0);
             }
         }
+        
+        ret &= fprintf(F, "],\n") > 0;
+    }
 
-        if (m == 2)
+    for (int m = 3; ret && m < 5; m++)
+    {
+        ret = fprintf(F, "\"%s\" : ", met_data_name[m]);
+
+        if (GetVector(sub_met[m], NULL, mdns))
         {
-            ret &= fprintf(F, "]\n") > 0;
-        }
-        else
-        {
-            ret &= fprintf(F, "],\n") > 0;
+            /* M7.x is present */
+            ret = PrintVector(F, mdns, 100.0);
+
+            if (m == 4) {
+                ret &= (fprintf(F, "\n") > 0);
+            }
+            else {
+                ret &= (fprintf(F, ",\n") > 0);
+            }
         }
     }
+
 
     return ret;
 }
@@ -991,7 +1004,7 @@ bool ithipublisher::PublishDataM7(FILE * F)
 
     fprintf(F, "\"M7DataSet\" : [\n");
 
-    for (int i = 1; ret && i <= 4; i++) {
+    for (int i = 1; ret && i <= 2; i++) {
 
         ret = snprintf(subMetX, sizeof(subMetX), "M7.%d", i) > 0;
 
@@ -1001,7 +1014,7 @@ bool ithipublisher::PublishDataM7(FILE * F)
                 /* M7.x is present */
                 ret = PrintVector(F, m7x, 100.0);
 
-                if (i == 4) {
+                if (i == 2) {
                     ret &= (fprintf(F, "\n") > 0);
                 }
                 else {

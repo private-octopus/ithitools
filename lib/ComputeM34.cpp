@@ -289,7 +289,10 @@ ComputeM4::ComputeM4()
     nb_userqueries(0),
     nb_nondelegated(0),
     nb_delegated(0),
-    m4_1(0)
+    m4_1(0),
+    m4_4(0),
+    m4_5(0),
+    m4_6(0)
 {
 }
 
@@ -333,6 +336,12 @@ bool ComputeM4::Compute()
         }
     }
 
+    if (ret) 
+    {
+        ret = GetM4_DNSSEC();
+    }
+
+
     return ret;
 }
 
@@ -350,6 +359,14 @@ bool ComputeM4::Write(FILE * F_out)
 
     if (ret) {
         ret = fprintf(F_out, "M4.4, , %6f,\n", m4_4) > 0;
+    }
+
+    if (ret) {
+        ret = fprintf(F_out, "M4.5, , %6f,\n", m4_5) > 0;
+    }
+
+    if (ret) {
+        ret = fprintf(F_out, "M4.6, , %6f,\n", m4_6) > 0;
     }
 
     return ret;
@@ -449,6 +466,41 @@ bool ComputeM4::GetM4_3()
     {
         ret = false;
     }
+
+    return ret;
+}
+
+static double DNSSEC_metric_from_extract(std::vector<CaptureLine*> * extract)
+{
+    double ret = 0;
+    uint64_t total = 0;
+    uint64_t support = 0;
+
+    for (size_t i = 0; i < extract->size(); i++) {
+        total += (*extract)[i]->count;
+        if ((*extract)[i]->key_type == 0 && (*extract)[i]->key_number == 1) {
+            support += (*extract)[i]->count;
+        }
+    }
+
+    if (total > 0) {
+        ret = (double)support;
+        ret /= (double)total;
+    }
+
+    return ret;
+}
+
+bool ComputeM4::GetM4_DNSSEC()
+{
+    bool ret = true;
+    std::vector<CaptureLine*> extractClientOccurence;
+    std::vector<CaptureLine*> extractZoneOccurence;
+    
+    cs.Extract(DnsStats::GetTableName(REGISTRY_DNSSEC_Client_Usage), &extractClientOccurence);
+    m4_5 = DNSSEC_metric_from_extract(&extractClientOccurence);
+    cs.Extract(DnsStats::GetTableName(REGISTRY_DNSSEC_Zone_Usage), &extractZoneOccurence);
+    m4_6 = DNSSEC_metric_from_extract(&extractZoneOccurence);
 
     return ret;
 }

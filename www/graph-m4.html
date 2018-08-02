@@ -73,6 +73,10 @@
         setValElement("averageM43", average43);
         setValElement("valM44", m44);
         setValElement("averageM44", average44);
+        setValElement("valM45", getLastElement(M4Data.M45Data));
+        setValElement("averageM45", getAverageElement(M4Data.M45Data));
+        setValElement("valM46", getLastElement(M4Data.M46Data));
+        setValElement("averageM46", getAverageElement(M4Data.M46Data));
 
         // Set the color blobs in the M4 table, then plot the M4 pie chart
         setColorBlob("colorBlobM41", colorSet[0]);
@@ -89,7 +93,8 @@
 
     function columnSum(dataSet, columnIndex)
     {
-        sum = 0;
+        var i = 0;
+        var sum = 0;
 
         for (i= 0; i < dataSet.length; i++)
         {
@@ -117,6 +122,39 @@
         }
     }
 
+
+    function getLastElement(dataSet) {
+        if (dataSet.length < 1) {
+            return "-";
+        }
+        else {
+            return dataSet[dataSet.length - 1];
+        }
+    }
+
+    function getAverageElement(dataSet) {
+        if (dataSet.length <= 2) {
+            return dataSet[0];
+        }
+        else {
+            var i = 0;
+
+            last = dataSet.length - 2;
+            first = 0;
+            if (dataSet.length > 13) {
+                first = dataSet.length - 13;
+            }
+            average = 0;
+            for (i = first; i <= last; i++) {
+                average += dataSet[i];
+            }
+            average /= (last + 1 - first);
+
+            return average;
+        }
+    }
+
+
     function setColorBlob(canvasId, colorValue)
     {
         var c = document.getElementById(canvasId);
@@ -128,6 +166,7 @@
     }
 
     function plotPieChart(canvasPieId, dataSet, colorSet) {
+        var i = 0;
         var c = document.getElementById(canvasPieId);
         var ctx = c.getContext("2d");
         var colorIndex = 0;
@@ -168,6 +207,8 @@
 
     function fillMetricTable(tableName, tableId, dataSet)
     {
+        var i=0;
+
         tableElem = document.getElementById(tableId);
         tableText = "<table class=\"metrics\"><tr><th>" + tableName + "</th>";
         tableText += "<th class=\"number\">Current value</th> <th class=\"number\">Average value</th></tr >\n";
@@ -208,6 +249,32 @@
         TLD, to RFC 6761 special use names, to frequently leaked strings, and
         to other strings.
     </p>
+<p>
+The M4 metric also tracks the usage of DNSSEC at recursive servers through two metrics:
+</p>
+<ul>
+
+        <li>
+            M4.5: the fraction of DNS Clients ready for DNSSEC.
+            This is computed at recursive resolvers.
+            We compute the ratio of the number of clients that sent requests with the EDNS "DNSSEC OK"
+            option set, over the total number of clients. Clients are identified by IP address,
+            and a given IP address is only counted once. The ratios measured at recursive
+            resolvers are then averaged to compute the metric.
+        </li>
+        <li>
+            M4.6: the fraction of Zones publishing DNSSEC records.
+            This is also computed at recursive resolvers.
+            We compute the ratio of the number of DNS zones for which we saw at
+            least one DNSSEC record (DNSKEY, RRSIG, NSEC, NSEC3 or DS) over the
+            total number of zones queried at the recursive resolver.
+            Zones are identified by a prefix, computed using
+            <a href="https://publicsuffix.org/">Mozilla's Public Suffix List</a>.
+            Each prefix is only counted once.
+            The ratios measured at recursive
+            resolvers are then averaged to compute the metric.
+        </li>
+</ul>
     <p>
         In the following table, the <em>current value</em> is the
         value of the metric for the current month.
@@ -279,6 +346,32 @@
                 -
             </td>
             <td class="number" id="averageM44">
+                -
+            </td>
+        </tr>
+
+	<tr> </tr>
+
+        <tr>
+            <td rowspan = 2 colspan=2> DNSSEC </td>
+            <td>
+                M4.5: % of Clients ready for DNSSEC
+            </td>
+            <td class="number" id="valM45">
+                -
+            </td>
+            <td class="number" id="averageM45">
+                -
+            </td>
+        </tr>
+        <tr>
+            <td>
+                M4.6: % of Zones publishing DNSSEC
+            </td>
+            <td class="number" id="valM46">
+                -
+            </td>
+            <td class="number" id="averageM46">
                 -
             </td>
         </tr>
