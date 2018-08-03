@@ -26,6 +26,8 @@
 #endif
 #endif
 
+#define ITHI_NUMBER_OF_METRICS 8
+
 class ithimetrics
 {
 public:
@@ -43,17 +45,22 @@ public:
 
     bool SetRootCaptureFileName(char const * file_name);
     bool SetRecursiveCaptureFileName(char const * file_name);
+    bool SetAuthoritativeCaptureFileName(char const * file_name);
 
     bool SetRootZoneFileName(char const * file_name);
 
     bool SetDefaultRootCaptureFile();
     bool SetDefaultRecursiveCaptureFile();
+    bool SetDefaultAuthoritativeCaptureFile();
     bool SetDefaultRootZoneFile();
 
     const char * GetRootCaptureFileName() {
         return root_capture_file_name;
     };
     const char * GetRecursiveCaptureFileName() {
+        return recursive_capture_file_name;
+    };
+    const char * GetAuthoritativeCaptureFileName() {
         return recursive_capture_file_name;
     };
     const char * GetRootZoneFileName() {
@@ -83,14 +90,16 @@ private:
     ComputeM4 cm4;
     ComputeM6 cm6;
     ComputeM7 cm7;
+    ComputeM8 cm8;
 
     char * metric_date;
     char * ithi_folder;
-    char * metric_file[7];
-    bool metric_is_available[7];
+    char * metric_file[ITHI_NUMBER_OF_METRICS];
+    bool metric_is_available[ITHI_NUMBER_OF_METRICS];
     char * compliance_file_name;
     char * root_capture_file_name;
     char * recursive_capture_file_name;
+    char * authoritative_capture_file_name;
     char * abuse_file_name_tlds;
     char * abuse_file_name_registrars;
     char * root_zone_file_name;

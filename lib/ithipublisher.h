@@ -93,6 +93,7 @@ public:
     bool PublishDataM5(FILE * F);
     bool PublishDataM6(FILE * F);
     bool PublishDataM7(FILE * F);
+    bool PublishDataM8(FILE * F);
 };
 
 #endif /* ITHI_PUBLISHER_H */

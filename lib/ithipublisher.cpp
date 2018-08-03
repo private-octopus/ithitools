@@ -437,6 +437,9 @@ bool ithipublisher::Publish(char const * web_folder)
             case 7:
                 ret = PublishDataM7(F);
                 break;
+            case 8:
+                ret = PublishDataM8(F);
+                break;
             default:
                 ret = fprintf(F, "\"error\" : \"No data yet for metric M%d\"\n", metric_id) > 0;
                 break;
@@ -1007,6 +1010,38 @@ bool ithipublisher::PublishDataM7(FILE * F)
     for (int i = 1; ret && i <= 2; i++) {
 
         ret = snprintf(subMetX, sizeof(subMetX), "M7.%d", i) > 0;
+
+        if (ret) {
+            if (GetVector(subMetX, NULL, m7x))
+            {
+                /* M7.x is present */
+                ret = PrintVector(F, m7x, 100.0);
+
+                if (i == 2) {
+                    ret &= (fprintf(F, "\n") > 0);
+                }
+                else {
+                    ret &= (fprintf(F, ",\n") > 0);
+                }
+            }
+        }
+    }
+    fprintf(F, "]\n");
+
+    return ret;
+}
+
+bool ithipublisher::PublishDataM8(FILE * F)
+{
+    double m7x[12];
+    char subMetX[16];
+    bool ret = true;
+
+    fprintf(F, "\"M8DataSet\" : [\n");
+
+    for (int i = 1; ret && i <= 3; i++) {
+
+        ret = snprintf(subMetX, sizeof(subMetX), "M8.%d", i) > 0;
 
         if (ret) {
             if (GetVector(subMetX, NULL, m7x))

@@ -42,11 +42,12 @@ ithimetrics::ithimetrics()
     compliance_file_name(NULL),
     root_capture_file_name(NULL),
     recursive_capture_file_name(NULL),
+    authoritative_capture_file_name(NULL),
     abuse_file_name_tlds(NULL),
     abuse_file_name_registrars(NULL),
     root_zone_file_name(NULL)
 {
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < ITHI_NUMBER_OF_METRICS; i++) {
         metric_file[i] = NULL;
         metric_is_available[i] = false;
     }
@@ -73,7 +74,7 @@ ithimetrics::~ithimetrics() {
         abuse_file_name_registrars = NULL;
     }
 
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < ITHI_NUMBER_OF_METRICS; i++) {
         if (metric_file[i] != NULL)
         {
             free(metric_file[i]);
@@ -89,6 +90,11 @@ ithimetrics::~ithimetrics() {
     if (recursive_capture_file_name != NULL) {
         free(recursive_capture_file_name);
         recursive_capture_file_name = NULL;
+    }
+
+    if (authoritative_capture_file_name != NULL) {
+        free(authoritative_capture_file_name);
+        authoritative_capture_file_name = NULL;
     }
 
     if (root_zone_file_name != NULL) {
@@ -116,7 +122,7 @@ bool ithimetrics::SetMetricFileNames(int metric_number, char const * metric_file
 {
     bool ret = false;
 
-    if (metric_number >= 0 && metric_number < 7)
+    if (metric_number >= 0 && metric_number < ITHI_NUMBER_OF_METRICS)
     {
         ret = copy_name(&metric_file[metric_number], metric_file_name);
     }
@@ -247,6 +253,12 @@ bool ithimetrics::SetRecursiveCaptureFileName(char const * file_name)
     return copy_name(&recursive_capture_file_name, file_name);
 }
 
+bool ithimetrics::SetAuthoritativeCaptureFileName(char const * file_name)
+{
+    return copy_name(&authoritative_capture_file_name, file_name);
+}
+
+
 bool ithimetrics::SetRootZoneFileName(char const * file_name)
 {
     return copy_name(&root_zone_file_name, file_name);
@@ -260,6 +272,11 @@ bool ithimetrics::SetDefaultRootCaptureFile()
 bool ithimetrics::SetDefaultRecursiveCaptureFile()
 {
     return SetDefaultCaptureFiles("M46", "-summary.csv", &recursive_capture_file_name);
+}
+
+bool ithimetrics::SetDefaultAuthoritativeCaptureFile()
+{
+    return SetDefaultCaptureFiles("M8", "-summary.csv", &authoritative_capture_file_name);
 }
 
 bool ithimetrics::SetDefaultRootZoneFile()
@@ -399,6 +416,18 @@ bool ithimetrics::GetMetrics() {
         ret |= metric_is_available[6];
     }
 
+
+    if (authoritative_capture_file_name == NULL)
+    {
+        (void)SetDefaultAuthoritativeCaptureFile();
+    }
+
+    if (authoritative_capture_file_name != NULL && cm8.Load(authoritative_capture_file_name))
+    {
+        metric_is_available[7] = cm8.Compute();
+        ret |= metric_is_available[7];
+    }
+
     return ret;
 }
 
@@ -406,8 +435,7 @@ bool ithimetrics::SaveMetricFiles()
 {
     bool ret = true;
     char buffer[512];
-    ComputeMetric * cm[7] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7 };
-
+    ComputeMetric * cm[ITHI_NUMBER_OF_METRICS] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7, &cm8 };
 
     if (ret && ithi_folder == NULL)
     {
@@ -420,7 +448,7 @@ bool ithimetrics::SaveMetricFiles()
         ret = SetDefaultDate(time(0));
     }
 
-    for (int i = 0; ret && i < 7; i++)
+    for (int i = 0; ret && i < ITHI_NUMBER_OF_METRICS; i++)
     {
         if (!metric_is_available[i] || cm[i] == NULL)
         {
@@ -455,7 +483,7 @@ bool ithimetrics::SaveMetricFiles()
 bool ithimetrics::Save(char const * file_name)
 {
 
-    ComputeMetric * cm[7] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7 };
+    ComputeMetric * cm[ITHI_NUMBER_OF_METRICS] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7, &cm8 };
     FILE* F;
 #ifdef _WINDOWS
     errno_t err = fopen_s(&F, file_name, "w");
@@ -466,7 +494,7 @@ bool ithimetrics::Save(char const * file_name)
     ret = (F != NULL);
 #endif
 
-    for (int i = 0; ret && i < 7; i++)
+    for (int i = 0; ret && i < ITHI_NUMBER_OF_METRICS; i++)
     {
         if (!metric_is_available[i] || cm[i] == NULL)
         {

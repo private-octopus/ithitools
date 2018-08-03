@@ -504,3 +504,112 @@ bool ComputeM4::GetM4_DNSSEC()
 
     return ret;
 }
+
+ComputeM8::ComputeM8() :
+    m8_1(0),
+    m8_2(0),
+    m8_3(0)
+{
+}
+
+ComputeM8::~ComputeM8()
+{
+}
+
+bool ComputeM8::Load(char const * single_file_name)
+{
+    return cs.Load(single_file_name);
+}
+
+bool ComputeM8::LoadMultipleFiles(char const ** in_files, int nb_files)
+{
+    return (nb_files == 1) ? Load(in_files[0]) : cs.Merge(nb_files, in_files);
+}
+
+bool ComputeM8::Compute()
+{
+    bool ret = GetM8_1() &&
+        GetM8_2() &&
+        GetM8_3();
+
+    return ret;
+}
+
+bool ComputeM8::Write(FILE * F_out)
+{
+    bool ret = fprintf(F_out, "M8.1, , %6f,\n", m8_1) > 0;
+
+    if (ret) {
+        ret = fprintf(F_out, "M8.2, , %6f,\n", m8_2) > 0;
+    }
+
+    if (ret) {
+        ret = fprintf(F_out, "M8.3, , %6f,\n", m8_3) > 0;
+    }
+
+    return ret;
+}
+
+bool ComputeM8::GetM8_1()
+{
+    bool ret = true;
+    uint64_t nb_noerror = cs.GetCountByNumber(
+        DnsStats::GetTableName(REGISTRY_DNS_RCODES), 0);
+    uint64_t nb_nxdomain = cs.GetCountByNumber(
+        DnsStats::GetTableName(REGISTRY_DNS_RCODES), 3);
+    uint64_t nb_responses = (nb_noerror + nb_nxdomain) / 2;
+
+    if (nb_responses > 0)
+    {
+        m8_1 = (double)nb_nxdomain;
+        m8_1 /= (double)nb_responses;
+    }
+    else
+    {
+        m8_1 = 0;
+        ret = false;
+    }
+
+    return ret;
+}
+
+
+bool ComputeM8::GetM8_2()
+{
+    bool ret = true;
+    uint64_t nb_noerror = cs.GetCountByNumber(
+        DnsStats::GetTableName(REGISTRY_DNS_RCODES), 0);
+    uint64_t nb_nxdomain = cs.GetCountByNumber(
+        DnsStats::GetTableName(REGISTRY_DNS_RCODES), 3);
+    uint64_t nb_edns0 = cs.GetCountByNumber(
+        DnsStats::GetTableName(REGISTRY_EDNS_Version_number), 0);
+    uint64_t nb_queries = nb_noerror + nb_nxdomain;
+
+    if (nb_queries > 0)
+    {
+        m8_2 = (double)nb_edns0;
+        m8_2 /= (double)nb_queries;
+
+        if (m8_2 > 1.0) {
+            m8_2 = 1.0;
+        }
+    }
+    else
+    {
+        m8_2 = 0;
+        ret = false;
+    }
+
+    return ret;
+}
+
+bool ComputeM8::GetM8_3()
+{
+    bool ret = true;
+    std::vector<CaptureLine*> extractClientOccurence;
+
+    cs.Extract(DnsStats::GetTableName(REGISTRY_DNSSEC_Client_Usage), &extractClientOccurence);
+    m8_3 = DNSSEC_metric_from_extract(&extractClientOccurence);
+
+    return ret;
+}
