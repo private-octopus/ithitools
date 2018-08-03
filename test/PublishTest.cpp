@@ -34,6 +34,7 @@ static char const * publish_test_target_m4 = ".\\M4Data.txt";
 static char const * publish_test_target_m5 = ".\\M5Data.txt";
 static char const * publish_test_target_m6 = ".\\M6Data.txt";
 static char const * publish_test_target_m7 = ".\\M7Data.txt";
+static char const * publish_test_target_m8 = ".\\M8Data.txt";
 #ifndef ITHI_FILE_PATH_SEP
 #define ITHI_FILE_PATH_SEP "\\"
 #endif
@@ -59,6 +60,9 @@ static char const * publish_ref_m6 = "..\\..\\data\\M6Data-test-ref.txt";
 static char const * publish_test_m71 = "..\\..\\data\\M7-2017-01-31.csv";
 static char const * publish_test_m72 = "..\\..\\data\\M7-2017-02-28.csv";
 static char const * publish_ref_m7 = "..\\..\\data\\M7Data-test-ref.txt";
+static char const * publish_test_m81 = "..\\..\\data\\M8-2017-01-31.csv";
+static char const * publish_test_m82 = "..\\..\\data\\M8-2017-02-28.csv";
+static char const * publish_ref_m8 = "..\\..\\data\\M8Data-test-ref.txt";
 #else
 static char const * publish_test_m11 = "..\\data\\M1-2017-01-31.csv";
 static char const * publish_test_m12 = "..\\data\\M1-2017-02-28.csv";
@@ -81,6 +85,9 @@ static char const * publish_ref_m6 = "..\\data\\M6Data-test-ref.txt";
 static char const * publish_test_m71 = "..\\data\\M7-2017-01-31.csv";
 static char const * publish_test_m72 = "..\\data\\M7-2017-02-28.csv";
 static char const * publish_ref_m7 = "..\\data\\M7Data-test-ref.txt";
+static char const * publish_test_m81 = "..\\data\\M8-2017-01-31.csv";
+static char const * publish_test_m82 = "..\\data\\M8-2017-02-28.csv";
+static char const * publish_ref_m8 = "..\\data\\M8Data-test-ref.txt";
 #endif
 #else
 static char const * publish_test_dir_ithi = "./ithi";
@@ -113,6 +120,9 @@ static char const * publish_test_target_m7 = "./M7Data.txt";
 static char const * publish_test_m71 = "./data/M7-2017-01-31.csv";
 static char const * publish_test_m72 = "./data/M7-2017-02-28.csv";
 static char const * publish_ref_m7 = "./data/M7Data-test-ref.txt";
+static char const * publish_test_m81 = "./data/M8-2017-01-31.csv";
+static char const * publish_test_m82 = "./data/M8-2017-02-28.csv";
+static char const * publish_ref_m8 = "./data/M8Data-test-ref.txt";
 #ifndef ITHI_FILE_PATH_SEP
 #define ITHI_FILE_PATH_SEP "/"
 #endif
@@ -239,6 +249,14 @@ bool PublishTest::DoTest()
     if (ret)
     {
         ret = DoOneTest(7, m7_files, 2, publish_test_target_m7, publish_ref_m7);
+    }
+
+    /* M7 test */
+    char const * m8_files[2] = { publish_test_m81, publish_test_m82 };
+
+    if (ret)
+    {
+        ret = DoOneTest(8, m8_files, 2, publish_test_target_m8, publish_ref_m8);
     }
 
     return ret;
