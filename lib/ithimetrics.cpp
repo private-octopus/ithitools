@@ -47,7 +47,7 @@ ithimetrics::ithimetrics()
     abuse_file_name_registrars(NULL),
     root_zone_file_name(NULL)
 {
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < ITHI_NUMBER_OF_METRICS; i++) {
         metric_file[i] = NULL;
         metric_is_available[i] = false;
     }
@@ -74,7 +74,7 @@ ithimetrics::~ithimetrics() {
         abuse_file_name_registrars = NULL;
     }
 
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < ITHI_NUMBER_OF_METRICS; i++) {
         if (metric_file[i] != NULL)
         {
             free(metric_file[i]);
@@ -122,7 +122,7 @@ bool ithimetrics::SetMetricFileNames(int metric_number, char const * metric_file
 {
     bool ret = false;
 
-    if (metric_number >= 0 && metric_number < 7)
+    if (metric_number >= 0 && metric_number < ITHI_NUMBER_OF_METRICS)
     {
         ret = copy_name(&metric_file[metric_number], metric_file_name);
     }
@@ -435,7 +435,7 @@ bool ithimetrics::SaveMetricFiles()
 {
     bool ret = true;
     char buffer[512];
-    ComputeMetric * cm[8] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7, &cm8 };
+    ComputeMetric * cm[ITHI_NUMBER_OF_METRICS] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7, &cm8 };
 
 
     if (ret && ithi_folder == NULL)
@@ -449,7 +449,7 @@ bool ithimetrics::SaveMetricFiles()
         ret = SetDefaultDate(time(0));
     }
 
-    for (int i = 0; ret && i < 8; i++)
+    for (int i = 0; ret && i < ITHI_NUMBER_OF_METRICS; i++)
     {
         if (!metric_is_available[i] || cm[i] == NULL)
         {
@@ -484,7 +484,7 @@ bool ithimetrics::SaveMetricFiles()
 bool ithimetrics::Save(char const * file_name)
 {
 
-    ComputeMetric * cm[8] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7, &cm8 };
+    ComputeMetric * cm[ITHI_NUMBER_OF_METRICS] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7, &cm8 };
     FILE* F;
 #ifdef _WINDOWS
     errno_t err = fopen_s(&F, file_name, "w");
@@ -495,7 +495,7 @@ bool ithimetrics::Save(char const * file_name)
     ret = (F != NULL);
 #endif
 
-    for (int i = 0; ret && i < 8; i++)
+    for (int i = 0; ret && i < ITHI_NUMBER_OF_METRICS; i++)
     {
         if (!metric_is_available[i] || cm[i] == NULL)
         {

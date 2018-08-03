@@ -26,6 +26,8 @@
 #endif
 #endif
 
+#define ITHI_NUMBER_OF_METRICS 8
+
 class ithimetrics
 {
 public:
@@ -92,8 +94,8 @@ private:
 
     char * metric_date;
     char * ithi_folder;
-    char * metric_file[7];
-    bool metric_is_available[7];
+    char * metric_file[ITHI_NUMBER_OF_METRICS];
+    bool metric_is_available[ITHI_NUMBER_OF_METRICS];
     char * compliance_file_name;
     char * root_capture_file_name;
     char * recursive_capture_file_name;
