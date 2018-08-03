@@ -12,6 +12,7 @@ document.getElementById("navMenu").innerHTML =
       '<a href="graph-m5.html">M5: Recursive Resolver Integrity</a>' +
       '<a href="graph-m6.html">M6: IANA</a>' +
       '<a href="graph-m7.html">M7: DNSSEC</a>' +
+      '<a href="graph-m7.html">M8: Authoritative</a>' +
     '</div>' +
   '</div>' +
   '<a href="participating.html">Participate</a>' +
