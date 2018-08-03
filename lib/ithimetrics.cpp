@@ -437,7 +437,6 @@ bool ithimetrics::SaveMetricFiles()
     char buffer[512];
     ComputeMetric * cm[ITHI_NUMBER_OF_METRICS] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7, &cm8 };
 
-
     if (ret && ithi_folder == NULL)
     {
         ret = SetIthiFolder(ITHI_DEFAULT_FOLDER);
