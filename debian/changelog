@@ -1,3 +1,10 @@
+ithitools (1.02.ppa8-0ubuntu1) xenial; urgency=medium
+
+  [ Christian Huitema ]
+  * Add code and script to publish M5
+
+ -- Christian Huitema <huitema@huitema.net>  Sat, 4 Aug 2018 11:20:03 -0700
+
 ithitools (1.02.ppa7-0ubuntu1) xenial; urgency=medium
 
   [ Christian Huitema ]
