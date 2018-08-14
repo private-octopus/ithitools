@@ -1,0 +1,24 @@
+{
+"identifier" : "ITHI-M7",
+"modified" : "2018-05-17",
+"title" : "DNSSEC Root Zone Deployment",
+"description" : "The M7 metrics track deployment of DNSSEC by tracking two values:
+M7.1: the fraction of Top Level Domain zones signed with DNSSEC; and,
+M7.2: the fraction of Country Code Top Level Domain zones signed with DNSSEC.",
+"keyword" : [ "ITHI", "IANA", "DNS root zone", "DNSSEC" ],
+"theme" : [],
+"publisher": {
+        "@type": "org:Organization",
+        "name": "ICANN"
+}, 
+"contactPoint" : {
+       "@type": "vcard:Contact",
+       "fn" : "Alain Durand",
+       "hasEmail" : "mailto://alain.durand@icann.org"
+   },
+"accessLevel" : "public",
+"license" : "http://opendatacommons.org/licenses/odbl/1.0/",
+"accrualPeriodicity" : "P1M",
+"language" : [ "en-US" ],
+"landingPage" : "https://www.icann.org/ithi"
+}
