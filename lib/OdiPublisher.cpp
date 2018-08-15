@@ -68,8 +68,6 @@ bool OdiPublisher::GetUpdateTime(char * time_value, size_t time_value_size, time
 
     if (ret)
     {
-        int year4digit = tm.tm_year + 1900;
-
         ret = snprintf(time_value, time_value_size, "%04d-%02d-%02dT%02d:%02d:%02dUTC", tm.tm_year + 1900,
             tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec ) > 0;
     }

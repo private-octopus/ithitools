@@ -47,12 +47,26 @@ static const odi_update_time_test_t update_time_test[] = {
 };
 
 static const size_t nb_testupdate_time_test = sizeof(update_time_test) / sizeof(odi_update_time_test_t);
+#if 0
+typedef struct st_odi_publish_test_t {
+    char const * metric_file_in;
+    char const * json_file_ref;
+    char const * odi_folder;
+    char const * odi_metric_file;
+    char const * odi_json_file;
+} odi_publish_test_t;
 
-
-typedef struct st_odi_publish_metric_t {
-    time_t unix_time;
-    char const * iso_time_string;
-} st_odi_parse_file_t;
+static const odi_publish_test_t odi_publish_test[] = {
+    { "M1-2017-01-31.csv", "Ref-Odi-M1.json", "ITHI-M1", "20170131-2359.csv", "20170131-2359.csv-metadata.json" },
+    { "M2-2017-02-28.csv", "Ref-Odi-M2.json", "ITHI-M2", "20170228-2359.csv", "20170228-2359.csv-metadata.json" },
+    { "M3-2017-01-31.csv", "Ref-Odi-M3.json", "ITHI-M3", "20170131-2359.csv", "20170131-2359.csv-metadata.json" },
+    { "M4-2017-02-28.csv", "Ref-Odi-M4.json", "ITHI-M4", "20170228-2359.csv", "20170228-2359.csv-metadata.json" },
+    { "M5-2017-01-31.csv", "Ref-Odi-M5.json", "ITHI-M5", "20170131-2359.csv", "20170131-2359.csv-metadata.json" },
+    { "M6-2017-02-28.csv", "Ref-Odi-M6.json", "ITHI-M6", "20170228-2359.csv", "20170228-2359.csv-metadata.json" },
+    { "M7-2017-01-31.csv", "Ref-Odi-M7.json", "ITHI-M7", "20170131-2359.csv", "20170131-2359.csv-metadata.json" },
+    { "M8-2017-02-28.csv", "Ref-Odi-M8.json", "ITHI-M8", "20170228-2359.csv", "20170228-2359.csv-metadata.json" }
+};
+#endif
 
 bool UpdateTimeTest()
 {
@@ -80,7 +94,23 @@ bool UpdateTimeTest()
     return ret;
 }
 
+#if 0
+bool UpdatePublishTestOne(int test_id)
+{
+    bool ret = true;
 
+    /* Compose the input file name */
+    /* Publish at test time */
+
+    /* Compose the metric file name */
+    /* Verify that the metric file is present and matches the input */
+    /* Compose the JSON file name */
+    /* Compose the JSON ref name */
+    /* Verify that the JSON file is present and matches the input */
+
+    return ret;
+}
+#endif
 
 bool OdiPublishTest::DoTest()
 {
