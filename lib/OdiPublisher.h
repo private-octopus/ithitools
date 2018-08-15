@@ -34,14 +34,6 @@ public:
 #endif
     static bool GetUpdateTime(char * time_value, size_t time_value_size, time_t current_time);
 
-private:
-#if 0
-    bool CopyMetadataFile();
-    bool CopyMetricFile();
-    bool SetPublishTime();
-#endif
-
-
 };
 
 #endif /* ODI_PUBLISHER_H */

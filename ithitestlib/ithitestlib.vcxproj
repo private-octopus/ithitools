@@ -146,6 +146,7 @@
     <ClCompile Include="..\test\M2DataTest.cpp" />
     <ClCompile Include="..\test\MergeTest.cpp" />
     <ClCompile Include="..\test\MetricTest.cpp" />
+    <ClCompile Include="..\test\OdiPublishTest.cpp" />
     <ClCompile Include="..\test\PatternTest.cpp" />
     <ClCompile Include="..\test\PluginTest.cpp" />
     <ClCompile Include="..\test\PublishTest.cpp" />
@@ -165,6 +166,7 @@
     <ClInclude Include="..\test\M2DataTest.h" />
     <ClInclude Include="..\test\MergeTest.h" />
     <ClInclude Include="..\test\MetricTest.h" />
+    <ClInclude Include="..\test\OdiPublishTest.h" />
     <ClInclude Include="..\test\PatternTest.h" />
     <ClInclude Include="..\test\PluginTest.h" />
     <ClInclude Include="..\test\PublishTest.h" />

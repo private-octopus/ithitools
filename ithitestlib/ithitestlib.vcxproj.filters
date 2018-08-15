@@ -69,6 +69,9 @@
     <ClCompile Include="..\test\TldCountTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\test\OdiPublishTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\test\CaptureTest.h">
@@ -120,6 +123,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\test\TldCountTest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\test\OdiPublishTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
