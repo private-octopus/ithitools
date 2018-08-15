@@ -62,7 +62,7 @@ bool OdiPublisher::GetUpdateTime(char * time_value, size_t time_value_size, time
         ret = false;
     }
 #else
-    tm = *localtime(&current_time);
+    tm = *gmtime(&current_time);
 #endif
 
 
