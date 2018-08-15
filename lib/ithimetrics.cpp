@@ -512,3 +512,71 @@ bool ithimetrics::Save(char const * file_name)
     return ret;
 }
 
+
+bool ithimetrics::ParseMetricFileName(const char * name, int * metric_id, int * year, int * month, int * day, size_t * name_offset)
+{
+    size_t ch_index = 0;
+    size_t char_after_sep_index = 0;
+    size_t name_len = strlen(name);
+    int val[4] = { 0, 0, 0, 0 };
+    bool ret = true;
+
+    /* Find the last separator in the file name */
+    if (ret)
+    {
+        while (name[ch_index] != 0)
+        {
+            if (name[ch_index] == ITHI_FILE_PATH_SEP[0])
+            {
+                char_after_sep_index = ch_index + 1;
+            }
+            ch_index++;
+        }
+
+        /* Check that the name length matches expectation */
+        ret &= (char_after_sep_index + 17u) <= name_len;
+    }
+
+    if (ret)
+    {
+
+        ret = name[char_after_sep_index] == 'M' &&
+            name[char_after_sep_index + 2] == '-' &&
+            name[char_after_sep_index + 7] == '-' &&
+            name[char_after_sep_index + 10] == '-' &&
+            name[char_after_sep_index + 13] == '.' &&
+            name[char_after_sep_index + 14] == 'c' &&
+            name[char_after_sep_index + 15] == 's' &&
+            name[char_after_sep_index + 16] == 'v' &&
+            name[char_after_sep_index + 17] == 0;
+    }
+
+    if (ret)
+    {
+        char digits[5];
+        const int delta[4] = { 1, 3, 8, 11 };
+        const int len[4] = { 1, 4, 2, 2 };
+
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < len[i]; j++)
+            {
+                digits[j] = name[char_after_sep_index + delta[i] + j];
+                ret &= (isdigit(digits[j]) != 0);
+            }
+            digits[len[i]] = 0;
+            val[i] = atoi(digits);
+        }
+    }
+
+    /* In case of error, return whatever value was parsed, or possibly zero.
+    */
+
+    *metric_id = val[0];
+    *year = val[1];
+    *month = val[2];
+    *day = val[3];
+    *name_offset = char_after_sep_index;
+
+    return ret;
+}

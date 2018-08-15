@@ -54,6 +54,7 @@ int usage()
     fprintf(stderr, "                     or in a text file, see -S argument description.\n");
     fprintf(stderr, "  -m                 compute the ITHI metrics.\n");
     fprintf(stderr, "  -p                 publish the HTML pages for the metrics.\n");
+    fprintf(stderr, "  -P                 publish the metrics to ODI folder.\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Options used in capture mode:\n");
     fprintf(stderr, "  -o file.csv        output file containing the computed summary.\n");
@@ -116,6 +117,12 @@ int usage()
     fprintf(stderr, "                     If not specified, use the current directory.\n");
     fprintf(stderr, "  -w web/folder      File path where to write web pages.\n");
     fprintf(stderr, "                     If not specified, use the current directory.\n");
+    fprintf(stderr, "Options used in ODI publishing mode:\n");
+    fprintf(stderr, "  -i ithi/folder     File path of the ITHI folder (ITHI).\n");
+    fprintf(stderr, "                     If not specified, use the current directory.\n");
+    fprintf(stderr, "  -O odi/folder      File path where to write ODI pages.\n");
+    fprintf(stderr, "                     If not specified, use the current directory.\n");
+    fprintf(stderr, "  -d yyyy-mm-dd      Date for which the metrics shall be exported.");
 
     return -1;
 }
@@ -126,6 +133,7 @@ enum ithi_tool_mode {
     ithi_mode_summary,
     ithi_mode_metrics,
     ithi_mode_publish,
+    ithi_mode_publish_odi,
     ithi_mode_max
 };
 
@@ -162,7 +170,7 @@ int main(int argc, char ** argv)
 
     /* Get the parameters */
     int opt;
-    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:hfcsmpT?")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:O:hfcsmpTP?")) != -1)
     {
         switch (opt)
         {
@@ -178,7 +186,6 @@ int main(int argc, char ** argv)
         case 'p':
             exit_code = check_execution_mode(ithi_mode_publish, &exec_mode);
             break;
-
         case 'o':
             out_file = optarg;
             break;
