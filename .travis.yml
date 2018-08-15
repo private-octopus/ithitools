@@ -9,7 +9,7 @@ before_install:
         echo "  IdentityFile ~/.ssh/ithipages-publish-key" >> ~/.ssh/config
         ( cd /tmp
           git clone git@github.com:wtoorop/ithipages.git
-	  git checkout gh-pages
+          git checkout gh-pages
           ls -l
         )
       fi
@@ -78,9 +78,9 @@ script:
   - |
       if $DOXYGEN ; then
         if [ $TRAVIS_PULL_REQUEST = "false" ] ; then
-	  if [ $TRAVIS_BRANCH = "master" ] ; then
+          if [ $TRAVIS_BRANCH = "master" ] ; then
             doxygen travis/Doxyfile
-	  fi
+          fi
         fi
       fi
 after_script:
