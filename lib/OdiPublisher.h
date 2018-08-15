@@ -21,14 +21,18 @@
 #ifndef ODI_PUBLISHER_H
 #define ODI_PUBLISHER_H
 
+#include <time.h>
+
 class OdiPublisher
 {
 public:
     OdiPublisher();
     ~OdiPublisher();
 
-    static bool OdiPublisher::ParseMetricFileName(const char * name, int * metric_id, int * year, int * month, int * day, size_t * name_offset);
-
+#if 0
+    static bool PublishMetricFile(const char * metric_file_name, char const * odi_dir);
+#endif
+    static bool GetUpdateTime(char * time_value, size_t time_value_size, time_t current_time);
 
 private:
 #if 0

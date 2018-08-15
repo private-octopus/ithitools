@@ -19,7 +19,6 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <time.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -37,75 +36,42 @@ OdiPublisher::~OdiPublisher()
 {
 }
 
-/* Publish a specific metric file, for the specified date.
- * If the date is not set, publish for the current data and year.
+/* Publish a specific metric file.
+ * The metric value and name are derived from the file name.
  * The updated time is always the current time.
  */
 
-bool OdiPublisher::ParseMetricFileName(const char * name, int * metric_id, int * year, int * month, int * day, size_t * name_offset)
+
+/* Get the update time. This is used to fill the "modified"
+ * date, which should be a full ISO 8601 date:  YYYY-MM-DDThh:mm:ss.sTZD
+ *
+ * eg
+ *
+ * "modified" : "2018-05-17T18:23:12.9UTC", 
+ *
+ */
+bool OdiPublisher::GetUpdateTime(char * time_value, size_t time_value_size, time_t current_time)
 {
-    size_t ch_index = 0;
-    size_t char_after_sep_index = 0;
-    size_t name_len = strlen(name);
-    int val[4] = { 0, 0, 0, 0 };
     bool ret = true;
+    struct tm tm;
 
-    /* Find the last separator in the file name */
-    if (ret)
+#ifdef _WINDOWS
+    if (gmtime_s(&tm, &current_time) != 0)
     {
-        while (name[ch_index] != 0)
-        {
-            if (name[ch_index] == ITHI_FILE_PATH_SEP[0])
-            {
-                char_after_sep_index = ch_index + 1;
-            }
-            ch_index++;
-        }
-
-        /* Check that the name length matches expectation */
-        ret &= (char_after_sep_index + 17u) <= name_len;
+        ret = false;
     }
+#else
+    tm = *localtime(&current_time);
+#endif
+
 
     if (ret)
     {
+        int year4digit = tm.tm_year + 1900;
 
-        ret = name[char_after_sep_index] == 'M' &&
-            name[char_after_sep_index + 2] == '-' &&
-            name[char_after_sep_index + 7] == '-' &&
-            name[char_after_sep_index + 10] == '-' &&
-            name[char_after_sep_index + 13] == '.' &&
-            name[char_after_sep_index + 14] == 'c' &&
-            name[char_after_sep_index + 15] == 's' &&
-            name[char_after_sep_index + 16] == 'v' &&
-            name[char_after_sep_index + 17] == 0;
+        ret = snprintf(time_value, time_value_size, "%04d-%02d-%02dT%02d:%02d:%02dUTC", tm.tm_year + 1900,
+            tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec ) > 0;
     }
-
-    if (ret)
-    {
-        char digits[5];
-        const int delta[4] = { 1, 3, 8, 11 };
-        const int len[4] = { 1, 4, 2, 2 };
-
-        for (int i = 0; i < 3; i++)
-        {
-            for (int j = 0; j < len[i]; j++)
-            {
-                digits[j] = name[char_after_sep_index + delta[i] + j];
-                ret &= (isdigit(digits[j]) != 0);
-            }
-            digits[len[i]] = 0;
-            val[i] = atoi(digits);
-        }
-    }
-
-    /* In case of error, return whatever value was parsed, or possibly zero.
-     */
-    
-    *metric_id = val[0];
-    *year = val[1];
-    *month = val[2];
-    *day = val[3];
-    *name_offset = char_after_sep_index;
 
     return ret;
 }

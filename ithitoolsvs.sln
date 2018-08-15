@@ -4,10 +4,25 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 15.0.26228.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ithitoolsvs", "ithitoolsvs\ithitoolsvs.vcxproj", "{8EBE8A68-3B93-4121-92D8-BB3E336139A6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F7B68880-27AA-45FE-ABEA-CF6424EF9AE0} = {F7B68880-27AA-45FE-ABEA-CF6424EF9AE0}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ithiunit", "ithiunit\ithiunit.vcxproj", "{E1ECEA66-5577-4C57-9B1D-1437DE43EA1F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F7B68880-27AA-45FE-ABEA-CF6424EF9AE0} = {F7B68880-27AA-45FE-ABEA-CF6424EF9AE0}
+		{96C7E8B4-0E3E-4423-8D99-F379379406FB} = {96C7E8B4-0E3E-4423-8D99-F379379406FB}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "clitest", "clitest\clitest.vcxproj", "{13B71C40-E902-430A-86AE-6DF9FF5649E3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F7B68880-27AA-45FE-ABEA-CF6424EF9AE0} = {F7B68880-27AA-45FE-ABEA-CF6424EF9AE0}
+		{96C7E8B4-0E3E-4423-8D99-F379379406FB} = {96C7E8B4-0E3E-4423-8D99-F379379406FB}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ithitestlib", "ithitestlib\ithitestlib.vcxproj", "{96C7E8B4-0E3E-4423-8D99-F379379406FB}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ithitoolslib", "ithitoolslib\ithitoolslib.vcxproj", "{F7B68880-27AA-45FE-ABEA-CF6424EF9AE0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,8 +56,27 @@ Global
 		{13B71C40-E902-430A-86AE-6DF9FF5649E3}.Release|x64.Build.0 = Release|x64
 		{13B71C40-E902-430A-86AE-6DF9FF5649E3}.Release|x86.ActiveCfg = Release|Win32
 		{13B71C40-E902-430A-86AE-6DF9FF5649E3}.Release|x86.Build.0 = Release|Win32
+		{96C7E8B4-0E3E-4423-8D99-F379379406FB}.Debug|x64.ActiveCfg = Debug|x64
+		{96C7E8B4-0E3E-4423-8D99-F379379406FB}.Debug|x64.Build.0 = Debug|x64
+		{96C7E8B4-0E3E-4423-8D99-F379379406FB}.Debug|x86.ActiveCfg = Debug|Win32
+		{96C7E8B4-0E3E-4423-8D99-F379379406FB}.Debug|x86.Build.0 = Debug|Win32
+		{96C7E8B4-0E3E-4423-8D99-F379379406FB}.Release|x64.ActiveCfg = Release|x64
+		{96C7E8B4-0E3E-4423-8D99-F379379406FB}.Release|x64.Build.0 = Release|x64
+		{96C7E8B4-0E3E-4423-8D99-F379379406FB}.Release|x86.ActiveCfg = Release|Win32
+		{96C7E8B4-0E3E-4423-8D99-F379379406FB}.Release|x86.Build.0 = Release|Win32
+		{F7B68880-27AA-45FE-ABEA-CF6424EF9AE0}.Debug|x64.ActiveCfg = Debug|x64
+		{F7B68880-27AA-45FE-ABEA-CF6424EF9AE0}.Debug|x64.Build.0 = Debug|x64
+		{F7B68880-27AA-45FE-ABEA-CF6424EF9AE0}.Debug|x86.ActiveCfg = Debug|Win32
+		{F7B68880-27AA-45FE-ABEA-CF6424EF9AE0}.Debug|x86.Build.0 = Debug|Win32
+		{F7B68880-27AA-45FE-ABEA-CF6424EF9AE0}.Release|x64.ActiveCfg = Release|x64
+		{F7B68880-27AA-45FE-ABEA-CF6424EF9AE0}.Release|x64.Build.0 = Release|x64
+		{F7B68880-27AA-45FE-ABEA-CF6424EF9AE0}.Release|x86.ActiveCfg = Release|Win32
+		{F7B68880-27AA-45FE-ABEA-CF6424EF9AE0}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {31959F7B-4671-401D-891A-DD5BCEF9599B}
 	EndGlobalSection
 EndGlobal
