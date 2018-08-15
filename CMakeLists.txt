@@ -29,6 +29,7 @@ SET(ITHITOOLS_LIBRARY_FILES
    lib/ComputeMetric.cpp
    lib/ComputeM34.cpp
    lib/ComputeM6.cpp
+   lib/OdiPublisher.cpp
 )
 
 SET(ITHITOOLS_TEST_LIBRARY_FILES
@@ -69,6 +70,7 @@ ADD_EXECUTABLE(ithitools
    lib/ComputeMetric.cpp
    lib/ComputeM34.cpp
    lib/ComputeM6.cpp
+   lib/OdiPublisher.cpp
 )
 
 ADD_EXECUTABLE(ithitest
@@ -89,6 +91,7 @@ ADD_EXECUTABLE(ithitest
    lib/ComputeMetric.cpp
    lib/ComputeM34.cpp
    lib/ComputeM6.cpp
+   lib/OdiPublisher.cpp
    lib/getopt.c
    test/CaptureTest.cpp
    test/DnsPrefixTest.cpp
