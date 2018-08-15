@@ -1,27 +1,47 @@
 sudo: false
 language: cpp
+before_install:
+  - |
+      if $ANALYSIS || $COVERAGE || $DOXYGEN; then
+        openssl aes-256-cbc -K $encrypted_e845a59f36e1_key -iv $encrypted_e845a59f36e1_iv -in travis/ithipages-publish-key.enc -out ~/.ssh/ithipages-publish-key -d
+        chmod u=rw,og= ~/.ssh/ithipages-publish-key
+        echo "Host github.com" >> ~/.ssh/config
+        echo "  IdentityFile ~/.ssh/ithipages-publish-key" >> ~/.ssh/config
+        ( cd /tmp
+          git clone git@github.com:wtoorop/ithipages.git
+          git checkout gh-pages
+          ls -l
+        )
+      fi
 addons:
   apt:
     packages:
       - python
       - valgrind
+      - lcov
+      - doxygen
+      - graphviz
 matrix:
   include:
     - os: linux
       compiler: gcc
-      env: VALGRIND=true  ANALYSIS=true
+      env: VALGRIND=true  ANALYSIS=true  COVERAGE=true  DOXYGEN=true
     - os: linux
       compiler: clang
-      env: VALGRIND=true  ANALYSIS=false
+      env: VALGRIND=true  ANALYSIS=false COVERAGE=false DOXYGEN=false
     - os: osx
       compiler: gcc
-      env: VALGRIND=false ANALYSIS=false
+      env: VALGRIND=false ANALYSIS=false COVERAGE=false DOXYGEN=false
     - os: osx
       compiler: clang
-      env: VALGRIND=false ANALYSIS=false
+      env: VALGRIND=false ANALYSIS=false COVERAGE=false DOXYGEN=false
 script:
   - |
-      if $VALGRIND ; then
+      if $COVERAGE ; then
+        CXXFLAGS="-Wall -Wextra -Wpedantic -Werror -g -fprofile-arcs -ftest-coverage -O0" \
+          CFLAGS="-Wall -Wextra -Wpedantic -Werror -g -fprofile-arcs -ftest-coverage -O0" \
+         LDFLAGS="-lgcov --coverage" cmake .
+      elif $VALGRIND ; then
         CXXFLAGS="-Wall -Wextra -Wpedantic -Werror -g" \
           CFLAGS="-Wall -Wextra -Wpedantic -Werror -g" cmake .
       else
@@ -41,5 +61,37 @@ script:
           scan-build cmake .
           mkdir -p /tmp/ithipages/analysis
           scan-build -o /tmp/ithipages/analysis --status-bugs make
+        )
+      fi
+  - |
+      if $COVERAGE ; then
+        geninfo .  -o ithitest.info
+        lcov --remove ithitest.info '/usr/include/*' -o ithi.info
+        if [ $TRAVIS_PULL_REQUEST = "false" ] ; then
+          THIS_BRANCH=$TRAVIS_BRANCH
+        else
+          THIS_BRANCH=$TRAVIS_PULL_REQUEST_BRANCH
+        fi
+        mkdir -p /tmp/ithipages/coverage/$THIS_BRANCH
+        genhtml ithi.info --output-directory /tmp/ithipages/coverage/$THIS_BRANCH
+      fi
+  - |
+      if $DOXYGEN ; then
+        if [ $TRAVIS_PULL_REQUEST = "false" ] ; then
+          if [ $TRAVIS_BRANCH = "master" ] ; then
+            doxygen travis/Doxyfile
+          fi
+        fi
+      fi
+after_script:
+  - |
+      if $ANALYSIS || $COVERAGE || $DOXYGEN ; then
+        ( cd /tmp/ithipages
+          ./mkreadme.sh
+          [ -d analysis ] && git add analysis
+          [ -d coverage ] && git add coverage
+          [ -d doxygen  ] && git add doxygen
+          git commit -a -m "update from travis at `date`" \
+          && git push
         )
       fi
