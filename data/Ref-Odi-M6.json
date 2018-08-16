@@ -1,0 +1,47 @@
+{
+"identifier" : "ITHI-M6",
+"modified" : "2018-08-15T05:32:36UTC",
+"title" : "IANA registries for DNS parameters",
+"description" : "The M6 metrics track the health of three set of registries maintained by IANA: the Domain Name System (DNS)
+Parameters, the Domain Name System Security (DNSSEC) Algorithm Numbers, and the DNS-Based Authentication of Named Entities
+(DANE) Parameters. Each of these groups includes different parameter sets. We will track the health of each of these
+parameters by a set of metrics of the form “M6.N.X.*”, where “N” is one of "DNS", "DANE" or "DNSSEC", and X
+is the index of the table in that registry. The list of tables is:
+DNS CLASSes (M6.DNS.01.*);
+Resource Record (RR) TYPEs (M6.DNS.02.*);
+DNS OpCodes (M6.DNS.03.*);
+DNS RCODEs (M6.DNS.04.*);
+AFSDB RR Subtype (M6.DNS.05.*);
+DHCID RR Identifier Type Codes (M6.DNS.06.*);
+DNS Label Types (M6.DNS.07.*);
+DNS EDNS0 Option Codes (OPT) (M6.DNS.08.*);
+DNS Header Flags (M6.DNS.09.*);
+EDNS Header Flags (M6.DNS.10.*);
+EDNS version Number (M6.DNS.11.*);
+Child Synchronization (CSYNC) (M6.DNS.12.*);
+DNS KEY Record Diffie-Hellman Prime Lengths (M6.DNSSEC.1.*);
+DNS KEY Record Diffie-Hellman Well-Known Prime/Generator Pairs (M6.DNSSEC.2.*);
+DNS Security Algorithm Numbers (M6.DNSSEC.3.*);
+TLSA Certificate Usages (M6.DANE.1.*);
+TLSA Selectors (M6.DANE.2.*);
+TLSA Matching Types (M6.DANE.3.*). For each table, the metric M6.N.X.1 tracks the "usage" ratio,
+the metric M6.N.X.2 tracks the "squatting" ratio, 
+and the metric M6.X.N.3 track the occurences in live traffic of specific values defined in the registries.",
+"keyword" : [ "ITHI", "IANA", "DNS parameters", "DNS parameters usage", "DNS parameters squatting",
+"DNSSEC", "DANE" ],
+"theme" : [],
+"publisher": {
+        "@type": "org:Organization",
+        "name": "ICANN"
+}, 
+"contactPoint" : {
+       "@type": "vcard:Contact",
+       "fn" : "Alain Durand",
+       "hasEmail" : "mailto://alain.durand@icann.org"
+   },
+"accessLevel" : "public",
+"license" : "http://opendatacommons.org/licenses/odbl/1.0/",
+"accrualPeriodicity" : "P1M",
+"language" : [ "en-US" ],
+"landingPage" : "https://www.icann.org/ithi"
+}

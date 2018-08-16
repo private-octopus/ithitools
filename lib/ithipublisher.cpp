@@ -18,23 +18,10 @@
 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
 #ifdef _WINDOWS
 #include "wincompat/dirent.h"
-#ifndef ITHI_DEFAULT_FOLDER
-#define ITHI_DEFAULT_FOLDER ".\\"
-#endif
-#ifndef ITHI_FILE_PATH_SEP
-#define ITHI_FILE_PATH_SEP "\\"
-#endif
 #else
 #include <dirent.h>
-#ifndef ITHI_DEFAULT_FOLDER
-#define ITHI_DEFAULT_FOLDER "./"
-#endif
-#ifndef ITHI_FILE_PATH_SEP
-#define ITHI_FILE_PATH_SEP "/"
-#endif
 #endif
 #include <time.h>
 #include <stdio.h>
@@ -44,6 +31,7 @@
 #include "CsvHelper.h"
 #include "CaptureSummary.h"
 #include "ComputeM6.h"
+#include "ithimetrics.h"
 #include "ithipublisher.h"
 
 ithipublisher::ithipublisher(char const * ithi_folder, int metric_id)
@@ -210,67 +198,21 @@ bool ithipublisher::CollectMetricFiles()
 
 /*
  * Metric files have the name format "MX-YYYY-MM-DD.csv".
+ * This is tested by the name parser in "ithimetrics".
  */
-
 bool ithipublisher::ParseFileName(MetricFileHolder * file, const char * name, int metric_id)
 {
-    size_t ch_index = 0;
-    size_t char_after_sep_index = 0;
+    int candidate_metric = 0;
+    size_t name_offset = 0;
     size_t name_len = strlen(name);
     bool ret = name_len < sizeof(file->file_name);
 
-    /* Find the last separator in the file name */
-    if (ret)
+    if (ret) 
     {
-        while (name[ch_index] != 0)
-        {
-            if (name[ch_index] == ITHI_FILE_PATH_SEP[0])
-            {
-                char_after_sep_index = ch_index + 1;
-            }
-            ch_index++;
-        }
-
-        /* Check that the name is well formed */
-        ret &= (char_after_sep_index + 17u) <= name_len;
+        ret = ithimetrics::ParseMetricFileName(name, &candidate_metric, &file->year, &file->month, &file->day, &name_offset);
+        ret &= (candidate_metric == metric_id);
     }
 
-    if (ret)
-    {
-        ret = name[char_after_sep_index] == 'M' &&
-            name[char_after_sep_index + 1] == '0' + metric_id &&
-            name[char_after_sep_index + 2] == '-' &&
-            name[char_after_sep_index + 7] == '-' &&
-            name[char_after_sep_index + 10] == '-' &&
-            name[char_after_sep_index + 13] == '.' &&
-            name[char_after_sep_index + 14] == 'c' &&
-            name[char_after_sep_index + 15] == 's' &&
-            name[char_after_sep_index + 16] == 'v' &&
-            name[char_after_sep_index + 17] == 0;
-    }
-
-    if (ret)
-    {
-        char digits[5];
-        int val[3] = { 0, 0, 0 };
-        const int delta[3] = { 3, 8, 11 };
-        const int len[3] = { 4, 2, 2 };
-
-        for (int i = 0; i < 3; i++)
-        {
-            for (int j = 0; j < len[i]; j++)
-            {
-                digits[j] = name[char_after_sep_index + delta[i] + j];
-                ret &= (isdigit(digits[j]) != 0);
-            }
-            digits[len[i]] = 0;
-            val[i] = atoi(digits);
-        }
-
-        file->year = val[0];
-        file->month = val[1];
-        file->day = val[2];
-    }
 
     if (ret)
     {

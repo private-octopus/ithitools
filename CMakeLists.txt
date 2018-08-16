@@ -29,6 +29,7 @@ SET(ITHITOOLS_LIBRARY_FILES
    lib/ComputeMetric.cpp
    lib/ComputeM34.cpp
    lib/ComputeM6.cpp
+   lib/OdiPublisher.cpp
 )
 
 SET(ITHITOOLS_TEST_LIBRARY_FILES
@@ -49,6 +50,7 @@ SET(ITHITOOLS_TEST_LIBRARY_FILES
    test/CsvTest.cpp
    test/TldCountTest.cpp
    test/ithi_test_class.cpp
+   test/OdiPublishTest.cpp
 )
 
 ADD_EXECUTABLE(ithitools 
@@ -69,6 +71,7 @@ ADD_EXECUTABLE(ithitools
    lib/ComputeMetric.cpp
    lib/ComputeM34.cpp
    lib/ComputeM6.cpp
+   lib/OdiPublisher.cpp
 )
 
 ADD_EXECUTABLE(ithitest
@@ -89,6 +92,7 @@ ADD_EXECUTABLE(ithitest
    lib/ComputeMetric.cpp
    lib/ComputeM34.cpp
    lib/ComputeM6.cpp
+   lib/OdiPublisher.cpp
    lib/getopt.c
    test/CaptureTest.cpp
    test/DnsPrefixTest.cpp
@@ -107,6 +111,7 @@ ADD_EXECUTABLE(ithitest
    test/CsvTest.cpp
    test/TldCountTest.cpp
    test/ithi_test_class.cpp
+   test/OdiPublishTest.cpp
 )
 
 ADD_LIBRARY(ithicap SHARED

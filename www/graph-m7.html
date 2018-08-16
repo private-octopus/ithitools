@@ -183,7 +183,7 @@
     <h1>M7: DNSSEC Deployment</h1>
     <h2 id="dateHeading">-</h2>
     <p>
-        We track the deployment of DNSSEC by tracking four metrics:
+        We track the deployment of DNSSEC by tracking two metrics:
     </p>
     <ul>
         <li>
@@ -199,26 +199,6 @@
             copy of the root zone. The metric M7.1 is defined as the ratio of the number of
             CC TLD for which at least one DS record is present over the total number of CC TLD
             in the root zone.
-        </li>
-        <li>
-            M7.3: the fraction of DNS Clients ready for DNSSEC.
-            This is computed at recursive resolvers.
-            We compute the ratio of the number of clients that sent requests with the EDNS "DNSSEC OK"
-            option set, over the total number of clients. Clients are identified by IP address,
-            and a given IP address is only counted once. The ratios measured at recursive
-            resolvers are then averaged to compute the metric.
-        </li>
-        <li>
-            M7.4: the fraction of Zones publishing DNSSEC records.
-            This is also computed at recursive resolvers.
-            We compute the ratio of the number of DNS zones for which we saw at
-            least one DNSSEC record (DNSKEY, RRSIG, NSEC, NSEC3 or DS) over the
-            total number of zones queried at the recursive resolver.
-            Zones are identified by a prefix, computed using
-            <a href="https://publicsuffix.org/">Mozilla's Public Suffix List</a>.
-            Each prefix is only counted once.
-            The ratios measured at recursive
-            resolvers are then averaged to compute the metric.
         </li>
     </ul>
     <p>

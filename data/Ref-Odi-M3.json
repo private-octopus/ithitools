@@ -1,0 +1,22 @@
+{
+"identifier" : "ITHI-M3",
+"modified" : "2018-08-15T05:32:36UTC",
+"title" : "DNS Root Traffic Analysis",
+"description" : "The metric M3 tracks the usage of the DNS root servers. It is tracked by measuring the number of requests to the root for non-existing TLD (M3.1) and the number of requests to the root that would not have been necessary if the DNS resolvers cached the previous replies (M3.2). The number of requests to non-existing TLD, or “leaks”, is further explained by a set of sub-metrics measuring various forms of name leakage, including requests for special-used TLD registered per RFC 6761 (M3.3.1), requests for frequently used name strings (M3.3.2), requests for various forms of automatically generated names (M3.3.3), and all other forms of names, including malformed names (M3.3.4). The data are computed by sampling traffic received at the L root.",
+"keyword" : [ "ITHI", "DNS Root Traffic", "No such domain query", "DNS caching", "Reserved names", "Frequently used names" ],
+"theme" : [],
+"publisher": {
+        "@type": "org:Organization",
+        "name": "ICANN"
+}, 
+"contactPoint" : {
+       "@type": "vcard:Contact",
+       "fn" : "Alain Durand",
+       "hasEmail" : "mailto://alain.durand@icann.org"
+   },
+"accessLevel" : "public",
+"license" : "http://opendatacommons.org/licenses/odbl/1.0/",
+"accrualPeriodicity" : "P1M",
+"language" : [ "en-US" ],
+"landingPage" : "https://www.icann.org/ithi"
+}

@@ -41,6 +41,7 @@
 #include "CaptureSummary.h"
 #include "ithimetrics.h"
 #include "ithipublisher.h"
+#include "OdiPublisher.h"
 
 int usage()
 {
@@ -54,6 +55,7 @@ int usage()
     fprintf(stderr, "                     or in a text file, see -S argument description.\n");
     fprintf(stderr, "  -m                 compute the ITHI metrics.\n");
     fprintf(stderr, "  -p                 publish the HTML pages for the metrics.\n");
+    fprintf(stderr, "  -P metric_file.csv publish the specified metric to ODI folder.\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Options used in capture mode:\n");
     fprintf(stderr, "  -o file.csv        output file containing the computed summary.\n");
@@ -116,6 +118,11 @@ int usage()
     fprintf(stderr, "                     If not specified, use the current directory.\n");
     fprintf(stderr, "  -w web/folder      File path where to write web pages.\n");
     fprintf(stderr, "                     If not specified, use the current directory.\n");
+    fprintf(stderr, "Options used in ODI publishing mode:\n");
+    fprintf(stderr, "  -O odi/folder      File path where to write ODI pages.\n");
+    fprintf(stderr, "                     If not specified, use the current directory.\n");
+    fprintf(stderr, "  -D data_folder     File path for the reference data. \n");
+    fprintf(stderr, "                     If not specified, assume same default as tests. \n");
 
     return -1;
 }
@@ -126,6 +133,7 @@ enum ithi_tool_mode {
     ithi_mode_summary,
     ithi_mode_metrics,
     ithi_mode_publish,
+    ithi_mode_publish_odi,
     ithi_mode_max
 };
 
@@ -159,10 +167,13 @@ int main(int argc, char ** argv)
     char const * capture_summary_list = NULL;
     char const * ithi_folder = NULL;
     char const * web_root = ".";
+    char const * metric_file_name = NULL;
+    char const * odi_dir = NULL;
+    char const * data_dir = NULL;
 
     /* Get the parameters */
     int opt;
-    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:hfcsmpT?")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:v:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:O:P:D:hfcsmpT?")) != -1)
     {
         switch (opt)
         {
@@ -178,9 +189,18 @@ int main(int argc, char ** argv)
         case 'p':
             exit_code = check_execution_mode(ithi_mode_publish, &exec_mode);
             break;
-
+        case 'P':
+            exit_code = check_execution_mode(ithi_mode_publish_odi, &exec_mode);
+            metric_file_name = optarg;
+            break;
         case 'o':
             out_file = optarg;
+            break;
+        case 'O':
+            odi_dir = optarg;
+            break;
+        case 'D':
+            data_dir = optarg;
             break;
         case 'R':
             fprintf(stderr, "The root addresses redefinition option is not yet implemented.\n");
@@ -463,6 +483,18 @@ int main(int argc, char ** argv)
         }
         if (ret) {
             printf("ITHI JSON Data saved in directory <%s>.\n", web_root);
+        }
+    }
+    else if (exec_mode == ithi_mode_publish_odi) {
+        bool ret = true;
+
+        if (odi_dir == NULL) {
+            odi_dir = ".";
+        }
+
+        ret = OdiPublisher::PublishMetricFile(metric_file_name, odi_dir, data_dir, 0);
+        if (ret) {
+            printf("ITHI Metric <%s> saved in directory <%s>.\n", metric_file_name, odi_dir);
         }
     }
 
