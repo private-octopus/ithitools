@@ -23,9 +23,11 @@
 #include <string.h>
 #ifdef _WINDOWS
 #include <direct.h>
-#include <errno.h>
 #else
+#include <sys/stats.h>
+#include <sys/types.h>
 #endif
+#include <errno.h>
 #include "ithimetrics.h"
 #include "OdiPublisher.h"
 #include "MetricTest.h"
