@@ -22,6 +22,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#ifndef _WINDOWS
+#include <errno.h>
+#endif
 #include "ithimetrics.h"
 #include "OdiPublisher.h"
 
