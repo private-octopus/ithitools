@@ -23,16 +23,28 @@
 
 #include <time.h>
 
+#ifndef ITHI_DEFAULT_DATA_FOLDER
+#ifdef _WINDOWS
+#ifdef _WINDOWS64
+#define ITHI_DEFAULT_DATA_FOLDER "..\\..\\data"
+#else
+#define ITHI_DEFAULT_DATA_FOLDER "..\\data"
+#endif
+#else
+#define ITHI_DEFAULT_DATA_FOLDER "./data"
+#endif
+#endif
+
 class OdiPublisher
 {
 public:
     OdiPublisher();
     ~OdiPublisher();
 
-#if 0
-    static bool PublishMetricFile(const char * metric_file_name, char const * odi_dir);
-#endif
+    static bool PublishMetricFile(const char * metric_file_name, char const * odi_dir, char const * data_dir, time_t current_time);
     static bool GetUpdateTime(char * time_value, size_t time_value_size, time_t current_time);
+    static bool CopyFile(const char * source_file_name, const char * dest_file_name);
+    static bool CopyUpdateJsonFile(int metric_id, const char * dest_file_name, char const * data_dir, time_t current_time);
 
 };
 

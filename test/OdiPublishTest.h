@@ -31,6 +31,9 @@ public:
     ~OdiPublishTest();
 
     bool DoTest() override;
+private:
+    bool UpdatePublishTestOne(int test_id);
+    bool UpdateTimeTest();
 };
 
 #endif /* ODI_PUBLISH_TEST_H */

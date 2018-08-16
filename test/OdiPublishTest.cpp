@@ -21,7 +21,14 @@
 
 #include <stdint.h>
 #include <string.h>
-#include <OdiPublisher.h>
+#ifdef _WINDOWS
+#include <direct.h>
+#include <errno.h>
+#else
+#endif
+#include "ithimetrics.h"
+#include "OdiPublisher.h"
+#include "MetricTest.h"
 #include "OdiPublishTest.h"
 
 
@@ -40,6 +47,8 @@ typedef struct st_odi_update_time_test_t {
     char const * iso_time_string;
 } odi_update_time_test_t;
 
+static time_t test_publish_time = 0x5b73baf4;
+
 static const odi_update_time_test_t update_time_test[] = {
     {0, "1970-01-01T00:00:00UTC" },
     {0x5b73baf4, "2018-08-15T05:32:36UTC"},
@@ -47,7 +56,7 @@ static const odi_update_time_test_t update_time_test[] = {
 };
 
 static const size_t nb_testupdate_time_test = sizeof(update_time_test) / sizeof(odi_update_time_test_t);
-#if 0
+
 typedef struct st_odi_publish_test_t {
     char const * metric_file_in;
     char const * json_file_ref;
@@ -66,9 +75,10 @@ static const odi_publish_test_t odi_publish_test[] = {
     { "M7-2017-01-31.csv", "Ref-Odi-M7.json", "ITHI-M7", "20170131-2359.csv", "20170131-2359.csv-metadata.json" },
     { "M8-2017-02-28.csv", "Ref-Odi-M8.json", "ITHI-M8", "20170228-2359.csv", "20170228-2359.csv-metadata.json" }
 };
-#endif
 
-bool UpdateTimeTest()
+static const size_t nb_odi_publish_test = sizeof(odi_publish_test) / sizeof(odi_publish_test_t);
+
+bool OdiPublishTest::UpdateTimeTest()
 {
     char buffer[256];
     bool ret = true;
@@ -94,23 +104,74 @@ bool UpdateTimeTest()
     return ret;
 }
 
-#if 0
-bool UpdatePublishTestOne(int test_id)
+bool OdiPublishTest::UpdatePublishTestOne(int test_id)
 {
     bool ret = true;
+    char input_file_name[512];
+    char target_file_name[512];
+    char ref_file_name[512];
+
+    /* Compose the folder name, and ensure that it exists */
+    if (ret) {
+        ret = snprintf(target_file_name, sizeof(target_file_name), ".%s%s",
+            ITHI_FILE_PATH_SEP, odi_publish_test[test_id].odi_folder);
+    }
+
+    if (ret) {
+#ifdef _WINDOWS
+        if (_mkdir(target_file_name) != 0) {
+            int err = errno;
+            ret = (err == EEXIST);
+        }
+#else
+        if (mkdir(target_file_name, 0777) != 0) {
+            ret = errno == EEXIST;
+        }
+#endif
+    }
 
     /* Compose the input file name */
+    if (ret) {
+        ret = snprintf(input_file_name, sizeof(input_file_name), "%s%s%s",
+            ITHI_DEFAULT_DATA_FOLDER, ITHI_FILE_PATH_SEP, odi_publish_test[test_id].metric_file_in);
+    }
     /* Publish at test time */
-
+    if (ret) {
+        ret = OdiPublisher::PublishMetricFile(input_file_name, ".", ITHI_DEFAULT_DATA_FOLDER, test_publish_time);
+        if (!ret) {
+            TEST_LOG("Cannot publish ODI files for input: %s\n", input_file_name);
+        }
+    }
     /* Compose the metric file name */
+    if (ret) {
+        ret = snprintf(target_file_name, sizeof(target_file_name), ".%s%s%s%s",
+            ITHI_FILE_PATH_SEP, odi_publish_test[test_id].odi_folder,
+            ITHI_FILE_PATH_SEP, odi_publish_test[test_id].odi_metric_file);
+    }
     /* Verify that the metric file is present and matches the input */
+    if (ret)
+    {
+        ret = MetricTest::compare_files(input_file_name, target_file_name);
+    }
     /* Compose the JSON file name */
+    if (ret) {
+        ret = snprintf(target_file_name, sizeof(target_file_name), ".%s%s%s%s",
+            ITHI_FILE_PATH_SEP, odi_publish_test[test_id].odi_folder,
+            ITHI_FILE_PATH_SEP, odi_publish_test[test_id].odi_json_file);
+    }
     /* Compose the JSON ref name */
+    if (ret) {
+        ret = snprintf(ref_file_name, sizeof(ref_file_name), "%s%s%s",
+            ITHI_DEFAULT_DATA_FOLDER, ITHI_FILE_PATH_SEP, odi_publish_test[test_id].json_file_ref);
+    }
     /* Verify that the JSON file is present and matches the input */
+    if (ret)
+    {
+        ret = MetricTest::compare_files(ref_file_name, target_file_name);
+    }
 
     return ret;
 }
-#endif
 
 bool OdiPublishTest::DoTest()
 {
@@ -118,5 +179,10 @@ bool OdiPublishTest::DoTest()
 
     /* First, test the update time computation */
     ret = UpdateTimeTest();
+
+    /* Then check the different files */
+    for (size_t test_id = 0; test_id < nb_odi_publish_test; test_id++) {
+        ret &= UpdatePublishTestOne((int)test_id);
+    }
     return ret;
 }
