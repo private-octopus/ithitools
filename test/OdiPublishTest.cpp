@@ -24,7 +24,7 @@
 #ifdef _WINDOWS
 #include <direct.h>
 #else
-#include <sys/stats.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #endif
 #include <errno.h>
