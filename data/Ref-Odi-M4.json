@@ -1,0 +1,31 @@
+{
+"identifier" : "ITHI-M4",
+"modified" : "2018-08-15T05:32:36UTC",
+"title" : "DNS Recursive Server Analysis",
+"description" : "The metric M3 tracks the traffic patterns at a set of particpating Recursive Servers.
+M4 comprises 4 metrics, measuring the fraction
+of queries going to delegated TLD (M4.1), to RFC 6761 special use names (M4.2), to frequently leaked strings (M4.3), and to
+other strings (M4.4). The M4 metric also tracks the usage of DNSSEC at recursive servers through two metrics, M4.5 and M4.6.
+M4.5 measures the fraction of DNS Clients asking for DNSSEC. We compute the ratio of
+the number of clients that sent requests with the EDNS "DNSSEC OK" option set, over the total number of clients. Clients are identified by IP address, and a given IP address is only counted once. The ratios measured at recursive resolvers are then averaged to compute the metric. M4.6 measures the fraction of Zones publishing DNSSEC records.
+We compute the ratio of the number of DNS zones for which we saw at least one DNSSEC record (DNSKEY, RRSIG, NSEC, NSEC3 or DS)
+over the total number of zones queried at the recursive resolver. Zones are identified by a prefix, computed using
+Mozilla's Public Suffix List. Each prefix is only counted once. The ratios measured at recursive resolvers are then averaged to compute the metric.",
+"keyword" : [ "ITHI", "DNS Recursive Resolvers", "No such domain query", "DNS caching", "Reserved names", 
+"Frequently used names", "DNSSEC", "DNSSEC Usage" ],
+"theme" : [],
+"publisher": {
+        "@type": "org:Organization",
+        "name": "ICANN"
+}, 
+"contactPoint" : {
+       "@type": "vcard:Contact",
+       "fn" : "Alain Durand",
+       "hasEmail" : "mailto://alain.durand@icann.org"
+   },
+"accessLevel" : "public",
+"license" : "http://opendatacommons.org/licenses/odbl/1.0/",
+"accrualPeriodicity" : "P1M",
+"language" : [ "en-US" ],
+"landingPage" : "https://www.icann.org/ithi"
+}

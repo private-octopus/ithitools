@@ -1,0 +1,27 @@
+{
+"identifier" : "ITHI-M2",
+"modified" : "2018-08-15T05:32:36UTC",
+"title" : "Inaccuracy of Whois Data",
+"description" : "The metric M2 tracks the Number of Abused Domain per 10,000 Registrations. It is based on data collected by ICANN's DAAR project. Every month the DAAR project provides us with the number of domains engaged in
+various types of abuse. The number of abusive domains are tabulated either based on the TLD in which they are registered (Measures M2.1.*.*) or based on the registrar that registered them (Measures M2.2.*.*). The values measured each way differ. One reason for the difference is the inclusion of "parked" domains in the TLD counts. These domains are known to be used for abuse, have been taken over by law enforcement or by other regulation systems, and are "parked" in specialized registrars. These specialized registrars are not included in the metrics "per registrar". Each subset of M2 comprises 4 different sub metrics, one for each type of abuse: phishing (M2.*.1.*), malware distribution (M2.*.2.*), botnet command and control (M2.*.3.*) and spam
+(M2.*.4.*). For each of these abuse, the first metric (M2.*.*.1) is defined as the number of domains engaged in that type of
+abuse for 10000 domains. The second and third metric  (M2.*.*.2 and M2.*.*.3) measure the "shape" of the distribution of 
+abuse with two key values: the minimum number of agents (TLD or registrars) that account for 50% of this type of abuse, and
+the minimum number that account for 90% of the abuse.",
+"keyword" : [ "ITHI", "Domain abuse", "Phishing", "Malware", "Botnet", "Spam" ],
+"theme" : [],
+"publisher": {
+        "@type": "org:Organization",
+        "name": "ICANN"
+}, 
+"contactPoint" : {
+       "@type": "vcard:Contact",
+       "fn" : "Alain Durand",
+       "hasEmail" : "mailto://alain.durand@icann.org"
+   },
+"accessLevel" : "public",
+"license" : "http://opendatacommons.org/licenses/odbl/1.0/",
+"accrualPeriodicity" : "P1M",
+"language" : [ "en-US" ],
+"landingPage" : "https://www.icann.org/ithi"
+}

@@ -1,0 +1,25 @@
+{
+"identifier" : "ITHI-M8",
+"modified" : "2018-08-15T05:32:36UTC",
+"title" : "DNS Authoritative Servers Analysis",
+"description" : "The metric M8 tracks the traffic at participatig resolvers by measuring three values:
+the fraction of queries that trigger an NX_DOMAIN responses (M8.1);
+the fraction of queries that use Extended DNS (EDNS) (M8.2); and,
+the fraction of DNS Resolvers ready for DNSSEC.",
+"keyword" : [ "ITHI", "DNS Authoritative Servers", "EDNS", "DNSSEC" ],
+"theme" : [],
+"publisher": {
+        "@type": "org:Organization",
+        "name": "ICANN"
+}, 
+"contactPoint" : {
+       "@type": "vcard:Contact",
+       "fn" : "Alain Durand",
+       "hasEmail" : "mailto://alain.durand@icann.org"
+   },
+"accessLevel" : "public",
+"license" : "http://opendatacommons.org/licenses/odbl/1.0/",
+"accrualPeriodicity" : "P1M",
+"language" : [ "en-US" ],
+"landingPage" : "https://www.icann.org/ithi"
+}
