@@ -87,6 +87,7 @@ script:
 after_script:
   - |
       if $ANALYSIS || $COVERAGE || $DOXYGEN ; then
+        cp README.md /tmp/ithipages/README.md.orig
         ( cd /tmp/ithipages
           ./mkreadme.sh
           [ -d analysis ] && git add analysis
