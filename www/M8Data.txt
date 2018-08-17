@@ -1,0 +1,8 @@
+{
+    "date" : "September 2017 (Fictitious data, for test and illustration only)",
+	"M8DataSet" : [
+		[55.976300, 56.789000, 58.912300],
+		[76.575900, 77.777700, 78.888800],
+		[83.783800, 81.234500, 84.567800]
+	]
+}

@@ -1,3 +1,24 @@
+/*
+* Author: Christian Huitema
+* Copyright (c) 2018, Private Octopus, Inc.
+* All rights reserved.
+*
+* Permission to use, copy, modify, and distribute this software for any
+* purpose with or without fee is hereby granted, provided that the above
+* copyright notice and this permission notice appear in all copies.
+*
+* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+* ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+* WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+* DISCLAIMED. IN NO EVENT SHALL Private Octopus, Inc. BE LIABLE FOR ANY
+* DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+* (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+* LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+* ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #ifndef ITHI_METRICS_H
 #define ITHI_METRICS_H
 
@@ -26,6 +47,8 @@
 #endif
 #endif
 
+#define ITHI_NUMBER_OF_METRICS 8
+
 class ithimetrics
 {
 public:
@@ -43,17 +66,22 @@ public:
 
     bool SetRootCaptureFileName(char const * file_name);
     bool SetRecursiveCaptureFileName(char const * file_name);
+    bool SetAuthoritativeCaptureFileName(char const * file_name);
 
     bool SetRootZoneFileName(char const * file_name);
 
     bool SetDefaultRootCaptureFile();
     bool SetDefaultRecursiveCaptureFile();
+    bool SetDefaultAuthoritativeCaptureFile();
     bool SetDefaultRootZoneFile();
 
     const char * GetRootCaptureFileName() {
         return root_capture_file_name;
     };
     const char * GetRecursiveCaptureFileName() {
+        return recursive_capture_file_name;
+    };
+    const char * GetAuthoritativeCaptureFileName() {
         return recursive_capture_file_name;
     };
     const char * GetRootZoneFileName() {
@@ -76,6 +104,8 @@ public:
 
     bool Save(char const * file_name);
 
+    static bool ParseMetricFileName(const char * name, int * metric_id, int * year, int * month, int * day, size_t * name_offset);
+
 private:
     ComputeM1 cm1;
     ComputeM2 cm2;
@@ -83,14 +113,16 @@ private:
     ComputeM4 cm4;
     ComputeM6 cm6;
     ComputeM7 cm7;
+    ComputeM8 cm8;
 
     char * metric_date;
     char * ithi_folder;
-    char * metric_file[7];
-    bool metric_is_available[7];
+    char * metric_file[ITHI_NUMBER_OF_METRICS];
+    bool metric_is_available[ITHI_NUMBER_OF_METRICS];
     char * compliance_file_name;
     char * root_capture_file_name;
     char * recursive_capture_file_name;
+    char * authoritative_capture_file_name;
     char * abuse_file_name_tlds;
     char * abuse_file_name_registrars;
     char * root_zone_file_name;

@@ -6,16 +6,8 @@ PROJECT(ithitools C CXX)
 SET(CMAKE_CXX_STANDARD 11)
 
 SET(CMAKE_C_FLAGS "-std=c99 -Wall -O2 -g ${CC_WARNING_FLAGS} ${CMAKE_C_FLAGS}")
-SET(CMAKE_C_FLAGS "-Wall -O2 -g ${CMAKE_CXX_FLAGS}")
-
-SET(getopt_SOURCES )
-include(CheckSymbolExists)
-check_symbol_exists(getopt unistd.h HAVE_GETOPT)
-if(NOT HAVE_GETOPT)
-   list(APPEND getopt_SOURCES lib/getopt.c)
-endif()
-
-configure_file(lib/config.h.in lib/config.h)
+SET(CMAKE_C_FLAGS "-Wall -O2 -g ${CMAKE_C_FLAGS}")
+SET(CMAKE_CXX_FLAGS "-Wall -O2 -g ${CMAKE_CXX_FLAGS}")
 
 INCLUDE_DIRECTORIES(src lib test include)
 
@@ -28,7 +20,7 @@ SET(ITHITOOLS_LIBRARY_FILES
    lib/pcap_reader.cpp
    lib/UsefulTransaction.cpp
    lib/NamePattern.cpp
-   ${getopt_SOURCES}
+   lib/getopt.c
    lib/DnscapPlugIn.cpp
    lib/M7Getter.cpp
    lib/CsvHelper.cpp
@@ -37,6 +29,7 @@ SET(ITHITOOLS_LIBRARY_FILES
    lib/ComputeMetric.cpp
    lib/ComputeM34.cpp
    lib/ComputeM6.cpp
+   lib/OdiPublisher.cpp
 )
 
 SET(ITHITOOLS_TEST_LIBRARY_FILES
@@ -57,6 +50,7 @@ SET(ITHITOOLS_TEST_LIBRARY_FILES
    test/CsvTest.cpp
    test/TldCountTest.cpp
    test/ithi_test_class.cpp
+   test/OdiPublishTest.cpp
 )
 
 ADD_EXECUTABLE(ithitools 
@@ -70,13 +64,14 @@ ADD_EXECUTABLE(ithitools
    lib/UsefulTransaction.cpp
    lib/NamePattern.cpp
    lib/M7Getter.cpp
-   ${getopt_SOURCES}
+   lib/getopt.c
    lib/CsvHelper.cpp
    lib/M1Data.cpp
    lib/M2Data.cpp
    lib/ComputeMetric.cpp
    lib/ComputeM34.cpp
    lib/ComputeM6.cpp
+   lib/OdiPublisher.cpp
 )
 
 ADD_EXECUTABLE(ithitest
@@ -97,6 +92,8 @@ ADD_EXECUTABLE(ithitest
    lib/ComputeMetric.cpp
    lib/ComputeM34.cpp
    lib/ComputeM6.cpp
+   lib/OdiPublisher.cpp
+   lib/getopt.c
    test/CaptureTest.cpp
    test/DnsPrefixTest.cpp
    test/hashtest.cpp
@@ -114,6 +111,7 @@ ADD_EXECUTABLE(ithitest
    test/CsvTest.cpp
    test/TldCountTest.cpp
    test/ithi_test_class.cpp
+   test/OdiPublishTest.cpp
 )
 
 ADD_LIBRARY(ithicap SHARED
@@ -125,6 +123,7 @@ ADD_LIBRARY(ithicap SHARED
    lib/NamePattern.cpp
    lib/CsvHelper.cpp
    lib/DnscapPlugIn.cpp
+   lib/getopt.c
 )
 
 SET_TARGET_PROPERTIES(ithicap PROPERTIES

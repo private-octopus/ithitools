@@ -60,7 +60,6 @@ private:
     bool GetM33_3();
 };
 
-
 class ComputeM4 : public ComputeMetric
 {
 public:
@@ -82,11 +81,36 @@ private:
     std::vector<metric34_line_t> m4_2;
     std::vector<metric34_line_t> m4_3;
     double m4_4;
+    double m4_5;
+    double m4_6;
 
     bool GetM4_X(uint32_t table_id, std::vector<metric34_line_t>* mstring_x, double min_share);
     bool GetM4_1();
     bool GetM4_2();
     bool GetM4_3();
+    bool GetM4_DNSSEC();
 };
 
+class ComputeM8 : public ComputeMetric
+{
+public:
+    ComputeM8();
+    ~ComputeM8();
+
+    bool Load(char const * single_file_name) override;
+    bool LoadMultipleFiles(char const ** in_files, int nb_files) override;
+    bool Compute() override;
+    bool Write(FILE * F_out) override;
+
+private:
+    CaptureSummary cs;
+
+    double m8_1;
+    double m8_2;
+    double m8_3;
+
+    bool GetM8_1();
+    bool GetM8_2();
+    bool GetM8_3();
+};
 #endif /* COMPUTE_M346_H */

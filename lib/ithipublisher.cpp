@@ -18,23 +18,10 @@
 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
 #ifdef _WINDOWS
 #include "wincompat/dirent.h"
-#ifndef ITHI_DEFAULT_FOLDER
-#define ITHI_DEFAULT_FOLDER ".\\"
-#endif
-#ifndef ITHI_FILE_PATH_SEP
-#define ITHI_FILE_PATH_SEP "\\"
-#endif
 #else
 #include <dirent.h>
-#ifndef ITHI_DEFAULT_FOLDER
-#define ITHI_DEFAULT_FOLDER "./"
-#endif
-#ifndef ITHI_FILE_PATH_SEP
-#define ITHI_FILE_PATH_SEP "/"
-#endif
 #endif
 #include <time.h>
 #include <stdio.h>
@@ -44,6 +31,7 @@
 #include "CsvHelper.h"
 #include "CaptureSummary.h"
 #include "ComputeM6.h"
+#include "ithimetrics.h"
 #include "ithipublisher.h"
 
 ithipublisher::ithipublisher(char const * ithi_folder, int metric_id)
@@ -210,67 +198,21 @@ bool ithipublisher::CollectMetricFiles()
 
 /*
  * Metric files have the name format "MX-YYYY-MM-DD.csv".
+ * This is tested by the name parser in "ithimetrics".
  */
-
 bool ithipublisher::ParseFileName(MetricFileHolder * file, const char * name, int metric_id)
 {
-    size_t ch_index = 0;
-    size_t char_after_sep_index = 0;
+    int candidate_metric = 0;
+    size_t name_offset = 0;
     size_t name_len = strlen(name);
     bool ret = name_len < sizeof(file->file_name);
 
-    /* Find the last separator in the file name */
-    if (ret)
+    if (ret) 
     {
-        while (name[ch_index] != 0)
-        {
-            if (name[ch_index] == ITHI_FILE_PATH_SEP[0])
-            {
-                char_after_sep_index = ch_index + 1;
-            }
-            ch_index++;
-        }
-
-        /* Check that the name is well formed */
-        ret &= (char_after_sep_index + 17u) <= name_len;
+        ret = ithimetrics::ParseMetricFileName(name, &candidate_metric, &file->year, &file->month, &file->day, &name_offset);
+        ret &= (candidate_metric == metric_id);
     }
 
-    if (ret)
-    {
-        ret = name[char_after_sep_index] == 'M' &&
-            name[char_after_sep_index + 1] == '0' + metric_id &&
-            name[char_after_sep_index + 2] == '-' &&
-            name[char_after_sep_index + 7] == '-' &&
-            name[char_after_sep_index + 10] == '-' &&
-            name[char_after_sep_index + 13] == '.' &&
-            name[char_after_sep_index + 14] == 'c' &&
-            name[char_after_sep_index + 15] == 's' &&
-            name[char_after_sep_index + 16] == 'v' &&
-            name[char_after_sep_index + 17] == 0;
-    }
-
-    if (ret)
-    {
-        char digits[5];
-        int val[3] = { 0, 0, 0 };
-        const int delta[3] = { 3, 8, 11 };
-        const int len[3] = { 4, 2, 2 };
-
-        for (int i = 0; i < 3; i++)
-        {
-            for (int j = 0; j < len[i]; j++)
-            {
-                digits[j] = name[char_after_sep_index + delta[i] + j];
-                ret &= (isdigit(digits[j]) != 0);
-            }
-            digits[len[i]] = 0;
-            val[i] = atoi(digits);
-        }
-
-        file->year = val[0];
-        file->month = val[1];
-        file->day = val[2];
-    }
 
     if (ret)
     {
@@ -428,11 +370,17 @@ bool ithipublisher::Publish(char const * web_folder)
             case 4:
                 ret = PublishDataM4(F);
                 break;
+            case 5:
+                ret = PublishDataM5(F);
+                break;
             case 6:
                 ret = PublishDataM6(F);
                 break;
             case 7:
                 ret = PublishDataM7(F);
+                break;
+            case 8:
+                ret = PublishDataM8(F);
                 break;
             default:
                 ret = fprintf(F, "\"error\" : \"No data yet for metric M%d\"\n", metric_id) > 0;
@@ -790,8 +738,9 @@ bool ithipublisher::PublishDataM4(FILE * F)
 {
     bool ret = true;
     double average, current;
-    const char * sub_met[3] = { "M4.1", "M4.2", "M4.3" };
-    const char * met_data_name[3] = { "M41Data", "M42DataSet", "M43DataSet" };
+    double mdns[12];
+    const char * sub_met[5] = { "M4.1", "M4.2", "M4.3", "M4.5", "M4.6" };
+    const char * met_data_name[5] = { "M41Data", "M42DataSet", "M43DataSet", "M45Data", "M46Data" };
 
     ret = GetAverageAndCurrent(sub_met[0], NULL, &average, &current);
     if (ret)
@@ -813,16 +762,61 @@ bool ithipublisher::PublishDataM4(FILE * F)
                 ret = PrintNameList(F, &name_list, 100.0);
             }
         }
+        
+        ret &= fprintf(F, "],\n") > 0;
+    }
 
-        if (m == 2)
+    for (int m = 3; ret && m < 5; m++)
+    {
+        ret = fprintf(F, "\"%s\" : ", met_data_name[m]);
+
+        if (GetVector(sub_met[m], NULL, mdns))
         {
-            ret &= fprintf(F, "]\n") > 0;
-        }
-        else
-        {
-            ret &= fprintf(F, "],\n") > 0;
+            /* M7.x is present */
+            ret = PrintVector(F, mdns, 100.0);
+
+            if (m == 4) {
+                ret &= (fprintf(F, "\n") > 0);
+            }
+            else {
+                ret &= (fprintf(F, ",\n") > 0);
+            }
         }
     }
+
+
+    return ret;
+}
+
+bool ithipublisher::PublishDataM5(FILE * F)
+{
+    bool ret = true;
+    const char * subMet[] = { "M5.1.1", "M5.1.2", "M5.1.3", "M5.1.4", "M5.1.5", "M5.1.6",
+        "M5.2.1", "M5.2.2", "M5.2.3", "M5.3.1", "M5.3.2", "M5.4.1", "M5.4.2", "M5.5" };
+    const size_t nbSubMet = sizeof(subMet) / sizeof(const char *);
+
+    ret &= fprintf(F, "\"M5\" : [") > 0;
+
+    for (size_t i=0; i<nbSubMet; i++) {
+        double mvec[12];
+        memset(mvec, 0, sizeof(mvec));
+
+        ret = GetVector(subMet[i], NULL, mvec);
+
+        if (i != 0) {
+            ret &= fprintf(F, ",\n") > 0;
+        }
+
+        ret &= fprintf(F, "{ \"v\" : ") > 0;
+
+        if (ret)
+        {
+            ret = PrintVector(F, mvec, 1.0);
+        }
+
+        ret &= fprintf(F, "}") > 0;
+    }
+    ret &= fprintf(F, "]\n") > 0;
 
     return ret;
 }
@@ -955,7 +949,7 @@ bool ithipublisher::PublishDataM7(FILE * F)
 
     fprintf(F, "\"M7DataSet\" : [\n");
 
-    for (int i = 1; ret && i <= 4; i++) {
+    for (int i = 1; ret && i <= 2; i++) {
 
         ret = snprintf(subMetX, sizeof(subMetX), "M7.%d", i) > 0;
 
@@ -965,7 +959,39 @@ bool ithipublisher::PublishDataM7(FILE * F)
                 /* M7.x is present */
                 ret = PrintVector(F, m7x, 100.0);
 
-                if (i == 4) {
+                if (i == 2) {
+                    ret &= (fprintf(F, "\n") > 0);
+                }
+                else {
+                    ret &= (fprintf(F, ",\n") > 0);
+                }
+            }
+        }
+    }
+    fprintf(F, "]\n");
+
+    return ret;
+}
+
+bool ithipublisher::PublishDataM8(FILE * F)
+{
+    double m7x[12];
+    char subMetX[16];
+    bool ret = true;
+
+    fprintf(F, "\"M8DataSet\" : [\n");
+
+    for (int i = 1; ret && i <= 3; i++) {
+
+        ret = snprintf(subMetX, sizeof(subMetX), "M8.%d", i) > 0;
+
+        if (ret) {
+            if (GetVector(subMetX, NULL, m7x))
+            {
+                /* M7.x is present */
+                ret = PrintVector(F, m7x, 100.0);
+
+                if (i == 2) {
                     ret &= (fprintf(F, "\n") > 0);
                 }
                 else {

@@ -8,6 +8,8 @@ rm -r ithiunit/
 rm -r copr
 rm -r data
 rm -r testfiles
+rm -r travis
 rm -r www
-sudo rm -r .git
+
+sudo rm -r .git* .tra* _config.yml *.pdf
 

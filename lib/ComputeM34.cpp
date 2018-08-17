@@ -289,7 +289,10 @@ ComputeM4::ComputeM4()
     nb_userqueries(0),
     nb_nondelegated(0),
     nb_delegated(0),
-    m4_1(0)
+    m4_1(0),
+    m4_4(0),
+    m4_5(0),
+    m4_6(0)
 {
 }
 
@@ -333,6 +336,12 @@ bool ComputeM4::Compute()
         }
     }
 
+    if (ret) 
+    {
+        ret = GetM4_DNSSEC();
+    }
+
+
     return ret;
 }
 
@@ -350,6 +359,14 @@ bool ComputeM4::Write(FILE * F_out)
 
     if (ret) {
         ret = fprintf(F_out, "M4.4, , %6f,\n", m4_4) > 0;
+    }
+
+    if (ret) {
+        ret = fprintf(F_out, "M4.5, , %6f,\n", m4_5) > 0;
+    }
+
+    if (ret) {
+        ret = fprintf(F_out, "M4.6, , %6f,\n", m4_6) > 0;
     }
 
     return ret;
@@ -449,6 +466,150 @@ bool ComputeM4::GetM4_3()
     {
         ret = false;
     }
+
+    return ret;
+}
+
+static double DNSSEC_metric_from_extract(std::vector<CaptureLine*> * extract)
+{
+    double ret = 0;
+    uint64_t total = 0;
+    uint64_t support = 0;
+
+    for (size_t i = 0; i < extract->size(); i++) {
+        total += (*extract)[i]->count;
+        if ((*extract)[i]->key_type == 0 && (*extract)[i]->key_number == 1) {
+            support += (*extract)[i]->count;
+        }
+    }
+
+    if (total > 0) {
+        ret = (double)support;
+        ret /= (double)total;
+    }
+
+    return ret;
+}
+
+bool ComputeM4::GetM4_DNSSEC()
+{
+    bool ret = true;
+    std::vector<CaptureLine*> extractClientOccurence;
+    std::vector<CaptureLine*> extractZoneOccurence;
+    
+    cs.Extract(DnsStats::GetTableName(REGISTRY_DNSSEC_Client_Usage), &extractClientOccurence);
+    m4_5 = DNSSEC_metric_from_extract(&extractClientOccurence);
+    cs.Extract(DnsStats::GetTableName(REGISTRY_DNSSEC_Zone_Usage), &extractZoneOccurence);
+    m4_6 = DNSSEC_metric_from_extract(&extractZoneOccurence);
+
+    return ret;
+}
+
+ComputeM8::ComputeM8() :
+    m8_1(0),
+    m8_2(0),
+    m8_3(0)
+{
+}
+
+ComputeM8::~ComputeM8()
+{
+}
+
+bool ComputeM8::Load(char const * single_file_name)
+{
+    return cs.Load(single_file_name);
+}
+
+bool ComputeM8::LoadMultipleFiles(char const ** in_files, int nb_files)
+{
+    return (nb_files == 1) ? Load(in_files[0]) : cs.Merge(nb_files, in_files);
+}
+
+bool ComputeM8::Compute()
+{
+    bool ret = GetM8_1() &&
+        GetM8_2() &&
+        GetM8_3();
+
+    return ret;
+}
+
+bool ComputeM8::Write(FILE * F_out)
+{
+    bool ret = fprintf(F_out, "M8.1, , %6f,\n", m8_1) > 0;
+
+    if (ret) {
+        ret = fprintf(F_out, "M8.2, , %6f,\n", m8_2) > 0;
+    }
+
+    if (ret) {
+        ret = fprintf(F_out, "M8.3, , %6f,\n", m8_3) > 0;
+    }
+
+    return ret;
+}
+
+bool ComputeM8::GetM8_1()
+{
+    bool ret = true;
+    uint64_t nb_noerror = cs.GetCountByNumber(
+        DnsStats::GetTableName(REGISTRY_DNS_RCODES), 0);
+    uint64_t nb_nxdomain = cs.GetCountByNumber(
+        DnsStats::GetTableName(REGISTRY_DNS_RCODES), 3);
+    uint64_t nb_responses = (nb_noerror + nb_nxdomain) / 2;
+
+    if (nb_responses > 0)
+    {
+        m8_1 = (double)nb_nxdomain;
+        m8_1 /= (double)nb_responses;
+    }
+    else
+    {
+        m8_1 = 0;
+        ret = false;
+    }
+
+    return ret;
+}
+
+
+bool ComputeM8::GetM8_2()
+{
+    bool ret = true;
+    uint64_t nb_noerror = cs.GetCountByNumber(
+        DnsStats::GetTableName(REGISTRY_DNS_RCODES), 0);
+    uint64_t nb_nxdomain = cs.GetCountByNumber(
+        DnsStats::GetTableName(REGISTRY_DNS_RCODES), 3);
+    uint64_t nb_edns0 = cs.GetCountByNumber(
+        DnsStats::GetTableName(REGISTRY_EDNS_Version_number), 0);
+    uint64_t nb_queries = nb_noerror + nb_nxdomain;
+
+    if (nb_queries > 0)
+    {
+        m8_2 = (double)nb_edns0;
+        m8_2 /= (double)nb_queries;
+
+        if (m8_2 > 1.0) {
+            m8_2 = 1.0;
+        }
+    }
+    else
+    {
+        m8_2 = 0;
+        ret = false;
+    }
+
+    return ret;
+}
+
+bool ComputeM8::GetM8_3()
+{
+    bool ret = true;
+    std::vector<CaptureLine*> extractClientOccurence;
+
+    cs.Extract(DnsStats::GetTableName(REGISTRY_DNSSEC_Client_Usage), &extractClientOccurence);
+    m8_3 = DNSSEC_metric_from_extract(&extractClientOccurence);
 
     return ret;
 }

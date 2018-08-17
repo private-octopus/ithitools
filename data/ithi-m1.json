@@ -1,0 +1,22 @@
+{
+"identifier" : "ITHI-M1",
+"modified" : "2018-05-17",
+"title" : "Inaccuracy of Whois Data",
+"description" : "The metric M1 tracks the Inaccuracy of Whois Data, by measuring the number of complaints validated in a given month. The compliance department of ICANN receives a number of complaints every month. Out of that number, some will be closed immediately, and some will be validated. When a complaint is validated, ICANN will send a notice to the registrar for the domain. We track the number of validated complaints by counting the notices sent each month. Since the number of complaints is expected to be proportional to the number of domains, the first sub metric (M1.1) is defined as number of validated complaints per 1,000,000 domains. For privacy reasons, we do not disclose the number of complaints per registrar. However, we measure the distribution by assessing two key points in the distribution of the data: Smallest number of registrars explaining 50% of complaints (M1.2); and smallest number of registrars explaining 90% of complaints (M1.3).",
+"keyword" : [ "ITHI", "Whois", "Accuracy", "Inaccuracy" ],
+"theme" : [],
+"publisher": {
+        "@type": "org:Organization",
+        "name": "ICANN"
+}, 
+"contactPoint" : {
+       "@type": "vcard:Contact",
+       "fn" : "Alain Durand",
+       "hasEmail" : "mailto://alain.durand@icann.org"
+   },
+"accessLevel" : "public",
+"license" : "http://opendatacommons.org/licenses/odbl/1.0/",
+"accrualPeriodicity" : "P1M",
+"language" : [ "en-US" ],
+"landingPage" : "https://www.icann.org/ithi"
+}

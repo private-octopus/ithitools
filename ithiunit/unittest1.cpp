@@ -37,6 +37,7 @@
 #include "TldCountTest.h"
 #include "DnsPrefixTest.h"
 #include "GetNameTest.h"
+#include "OdiPublishTest.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -200,6 +201,14 @@ namespace ithiunit
         TEST_METHOD(GetName)
         {
             GetNameTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(OdiPublish)
+        {
+            OdiPublishTest test;
             bool ret = test.DoTest();
 
             Assert::AreEqual(ret, true);

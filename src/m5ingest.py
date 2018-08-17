@@ -13,10 +13,6 @@ class m5_summary:
         self.key_list = ["M5.1.1", "M5.1.2", "M5.1.3", "M5.1.4", "M5.1.5", "M5.1.6",
            "M5.2.1", "M5.2.2", "M5.2.3", "M5.3.1", "M5.3.2", "M5.4.1",
            "M5.4.2","M5.5"]
-        self.sub_met = ["M5.1", "M5.1", "M5.1", "M5.1", "M5.1", "M5.1",
-           "M5.2", "M5.2", "M5.2", "M5.3", "M5.3", "M5.4",
-           "M5.4","M5.5"]
-        self.sub_entry = [1, 2, 3, 4, 5, 6, 1, 2, 3, 1, 2, 1, 2, 0]
     
     def add_to_summary (self, f_name):
         "Parse a JSON file and add the results to the summary"
@@ -44,10 +40,7 @@ class m5_summary:
         csv_file = open(f_name, "w")
         i = 0
         while i < len(self.key_list):
-            entry = "";
-            if (self.sub_entry[i] != 0) :
-                entry = str(self.sub_entry[i]);
-            csv_file.write(self.sub_met[i] + ", " + entry + ", " + str(self.total[i]) + ",\n")
+            csv_file.write(self.key_list[i] + ", , " + str(self.total[i]) + ",\n")
             i += 1
         csv_file.close()
 

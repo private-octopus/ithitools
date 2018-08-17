@@ -21,6 +21,7 @@
 #include "TldCountTest.h"
 #include "DnsPrefixTest.h"
 #include "GetNameTest.h"
+#include "OdiPublishTest.h"
 
 enum test_list_enum {
     test_enum_hash = 0,
@@ -43,6 +44,7 @@ enum test_list_enum {
     test_enum_TldCount,
     test_enum_DnsPrefix,
     test_enum_GetName,
+    test_enumOdiPublish,
     test_enum_max_number
 };
 
@@ -102,6 +104,8 @@ char const * ithi_test_class::GetTestName(int number)
         return("DnsPrefix");
     case test_enum_GetName:
         return("GetName");
+    case test_enumOdiPublish:
+        return("OdiPublish");
     default:
         break;
     }
@@ -188,6 +192,9 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_enum_GetName:
         test = new GetNameTest();
+        break;
+    case test_enumOdiPublish:
+        test = new OdiPublishTest();
         break;
     default:
         break;
