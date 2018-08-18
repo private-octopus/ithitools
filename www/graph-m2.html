@@ -10,19 +10,9 @@
 
 <script type="text/javascript">
 
-    var canvas ;
-    var context ;
-    var Val_max;
-    var Val_min;
-    var sections;
-    var xScale;
-    var yScale;
-
     // Values for the M3.1 and M3.2 metrics, since Jan 2017 -- this is test data
     
     var M2Data;
-
-    var M2DataMax = [10, 10, 10, 200, 10, 10, 10, 200];
     var M2DisplayPilot = [
         ["valM2111", "averageM2111", "valM2112", "valM2113", "graphM211"],
         ["valM2121", "averageM2121", "valM2122", "valM2123", "graphM212"],
@@ -56,91 +46,22 @@
         // Set the text values that depend on the current data
         setDateElement(M2Data.date);
 
-        if (M2Data.m2Val.length >= 8 && M2DisplayPilot.length >= 8 && M2DataMax.length >= length) {
+        if (M2Data.m2Val.length >= 8 && M2DisplayPilot.length >= 8) {
             for (xMet = 0; xMet < 8; xMet++) {
-                setM2MetricLine(M2Data.m2Val[xMet], M2DisplayPilot[xMet], M2DataMax[xMet], "#404040C0");
+                setM2MetricLine(M2Data.m2Val[xMet], M2DisplayPilot[xMet], "#404040C0");
             }
         }
     }
 
-    function setM2MetricLine(metricLine, pilotLine, valmax, graphColor) {
+    function setM2MetricLine(metricLine, pilotLine, graphColor) {
         if (metricLine.length >= 3 && pilotLine.length >= 5) {
             setValElementX(pilotLine[0], getLastElement(metricLine[0]));
             setValElementX(pilotLine[1], getAverageElement(metricLine[0]));
             setValElementX(pilotLine[2], metricLine[1]);
             setValElementX(pilotLine[3], metricLine[2]);
-            plotGraphM2(pilotLine[4], metricLine[0], valmax, graphColor);
+            plotGraph(pilotLine[4], metricLine[0], getMaxRange(getMaxElement(metricLine[0])), graphColor, "");
         }
     }
-
-
-function setScale(canvasId, v_max)
-{
-        sections = 12;
-        Val_max = v_max;
-        Val_min = 0;
-    var stepSize = v_max / 10;
-        var columnSize = 50;
-        var rowSize = 50;
-        var margin = 10;
-        var xAxis = [" ", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] 
-                        
-        canvas = document.getElementById(canvasId);
-        context = canvas.getContext("2d");
-        context.fillStyle = "#808080"
-        context.font = "20 pt Verdana"
-        
-        yScale = (canvas.height - columnSize - margin) / (Val_max - Val_min);
-        xScale = (canvas.width - rowSize) / sections;
-        
-        context.strokeStyle="#808080"; // color of grid lines
-        context.beginPath();
-                // print Parameters on X axis, and grid lines on the graph
-        for (i=1;i<=sections + 1;i++) {
-                var x = i * xScale;
-                context.fillText(xAxis[i], x,columnSize - margin);
-                context.moveTo(x, columnSize + margin);
-                context.lineTo(x, canvas.height);
-        }
-                // print row header and draw horizontal grid lines
-        var count =  0;
-        for (scale=Val_max;scale>=Val_min;scale = scale - stepSize) {
-                var y = columnSize + (yScale * count * stepSize); 
-                context.fillText(scale, margin,y + margin);
-                context.moveTo(rowSize,y + margin)
-                context.lineTo(canvas.width,y + margin)
-                count++;
-        }
-        context.stroke();
-        
-        context.translate(rowSize,canvas.height + Val_min * yScale);
-        context.scale(1,-1 * yScale);
-}
-
-    function plotGraphM2(canvasId, dataSet, valmax, graphColor) {
-
-        setScale(canvasId, valmax);
-
-
-    l = dataSet.length; 
-    if (l > sections)
-    {
-        l = sections;
-    }
-
-    context.fillStyle = graphColor;
-    context.beginPath();
-    context.moveTo(0, 0);
-
-    for (i=0; i<l; i++) {
-	context.lineTo(i * xScale, dataSet[i]);
-        context.lineTo((i + 1) * xScale, dataSet[i]);
-    }
-
-    context.lineTo((l) * xScale, 0);
-    context.closePath();
-    context.fill();
-}
 
 </script>
 </head>

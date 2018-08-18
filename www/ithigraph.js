@@ -60,6 +60,45 @@ function getAverageElement(dataSet) {
     }
 }
 
+function getMaxElement(dataSet) {
+    if (dataSet.length < 1) {
+        return 0;
+    } else {
+        var i = 0;
+
+        var maxEl = dataSet[0];
+
+        for (i = 0; i < dataSet.length; i++) {
+            if (maxEl < dataSet[i]) {
+                maxEl = dataSet[i];
+            }
+        }
+
+        return maxEl;
+    }
+}
+
+function getMaxRange(rawMax) {
+    var i = 0;
+    var t_max = 0.001;
+
+    for (i = 0; i < 6; i++) {
+        if (2.0 * t_max > rawMax) {
+            return 2.0 * t_max;
+        } else if (5.0 * t_max > rawMax) {
+            return (5.0 * t_max);
+        } else {
+            t_max *= 10.0;
+
+            if (t_max > rawMax) {
+                return (t_max);
+            }
+        }
+    }
+
+    return rawMax;
+}
+
 function columnSum(dataSet, columnIndex) {
     var sum = 0;
     var i = 0;
@@ -140,4 +179,77 @@ function fillMetricTable(tableName, tableId, dataSet) {
     tableElem.innerHTML += "</table>\n";
 
     tableElem.innerHTML = tableText;
+}
+
+function setScale(canvasId, v_max, sections, unit) {
+    var v_min = 0;
+    var stepSize = v_max / 10;
+    var columnSize = 50;
+    var rowSize = 50;
+    var margin = 10;
+    var xAxis = [" ", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    var graph = new Object();
+    var i = 0;
+    graph.canvas = document.getElementById(canvasId);
+    graph.context = graph.canvas.getContext("2d");
+    graph.context.fillStyle = "#808080"
+    graph.context.font = "20 pt Verdana"
+
+    graph.yScale = (graph.canvas.height - columnSize - margin) / (v_max - v_min);
+    graph.xScale = (graph.canvas.width - rowSize) / sections;
+
+    graph.context.strokeStyle = "#808080"; // color of grid lines
+    graph.context.beginPath();
+    // print Parameters on X axis, and grid lines on the graph
+    for (i = 1; i <= sections + 1; i++) {
+        var x = i * graph.xScale;
+        graph.context.fillText(xAxis[i], x, columnSize - margin);
+        graph.context.moveTo(x, columnSize + margin);
+        graph.context.lineTo(x, graph.canvas.height);
+    }
+    // print row header and draw horizontal grid lines
+    var count = 0;
+    var scale = 0;
+    for (scale = v_max; scale >= v_min; scale = scale - stepSize) {
+        var y = columnSize + (graph.yScale * count * stepSize);
+        graph.context.fillText(scale + unit, margin, y + margin);
+        graph.context.moveTo(rowSize, y + margin)
+        graph.context.lineTo(graph.canvas.width, y + margin)
+        count++;
+    }
+    graph.context.stroke();
+
+    graph.context.translate(rowSize, graph.canvas.height + v_min * graph.yScale);
+    graph.context.scale(1, -1 * graph.yScale);
+
+    return graph;
+}
+
+function plotGraph(canvasId, dataSet, range_max, graphColor, unit) {
+    var sections = 12;
+    var graph = setScale(canvasId, range_max, sections, unit);
+
+    l = dataSet.length;
+    if (l > sections) {
+        l = sections;
+    }
+
+    graph.context.fillStyle = graphColor;
+    graph.context.beginPath();
+    graph.context.moveTo(0, 0);
+
+    for (i = 0; i < l; i++) {
+        var this_val = dataSet[i];
+        if (this_val > range_max) {
+            this_val = range_max;
+        } else if (this_val < 0) {
+            this_val = 0;
+        }
+        graph.context.lineTo(i * graph.xScale, this_val);
+        graph.context.lineTo((i + 1) * graph.xScale, this_val);
+    }
+
+    graph.context.lineTo((l) * graph.xScale, 0);
+    graph.context.closePath();
+    graph.context.fill();
 }

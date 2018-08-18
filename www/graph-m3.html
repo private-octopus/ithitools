@@ -8,7 +8,7 @@
 <script src="ithigraph.js"></script>
         
 <script type="text/javascript">
-
+    /*
 var canvas ;
 var context ;
 var Val_max;
@@ -16,6 +16,7 @@ var Val_min;
 var sections;
 var xScale;
     var yScale;
+    */
     var colorSet = ["#404040C0", "#A0A0A0C0", "#EFEFEFC0", "#404040C0"];
 
     // Values for the M3.1 and M3.2 metrics, since Jan 2017 -- this is test data
@@ -93,8 +94,7 @@ var xScale;
         setColorBlob("colorBlobM3Zero", colorSet[2]);
 
         plotPieChart("pieChartM3", M3Set, colorSet);
-        setScale("stackGraphM3");
-        plotStackGraphM3(M3Data.M31, M3Data.M32, colorSet);
+        plotStackGraphM3("stackGraphM3",M3Data.M31, M3Data.M32, colorSet);
 
         // Set the color blobs for the M3.3 table, then plot the pie chart
         setColorBlob("colorBlobM331", colorSet[0]);
@@ -110,51 +110,10 @@ var xScale;
         fillMetricTable("Frequent pattern", "m333Table", M3Data.m333Set);
     }
 
-    function setScale(canvasId)
-    {
-        sections = 12;
-        Val_max = 100;
-        Val_min = 0;
-        var stepSize = 10;
-        var columnSize = 50;
-        var rowSize = 50;
-        var margin = 10;
-        var xAxis = [" ", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] 
-                
-                
-        canvas = document.getElementById(canvasId);
-        context = canvas.getContext("2d");
-        context.fillStyle = "#808080"
-        context.font = "20 pt Verdana"
-        
-        yScale = (canvas.height - columnSize - margin) / (Val_max - Val_min);
-        xScale = (canvas.width - rowSize) / sections;
-        
-        context.strokeStyle="#808080"; // color of grid lines
-        context.beginPath();
-                // print Parameters on X axis, and grid lines on the graph
-        for (i=1;i<=sections + 1;i++) {
-                var x = i * xScale;
-                context.fillText(xAxis[i], x,columnSize - margin);
-                context.moveTo(x, columnSize + margin);
-                context.lineTo(x, canvas.height);
-        }
-                // print row header and draw horizontal grid lines
-        var count =  0;
-        for (scale=Val_max;scale>=Val_min;scale = scale - stepSize) {
-                var y = columnSize + (yScale * count * stepSize); 
-                context.fillText(scale + "%", margin,y + margin);
-                context.moveTo(rowSize,y + margin)
-                context.lineTo(canvas.width,y + margin)
-                count++;
-        }
-        context.stroke();
-        
-        context.translate(rowSize,canvas.height + Val_min * yScale);
-        context.scale(1,-1 * yScale);
-    }
-
-    function plotStackGraphM3(dataSet1, dataSet2, colorSet) {
+    function plotStackGraphM3(canvasId, dataSet1, dataSet2, colorSet) {
+        var Val_max = 100;
+        var sections = 12;
+        var graph = setScale(canvasId, Val_max, sections, "%");
         var l = dataSet1.length;
         if (dataSet2.length < l)
         {
@@ -167,6 +126,9 @@ var xScale;
         }
 
         // Start with first data set, M31
+        var context = graph.context;
+        var xScale = graph.xScale;
+        var yScale = graph.yScale;
 
         context.fillStyle = colorSet[0];
         context.beginPath();
