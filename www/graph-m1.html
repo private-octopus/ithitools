@@ -5,6 +5,7 @@
 <link rel="stylesheet" type="text/css" href="ithistyle.css">
 
 <script src="ithinav.js"></script>
+<script src="ithigraph.js"></script>
 <script type="text/javascript">
     var canvas;
     var context;
@@ -39,61 +40,13 @@
         setDateElement(M1Data.date);
 
         if (M1Data.m1Val.length >= 3) {
-            setValElement("valM11", getLastElement(M1Data.m1Val[0]));
-            setValElement("valM12", getLastElement(M1Data.m1Val[1]));
-            setValElement("valM13", getLastElement(M1Data.m1Val[2]));
-            setValElement("averageM11", getAverageElement(M1Data.m1Val[0]));
-            setValElement("averageM12", getAverageElement(M1Data.m1Val[1]));
-            setValElement("averageM13", getAverageElement(M1Data.m1Val[2]));
+            setValElementX("valM11", getLastElement(M1Data.m1Val[0]));
+            setValElementX("valM12", getLastElement(M1Data.m1Val[1]));
+            setValElementX("valM13", getLastElement(M1Data.m1Val[2]));
+            setValElementX("averageM11", getAverageElement(M1Data.m1Val[0]));
+            setValElementX("averageM12", getAverageElement(M1Data.m1Val[1]));
+            setValElementX("averageM13", getAverageElement(M1Data.m1Val[2]));
             plotGraphM1("graphM11", M1Data.m1Val[0], 50, "#404040C0");
-        }
-    }
-
-    function setDateElement(dateValue) {
-        dateElement = document.getElementById("dateHeading");
-        dateElement.innerHTML = dateValue;
-    }
-
-    function setValElement(valElementId, x) {
-        elm = document.getElementById(valElementId);
-        if (x.toFixed(2)) {
-            elm.innerHTML = "<b>" + x.toFixed(2) + "</b>";
-        }
-        else {
-            elm.innerHTML = "<b>" + x + "</b>";
-        }
-    }
-
-    function getLastElement(dataSet) {
-        if (dataSet.length < 1) {
-            return 0;
-        }
-        else {
-            return dataSet[dataSet.length - 1];
-        }
-    }
-
-    function getAverageElement(dataSet) {
-        if (dataSet.length <= 1) {
-            if (dataSet.length == 0) {
-                return 0;
-            } else {
-                return dataSet[0];
-            }
-        }
-        else {
-            last = dataSet.length - 2;
-            first = 0;
-            if (dataSet.length > 13) {
-                first = dataSet.length - 13;
-            }
-            average = 0;
-            for (iAv = first; iAv <= last; iAv++) {
-                average += dataSet[iAv];
-            }
-            average /= (last + 1 - first);
-
-            return average;
         }
     }
     

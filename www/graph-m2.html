@@ -6,6 +6,7 @@
 <link rel="stylesheet" type="text/css" href="ithistyle.css">
 
 <script src="ithinav.js"></script>
+<script src="ithigraph.js"></script>
 
 <script type="text/javascript">
 
@@ -64,71 +65,14 @@
 
     function setM2MetricLine(metricLine, pilotLine, valmax, graphColor) {
         if (metricLine.length >= 3 && pilotLine.length >= 5) {
-            setValElement(pilotLine[0], getLastElement(metricLine[0]));
-            setValElement(pilotLine[1], getAverageElement(metricLine[0]));
-            setValElement(pilotLine[2], metricLine[1]);
-            setValElement(pilotLine[3], metricLine[2]);
+            setValElementX(pilotLine[0], getLastElement(metricLine[0]));
+            setValElementX(pilotLine[1], getAverageElement(metricLine[0]));
+            setValElementX(pilotLine[2], metricLine[1]);
+            setValElementX(pilotLine[3], metricLine[2]);
             plotGraphM2(pilotLine[4], metricLine[0], valmax, graphColor);
         }
     }
 
-    function setDateElement(dateValue)
-    {
-        dateElement = document.getElementById("dateHeading");
-        dateElement.innerHTML = dateValue;
-    }
-
-    function setValElement(valElementId, x) {
-        elm = document.getElementById(valElementId);
-        if (x.toFixed(2)) {
-            elm.innerHTML = "<b>" + x.toFixed(2) + "</b>";
-        }
-        else {
-            elm.innerHTML = "<b>" + x + "</b>";
-        }
-    }
-
-    function getLastElement(dataSet)
-    {
-        if (dataSet.length < 1) {
-            return 0;
-        }
-        else
-        {
-            return dataSet[dataSet.length - 1];
-        }
-    }
-
-    function getAverageElement(dataSet)
-    {
-        if (dataSet.length <= 1)
-        {
-            if (dataSet.length == 0) {
-                return 0;
-            } else {
-                return dataSet[0];
-            }
-        }
-        else
-        {
-            var iAv = 0;
-
-            last = dataSet.length - 2;
-            first = 0;
-            if (dataSet.length > 13)
-            {
-                first = dataSet.length - 13;
-            }
-            average = 0;
-            for (iAv = first; iAv <= last; iAv++)
-            {
-                average += dataSet[iAv];
-            }
-            average /= (last + 1 - first);
-
-            return average;
-        }
-    }
 
 function setScale(canvasId, v_max)
 {

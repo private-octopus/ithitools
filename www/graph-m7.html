@@ -6,6 +6,7 @@
 <link rel="stylesheet" type="text/css" href="ithistyle.css">
 
 <script src="ithinav.js"></script>
+<script src="ithigraph.js"></script>
 
 <script type="text/javascript">
 
@@ -55,53 +56,6 @@
 
         plotGraphM7("graphM71", M7Data.M7DataSet[0], "#404040C0");
         plotGraphM7("graphM72", M7Data.M7DataSet[1], "#404040C0");
-    }
-    
-    function setDateElement(date) {
-        dateElement = document.getElementById("dateHeading");
-        dateElement.innerHTML = date;
-    }
-
-    function setValElement(valElementId, x) {
-        elm = document.getElementById(valElementId);
-
-        if (x.toFixed(2)) {
-            elm.innerHTML = "<b>" + x.toFixed(2) + "%</b>";
-        }
-        else {
-            elm.innerHTML = "<b>" + x + "</b>";
-        }
-    }
-
-    function getLastElement(dataSet) {
-        if (dataSet.length < 1) {
-            return "-";
-        }
-        else {
-            return dataSet[dataSet.length - 1];
-        }
-    }
-
-    function getAverageElement(dataSet) {
-        if (dataSet.length <= 2) {
-            return dataSet[0];
-        }
-        else {
-            var i = 0;
-
-            last = dataSet.length - 2;
-            first = 0;
-            if (dataSet.length > 13) {
-                first = dataSet.length - 13;
-            }
-            average = 0;
-            for (i = first; i <= last; i++) {
-                average += dataSet[i];
-            }
-            average /= (last + 1 - first);
-
-            return average;
-        }
     }
 
     function setScale(canvasId) {

@@ -5,6 +5,7 @@
 <link rel="stylesheet" type="text/css" href="ithistyle.css">
 
 <script src="ithinav.js"></script>
+<script src="ithigraph.js"></script>
 <script type="text/javascript">
     var M5valId = [
         "valM511", "valM512", "valM513", "valM514", "valM515", "valM516",
@@ -57,55 +58,6 @@
             }
         }
     }
-
-    function setDateElement(date)
-    {
-        dateElement = document.getElementById("dateHeading");
-        dateElement.innerHTML = date;
-    }
-
-    function setValElement(valElementId, x) {
-        elm = document.getElementById(valElementId);
-        if (x.toFixed(2)) {
-            elm.innerHTML = "<b>" + x.toFixed(2) + "%</b>";
-        }
-        else
-        {
-            elm.innerHTML = "<b>" + x + "</b>";
-        }
-    }
-
-    function getLastElement(dataSet) {
-        if (dataSet.length < 1) {
-            return 0;
-        } else {
-            return dataSet[dataSet.length - 1];
-        }
-    }
-
-    function getAverageElement(dataSet) {
-        if (dataSet.length <= 1) {
-            return 0;
-        }
-        else if (dataSet.length == 2) {
-            return dataSet[0];
-        }
-        else {
-            last = dataSet.length - 2;
-            first = 0;
-            if (dataSet.length > 13) {
-                first = dataSet.length - 13;
-            }
-            average = 0;
-            for (i_av = first; i_av <= last; i_av++) {
-                average += dataSet[i_av];
-            }
-            average /= (last + 1 - first);
-
-            return average;
-        }
-    }
-
 
 </script>
 </head>
