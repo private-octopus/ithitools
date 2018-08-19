@@ -80,9 +80,12 @@ function getMaxElement(dataSet) {
 
 function getMaxRange(rawMax) {
     var i = 0;
-    var t_max = 0.001;
+    var t_max = 0.1;
 
     for (i = 0; i < 6; i++) {
+        if (t_max > 0.99) {
+            t_max = Math.round(t_max);
+        }
         if (2.0 * t_max > rawMax) {
             return 2.0 * t_max;
         } else if (5.0 * t_max > rawMax) {
@@ -212,7 +215,15 @@ function setScale(canvasId, v_max, sections, unit) {
     var scale = 0;
     for (scale = v_max; scale >= v_min; scale = scale - stepSize) {
         var y = columnSize + (graph.yScale * count * stepSize);
-        graph.context.fillText(scale + unit, margin, y + margin);
+        var fscale;
+        if (v_max >= 10.0) {
+            fscale = scale.toFixed(0);
+        } else if (v_max >= 1.0) {
+            fscale = scale.toFixed(1);
+        } else {
+            fscale = scale;
+        }
+        graph.context.fillText(fscale + unit, margin, y + margin);
         graph.context.moveTo(rowSize, y + margin)
         graph.context.lineTo(graph.canvas.width, y + margin)
         count++;
