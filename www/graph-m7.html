@@ -6,17 +6,9 @@
 <link rel="stylesheet" type="text/css" href="ithistyle.css">
 
 <script src="ithinav.js"></script>
+<script src="ithigraph.js"></script>
 
 <script type="text/javascript">
-
-    var canvas ;
-    var context ;
-    var Val_max;
-    var Val_min;
-    var sections;
-    var xScale;
-    var yScale;
-
     var M7Data; // Will be obtained from the web server.
 
     function init() {
@@ -53,126 +45,9 @@
         
         // Plot the charts
 
-        plotGraphM7("graphM71", M7Data.M7DataSet[0], "#404040C0");
-        plotGraphM7("graphM72", M7Data.M7DataSet[1], "#404040C0");
+        plotGraph("graphM71", M7Data.M7DataSet[0], 100, "#404040C0", "%");
+        plotGraph("graphM72", M7Data.M7DataSet[1], 100, "#404040C0", "%");
     }
-    
-    function setDateElement(date) {
-        dateElement = document.getElementById("dateHeading");
-        dateElement.innerHTML = date;
-    }
-
-    function setValElement(valElementId, x) {
-        elm = document.getElementById(valElementId);
-
-        if (x.toFixed(2)) {
-            elm.innerHTML = "<b>" + x.toFixed(2) + "%</b>";
-        }
-        else {
-            elm.innerHTML = "<b>" + x + "</b>";
-        }
-    }
-
-    function getLastElement(dataSet) {
-        if (dataSet.length < 1) {
-            return "-";
-        }
-        else {
-            return dataSet[dataSet.length - 1];
-        }
-    }
-
-    function getAverageElement(dataSet) {
-        if (dataSet.length <= 2) {
-            return dataSet[0];
-        }
-        else {
-            var i = 0;
-
-            last = dataSet.length - 2;
-            first = 0;
-            if (dataSet.length > 13) {
-                first = dataSet.length - 13;
-            }
-            average = 0;
-            for (i = first; i <= last; i++) {
-                average += dataSet[i];
-            }
-            average /= (last + 1 - first);
-
-            return average;
-        }
-    }
-
-    function setScale(canvasId) {
-        sections = 12;
-        Val_max = 100;
-        Val_min = 0;
-        var stepSize = 10;
-        var columnSize = 50;
-        var rowSize = 50;
-        var margin = 10;
-        var xAxis = [" ", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
-
-        canvas = document.getElementById(canvasId);
-        context = canvas.getContext("2d");
-        context.fillStyle = "#808080"
-        context.font = "20 pt Verdana"
-
-        yScale = (canvas.height - columnSize - margin) / (Val_max - Val_min);
-        xScale = (canvas.width - rowSize) / sections;
-
-        context.strokeStyle = "#808080"; // color of grid lines
-        context.beginPath();
-        // print Parameters on X axis, and grid lines on the graph
-        for (i = 1; i <= sections + 1; i++) {
-            var x = i * xScale;
-            context.fillText(xAxis[i], x, columnSize - margin);
-            context.moveTo(x, columnSize + margin);
-            context.lineTo(x, canvas.height);
-        }
-        // print row header and draw horizontal grid lines
-        var count = 0;
-        for (scale = Val_max; scale >= Val_min; scale = scale - stepSize) {
-            var y = columnSize + (yScale * count * stepSize);
-            context.fillText(scale + "%", margin, y + margin);
-            context.moveTo(rowSize, y + margin)
-            context.lineTo(canvas.width, y + margin)
-            count++;
-        }
-        context.stroke();
-
-        context.translate(rowSize, canvas.height + Val_min * yScale);
-        context.scale(1, -1 * yScale);
-    }
-
-    function plotGraphM7(canvasId, dataSet, graphColor) {
-        setScale(canvasId);
-
-        l = dataSet.length;
-
-        if (l > sections) {
-            l = sections;
-        }
-
-        // Plot the data set
-
-        context.fillStyle = graphColor;
-        context.beginPath();
-        context.moveTo(0, 0);
-
-        for (i = 0; i < l; i++) {
-            context.lineTo(i * xScale, dataSet[i]);
-            context.lineTo((i + 1) * xScale, dataSet[i]);
-        }
-
-        context.lineTo((l) * xScale, 0);
-        context.closePath();
-        context.fill();
-
-    }
-
 </script>
 </head>
 
