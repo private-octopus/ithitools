@@ -1,0 +1,64 @@
+<html>
+<head>
+<title>About ICANN’s ITHI Metric M2</title>
+
+<link rel="stylesheet" type="text/css" href="ithistyle.css">
+
+<script src="ithinav.js"></script>
+<script type="text/javascript">
+    function init() {
+        initnav();
+    }
+</script>
+</head>
+
+<body onload="init()">
+<nav id="navMenu"></nav>
+
+<h1>ITHI M2: Domain Name Abuse</h1>
+<p>
+The domain name abuses are tracked by measuring the number of registered domain
+names used in four kinds of abuse: phishing, malware distribution,
+command and control of botnets, and spam. These abuses are computed
+by ICANN's <a href="https://www.icann.org/octo-ssr/daar">
+Domain Abuse Activity Reporting (DAAR) project</a>.
+</p>
+<p>
+Each month, the DAAR project establishes lists of domains engaged in the 
+different type of abuses, using a large set of high-confidence reputation
+(security threat) data feeds. The number of abusive domains can be tabulated
+based on the domain's TLD, but the registrar in charge of the domain
+can also be retrieved using Whois data. This gives us eight sets of metrics,
+computed either by TLD or by Registrar:
+</p>
+<table>
+<tr><th></th><th>Phishing</th><th>Malware distribution</th><th>Botnet C&C</th><th>Spam</th></tr>
+<tr><th>By TLD</th><td>M2.1.1.*</td><td>M2.1.2.*</td><td>M2.1.3.*</td><td>M2.1.4.*</td></tr>
+<tr><th>By Registrar</th><td>M2.1.1.*</td><td>M2.1.2.*</td><td>M2.1.3.*</td><td>M2.1.4.*</td></tr>
+</table>
+<p>
+The first metric in each set (M2.*.*.1) is the number of abuse reported for 10000 domain names. For 
+example, M2.1.4.1 is the number of spam domains per 10000 domain names, tabulated per
+registrars, and M2.2.4.1 is the same number tabulated per TLD. In theory these two numbers
+should be the same, as the total number of abuses for all TLD should be the same as the
+total for each Registrar. It turns out that this is not the case, because of 
+the inclusion of "parked" domains in the TLD counts. These domains are known to be used
+for abuse, have been taken over by law enforcement or by other regulation systems, and are 
+"parked" in specialized registrars. These specialized registrars are not included
+in the metrics "per registrar".
+</p>
+<p>
+As seen in the <a href="about-m1.html">discussion of metric M1</a>, the average number
+does not tell the entire story, because the rate of abuse varies widely across the different
+registrars and the different TLD. It is of course not our role to explain why abusers
+choose to use the service of a specific registrar, or choose names in a specific TLD,
+but we wanted to capture the phenomemon and we use for that two metrics in each set:
+the minimum number
+of agents (TLD or registrars) that account for 50% of this type of abuse (M2.*.*.2), 
+and the minimum number that account for 90% of the abuse (M2.*.*.3).
+</p>
+<p>
+The current value of the metrics is available <a href="graph-m2.html">here</a>.
+</p>
+</body>
+</html>

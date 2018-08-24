@@ -16,6 +16,19 @@ document.getElementById("navMenu").innerHTML =
     '</div>' +
   '</div>' +
   '<a href="participating.html">Participate</a>' +
-  '<a href="about.html">About</a>' +
+  '<div class="dropdown">' +
+    '<a href="about.html">About</a>' +
+    '<div class="dropdown-content">' +
+      '<a href="about.html">About ITHI</a>' +
+      '<a href="about-m1.html">About M1</a>' +
+      '<a href="about-m2.html">About M2</a>' +
+      '<a href="about-m3.html">About M3</a>' +
+      '<a href="about-m4.html">About M4</a>' +
+      '<a href="about-m5.html">About M5</a>' +
+      '<a href="about-m6.html">About M6</a>' +
+      '<a href="about-m7.html">About M7</a>' +
+      '<a href="about-m8.html">About M8</a>' +
+    '</div>' +
+  '</div>' +
  '</div>'
 }
