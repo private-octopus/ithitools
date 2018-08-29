@@ -1,0 +1,158 @@
+<html>
+<head>
+<title>About ICANN’s ITHI Metric M8</title>
+
+<link rel="stylesheet" type="text/css" href="ithistyle.css">
+
+<script src="ithinav.js"></script>
+<script type="text/javascript">
+    function init() {<t
+        initnav();
+    }
+</script>
+</head>
+
+<body onload="init()">
+<nav id="navMenu"></nav>
+<h1>ITHI M8: Authoritative server traffic analysis</h1>
+<p>
+ITHI Metric M8 characterizes the behavior of recursive resolvers as observed by a sampling of authoritative servers.
+We want to find answer to the following questions:
+</p>
+<nl>
+<li>Do recursive servers forward gratuitous queries to non-existing domains?</li>
+<li>Do recursive servers use Extended DNS (EDNS), and how?</li>
+<li>Do recursive servers signal that DNSSEC is OK in their queries?</li>
+<li>Do recursive servers start deploying QName minimization as part of DNS privacy efforts?</li>
+</nl>
+<p>
+Recursive resolvers, in the normal course of operation, send queries for domain names to the
+servers authoritative for these domains. We expect that authoritative servers will receive requests
+from many resolvers. We also expect that there is some selection bias: pretty much every resolver
+will query popular global names, but domains specific to particular countries are much more likely
+to be queried by resolvers in that country. We don’t know how these potential bias affects measurements
+like the use of EDNS or DNSSEC by recursive. We will only know that when we can get multiple
+measurements from multiple sites and compare the results. Our first step is thus to instrument a
+sufficient number of servers to at least get preliminary results.
+</p>
+<h2>Measuring QName Minimization</h2>
+<p>
+Measuring the use of EDNS or the setting of the DO bit is pretty straightforward, since the information
+is visible in the queries and responses. Measuring QNAME minimization is less obvious. We first have
+to understand how QName minimization work, which is shown in this comparison table:
+</p>
+<table>
+<tr><th>Resolve “X record” for “www.example.com”</th><th>Without QName minimization</th>
+<th>Standard QName minimization</th><th>QName minimization with firewall traversal</th></tr>
+<tr><td>Query to the root</td><td>www.example.com/X?</td><td>.com/NS?</td><td>.com/A?</td></tr>
+<tr><td>Response from the root</td><td>.com/NS</td><td>.com/NS</td><td>.com/A, .com/NS, or maybe just .com/NS</td></tr>
+<tr><td>Query to TLD server</td><td>www.example.com/X?</td><td>example.com/NS?</td><td>example.com/A?</td></tr>
+<tr><td>Response from TLD server</td><td>.example.com/NS</td><td>.example.com/NS</td>
+<td>.example.com/A, .example.com/NS, or maybe just .example.com/NS</td></tr>
+<tr><td>Query to zone server</td><td colspan=3>www.example.com/X?</td></tr>
+<tr><td>Response from zone server</td><td colspan=3>www.example.com/X or maybe www.example.com/CNAME.</td></tr>		
+</table>
+<p>
+The table shows two variants of QName minimization. The standard approach was to break down the queried name
+into “zone” components, and instead of sending request for the complete name, just send successive requests
+for the name server (NS) records of those components. However, early deployment attempts showed that some
+firewalls were surprised to see these NS requests, and sometime blocked the packets. The “firewall traversal”
+variants works by querying an A record instead of the NS record. The table shows that the length of names is
+a good decision attribute:
+</p>
+<nl>
+<li>If the name in the query is longer than the name in the response, then we can be pretty sure that the query
+was not minimized.</li>
+<li>If the name in the query has the same length as the name in the response, then the query may or may not have
+been minimized – since in all three cases there is a final step in which the full name is queried for the server
+in charge of the zone.</li>
+</nl>
+<p>
+We also assume that in some cases, even resolvers who do not implement QName minimization will send queries for
+short names such as “example.com”. To make decisions, we need to see multiple queries sent by the same resolver.
+We will consider resolvers as “probably not minimizing” if the names in the queries were sometimes longer than
+the name in the response, and “maybe minimizing” if the names in the queries were always the same length as the
+names in the response.
+</p>
+
+<h2>Statistics per resolver</h2>
+<p>
+When we do statistics about characteristics like EDNS, DO or QName minimization, we could simply count the number
+of queries with the tracked property, and then divide by the total number of queries. That would give us for example
+the “percentage of queries with the DO bit set.” But to get statistic per resolver, we need to measure the resolvers.
+</p>
+<p>
+We use the IP address to identify the resolvers at each data collection point, for each data collection session.
+We will then for each of the attributes that we look at count the number of queries with the attribute, and the
+total number of queries. We will then compute a measure for that data collection point and that session by using
+a weight of 1 for each resolver. This will give us the ratios measured in a particular session. The metric itself
+is obtained by averaging the ratios over all the sessions.
+</p>
+<p>
+As part of the EDNS metric, we also want to track usage of the various EDNS options. We are already tracking global
+usage of these options as part of M6, but we want here to have an indication of the distribution of these options
+in the pool of receivers. The simple solution is to only sample one packet per resolver and count the appearance of
+options in that packet.
+</p>
+
+<h2>Comparison with M5</h2>
+<p>
+The <a href="about-m5.html">M5 metric</a>
+also tracks the behavior of resolvers. The data is collected by running advertisements on a large
+number of clients distributed more or less randomly on the Internet, generating name resolutions as part of
+processing the advertisements. The names all belong to domains controlled by the experiment, so the traffic
+can be observed at servers controlled by the experiment. The name resolutions are processed by resolvers
+configured for these clients, leading to sampling a large proportion of the resolvers on the Internet.
+</p>
+The main difference between M8 and M5 is that M8 acquires its data by looking at traffic naturally generated
+by diverse clients, while M5 uses artificial traffic generated for the experiment. There may well be differences,
+from the choice of names to the specific resource records or EDNS options used in the queries. In any case,
+M5 does not track EDNS usage or QName minimization deployment. We believe that the instrumentation of a sample
+of servers will provide complementary data on DNSSEC usage.
+</p>
+
+<h2>Limitation of the DNSSEC OK Option</h2>
+<p>
+We are measuring the fraction of resolvers that set the DNSSEC OK option in their queries. We understand
+that resolvers may very well set that option even if they do not intend to perform response validation
+according to DNSSEC. For reference, we know that in August 2018 84% of resolvers measured by M5 set the
+DO bit in queries, but only 25% performed DNSSEC validation. We will carefully message that we are only
+measuring the presence of the DNSSEC OK option, not actual usage of DNSSEC.
+</p>
+
+<h2>Limits of M8</h2>
+<p>We considered and rejected several additional measurement ideas.</p>
+<p>
+We will not attempt to measure “name leakage” at authoritative servers, because this is hard to measure
+without knowing a lot about the zone served by the authoritative, and there are privacy issues if we do that.</p>
+<p>
+We were told that we may have a problem with "pseudo CCTLD", such as ".fr.com". There may be some legitimate
+use for such pseudo-CCTLD, e.g. people setting up some competition for the national service. But there may also
+well be some more nefarious actions, e.g. phishers setting pseudo domains like "banque-de-paris.fr.com"
+to phish customers of "banque-de-paris.fr". But it is hard to measure occurrence of such domains by parsing
+samples of actual traffic. In any case, if we did want to measure this phenomenon, it should be done by parsing
+recursive resolver traffic, not traffic at a sample of authoritative servers.
+</p>
+<p>
+We will not attempt to measure the distribution of market share among recursive servers. Doing so would require
+collecting lists of IP addresses of resolvers at various locations, sending these lists to our staging servers,
+and computing request frequencies there. This would be a violation of our privacy rules, and we would rather not do it. 
+</p>
+<h2>List of M8 metrics</h2>
+<p>
+The design results in the following list of metrics:
+</p>
+<table>
+<tr><th>Metric</th><th>Description</th></tr>
+<tr><td>M8.1</td><td>% NX Domain Queries at Authoritative</td></tr>
+<tr><td>M8.2.1</td><td>% of resolvers using EDNS</td></tr>
+<tr><td>M8.2.2.X</td><td>% of resolvers using EDNS option code X</td></tr>
+<tr><td>M8.3</td><td>% of resolvers that set the DNSSEC OK option in queries</td></tr>
+<tr><td>M8.4</td><td>% resolvers that appear to deploy QName minimization</td></tr>
+</table>
+<p>
+The current values of the metrics will be available <a href="graph-m8.html">here</a>,
+once sampling sites become operational.
+</p>
+</body>
+</html>

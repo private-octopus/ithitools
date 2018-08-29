@@ -1,0 +1,38 @@
+<html>
+<head>
+<title>About ICANN’s ITHI Metric M7</title>
+
+<link rel="stylesheet" type="text/css" href="ithistyle.css">
+
+<script src="ithinav.js"></script>
+<script type="text/javascript">
+    function init() {<t
+        initnav();
+    }
+</script>
+</head>
+
+<body onload="init()">
+<nav id="navMenu"></nav>
+<h1>ITHI M7: DNSSEC Deployment in TLD</h1>
+
+<p>
+The metric M7 tracks the usage of DNSSEC in TLD. There is an interesting difference between GTLD and CCTLD for this metric. 
+The contract of GTLD with ICANN requires them to deploy DNSSEC, and thus we can expect values close to 100%.
+CC TLD do not have any such oblication, and the deployment of DNSSEC reflects the initiative of the CC TLD operators.
+We thus track the DNSSEC deployment in TLD in two ways:
+</p>
+<ul>
+<li>M7.1 tracks the deployment of DNSSEC across all TLD</li>
+<li>M7.2 tracks the deployment of DNSSEC across CC TLD</li>
+</ul>
+<p>
+The metric is computed by parsing the root zone. We download a copy of the root zone every month, and check for each 
+TLD in the zone whether a Delegation Signer (DS) Resource Record is present. If the DS record is present, we mark the
+TLD as deploying DNSSEC.
+</p>
+<p>
+The current values of the metrics is available <a href="graph-m7.html">here</a>.
+</p>
+</body>
+</html>
