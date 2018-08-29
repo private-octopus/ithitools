@@ -1,0 +1,87 @@
+<html>
+<head>
+<title>About ICANN’s ITHI Metric M4</title>
+
+<link rel="stylesheet" type="text/css" href="ithistyle.css">
+
+<script src="ithinav.js"></script>
+<script type="text/javascript">
+    function init() {<t
+        initnav();
+    }
+</script>
+</head>
+
+<body onload="init()">
+<nav id="navMenu"></nav>
+<h1>ITHI M4: DNS Recursive Server Analysis</h1>
+<img src="m4-dns-resolver-graph.PNG" alt="Graph showing DNS clients resolvers and servers and traffic observation"
+style="float:right;width:25%"/>
+<p>
+The M4 metrics measure the usage of TLDs and leakage of undelegated strings by DNS users.
+As shown on the figure on the right of this text, this is not the same measure as M3,
+because most users do not contact the root servers directly. Instead, they will contact
+a DNS Recursive Resolver, which may be provided by their connectivity provider, by their
+organization, or by a third party. These recursive resolvers will often respond to queries
+with cached responses, so the root will only observe a very small fraction of the queries.
+The goal of M4 is to measure the users’ behavior, which will be done by analyzing traffic
+at recursive resolvers.
+</p>
+<p>
+The usage of TLD and leakage of undelegated names is measured in M4 by 4 metrics:
+</p>
+<ul>
+<li>M4.1: Usage volume of delegated TLDs: fraction of queries directed at delegated TLDs.</li>
+<li>M4.2: Leakage of RFC 6761 Special Use Names: for each RFC 6761 name, fraction of queries 
+directed at this name.</li>
+<li>M4.3: Leakage of frequent non delegated strings.</li>
+<li>M4.4: Leakage of other strings: all queries at strings not accounted for in M4.2 or M4.3.</li>
+</ul>
+<p>
+The measurement of M4.1, M4.2 and M4.4 is straightforward, but M4.3 deserves some explanation.
+The initial implementation would just find the top 128 strings seen at each recursive resolver
+participating in the study, and list the corresponding names in the summary. Then we would merge
+statistics from multiple sources, and retain the list of names that were found most frequently.
+This turned out to be problematic, because the most frequent errors happen when clients look up
+a local server name using the wrong domain prefix, such as looking for "myserver"
+instead of "myserver.example.com". The names of local servers tell a lot about the local 
+domains, and we feared that exposing them in statistics would be a privacy violation.
+</p>
+<p>
+We mitigate that privacy issue by categorizing leaked names as either "local" or "global". We
+consider that a leaked name is "global" if it belongs to the list of the names most
+frequently leaked to the root, and we consider the other names as "local". In the summaries,
+we tabulate all frequently leaked global names individually, but we group all local names
+under a single category, "local host names".
+</p>
+<p>
+In addition to measuring name leakage, we also measure DNSSEC deployment with 2 metrics:
+</p>
+<ul>
+<li>M4.5: % of Clients ready for DNSSEC.</li>
+<li>M4.6: % of Zones publishing DNSSEC.</li>
+</ul>
+<p>
+To compute the metric 4.5, we identify the clients by their IP address, and we weight
+each client equally. We count a client as "DNS Ready" if it sets the "DNSSEC OK" option
+(DO) in its queries. There is a slight uncertainty in this measurement, as the traces
+will not just contain queries sent by the clients, but also queries sent by the
+recursive resolver itself. However, the number of IP addresses used
+by clients vastly exceeds the number of addresses used by the resolver, and we
+can ignore this error.
+</p>
+<p>
+To compute the metric 4.6, we find the zone associated with queries using the
+open source <a href="https://github.com/publicsuffix/list">Public Suffix List</a> maintained
+on GitHub by the <a href="https://publicsuffix.org/">Public Suffix project</a>.
+We then look at the subset of queries in which the DO bit was set. If the response
+included a DNSSEC records such as DNSKEY, RRSIG, NSEC, NSEC3, or DS, we conclude
+that the corresponding zone is supporting DNSSEC. In constrast, if we find queries
+in which the DO bit is set but never receive any DNSSEC response, we assume
+that the zone is probably not supporting DNSSEC.
+</p>
+<p>
+The current values of the metrics is available <a href="graph-m4.html">here</a>.
+</p>
+</body>
+</html>

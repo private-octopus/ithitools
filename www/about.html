@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>About ITHI</title>
+<title>About ICANN’s ITHI Project</title>
 
 <link rel="stylesheet" type="text/css" href="ithistyle.css">
 
@@ -15,28 +15,70 @@
 <body onload="init()">
 <nav id="navMenu"></nav>
 
-<h1>About the ITHI Project</h1>
+<h1>ICANN’s ITHI Project</h1>
+<p>
+ITHI, or Identifier Technologies Health Indicators is an ICANN initiative to “<em>measure</em>”
+the “<em>health</em>” of the “<em>identifiers</em>” that “<em>ICANN helps coordinate</em>”. This is directly linked
+to one of the priorities in ICANN Strategic Plan for 2016-2020: “Foster and coordinate
+a <em>healthy</em>, <em>secure</em>, <em>stable, and resilient</em> identifier ecosystem.”
+</p>
+<div>
+<img src="ITHI-pipeline.PNG" alt="Diagram showing progress from data source to ITHI analysis to publication via ODI"
+style="float:right;width:50%" />
+<p>
+The goal of the ITHI project is to produce a set of indicators that will be <em>measured and tracked
+over time</em> that will help determine if the set of identifiers is overall doing better or worse.
+This is a long term project, expected to run for many years. The focus of the ITHI project is
+strictly technical. Our role is to define metrics and perform measurements in important problem
+areas, and to assess values and trends over time. We will leave interpretation and reaction to others.
+</p>
+<p>
+We rely on various data sources and place a great emphasis on protecting the privacy of these sources.
+Instead of collecting the raw data, we let these sources extract basic statistics, devoid of personal
+identifiers and other sensitive information. Our processing tools are available as open source, and
+the data are published through the Open Data Initiative.
+</p>
+</div>
+<div>
+<p>
+Eight metrics cover the currently identified problem areas:
+</p>
+<table>
+<tr><th>Metric Name</th><th>Data Source</th></tr>
+<tr><td><a href="about-m1.html">M1: inaccuracy of Whois Data</a></td>
+<td>ICANN compliance dept.</td></tr>
 
-<p>The ITHI project was started by <a href="http://icann.org/">ICANN</a> in 2017,
-in the office of the CTO. The timeline of the project runs as follow:</p>
-<ul>
-<li>2017: definition of metrics, prototype tool chain.</li>
-<li>Jan-Feb 2018: initial captures, M3, and M7.</li>
-<ul>
-<li>We also captured M2, and single source M4 and M6.</li>
-</ul>
-<li>March 2018: first data presented at ICANN meeting.</li>
-<li>Apr-Jun 2018: pipeline automation, publish metrics on ICANN web site.</li>
-<li>Continued updating and publication of metrics in the following years.</li>
-</ul>
+<tr><td><a href="about-m2.html">M2: Domain Name Abuse</a></td>
+<td><a href="https://www.icann.org/octo-ssr/daar">ICANN’s DAAR Project</td></tr>
 
-<p>The project is managed by Alain Durand at ICANN and by Christian Huitema at
-<a href="http://www.privateoctopus.com/">Private Octopus Inc,</a> under contract with ICANN. This initial web site is provided by
-Private Octopus Inc. As stated in the time line, these pages will soon be published
-through ICANN's web site.</p>
+<tr><td><a href="about-m3.html">M3: DNS Root Traffic Analysis</a></td>
+<td>Scans of DNS root traffic</td></tr>
 
+<tr><td><a href="about-m4.html">M4: DNS Recursive Server Analysis</a></td>
+<td>Summaries of recursive resolvers traffic</td></tr>
+
+<tr><td><a href="about-m5.html">M5: Recursive Resolver Integrity</a></td>
+<td>APNIC</td></tr>
+
+<tr><td><a href="about-m6.html">M6: IANA registries for DNS parameters</a></td>
+<td>Scan of recursive resolvers traffic</td></tr>
+
+<tr><td><a href="about-m7.html">M7: DNSSEC Deployment.</a></td>
+<td>Snapshots of DNS root zone</td></tr>
+
+<tr><td><a href="about-m8.html">M8: DNS Authoritative Servers Analysis</a></td>
+<td>Scans of authoritative servers traffic</td></tr>
+
+</table>
+</div>
+<div>
 <a href="http://www.privateoctopus.com/">
-<img src="octopus.jpg" txt="Private Octopus logo" /></a>
-
+<img src="octopus.jpg" txt="Private Octopus logo" style="float:left;width:10%"/></a>
+<p>The project is managed by Alain Durand at ICANN and by Christian Huitema at
+<a href="http://www.privateoctopus.com/">Private Octopus Inc,</a> under contract with ICANN. 
+This initial web site is provided by
+Private Octopus Inc. These pages will soon be published
+through ICANN's web site.</p>
+</div>
 </body>
 </html>

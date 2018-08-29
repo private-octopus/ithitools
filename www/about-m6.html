@@ -1,0 +1,115 @@
+<html>
+<head>
+<title>About ICANN’s ITHI Metric M6</title>
+
+<link rel="stylesheet" type="text/css" href="ithistyle.css">
+
+<script src="ithinav.js"></script>
+<script type="text/javascript">
+    function init() {
+        initnav();
+    }
+</script>
+</head>
+
+<body onload="init()">
+<nav id="navMenu"></nav>
+
+<h1>ITHI Metric M6, IANA registries for DNS parameters</h1>
+<img src="pipe-line-m6.PNG" 
+alt="Flow chart from definition by IETF to creation of registry by IANA, registration or squatting by developers, practical usage"
+style="float:right;width:25%"/>
+<p>
+The IANA manages a set of parameter registries on behalf of the IETF.
+These registries are requested by the IETF, as part of a protocol definition.
+The IANA will then establish the corresponding registry.
+Developers are then supposed to register new values when the need arises.
+For example, developers who find the need for a new DNS Record Type will document that new type in an Internet Draft,
+and get the new type registered by IANA in the DNS RR Type registry.
+Of course, there is a risk that some developers will find that process too cumbersome,
+and will instead use an unregistered value, a process that we call “squatting”.
+The goal of the M6 metrics is to measure if registered values are used, and
+whether we observe squatting. We want to tract this squatting and usage over time,
+and we also want to track the usage level of specific parameters.
+</p>
+<p>
+We compute the M6 metric for three groups of registries managed by IANA:
+the <a href="https://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml">Domain Name System (DNS) Parameters</a>, 
+the <a href="https://www.iana.org/assignments/dns-sec-alg-numbers/dns-sec-alg-numbers.xhtml">
+Domain Name System Security (DNSSEC) Algorithm Numbers</a>, 
+and the <a href="https://www.iana.org/assignments/dane-parameters/dane-parameters.xhtml">
+DNS-Based Authentication of Named Entities (DANE) Parameters</a>.
+Each of these groups includes different parameter sets. 
+We will track the health of each of these parameters by a set of metrics of the form “M6.N.X.*”,
+where “M6.N.X” is the metric index composed of the registry name “N” and the parameter set index “X”. 
+These three groups include the following set of parameters:
+</p>
+<table>
+<tr><th>Group</th><th>Parameters</th><th>Metric Index</th></tr>
+<tr><th rowspan=13>DNS</th><td>DNS CLASSes</td><td>M6.DNS.1</td></tr>
+<tr><td>Resource Record (RR) TYPEs</td><td>M6.DNS.2</td></tr>
+<tr><td>DNS OpCodes</td><td>M6.DNS.3</td></tr>
+<tr><td>DNS RCODEs</td><td>M6.DNS.4</td></tr>
+<tr><td>AFSDB RR Subtype</td><td>M6.DNS.5</td></tr>
+<tr><td>DHCID RR Identifier Type Codes</td><td>M6.DNS.6</td></tr>
+<tr><td>DNS Label Types</td><td>M6.DNS.7</td></tr>
+<tr><td>DNS EDNS0 Option Codes (OPT)</td><td>M6.DNS.8</td></tr>
+<tr><td>DNS Header Flags</td><td>M6.DNS.9</td></tr>
+<tr><td>EDNS Header Flags (16 bits)</td><td>M6.DNS.10</td></tr>
+<tr><td>EDNS version Number (8 bits)</td><td>M6.DNS.11</td></tr>
+<tr><td>Child Synchronization (CSYNC) Flags </td><td>M6.DNS.12</td></tr>
+
+<tr><td></td><td></td></tr>
+<tr><th rowspan=3>DNSSEC</th><td>DNS Security Algorithm Numbers</td><td>M6.DNSSEC.1</td></tr>
+<tr><td>DNS KEY Record Diffie-Hellman Prime Lengths</td><td>M6.DNSSEC.2</td></tr>
+<tr><td>DNS KEY Record Diffie-Hellman Well-Known Prime/Generator Pairs</td><td>M6.DNSSEC.3</td></tr>
+<tr><th rowspan=12>DANE</th><td>TLSA Certificate Usages</td><td>M6.DANE.1</td></tr>
+<tr><td>TLSA Selectors</td><td>M6.DANE.2</td></tr>
+<tr><td>TLSA Matching Types</td><td>M6.DANE.3</td></tr>
+</table>
+<p>
+Each of this set of parameters is associated with a metric index. For each of these indices, we will compute three metrics:
+</p>
+<table>
+<tr><th>Metric Number</th><th>Metric name</th><th>Metric definition</th></tr>
+<tr><td>M6.X.N.1</td><td>Parameter usage for table of metric N in group X</td>
+<td>Number of parameters found at least once in real traffic, 
+divided by the total number of parameters found registered in the table.</td></tr>
+<tr><td>M6.X.N.2</td><td>Squat rate for table of index N in group X</td>
+<td>Total number of instances of unregistered parameters found in real traffic,
+divided by the total number of parameter instances found in real traffic.</td></tr>
+<tr><td>M6.X.N.3.<P></td><td>Usage level of registered parameter P in table of index N in group X</td>
+<td>Number of instances of the registered parameter in real traffic.</td></tr>
+</table>
+
+<img src="explain-m6.PNG" 
+alt="graph showing histogram of volume usage for each of the fictional values"
+style="float:right;width:50%"/>
+<p>
+The computation of the usage and squatting metrics (M6.X.N.1 and M6.X.N.2) can be explained 
+by using as example a fictitious
+registry that could manage a total of 16 values. In our example, values 0 to 10 have
+been properly registered. Values 12, 15 and 16 are not registered, but they do appear
+in some the traces.
+</p>
+<p>
+To compute the “usage” metric, we look at the traffic observed for the registered values.
+We see some traffic for values 1, 2, 3, 4, 7, 8 and 10, and mark a “1” in the corresponding 
+“Used Y/N” table; there is no traffic for the values 5, 6, and 9, so we mark a “0” in the table.
+If we sum the ones, we get 7 registered parameters out of 10. The usage metric is thus:
+<ul>
+<li>Usage = <em>number used</em> / <em>number registered</em> = 7/10 = 70%.</li>
+</ul>
+To compute the “squatting” metric, we compute the total volume of traffic for the squatted values
+12, 15 and 16, which in your example is 8 units. The total traffic for all the registered value in
+our example is 60 units. The squatting metric is thus:
+<ul>
+<li>Squatting = <em>volume non registered</em>/<em>volume total</em> = 8 / (60 + 8) = 11.8%</li>
+</ul>
+</p>
+<p>
+The current values of these numbers are displayed <a href="graph-m6.html">here</a>, 
+using the definitions that we presented above.
+</p> 
+</body>
+</html>
