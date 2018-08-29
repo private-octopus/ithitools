@@ -70,7 +70,7 @@ in charge of the zone.</li>
 <p>
 We also assume that in some cases, even resolvers who do not implement QName minimization will send queries for
 short names such as “example.com”. To make decisions, we need to see multiple queries sent by the same resolver.
-We will consider resolvers as “probably not minimizing” if the names in the queries were sometimes longer than
+We consider resolvers as “probably not minimizing” if the names in the queries were sometimes longer than
 the name in the response, and “maybe minimizing” if the names in the queries were always the same length as the
 names in the response.
 </p>
@@ -79,19 +79,20 @@ names in the response.
 <p>
 When we do statistics about characteristics like EDNS, DO or QName minimization, we could simply count the number
 of queries with the tracked property, and then divide by the total number of queries. That would give us for example
-the “percentage of queries with the DO bit set.” But to get statistic per resolver, we need to measure the resolvers.
+the “percentage of queries with the DO bit set.” But to get statistics per resolver, we need to get data
+for individual resolvers.
 </p>
 <p>
 We use the IP address to identify the resolvers at each data collection point, for each data collection session.
 We will then for each of the attributes that we look at count the number of queries with the attribute, and the
-total number of queries. We will then compute a measure for that data collection point and that session by using
-a weight of 1 for each resolver. This will give us the ratios measured in a particular session. The metric itself
+total number of queries. We compute a measure for that data collection point and that session by using
+a weight of 1 for each resolver. This give us the ratios measured in a particular session. The metric itself
 is obtained by averaging the ratios over all the sessions.
 </p>
 <p>
-As part of the EDNS metric, we also want to track usage of the various EDNS options. We are already tracking global
-usage of these options as part of M6, but we want here to have an indication of the distribution of these options
-in the pool of receivers. The simple solution is to only sample one packet per resolver and count the appearance of
+As part of the EDNS metric, we also track usage of the various EDNS options. We are already tracking global
+usage of these options as part of M6, but M8 gives us an indication of the distribution of these options
+in the pool of receivers. Our simple solution is to only sample one packet per resolver and count the appearance of
 options in that packet.
 </p>
 
@@ -106,9 +107,10 @@ configured for these clients, leading to sampling a large proportion of the reso
 </p>
 The main difference between M8 and M5 is that M8 acquires its data by looking at traffic naturally generated
 by diverse clients, while M5 uses artificial traffic generated for the experiment. There may well be differences,
-from the choice of names to the specific resource records or EDNS options used in the queries. In any case,
-M5 does not track EDNS usage or QName minimization deployment. We believe that the instrumentation of a sample
-of servers will provide complementary data on DNSSEC usage.
+from the choice of names to the specific resource records or EDNS options used in the queries. 
+Instrumentation of a sample of servers provides complementary data on DNSSEC usage. It also
+provides statictics on EDNS usage or QName minimization deployment that are not available
+from M5. 
 </p>
 
 <h2>Limitation of the DNSSEC OK Option</h2>
@@ -116,8 +118,8 @@ of servers will provide complementary data on DNSSEC usage.
 We are measuring the fraction of resolvers that set the DNSSEC OK option in their queries. We understand
 that resolvers may very well set that option even if they do not intend to perform response validation
 according to DNSSEC. For reference, we know that in August 2018 84% of resolvers measured by M5 set the
-DO bit in queries, but only 25% performed DNSSEC validation. We will carefully message that we are only
-measuring the presence of the DNSSEC OK option, not actual usage of DNSSEC.
+DO bit in queries, but only 25% performed DNSSEC validation. Users of the M8 statistics should be
+conscious that we are measuring the presence of the DNSSEC OK option, not actual usage of DNSSEC.
 </p>
 
 <h2>Limits of M8</h2>
