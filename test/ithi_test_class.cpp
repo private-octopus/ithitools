@@ -22,6 +22,7 @@
 #include "DnsPrefixTest.h"
 #include "GetNameTest.h"
 #include "OdiPublishTest.h"
+#include "QNameTest.h"
 
 enum test_list_enum {
     test_enum_hash = 0,
@@ -44,7 +45,9 @@ enum test_list_enum {
     test_enum_TldCount,
     test_enum_DnsPrefix,
     test_enum_GetName,
-    test_enumOdiPublish,
+    test_enum_OdiPublish,
+    test_enum_CmpName,
+    test_enum_QNameMini,
     test_enum_max_number
 };
 
@@ -104,8 +107,12 @@ char const * ithi_test_class::GetTestName(int number)
         return("DnsPrefix");
     case test_enum_GetName:
         return("GetName");
-    case test_enumOdiPublish:
+    case test_enum_OdiPublish:
         return("OdiPublish");
+    case test_enum_CmpName:
+        return("CmpName");
+    case test_enum_QNameMini:
+        return("QNameMini");
     default:
         break;
     }
@@ -193,8 +200,14 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
     case test_enum_GetName:
         test = new GetNameTest();
         break;
-    case test_enumOdiPublish:
+    case test_enum_OdiPublish:
         test = new OdiPublishTest();
+        break;
+    case test_enum_CmpName:
+        test = new CmpNameTest();
+        break;
+    case test_enum_QNameMini:
+        test = new QNameTest();
         break;
     default:
         break;

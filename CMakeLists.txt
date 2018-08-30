@@ -51,6 +51,7 @@ SET(ITHITOOLS_TEST_LIBRARY_FILES
    test/TldCountTest.cpp
    test/ithi_test_class.cpp
    test/OdiPublishTest.cpp
+   test/QNameTest.cpp
 )
 
 ADD_EXECUTABLE(ithitools 
@@ -112,6 +113,7 @@ ADD_EXECUTABLE(ithitest
    test/TldCountTest.cpp
    test/ithi_test_class.cpp
    test/OdiPublishTest.cpp
+   test/QNameTest.cpp
 )
 
 ADD_LIBRARY(ithicap SHARED
