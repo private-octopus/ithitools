@@ -256,12 +256,8 @@ public:
         bool is_dnssec);
     void ExportDnssecUsage();
 
-    static int GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
+    int GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
         uint8_t * name, size_t name_max, size_t * name_length);
-
-    static int CompareDnsName(uint8_t * packet, uint32_t length, uint32_t start1, uint32_t start2);
-
-    static bool IsQNameMinimized(uint8_t * packet, uint32_t length, uint32_t nb_queries, int q_rclass, int q_rtype, uint32_t qr_index, uint32_t an_index, uint32_t ns_index);
 
     static void GetSourceAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
     static void GetDestAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
@@ -270,7 +266,7 @@ private:
     bool LoadPcapFile(char const * fileName);
     void SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header);
 
-    int SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start, bool is_response, int * qclass, int * qtype);
+    int SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start, bool is_response);
     int SubmitRecord(uint8_t * packet, uint32_t length, uint32_t start, 
         uint32_t * e_rcode, uint32_t * e_length, bool is_response);
     int SubmitName(uint8_t * packet, uint32_t length, uint32_t start, bool should_tabulate);
@@ -292,7 +288,7 @@ private:
 
 
 
-    static void NormalizeNamePart(uint32_t length, uint8_t * value, uint8_t * normalized, uint32_t * flags);
+    void NormalizeNamePart(uint32_t length, uint8_t * value, uint8_t * normalized, uint32_t * flags);
 
 
 

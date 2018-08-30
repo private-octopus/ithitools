@@ -38,7 +38,6 @@
 #include "DnsPrefixTest.h"
 #include "GetNameTest.h"
 #include "OdiPublishTest.h"
-#include "QNameTest.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -210,22 +209,6 @@ namespace ithiunit
         TEST_METHOD(OdiPublish)
         {
             OdiPublishTest test;
-            bool ret = test.DoTest();
-
-            Assert::AreEqual(ret, true);
-        }
-
-        TEST_METHOD(CmpName)
-        {
-            CmpNameTest test;
-            bool ret = test.DoTest();
-
-            Assert::AreEqual(ret, true);
-        }
-
-        TEST_METHOD(QNameMini)
-        {
-            QNameTest test;
             bool ret = test.DoTest();
 
             Assert::AreEqual(ret, true);
