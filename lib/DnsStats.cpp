@@ -311,7 +311,7 @@ static char const * RegisteredTldName[] = {
 
 static uint32_t RegisteredTldNameNb = sizeof(RegisteredTldName) / sizeof(char const*);
 
-int DnsStats::SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start, bool is_response)
+int DnsStats::SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start, bool is_response, int * qclass, int * qtype)
 {
     int rrclass = 0;
     int rrtype = 0;
@@ -328,6 +328,8 @@ int DnsStats::SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start, boo
         rrtype = (packet[start] << 8) | packet[start + 1];
         rrclass = (packet[start + 2] << 8) | packet[start + 3];
         start += 4;
+        *qclass = rrclass;
+        *qtype = rrtype;
 
         if (dnsstat_flags&dnsStateFlagCountQueryParms)
         {
@@ -902,6 +904,88 @@ int DnsStats::GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
 
 }
 
+int DnsStats::CompareDnsName(uint8_t * packet, uint32_t length, uint32_t start1, uint32_t start2)
+{
+    bool ret = false;
+
+    while (start1 < length && start2 < length) {
+        if (start1 == start2) {
+            ret = true;
+            break;
+        } 
+        else if ((packet[start1] & 0xC0) == 0xC0)
+        {
+            start1 = ((packet[start1] & 63) << 8) + packet[start1 + 1];
+        }
+        else if ((packet[start2] & 0xC0) == 0xC0)
+        {
+            start2 = ((packet[start2] & 63) << 8) + packet[start2 + 1];
+        }
+        else if (packet[start1] > 0x3f || packet[start2] > 0x3f)
+        {
+            break;
+        }
+        else if (packet[start1] != packet[start2])
+        {
+            break;
+        }
+        else
+        {
+            uint32_t l = packet[start1];
+            start1++;
+            start2++;
+
+            if (l == 0)
+            {
+                ret = true;
+                break;
+            }
+            else if (start1 + l > length || start2 + l >= length)
+            {
+                break;
+            }
+            else
+            {
+                bool cmp = true;
+                for (uint32_t i = 0; cmp && i < l; i++) {
+                    uint8_t c1 = packet[start1 + i];
+                    uint8_t c2 = packet[start2 + i];
+
+                    cmp = (c1 == c2 || (c1 >= 'a' && c1 <= 'z' && (c1 + 'A' - 'a') == c2) || (c1 >= 'A' && c1 <= 'Z' && (c1 + 'a' - 'A') == c2));
+                }
+
+                if (!cmp) {
+                    break;
+                }
+                start1 += l;
+                start2 += l;
+            }
+        }
+    }
+
+    return ret;
+}
+
+
+/*
+* A query is considered minimized if the queried record type is S or A, and
+* if the name in the first response or NS record is identical to the name in the query
+*/
+
+bool DnsStats::IsQNameMinimized(uint8_t * packet, uint32_t length, uint32_t nb_queries, int q_rclass, int q_rtype, uint32_t qr_index, uint32_t an_index, uint32_t ns_index)
+{
+    bool ret = false;
+    uint32_t first_index = (an_index == 0) ? ns_index : an_index;
+
+    if (nb_queries == 1 && qr_index != 0 && first_index != 0 && q_rclass == DnsRClass_IN &&
+        (q_rtype == DnsRtype_A || q_rtype == DnsRtype_NS)) {
+        ret = CompareDnsName(packet, length, qr_index, first_index);
+    }
+
+    return ret;
+}
+
+
 void DnsStats::NormalizeNamePart(uint32_t length, uint8_t * value,
     uint8_t * normalized, uint32_t * flags)
 {
@@ -1320,6 +1404,12 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     uint32_t parse_index = 0;
     uint32_t e_length = 512;
     bool unfiltered = false;
+    int query_rclass = 0;
+    int query_rtype = 0;
+    uint32_t first_query_index = 0;
+    uint32_t first_answer_index = 0;
+    uint32_t first_ns_index = 0;
+
 
     error_flags = 0;
     is_do_flag_set = false;
@@ -1507,6 +1597,8 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
         parse_index = 12;
     }
 
+    first_query_index = parse_index;
+
     for (uint32_t i = 0; i < qdcount; i++)
     {
         if (parse_index >= length)
@@ -1515,9 +1607,11 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
         }
         else
         {
-            parse_index = SubmitQuery(packet, length, parse_index, is_response);
+            parse_index = SubmitQuery(packet, length, parse_index, is_response, &query_rclass, &query_rtype);
         }
     }
+
+    first_answer_index = parse_index;
 
     for (uint32_t i = 0; i < ancount; i++)
     {
@@ -1530,6 +1624,8 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
             parse_index = SubmitRecord(packet, length, parse_index, NULL, NULL, is_response);
         }
     }
+
+    first_ns_index = parse_index;
 
     for (uint32_t i = 0; i < nscount; i++)
     {

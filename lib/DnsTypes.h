@@ -21,6 +21,14 @@
 #ifndef DNSTYPE_H
 #define DNSTYPE_H
 
+enum DnsRClass {
+    DnsRClass_IN = 1,
+    DnsRClass_Chaos = 3,
+    DnsRClass_Hesiod = 4,
+    DnsRClass_None = 254,
+    DnsRClass_Any = 255
+};
+
 enum DnsRtype {
     DnsRtype_A = 1, /* a host address */
     DnsRtype_NS = 2, /* an authoritative name server */
