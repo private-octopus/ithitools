@@ -23,6 +23,7 @@
 #include "GetNameTest.h"
 #include "OdiPublishTest.h"
 #include "QNameTest.h"
+#include "StatsByIpTest.h"
 
 enum test_list_enum {
     test_enum_hash = 0,
@@ -48,6 +49,7 @@ enum test_list_enum {
     test_enum_OdiPublish,
     test_enum_CmpName,
     test_enum_QNameMini,
+    test_enum_StatsByIp,
     test_enum_max_number
 };
 
@@ -113,6 +115,8 @@ char const * ithi_test_class::GetTestName(int number)
         return("CmpName");
     case test_enum_QNameMini:
         return("QNameMini");
+    case test_enum_StatsByIp:
+        return("StatsByIp");
     default:
         break;
     }
@@ -208,6 +212,9 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_enum_QNameMini:
         test = new QNameTest();
+        break;
+    case test_enum_StatsByIp:
+        test = new StatsByIpTest();
         break;
     default:
         break;

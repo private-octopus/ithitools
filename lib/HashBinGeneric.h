@@ -23,6 +23,7 @@
 #define HASH_BIN_GENERIC_H
 
 #include <stdint.h>
+#include <string.h>
 #include <stdlib.h>
 
 template <class KeyObj>

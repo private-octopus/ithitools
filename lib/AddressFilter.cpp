@@ -323,3 +323,69 @@ IPAsKeyLRU * IPAsKeyLRU::CreateCopy()
 
     return x;
 }
+
+
+StatsByIP::StatsByIP(uint8_t * addr, size_t addr_len, bool has_do, bool has_edns, bool mini_qname) :
+    nb_do((has_do)?1:0),
+    nb_edns((has_edns)?1:0),
+    nb_mini_qname((mini_qname)?1:0),
+    HashNext(NULL),
+    count(1),
+    hash(0)
+{
+    if (addr_len > 16)
+    {
+        addr_len = 16;
+    }
+
+    memcpy(this->addr, addr, addr_len);
+    this->addr_len = addr_len;
+}
+
+StatsByIP::~StatsByIP()
+{
+}
+
+bool StatsByIP::IsSameKey(StatsByIP * key)
+{
+    bool ret = (key->addr_len == this->addr_len &&
+        memcmp(key->addr, this->addr, this->addr_len) == 0);
+    return ret;
+}
+
+uint32_t StatsByIP::Hash()
+{
+    if (hash == 0)
+    {
+        hash = 0xDEADBEEF;
+        for (size_t i = 0; i < addr_len; i++)
+        {
+            hash = hash * 101 + addr[i];
+        }
+    }
+    return hash;
+}
+
+
+StatsByIP * StatsByIP::CreateCopy()
+{
+    StatsByIP * x = new StatsByIP(addr, addr_len, false, false, false);
+
+    if (x != NULL)
+    {
+        x->hash = hash;
+        x->nb_do = nb_do;
+        x->nb_edns = nb_edns;
+        x->nb_mini_qname = nb_mini_qname;
+    }
+
+    return x;
+}
+
+void StatsByIP::Add(StatsByIP * key)
+{
+    count += key->count;
+    nb_do += key->nb_do;
+    nb_edns += key->nb_edns;
+    nb_mini_qname += key->nb_mini_qname;
+}

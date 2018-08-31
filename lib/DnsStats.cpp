@@ -38,6 +38,7 @@ DnsStats::DnsStats()
     max_tld_leakage_table_count(0x8000),
     max_query_usage_count(0x8000),
     max_tld_string_usage_count(0x8000),
+    max_stats_by_ip_count(0x8000),
     dnsstat_flags(0),
     record_count(0),
     query_count(0),
@@ -123,7 +124,9 @@ static char const * RegistryNameById[] = {
     "TLD-Usage-Count",
     "Local_TLD_Usage_Count",
     "DNSSEC_Client_Usage",
-    "DNSSEC_Zone_Usage"
+    "DNSSEC_Zone_Usage",
+    "EDNS_CLIENT_USAGE",
+    "QNAME_MINIMIZATION_USAGE"
 };
 
 static uint32_t RegistryNameByIdNb = sizeof(RegistryNameById) / sizeof(char const*);
@@ -544,6 +547,9 @@ void DnsStats::SubmitOPTRecord(uint32_t flags, uint8_t * content, uint32_t lengt
     {
         *e_rcode = (flags >> 24) & 0xFF;
     }
+
+    /* Register that EDNS was used */
+    is_using_edns = true;
 
     /* Register whether the DO bit was set */
     is_do_flag_set = (flags & (1<<15)) != 0;
@@ -1413,6 +1419,8 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
 
     error_flags = 0;
     is_do_flag_set = false;
+    is_using_edns = false;
+    is_qname_minimized = false;
     dnssec_name_index = 0;
 
     if (rootAddresses.GetCount() == 0)
@@ -1677,17 +1685,23 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     SubmitRegistryNumber(REGISTRY_DNS_error_flag, error_flags);
 
     if (has_header && is_response && opcode == DNS_OPCODE_QUERY &&
-        rcode == DNS_RCODE_NOERROR && error_flags == 0 &&
-        !rootAddresses.IsInList(source_addr, source_addr_length)) {
-        /* Do not perform client statistic on root traffic, but do it
-         * for all other sources of traffic */
-        RegisterDnssecUsageByAddress(dest_addr, dest_addr_length);
+        rcode == DNS_RCODE_NOERROR && error_flags == 0)
+    {
+        is_qname_minimized = IsQNameMinimized(packet, length, qdcount, query_rclass, query_rtype,
+            first_query_index, first_answer_index, first_ns_index);
 
-        if (is_do_flag_set) {
-            if (dnssec_name_index == 0) {
-                RegisterDnssecUsageByName(packet, length, 12, false);
-            } else {
-                RegisterDnssecUsageByName(packet, length, dnssec_name_index, true);
+        if (!rootAddresses.IsInList(source_addr, source_addr_length)) {
+            /* Do not perform client statistic on root traffic, but do it
+             * for all other sources of traffic */
+            RegisterStatsByIp(dest_addr, dest_addr_length);
+
+            if (is_do_flag_set) {
+                if (dnssec_name_index == 0) {
+                    RegisterDnssecUsageByName(packet, length, 12, false);
+                }
+                else {
+                    RegisterDnssecUsageByName(packet, length, dnssec_name_index, true);
+                }
             }
         }
     }
@@ -1701,6 +1715,8 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
     ExportLeakedDomains();
     /* Get the ordered list of domain string usage into the main hash */
     ExportStringUsage();
+    /* Get the statistics on DO bit, EDNS and QNAME minimization */
+    ExportStatsByIp();
     /* get the counts of DNSSEC usage per address and per zone */
     ExportDnssecUsage();
 
@@ -2169,11 +2185,6 @@ const char * DnsStats::GetZonePrefix(const char * dnsName)
     return ret;
 }
 
-void DnsStats::RegisterDnssecUsageByAddress(uint8_t * source_addr, size_t source_addr_length)
-{
-    RegisterDnssecUsageByPrefix(&dnssecAddressTable, source_addr, source_addr_length, is_do_flag_set);
-}
-
 void DnsStats::RegisterDnssecUsageByName(uint8_t * packet, uint32_t length, uint32_t name_start,
     bool is_dnssec)
 {
@@ -2199,8 +2210,6 @@ void DnsStats::RegisterDnssecUsageByName(uint8_t * packet, uint32_t length, uint
 
 void DnsStats::ExportDnssecUsage()
 {
-    ExportDnssecUsageByTable(&dnssecAddressTable, REGISTRY_DNSSEC_Client_Usage);
-    dnssecAddressTable.Clear();
     ExportDnssecUsageByTable(&dnssecPrefixTable, REGISTRY_DNSSEC_Zone_Usage);
     dnssecPrefixTable.Clear();
 }
@@ -2242,6 +2251,78 @@ void DnsStats::ExportDnssecUsageByTable(BinHash<DnssecPrefixEntry>* dnssecTable,
     
     SubmitRegistryNumberAndCount(registry_id, 0, nonusage_count);
     SubmitRegistryNumberAndCount(registry_id, 1, usage_count);
+}
+
+
+void DnsStats::RegisterStatsByIp(uint8_t * source_addr, size_t source_addr_length)
+{
+    StatsByIP x(source_addr, source_addr_length, is_do_flag_set, is_using_edns, is_qname_minimized);
+    StatsByIP * y = statsByIp.Retrieve(&x);
+
+    if (y == NULL) {
+        if (statsByIp.GetCount() < max_stats_by_ip_count) {
+            bool stored = false;
+
+            (void)statsByIp.InsertOrAdd(&x, true, &stored);
+        }
+    }
+    else {
+        y->Add(&x);
+    }
+}
+
+void DnsStats::ExportStatsByIp()
+{
+    StatsByIP *sbi;
+    uint32_t using_do_count = 0;
+    uint32_t not_using_do_count = 0;
+    uint32_t using_edns_count = 0;
+    uint32_t not_using_edns_count = 0;
+    uint32_t qname_minimizing_count = 0;
+    uint32_t not_minimizing_count = 0;
+
+
+    for (uint32_t i = 0; i < statsByIp.GetSize(); i++)
+    {
+        sbi = statsByIp.GetEntry(i);
+
+        while (sbi != NULL)
+        {
+            if (sbi->nb_do > 0) {
+                using_do_count++;
+            }
+            else {
+                not_using_do_count++;
+            }
+
+            if (sbi->nb_edns > 0) {
+                using_edns_count++;
+            }
+            else {
+                not_using_edns_count++;
+            }
+
+            if (sbi->nb_mini_qname == sbi->count) {
+                qname_minimizing_count++;
+            }
+            else {
+                not_minimizing_count++;
+            }
+
+            sbi = sbi->HashNext;
+        }
+    }
+
+    SubmitRegistryNumberAndCount(REGISTRY_DNSSEC_Client_Usage, 0, not_using_do_count);
+    SubmitRegistryNumberAndCount(REGISTRY_DNSSEC_Client_Usage, 1, using_do_count);
+
+    SubmitRegistryNumberAndCount(REGISTRY_EDNS_Client_Usage, 0, using_edns_count);
+    SubmitRegistryNumberAndCount(REGISTRY_EDNS_Client_Usage, 1, not_using_edns_count);
+
+    SubmitRegistryNumberAndCount(REGISTRY_QNAME_MINIMIZATION_Usage, 0, qname_minimizing_count);
+    SubmitRegistryNumberAndCount(REGISTRY_QNAME_MINIMIZATION_Usage, 1, not_minimizing_count);
+
+    statsByIp.Clear();
 }
 
 DnssecPrefixEntry::DnssecPrefixEntry() :

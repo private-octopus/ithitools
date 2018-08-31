@@ -39,6 +39,7 @@
 #include "GetNameTest.h"
 #include "OdiPublishTest.h"
 #include "QNameTest.h"
+#include "StatsByIpTest.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -226,6 +227,14 @@ namespace ithiunit
         TEST_METHOD(QNameMini)
         {
             QNameTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(StatsByIp)
+        {
+            StatsByIpTest test;
             bool ret = test.DoTest();
 
             Assert::AreEqual(ret, true);

@@ -40,7 +40,7 @@ public:
     bool IsSameKey(IPAsKey* key);
     uint32_t Hash();
     virtual IPAsKey* CreateCopy();
-    void Add(IPAsKey* key);
+    virtual void Add(IPAsKey* key);
     IPAsKey * HashNext;
 
     size_t addr_len;
@@ -97,6 +97,27 @@ public:
 
     uint32_t table_lru_max;
     LruHash<IPAsKeyLRU> table;
+};
+
+class StatsByIP
+{
+public:
+    StatsByIP(uint8_t * addr, size_t addr_len, bool has_do, bool has_edns, bool mini_qname);
+    virtual ~StatsByIP();
+
+    bool IsSameKey(StatsByIP* key);
+    uint32_t Hash();
+    virtual StatsByIP* CreateCopy() ;
+    virtual void Add(StatsByIP* key);
+    StatsByIP * HashNext;
+
+    size_t addr_len;
+    uint8_t addr[16];
+    uint32_t count;
+    uint32_t hash;
+    uint32_t nb_do;
+    uint32_t nb_edns;
+    uint32_t nb_mini_qname;
 };
 
 #endif /* ADDRESS_FILTER_H */

@@ -82,6 +82,8 @@
 #define REGISTRY_DNS_Local_TLD_Usage_Count 40
 #define REGISTRY_DNSSEC_Client_Usage 41
 #define REGISTRY_DNSSEC_Zone_Usage 42
+#define REGISTRY_EDNS_Client_Usage 43
+#define REGISTRY_QNAME_MINIMIZATION_Usage 44
 
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
@@ -216,7 +218,7 @@ public:
 
     BinHash<DnsPrefixEntry> dnsPrefixTable;
     BinHash<DnssecPrefixEntry> dnssecPrefixTable;
-    BinHash<DnssecPrefixEntry> dnssecAddressTable;
+    BinHash<StatsByIP> statsByIp;
 
     /* For the plug in */
     void SubmitPacket(uint8_t * packet, uint32_t length,
@@ -237,6 +239,7 @@ public:
     uint32_t max_tld_leakage_table_count;
     uint32_t max_query_usage_count;
     uint32_t max_tld_string_usage_count;
+    uint32_t max_stats_by_ip_count;
     uint32_t dnsstat_flags;
     int record_count; 
     int query_count;
@@ -244,6 +247,8 @@ public:
     uint32_t error_flags;
     uint32_t dnssec_name_index;
     bool is_do_flag_set;
+    bool is_using_edns;
+    bool is_qname_minimized;
 
 
     static bool IsRfc6761Tld(uint8_t * tld, size_t length);
@@ -255,6 +260,10 @@ public:
     void RegisterDnssecUsageByName(uint8_t * packet, uint32_t length, uint32_t name_start,
         bool is_dnssec);
     void ExportDnssecUsage();
+
+    void RegisterStatsByIp(uint8_t * source_addr, size_t source_addr_length);
+
+    void ExportStatsByIp();
 
     static int GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
         uint8_t * name, size_t name_max, size_t * name_length);

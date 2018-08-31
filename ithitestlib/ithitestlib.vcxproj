@@ -152,6 +152,7 @@
     <ClCompile Include="..\test\PublishTest.cpp" />
     <ClCompile Include="..\test\QNameTest.cpp" />
     <ClCompile Include="..\test\SaveTest.cpp" />
+    <ClCompile Include="..\test\StatsByIpTest.cpp" />
     <ClCompile Include="..\test\testRfc6761.cpp" />
     <ClCompile Include="..\test\TldCountTest.cpp" />
   </ItemGroup>
@@ -173,6 +174,7 @@
     <ClInclude Include="..\test\PublishTest.h" />
     <ClInclude Include="..\test\QNameTest.h" />
     <ClInclude Include="..\test\SaveTest.h" />
+    <ClInclude Include="..\test\StatsByIpTest.h" />
     <ClInclude Include="..\test\testRfc6761.h" />
     <ClInclude Include="..\test\TldCountTest.h" />
   </ItemGroup>

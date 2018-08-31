@@ -184,13 +184,13 @@ var xScale;
 </script>
 </head>
 
-<nav id="navMenu"></nav>
-
 <body onLoad="init()">
 
-<h1>M3: DNS Root Traffic Analysis</h1>
+    <nav id="navMenu"></nav>
 
-<h2 id="dateHeading">-</h2>
+    <h1>M3: DNS Root Traffic Analysis</h1>
+
+    <h2 id="dateHeading">-</h2>
 
     <p>
         The usage of the DNS root servers is tracked by measuring the number of
@@ -208,67 +208,67 @@ var xScale;
         over the 12 months preceeding this one -- or the average since the beginning
         of measurements if measurements started fewer than 12 months ago.
     </p>
-<table class="metrics">
-    <tr>
-        <td rowspan="4">
-            <canvas display="inline" id="pieChartM3" height="160" width="160"></canvas>
-        </td>
-        <th colspan="2">
-            Metric
-        </th>
-        <th class="number">
-            Current Value
-        </th>
-        <th class="number">
-            Average Value
-        </th>
-    </tr>
-    <tr>
-        <td>
-            <canvas id="colorBlobM31" height="32" width="32"></canvas>
-        </td>
-        <td>
-            M3.1 (% No Such Domain queries)
-        </td>
-        <td class="number" id="valM31">
-            -
-        </td>
-        <td class="number" id="averageM31">
-            -
-        </td>
-    </tr>
-    <tr>
-        <td>
-            <canvas id="colorBlobM32" height="32" width="32"></canvas>
-        </td>
-        <td>
-            M3.2 (% cacheable queries)
-        </td>
-        <td class="number" id="valM32">
-            -
-        </td>
-        <td class="number" id="averageM32">
-            -
-        </td>
-    </tr>
-    <tr>
-        <td>
-            <canvas id="colorBlobM3Zero" height="32" width="32"></canvas>
-        </td>
-        <td>
-            Core (100% - M3.1 - M3.2)
-        </td>
-        <td class="number" id="valM3Zero">
-            -
-        </td>
-        <td class="number" id="averageM3Zero">
-            -
-        </td>
-    </tr>
-</table>
+    <table class="metrics">
+        <tr>
+            <td rowspan="4">
+                <canvas display="inline" id="pieChartM3" height="160" width="160"></canvas>
+            </td>
+            <th colspan="2">
+                Metric
+            </th>
+            <th class="number">
+                Current Value
+            </th>
+            <th class="number">
+                Average Value
+            </th>
+        </tr>
+        <tr>
+            <td>
+                <canvas id="colorBlobM31" height="32" width="32"></canvas>
+            </td>
+            <td>
+                M3.1 (% No Such Domain queries)
+            </td>
+            <td class="number" id="valM31">
+                -
+            </td>
+            <td class="number" id="averageM31">
+                -
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <canvas id="colorBlobM32" height="32" width="32"></canvas>
+            </td>
+            <td>
+                M3.2 (% cacheable queries)
+            </td>
+            <td class="number" id="valM32">
+                -
+            </td>
+            <td class="number" id="averageM32">
+                -
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <canvas id="colorBlobM3Zero" height="32" width="32"></canvas>
+            </td>
+            <td>
+                Core (100% - M3.1 - M3.2)
+            </td>
+            <td class="number" id="valM3Zero">
+                -
+            </td>
+            <td class="number" id="averageM3Zero">
+                -
+            </td>
+        </tr>
+    </table>
 
     <p>
-    The following graph shows the evolution of M3.1 and M3.2 over time:
+        The following graph shows the evolution of M3.1 and M3.2 over time:
     </p>
 
     <canvas display="inline" id="stackGraphM3" height="400" width="650"></canvas>
@@ -282,7 +282,7 @@ var xScale;
         all other forms of names, including malformed names (M3.3.4).
     </p>
     <p>
-        In the following table, the <em>current value</em> is the 
+        In the following table, the <em>current value</em> is the
         value of the metric for the current month.
         The <em>average value</em> is the value of that fraction
         over the 12 months preceeding this one -- or the average since the beginning
@@ -329,7 +329,7 @@ var xScale;
             <td>
                 <canvas id="colorBlobM333" height="32" width="32"></canvas>
             </td>
-            <td >
+            <td>
                 <a href="#M333">M3.3.3 (% Queries to frequently found name patterns)</a>
             </td>
             <td class="number" id="valM333">
@@ -363,9 +363,9 @@ var xScale;
     <h3 id="M331">Queries to RFC 6761 reserved names</h3>
     <p>
         In the following table, the <em>current value</em> is the fraction of queries to the root
-        directed at RFC 6761 names in the current month. 
+        directed at RFC 6761 names in the current month.
         The <em>average value</em> is the value of that fraction
-        over the 12 months preceeding this one -- or the average since the beginning 
+        over the 12 months preceeding this one -- or the average since the beginning
         of measurements if measurements started fewer than 12 months ago.
     </p>
     <div id="m331Table">Table M331 not found</div>
@@ -383,7 +383,7 @@ var xScale;
     <h3 id="M333">Queries to frequently found name patterns</h3>
     <p>
         In the following table, the <em>current value</em> is the fraction of queries to the root
-        following a specific name pattern in the current month. 
+        following a specific name pattern in the current month.
         The <em>average value</em> is the value of that fraction
         over the 12 months preceeding this one -- or the average since the beginning
         of measurements if measurements started fewer than 12 months ago.
