@@ -50,54 +50,55 @@ typedef struct st_stats_by_ip_test_in_t {
     bool has_do;
     bool has_edns;
     bool mini_qname;
-    size_t expected_size;
+    bool is_new;
+    bool add_query;
 } stats_by_ip_test_in_t;
 
 static const stats_by_ip_test_in_t stats_by_ip_test_input[] = {
-    { ip1, sizeof(ip1), false, false, false, 1 },
-    { ip2, sizeof(ip2), false, false, true, 2 },
-    { ip3, sizeof(ip3), false, true, false, 3 },
-    { ip4, sizeof(ip4), false, true, true, 4 },
-    { ip5, sizeof(ip5), true, false, false, 5 },
-    { ip6, sizeof(ip6), true, false, true, 6},
-    { ip7, sizeof(ip7), true, true, false, 7 },
-    { ip8, sizeof(ip8), true, true, true, 8 },
-    { ip1, sizeof(ip1), false, false, false, 8 },
-    { ip2, sizeof(ip2), false, false, true, 8 },
-    { ip3, sizeof(ip3), false, true, false, 8 },
-    { ip4, sizeof(ip4), false, true, true, 8 },
-    { ip5, sizeof(ip5), true, false, false, 8 },
-    { ip6, sizeof(ip6), true, false, true, 8 },
-    { ip7, sizeof(ip7), true, true, false, 8 },
-    { ip1, sizeof(ip1), false, false, false, 8 },
-    { ip2, sizeof(ip2), false, false, true, 8 },
-    { ip3, sizeof(ip3), false, true, false, 8 },
-    { ip4, sizeof(ip4), false, true, true, 8 },
-    { ip5, sizeof(ip5), true, false, false, 8 },
-    { ip6, sizeof(ip6), true, false, true, 8 },
-    { ip1, sizeof(ip1), false, false, false, 8 },
-    { ip2, sizeof(ip2), false, false, true, 8 },
-    { ip3, sizeof(ip3), false, true, false, 8 },
-    { ip4, sizeof(ip4), false, true, true, 8 },
-    { ip5, sizeof(ip5), true, false, false, 8 },
-    { ip1, sizeof(ip1), false, false, false, 8 },
-    { ip2, sizeof(ip2), false, false, true, 8 },
-    { ip3, sizeof(ip3), false, true, false, 8 },
-    { ip4, sizeof(ip4), false, true, true, 8 },
-    { ip1, sizeof(ip1), false, false, false, 8 },
-    { ip2, sizeof(ip2), false, false, true, 8 },
-    { ip3, sizeof(ip3), false, true, false, 8 },
-    { ip1, sizeof(ip1), false, false, false, 8 },
-    { ip2, sizeof(ip2), false, false, true, 8 },
-    { ip1, sizeof(ip1), false, false, false, 8 },
-    { ip9, sizeof(ip9), false, false, false, 9 },
-    { ip9, sizeof(ip9), false, false, true, 9 },
-    { ip9, sizeof(ip9), false, true, false, 9 },
-    { ip9, sizeof(ip9), false, true, true, 9 },
-    { ip9, sizeof(ip9), true, false, false, 9 },
-    { ip9, sizeof(ip9), true, false, true, 9 },
-    { ip9, sizeof(ip9), true, true, false, 9 },
-    { ip9, sizeof(ip9), true, true, true, 9 }
+    { ip1, sizeof(ip1), false, false, false, false, true },
+    { ip2, sizeof(ip2), false, false, true, true, false },
+    { ip3, sizeof(ip3), false, true, false, false, true },
+    { ip4, sizeof(ip4), false, true, true, true, false },
+    { ip5, sizeof(ip5), true, false, false, false, true },
+    { ip6, sizeof(ip6), true, false, true, true, false },
+    { ip7, sizeof(ip7), true, true, false, false, true },
+    { ip8, sizeof(ip8), true, true, true, true, false },
+    { ip1, sizeof(ip1), false, false, false, false, true },
+    { ip2, sizeof(ip2), false, false, true, false, false },
+    { ip3, sizeof(ip3), false, true, false, false, true },
+    { ip4, sizeof(ip4), false, true, true, false, false },
+    { ip5, sizeof(ip5), true, false, false, false, true },
+    { ip6, sizeof(ip6), true, false, true, false, false },
+    { ip7, sizeof(ip7), true, true, false, false, false },
+    { ip1, sizeof(ip1), false, false, false, false, false },
+    { ip2, sizeof(ip2), false, false, true, false, false },
+    { ip3, sizeof(ip3), false, true, false, false, false },
+    { ip4, sizeof(ip4), false, true, true, false, false },
+    { ip5, sizeof(ip5), true, false, false, false, false },
+    { ip6, sizeof(ip6), true, false, true, false, false },
+    { ip1, sizeof(ip1), false, false, false, false, false },
+    { ip2, sizeof(ip2), false, false, true, false, false },
+    { ip3, sizeof(ip3), false, true, false, false, false },
+    { ip4, sizeof(ip4), false, true, true, false, false },
+    { ip5, sizeof(ip5), true, false, false, false, false },
+    { ip1, sizeof(ip1), false, false, false, false, false },
+    { ip2, sizeof(ip2), false, false, true, false, false },
+    { ip3, sizeof(ip3), false, true, false, false, false },
+    { ip4, sizeof(ip4), false, true, true, false, false },
+    { ip1, sizeof(ip1), false, false, false, false, false },
+    { ip2, sizeof(ip2), false, false, true, false, false },
+    { ip3, sizeof(ip3), false, true, false, false, false },
+    { ip1, sizeof(ip1), false, false, false, false, false },
+    { ip2, sizeof(ip2), false, false, true, false, false },
+    { ip1, sizeof(ip1), false, false, false, false, false },
+    { ip9, sizeof(ip9), false, false, false, false, true },
+    { ip9, sizeof(ip9), false, false, true, false, false },
+    { ip9, sizeof(ip9), false, true, false, false, false },
+    { ip9, sizeof(ip9), false, true, true, false, false },
+    { ip9, sizeof(ip9), true, false, false, false, false },
+    { ip9, sizeof(ip9), true, false, true, false, false },
+    { ip9, sizeof(ip9), true, true, false, false, false },
+    { ip9, sizeof(ip9), true, true, true, false, false }
 };
 
 static const size_t nb_stats_by_ip_test_input = sizeof(stats_by_ip_test_input) / sizeof(stats_by_ip_test_in_t);
@@ -109,18 +110,21 @@ typedef struct st_stats_by_ip_test_out_t {
     uint32_t nb_do;
     uint32_t nb_edns;
     uint32_t nb_mini_qname;
+    bool is_do_used;
+    bool is_edns_supported;
+    bool is_qname_minimized;
 } stats_by_ip_test_out_t;
 
 static const stats_by_ip_test_out_t stats_by_ip_test_output[] = {
-    { ip1, sizeof(ip1), 8, 0, 0, 0 },
-    { ip2, sizeof(ip2), 7, 0, 0, 7 },
-    { ip3, sizeof(ip3), 6, 0, 6, 0 },
-    { ip4, sizeof(ip4), 5, 0, 5, 5 },
-    { ip5, sizeof(ip5), 4, 4, 0, 0 },
-    { ip6, sizeof(ip6), 3, 3, 0, 3 },
-    { ip7, sizeof(ip7), 2, 2, 2, 0 },
-    { ip8, sizeof(ip8), 1, 1, 1, 1 },
-    { ip9, sizeof(ip9), 8, 4, 4, 4 }
+    { ip1, sizeof(ip1), 9, 0, 0, 0, false, false, false },
+    { ip2, sizeof(ip2), 7, 0, 0, 7, false, false, true },
+    { ip3, sizeof(ip3), 7, 0, 6, 0, false, true, false },
+    { ip4, sizeof(ip4), 5, 0, 5, 5, false, true, true },
+    { ip5, sizeof(ip5), 5, 4, 0, 0, true, false, false },
+    { ip6, sizeof(ip6), 3, 3, 0, 3, true, false, true },
+    { ip7, sizeof(ip7), 3, 2, 2, 0, true, true, false },
+    { ip8, sizeof(ip8), 1, 1, 1, 1, true, true, true },
+    { ip9, sizeof(ip9), 9, 4, 4, 4, true, true, false }
 };
 
 
@@ -131,6 +135,7 @@ bool StatsByIpTest::DoTest()
 {
     bool ret = true;
     BinHash<StatsByIP> stats;
+    StatsByIP * y = NULL;
 
     for (size_t i = 0; ret && i < nb_stats_by_ip_test_input; i++) {
         StatsByIP * x = new StatsByIP(
@@ -139,6 +144,7 @@ bool StatsByIpTest::DoTest()
             stats_by_ip_test_input[i].has_do,
             stats_by_ip_test_input[i].has_edns,
             stats_by_ip_test_input[i].mini_qname);
+        x->response_seen = true;
 
         if (x == NULL) {
             TEST_LOG("Cannot create StatsByIp for input #%d\n", (int)i);
@@ -146,24 +152,40 @@ bool StatsByIpTest::DoTest()
         }
         else {
             bool stored = false;
-            StatsByIP * y = stats.InsertOrAdd(x, false, &stored);
-            if (y == NULL) {
-                TEST_LOG("Cannot add input #%d to hash table\n", (int)i);
-                ret = false;
-            }
-            else {
-                if (i == 0 || stats_by_ip_test_input[i].expected_size > stats_by_ip_test_input[i - 1].expected_size) {
-                    if (!stored) {
-                        TEST_LOG("test input #%d was not stored, expected stored!\n", (int)i);
-                        ret = false;
-                    }
-                }
-                else if (stored) {
-                    TEST_LOG("test input #%d was stored, not expected!\n", (int)i);
+            if (stats_by_ip_test_input[i].add_query) {
+                StatsByIP q (
+                    stats_by_ip_test_input[i].addr,
+                    stats_by_ip_test_input[i].addr_len,
+                    false,
+                    false,
+                    false);
+                q.query_seen = true;
+                if (stats.Retrieve(&q) == NULL &&
+                    stats.InsertOrAdd(&q, true, &stored) == NULL) {
+                    TEST_LOG("Cannot add query #%d to hash table\n", (int)i);
                     ret = false;
                 }
-                if (!stored) {
-                    delete x;
+            }
+            if (ret) {
+                y = stats.InsertOrAdd(x, false, &stored);
+                if (y == NULL) {
+                    TEST_LOG("Cannot add input #%d to hash table\n", (int)i);
+                    ret = false;
+                }
+                else {
+                    if (stats_by_ip_test_input[i].is_new) {
+                        if (!stored) {
+                            TEST_LOG("test input #%d was not stored, expected stored!\n", (int)i);
+                            ret = false;
+                        }
+                    }
+                    else if (stored) {
+                        TEST_LOG("test input #%d was stored, not expected!\n", (int)i);
+                        ret = false;
+                    }
+                    if (!stored) {
+                        delete x;
+                    }
                 }
             }
         }
@@ -174,7 +196,8 @@ bool StatsByIpTest::DoTest()
             stats_by_ip_test_output[i].addr,
             stats_by_ip_test_output[i].addr_len,
             false, false, false);
-        StatsByIP * y = stats.Retrieve(&x);
+        
+        y = stats.Retrieve(&x);
 
         if (y == NULL) {
             TEST_LOG("Cannot retrieve output case #%d\n", (int)i);
@@ -196,8 +219,23 @@ bool StatsByIpTest::DoTest()
             ret = false;
         }
         else if (y->nb_mini_qname != stats_by_ip_test_output[i].nb_mini_qname) {
-            TEST_LOG("Output case #%d, count = %d instead of %d\n", (int)i,
+            TEST_LOG("Output case #%d, nb_mini_qname = %d instead of %d\n", (int)i,
                 y->nb_mini_qname, stats_by_ip_test_output[i].nb_mini_qname);
+            ret = false;
+        }
+        else if (y->IsDoUsed() != stats_by_ip_test_output[i].is_do_used) {
+            TEST_LOG("Output case #%d, IsDoUsed() = %d instead of %d\n", (int)i,
+                y->IsDoUsed(), stats_by_ip_test_output[i].is_do_used);
+            ret = false;
+        }
+        else if (y->IsEdnsSupported() != stats_by_ip_test_output[i].is_edns_supported) {
+            TEST_LOG("Output case #%d, IsEdnsSupported() = %d instead of %d\n", (int)i,
+                y->IsEdnsSupported(), stats_by_ip_test_output[i].is_edns_supported);
+            ret = false;
+        }
+        else if (y->IsQnameMinimized() != stats_by_ip_test_output[i].is_qname_minimized) {
+            TEST_LOG("Output case #%d, IsQnameMinimized() = %d instead of %d\n", (int)i,
+                y->IsQnameMinimized(), stats_by_ip_test_output[i].is_qname_minimized);
             ret = false;
         }
     }

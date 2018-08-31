@@ -329,6 +329,8 @@ StatsByIP::StatsByIP(uint8_t * addr, size_t addr_len, bool has_do, bool has_edns
     nb_do((has_do)?1:0),
     nb_edns((has_edns)?1:0),
     nb_mini_qname((mini_qname)?1:0),
+    query_seen(false),
+    response_seen(false),
     HashNext(NULL),
     count(1),
     hash(0)
@@ -377,6 +379,8 @@ StatsByIP * StatsByIP::CreateCopy()
         x->nb_do = nb_do;
         x->nb_edns = nb_edns;
         x->nb_mini_qname = nb_mini_qname;
+        x->query_seen = query_seen;
+        x->response_seen = response_seen;
     }
 
     return x;
@@ -388,4 +392,27 @@ void StatsByIP::Add(StatsByIP * key)
     nb_do += key->nb_do;
     nb_edns += key->nb_edns;
     nb_mini_qname += key->nb_mini_qname;
+    query_seen |= key->query_seen;
+    response_seen |= key->response_seen;
+}
+
+bool StatsByIP::IsDoUsed()
+{
+    return (nb_do > 0);
+}
+
+bool StatsByIP::IsEdnsSupported()
+{
+    return (nb_edns > 0);
+}
+
+bool StatsByIP::IsQnameMinimized()
+{
+    uint32_t ref_count = count;
+
+    if (query_seen) {
+        ref_count--;
+    }
+
+    return(nb_mini_qname == ref_count);
 }

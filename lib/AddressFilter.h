@@ -111,6 +111,10 @@ public:
     virtual void Add(StatsByIP* key);
     StatsByIP * HashNext;
 
+    bool IsDoUsed();
+    bool IsEdnsSupported();
+    bool IsQnameMinimized();
+
     size_t addr_len;
     uint8_t addr[16];
     uint32_t count;
@@ -118,6 +122,8 @@ public:
     uint32_t nb_do;
     uint32_t nb_edns;
     uint32_t nb_mini_qname;
+    bool query_seen;
+    bool response_seen;
 };
 
 #endif /* ADDRESS_FILTER_H */

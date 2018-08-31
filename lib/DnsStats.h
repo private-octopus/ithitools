@@ -84,6 +84,8 @@
 #define REGISTRY_DNSSEC_Zone_Usage 42
 #define REGISTRY_EDNS_Client_Usage 43
 #define REGISTRY_QNAME_MINIMIZATION_Usage 44
+#define REGISTRY_EDNS_OPT_USAGE 45
+#define REGISTRY_EDNS_OPT_USAGE_REF 46
 
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
@@ -248,6 +250,8 @@ public:
     uint32_t dnssec_name_index;
     bool is_do_flag_set;
     bool is_using_edns;
+    uint8_t * edns_options;
+    uint32_t edns_options_length;
     bool is_qname_minimized;
 
 
@@ -261,7 +265,8 @@ public:
         bool is_dnssec);
     void ExportDnssecUsage();
 
-    void RegisterStatsByIp(uint8_t * source_addr, size_t source_addr_length);
+    void RegisterStatsByIp(uint8_t * dest_addr, size_t dest_addr_length);
+    void RegisterOptionsByIp(uint8_t * source_addr, size_t source_addr_length);
 
     void ExportStatsByIp();
 

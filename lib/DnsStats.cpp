@@ -126,7 +126,9 @@ static char const * RegistryNameById[] = {
     "DNSSEC_Client_Usage",
     "DNSSEC_Zone_Usage",
     "EDNS_CLIENT_USAGE",
-    "QNAME_MINIMIZATION_USAGE"
+    "QNAME_MINIMIZATION_USAGE",
+    "EDNS_OPTIONS_USAGE",
+    "EDNS_OPTIONS_TOTAL_QUERIES"
 };
 
 static uint32_t RegistryNameByIdNb = sizeof(RegistryNameById) / sizeof(char const*);
@@ -564,6 +566,17 @@ void DnsStats::SubmitOPTRecord(uint32_t flags, uint8_t * content, uint32_t lengt
     }
 
     SubmitRegistryNumber(REGISTRY_EDNS_Version_number, (flags >> 16) & 0xFF);
+
+
+    if (current_index < length) {
+        edns_options = &content[current_index];
+        edns_options_length = length - current_index;
+    }
+    else {
+        edns_options = NULL;
+        edns_options_length = 0;
+
+    }
 
     /* Find the options in the payload */
     while (current_index + 4 <= length)
@@ -1420,6 +1433,8 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     error_flags = 0;
     is_do_flag_set = false;
     is_using_edns = false;
+    edns_options = NULL;
+    edns_options_length = 0;
     is_qname_minimized = false;
     dnssec_name_index = 0;
 
@@ -1684,27 +1699,51 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
 
     SubmitRegistryNumber(REGISTRY_DNS_error_flag, error_flags);
 
-    if (has_header && is_response && opcode == DNS_OPCODE_QUERY &&
-        rcode == DNS_RCODE_NOERROR && error_flags == 0)
+    if (has_header && opcode == DNS_OPCODE_QUERY &&
+        rcode == DNS_RCODE_NOERROR && error_flags == 0 )
     {
-        is_qname_minimized = IsQNameMinimized(packet, length, qdcount, query_rclass, query_rtype,
-            first_query_index, first_answer_index, first_ns_index);
+        /* Do not perform client statistic on root traffic, but do it
+        * for all other sources of traffic */
+        if (is_response) {
+            /* if (!rootAddresses.IsInList(source_addr, source_addr_length)) */ {
+                is_qname_minimized = IsQNameMinimized(packet, length, qdcount, query_rclass, query_rtype,
+                    first_query_index, first_answer_index, first_ns_index);
+                RegisterStatsByIp(dest_addr, dest_addr_length);
 
-        if (!rootAddresses.IsInList(source_addr, source_addr_length)) {
-            /* Do not perform client statistic on root traffic, but do it
-             * for all other sources of traffic */
-            RegisterStatsByIp(dest_addr, dest_addr_length);
-
-            if (is_do_flag_set) {
-                if (dnssec_name_index == 0) {
-                    RegisterDnssecUsageByName(packet, length, 12, false);
+                if (is_do_flag_set) {
+                    if (dnssec_name_index == 0) {
+                        RegisterDnssecUsageByName(packet, length, 12, false);
+                    }
+                    else {
+                        RegisterDnssecUsageByName(packet, length, dnssec_name_index, true);
+                    }
                 }
-                else {
-                    RegisterDnssecUsageByName(packet, length, dnssec_name_index, true);
+            }
+        } else {
+            uint32_t tld_offset = 0;
+            bool gotTld = GetTLD(packet, length, 12, &tld_offset);
+
+            if (gotTld)
+            {
+                /* Verify that the TLD is valid, so as to exclude random traffic that would drown the stats */
+                SetToUpperCase(packet + tld_offset + 1, packet[tld_offset]);
+                TldAsKey key(packet + tld_offset + 1, packet[tld_offset]);
+
+                if (registeredTld.GetCount() == 0)
+                {
+                    LoadRegisteredTLD_from_memory();
+                }
+
+                if (registeredTld.Retrieve(&key) != NULL)
+                {
+                    /* This is a registered TLD
+                     * Use the list of source addresses as a filter to
+                     * check the incoming EDNS options */
+                    RegisterOptionsByIp(source_addr, source_addr_length);
                 }
             }
         }
-    }
+    } 
 }
 
 bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
@@ -2254,10 +2293,12 @@ void DnsStats::ExportDnssecUsageByTable(BinHash<DnssecPrefixEntry>* dnssecTable,
 }
 
 
-void DnsStats::RegisterStatsByIp(uint8_t * source_addr, size_t source_addr_length)
+void DnsStats::RegisterStatsByIp(uint8_t * dest_addr, size_t dest_addr_length)
 {
-    StatsByIP x(source_addr, source_addr_length, is_do_flag_set, is_using_edns, is_qname_minimized);
+    StatsByIP x(dest_addr, dest_addr_length, is_do_flag_set, is_using_edns, is_qname_minimized);
     StatsByIP * y = statsByIp.Retrieve(&x);
+
+    x.response_seen = true;
 
     if (y == NULL) {
         if (statsByIp.GetCount() < max_stats_by_ip_count) {
@@ -2271,6 +2312,42 @@ void DnsStats::RegisterStatsByIp(uint8_t * source_addr, size_t source_addr_lengt
     }
 }
 
+void DnsStats::RegisterOptionsByIp(uint8_t * source_addr, size_t source_addr_length)
+{
+    StatsByIP x(source_addr, source_addr_length, false, false, false);
+    StatsByIP * y = statsByIp.Retrieve(&x);
+    bool is_first_query = false;
+
+    if (y == NULL) {
+        if (statsByIp.GetCount() < max_stats_by_ip_count) {
+            bool stored = false;
+
+            if ((y = statsByIp.InsertOrAdd(&x, true, &stored)) != NULL) {
+                is_first_query = true;
+                y->query_seen = true;
+            }
+        }
+    } else {
+        if (y->query_seen) {
+            y->count++;
+            is_first_query = true;
+            y->query_seen = true;
+        }
+    }
+
+    if (is_first_query && is_using_edns && edns_options != NULL) {
+        /* Should export the EDNS Options to new table. */
+        uint32_t current_index = 0;
+        while (current_index + 4 <= edns_options_length)
+        {
+            uint32_t o_code = (edns_options[current_index] << 8) | edns_options[current_index + 1];
+            uint32_t o_length = (edns_options[current_index + 2] << 8) | edns_options[current_index + 3];
+            current_index += 4 + o_length;
+            SubmitRegistryNumber(REGISTRY_EDNS_OPT_USAGE, o_code);
+        }
+    }
+}
+
 void DnsStats::ExportStatsByIp()
 {
     StatsByIP *sbi;
@@ -2280,6 +2357,7 @@ void DnsStats::ExportStatsByIp()
     uint32_t not_using_edns_count = 0;
     uint32_t qname_minimizing_count = 0;
     uint32_t not_minimizing_count = 0;
+    uint32_t total_queries = 0;
 
 
     for (uint32_t i = 0; i < statsByIp.GetSize(); i++)
@@ -2288,25 +2366,31 @@ void DnsStats::ExportStatsByIp()
 
         while (sbi != NULL)
         {
-            if (sbi->nb_do > 0) {
-                using_do_count++;
-            }
-            else {
-                not_using_do_count++;
+            if (sbi->query_seen) {
+                total_queries++;
             }
 
-            if (sbi->nb_edns > 0) {
-                using_edns_count++;
-            }
-            else {
-                not_using_edns_count++;
-            }
+            if (sbi->response_seen) {
+                if (sbi->IsDoUsed()) {
+                    using_do_count++;
+                }
+                else {
+                    not_using_do_count++;
+                }
 
-            if (sbi->nb_mini_qname == sbi->count) {
-                qname_minimizing_count++;
-            }
-            else {
-                not_minimizing_count++;
+                if (sbi->IsEdnsSupported()) {
+                    using_edns_count++;
+                }
+                else {
+                    not_using_edns_count++;
+                }
+
+                if (sbi->IsQnameMinimized()) {
+                    qname_minimizing_count++;
+                }
+                else {
+                    not_minimizing_count++;
+                }
             }
 
             sbi = sbi->HashNext;
@@ -2321,6 +2405,8 @@ void DnsStats::ExportStatsByIp()
 
     SubmitRegistryNumberAndCount(REGISTRY_QNAME_MINIMIZATION_Usage, 0, qname_minimizing_count);
     SubmitRegistryNumberAndCount(REGISTRY_QNAME_MINIMIZATION_Usage, 1, not_minimizing_count);
+
+    SubmitRegistryNumberAndCount(REGISTRY_EDNS_OPT_USAGE_REF, 0, total_queries);
 
     statsByIp.Clear();
 }
