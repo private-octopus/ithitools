@@ -973,32 +973,66 @@ bool ithipublisher::PublishDataM7(FILE * F)
     return ret;
 }
 
+bool ithipublisher::PublishOptTable(FILE * F, char const * metric_name)
+{
+    std::vector<MetricNameLine> name_list;
+    const metric6_def_t * opt_def = ComputeM6::GetTable("M6.DNS.08");
+    bool ret = GetNameList(metric_name, &name_list);
+
+    ret &= (opt_def != NULL);
+
+    ret &= fprintf(F, "[") > 0;
+    
+    for (size_t i=0; ret && i<name_list.size(); i++){
+        /* Parse name to code */
+        char const * opt_long_name = NULL;
+        uint32_t opt_code = (uint32_t)atoi(name_list[i].name);
+
+        for (size_t j = 0; j < opt_def->nb_registered; j++) {
+            if (opt_def->registry[j].key == opt_code) {
+                opt_long_name = opt_def->registry[j].key_name;
+                break;
+            }
+        }
+
+        if (i > 0) {
+            ret &= fprintf(F, ",\n") > 0;
+        }
+
+        if (opt_long_name != NULL) {
+            ret &= fprintf(F, "[ \"%s(%s)\", %6f, %6f]", opt_long_name, name_list[i].name, 100.0*name_list[i].current, 100.0*name_list[i].average) > 0;
+        }
+        else {
+            ret &= fprintf(F, "[ \"%s\", %6f, %6f]", name_list[i].name, 100.0*name_list[i].current, 100.0*name_list[i].average) > 0;
+        }
+    }
+
+    ret &= fprintf(F, "]\n") > 0;
+
+    return ret;
+}
+
 bool ithipublisher::PublishDataM8(FILE * F)
 {
-    double m7x[12];
-    char subMetX[16];
+    double m8x[12];
     bool ret = true;
+    char const * subMetX[4] = { "M8.1", "M8.2.1", "M8.3", "M8.4" };
 
     fprintf(F, "\"M8DataSet\" : [\n");
 
-    for (int i = 1; ret && i <= 3; i++) {
-
-        ret = snprintf(subMetX, sizeof(subMetX), "M8.%d", i) > 0;
-
-        if (ret) {
-            if (GetVector(subMetX, NULL, m7x))
-            {
-                /* M7.x is present */
-                ret = PrintVector(F, m7x, 100.0);
-
-                if (i == 2) {
-                    ret &= (fprintf(F, "\n") > 0);
-                }
-                else {
-                    ret &= (fprintf(F, ",\n") > 0);
-                }
+    for (int i = 0; ret && i < 4; i++) {
+        if (GetVector(subMetX[i], NULL, m8x))
+        {
+            /* M7.x is present */
+            if (i > 0) {
+                ret &= (fprintf(F, ",\n") > 0);
             }
+            ret = PrintVector(F, m8x, 100.0);
         }
+    }
+
+    if (ret) {
+        ret = PublishOptTable(F, "M8.2.2");
     }
     fprintf(F, "]\n");
 

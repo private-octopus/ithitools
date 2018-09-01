@@ -7,6 +7,8 @@
 
 <script src="ithinav.js"></script>
 
+<script src="ithigraph.js"></script>
+
 <script type="text/javascript">
 
     var canvas ;
@@ -40,59 +42,16 @@
         // set these values for your data
 
         setDateElement(M8Data.date);
-        elementRefList = ["valM81", "valM82", "valM83"];
-        elementAverageList = ["averageM81", "averageM82", "averageM83"];
+        elementRefList = ["valM81", "valM82", "valM83", "valM84"];
+        elementAverageList = ["averageM81", "averageM82", "averageM83", "averageM84" ];
         
-        for (i = 0; i < 3; i++) {
+        for (i = 0; i < 4 && i < M8Data.M8DataSet.length; i++) {
             setValElement(elementRefList[i], getLastElement(M8Data.M8DataSet[i]));
             setValElement(elementAverageList[i], getAverageElement(M8Data.M8DataSet[i]));
         }
-    }
-    
-    function setDateElement(date) {
-        dateElement = document.getElementById("dateHeading");
-        dateElement.innerHTML = date;
-    }
 
-    function setValElement(valElementId, x) {
-        elm = document.getElementById(valElementId);
-
-        if (x.toFixed(2)) {
-            elm.innerHTML = "<b>" + x.toFixed(2) + "%</b>";
-        }
-        else {
-            elm.innerHTML = "<b>" + x + "</b>";
-        }
-    }
-
-    function getLastElement(dataSet) {
-        if (dataSet.length < 1) {
-            return "-";
-        }
-        else {
-            return dataSet[dataSet.length - 1];
-        }
-    }
-
-    function getAverageElement(dataSet) {
-        if (dataSet.length <= 2) {
-            return dataSet[0];
-        }
-        else {
-            var i = 0;
-
-            last = dataSet.length - 2;
-            first = 0;
-            if (dataSet.length > 13) {
-                first = dataSet.length - 13;
-            }
-            average = 0;
-            for (i = first; i <= last; i++) {
-                average += dataSet[i];
-            }
-            average /= (last + 1 - first);
-
-            return average;
+        if (M8Data.M8DataSet.length >= 5) {
+            fillMetricTable("M8.2.2, Resolver Usage of EDNS Options", "m822Table", M8Data.M8DataSet[4]);
         }
     }
 
@@ -110,24 +69,40 @@ The M8 metrics analyze the DNS traffic at Authoritative Servers. The
 data collected by participating servers gives us a good statistical
 sampling of that traffic originating from recursive resolvers, or
 from clients interacting directly with authoritative servers.
-We track this behavior with three metrics:
+We track this behavior with three metrics. The first metric is about usage:
     </p>
     <ul>
         <li>
             M8.1: the fraction of queries that trigger an NX_DOMAIN responses.
         </li>
-        <li>
-            M8.2: the fraction of queries that use Extended DNS (EDNS).
-        </li>
-        <li>
-            M8.3: the fraction of DNS Resolvers ready for DNSSEC.
-            We compute the ratio of the number of resolvers that sent requests with the EDNS "DNSSEC OK"
-            option set, over the total number of resolvers that contact the authoritative servers.
-            Resolvers are identified by IP address,
-            and a given IP address is only counted once. The ratios measured at different authoritative
-            servers are then averaged to compute the metric.
-        </li>
-    </ul>
+</ul>
+<p>
+The next three metrics are about properties of the resolvers. Resolvers are identified by IP address,
+and a given IP address is only counted once. For a given server, the ratios are computed over the total number
+of resolvers that contacted this server. The ratios measured at different authoritative
+servers are then averaged to compute the metric. The metrics tracking resolver behavior are:
+</p>
+<ul>
+<li>
+M8.2: usage of Extended DNS (EDNS) by resolvers:
+</li>
+<ul>
+<li>
+M8.2.1: the fraction of resolvers that use Extended DNS (EDNS).
+</li>
+<li>
+M8.2.2.X: the fraction of resolvers that use Extended DNS option X.
+</li>
+</ul>
+<li>
+M8.3: the fraction of DNS Resolvers that sent requests with the EDNS "DNSSEC OK"
+option set.
+</li>
+
+<li>
+M8.4: the fraction of DNS Resolvers that are probably using QName Minimization.
+</li>
+</ul>
     <p>
         In the following table, the <em>current value</em> is the
         value of the metric for the current month.
@@ -155,7 +130,7 @@ We track this behavior with three metrics:
         </tr>
         <tr>
             <td>
-                M8.2: % of queries using EDNS
+                M8.2.1: % of resolvers using EDNS
             </td>
             <td class="number" id="valM82">
                 -
@@ -163,8 +138,8 @@ We track this behavior with three metrics:
             <td class="number" id="averageM82">
                 -
             </td>
-        </tr>
-        <tr>
+         </tr>
+         <tr>
             <td>
                 M8.3: % of resolvers setting DNSSEC OK option
             </td>
@@ -174,7 +149,26 @@ We track this behavior with three metrics:
             <td class="number" id="averageM83">
                 -
             </td>
+         </tr>
+         <tr>
+            <td>
+                M8.4: % of resolvers using QName Minimization
+            </td>
+            <td class="number" id="valM84">
+                -
+            </td>
+            <td class="number" id="averageM84">
+                -
+            </td>
         </tr>
     </table>
+
+<p>
+The following table shows the frequency with which specific Extended DNS options were used by resolvers:
+</p>
+
+    <div id="m822Table">Table M8.2.2 not found</div>
+
+
 </body>
 </html>

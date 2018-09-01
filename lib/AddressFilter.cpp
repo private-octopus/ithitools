@@ -326,14 +326,14 @@ IPAsKeyLRU * IPAsKeyLRU::CreateCopy()
 
 
 StatsByIP::StatsByIP(uint8_t * addr, size_t addr_len, bool has_do, bool has_edns, bool mini_qname) :
+    HashNext(NULL),
+    count(1),
+    hash(0),
     nb_do((has_do)?1:0),
     nb_edns((has_edns)?1:0),
     nb_mini_qname((mini_qname)?1:0),
     query_seen(false),
-    response_seen(false),
-    HashNext(NULL),
-    count(1),
-    hash(0)
+    response_seen(false)
 {
     if (addr_len > 16)
     {
