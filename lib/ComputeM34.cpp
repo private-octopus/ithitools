@@ -58,6 +58,35 @@ bool metric8_line_is_bigger(metric8_line_t x, metric8_line_t y)
     return (ret);
 }
 
+static double scalar_metric_from_extract(std::vector<CaptureLine*> * extract)
+{
+    double ret = 0;
+    uint64_t total = 0;
+    uint64_t support = 0;
+
+    for (size_t i = 0; i < extract->size(); i++) {
+        total += (*extract)[i]->count;
+        if ((*extract)[i]->key_type == 0 && (*extract)[i]->key_number == 1) {
+            support += (*extract)[i]->count;
+        }
+    }
+
+    if (total > 0) {
+        ret = (double)support;
+        ret /= (double)total;
+    }
+
+    return ret;
+}
+
+static double scalar_metric_from_capture(CaptureSummary * cs, uint32_t table_id)
+{
+    std::vector<CaptureLine*> extract;
+    cs->Extract(DnsStats::GetTableName(table_id), &extract);
+
+    return scalar_metric_from_extract(&extract);
+}
+
 
 void GetStringM_X(CaptureSummary * cs, uint32_t table_id,
     std::vector<metric34_line_t>* mstring_x, uint64_t nbqueries, double min_share)
@@ -93,7 +122,10 @@ ComputeM3::ComputeM3()
     nb_rootqueries(0),
     m3_1(0),
     m3_2(0),
-    m33_4(0)
+    m33_4(0),
+    m3_4_1(0),
+    m3_5(0),
+    m3_6(0)
 {
 }
 
@@ -144,6 +176,10 @@ bool ComputeM3::Compute()
         }
     }
 
+    ret &= GetM3_4();
+    ret &= GetM3_5();
+    ret &= GetM3_6();
+
     return ret;
 }
 
@@ -175,6 +211,24 @@ bool ComputeM3::Write(FILE * F_out)
     if (ret)
     {
         ret = fprintf(F_out, "M3.3.4, , %6f,\n", (m33_4 > 0) ? m33_4 : 0);
+    }
+
+    if (ret) {
+        ret = fprintf(F_out, "M3.4.1, , %6f,\n", m3_4_1) > 0;
+    }
+
+    for (size_t i = 0; ret && i < m3_4_2.size(); i++) {
+        ret = fprintf(F_out, "M3.4.2, %d, %6f,\n",
+            m3_4_2[i].opt_code,
+            m3_4_2[i].frequency) > 0;
+    }
+
+    if (ret) {
+        ret = fprintf(F_out, "M3.5, , %6f,\n", m3_5) > 0;
+    }
+
+    if (ret) {
+        ret = fprintf(F_out, "M3.6, , %6f,\n", m3_6) > 0;
     }
 
     return ret;
@@ -297,6 +351,30 @@ bool ComputeM3::GetM33_3()
 
         std::sort(m33_3.begin(), m33_3.end(), metric34_line_is_bigger);
     }
+
+    return ret;
+}
+
+
+bool ComputeM3::GetM3_4()
+{
+    return ComputeM8::ComputeEdnsMetrics(&cs, &m3_4_1, &m3_4_2);
+}
+
+bool ComputeM3::GetM3_5()
+{
+    bool ret = true;
+
+    m3_5 = scalar_metric_from_capture(&cs, REGISTRY_DNSSEC_Client_Usage);
+
+    return ret;
+}
+
+bool ComputeM3::GetM3_6()
+{
+    bool ret = true;
+
+    m3_6 = scalar_metric_from_capture(&cs, REGISTRY_QNAME_MINIMIZATION_Usage);
 
     return ret;
 }
@@ -487,37 +565,12 @@ bool ComputeM4::GetM4_3()
     return ret;
 }
 
-static double DNSSEC_metric_from_extract(std::vector<CaptureLine*> * extract)
-{
-    double ret = 0;
-    uint64_t total = 0;
-    uint64_t support = 0;
-
-    for (size_t i = 0; i < extract->size(); i++) {
-        total += (*extract)[i]->count;
-        if ((*extract)[i]->key_type == 0 && (*extract)[i]->key_number == 1) {
-            support += (*extract)[i]->count;
-        }
-    }
-
-    if (total > 0) {
-        ret = (double)support;
-        ret /= (double)total;
-    }
-
-    return ret;
-}
-
 bool ComputeM4::GetM4_DNSSEC()
 {
     bool ret = true;
-    std::vector<CaptureLine*> extractClientOccurence;
-    std::vector<CaptureLine*> extractZoneOccurence;
-    
-    cs.Extract(DnsStats::GetTableName(REGISTRY_DNSSEC_Client_Usage), &extractClientOccurence);
-    m4_5 = DNSSEC_metric_from_extract(&extractClientOccurence);
-    cs.Extract(DnsStats::GetTableName(REGISTRY_DNSSEC_Zone_Usage), &extractZoneOccurence);
-    m4_6 = DNSSEC_metric_from_extract(&extractZoneOccurence);
+
+    m4_5 = scalar_metric_from_capture(&cs, REGISTRY_DNSSEC_Client_Usage);
+    m4_6 = scalar_metric_from_capture(&cs, REGISTRY_DNSSEC_Zone_Usage);
 
     return ret;
 }
@@ -602,49 +655,21 @@ bool ComputeM8::GetM8_1()
     return ret;
 }
 
-
-bool ComputeM8::GetM8_2()
+bool ComputeM8::ComputeEdnsMetrics(CaptureSummary * cs, double * m_edns, std::vector<metric8_line_t> * m_edns_opt)
 {
     bool ret = true;
-#if 0
-    uint64_t nb_noerror = cs.GetCountByNumber(
-        DnsStats::GetTableName(REGISTRY_DNS_RCODES), 0);
-    uint64_t nb_nxdomain = cs.GetCountByNumber(
-        DnsStats::GetTableName(REGISTRY_DNS_RCODES), 3);
-    uint64_t nb_edns0 = cs.GetCountByNumber(
-        DnsStats::GetTableName(REGISTRY_EDNS_Version_number), 0);
-    uint64_t nb_queries = nb_noerror + nb_nxdomain;
-
-    if (nb_queries > 0)
-    {
-        m8_2 = (double)nb_edns0;
-        m8_2 /= (double)nb_queries;
-
-        if (m8_2 > 1.0) {
-            m8_2 = 1.0;
-        }
-    }
-    else
-    {
-        m8_2 = 0;
-        ret = false;
-    }
-#else
-    std::vector<CaptureLine*> extractClientOccurence;
-    uint64_t nb_edns_opt_usage_ref = cs.GetCountByNumber(
+    uint64_t nb_edns_opt_usage_ref = cs->GetCountByNumber(
         DnsStats::GetTableName(REGISTRY_EDNS_OPT_USAGE_REF), 0);
-
-    cs.Extract(DnsStats::GetTableName(REGISTRY_EDNS_Client_Usage), &extractClientOccurence);
-    m8_2_1 = DNSSEC_metric_from_extract(&extractClientOccurence);
+    *m_edns = scalar_metric_from_capture(cs, REGISTRY_EDNS_Client_Usage);
 
     if (nb_edns_opt_usage_ref > 0) {
         std::vector<CaptureLine *> extract;
 
-        cs.Extract(
+        cs->Extract(
             DnsStats::GetTableName(REGISTRY_EDNS_OPT_USAGE), &extract);
 
         if (extract.size() > 0) {
-            m8_2_2.reserve(extract.size());
+            m_edns_opt->reserve(extract.size());
 
             for (size_t i = 0; i < extract.size(); i++)
             {
@@ -655,25 +680,27 @@ bool ComputeM8::GetM8_2()
 
                 if (extract.size() < 8 || line.frequency >= 0.001)
                 {
-                    m8_2_2.push_back(line);
+                    m_edns_opt->push_back(line);
                 }
             }
 
-            std::sort(m8_2_2.begin(), m8_2_2.end(), metric8_line_is_bigger);
+            std::sort(m_edns_opt->begin(), m_edns_opt->end(), metric8_line_is_bigger);
         }
     }
 
-#endif
     return ret;
+}
+
+bool ComputeM8::GetM8_2()
+{
+    return ComputeEdnsMetrics(&cs, &m8_2_1, &m8_2_2);
 }
 
 bool ComputeM8::GetM8_3()
 {
     bool ret = true;
-    std::vector<CaptureLine*> extractClientOccurence;
 
-    cs.Extract(DnsStats::GetTableName(REGISTRY_DNSSEC_Client_Usage), &extractClientOccurence);
-    m8_3 = DNSSEC_metric_from_extract(&extractClientOccurence);
+    m8_3 = scalar_metric_from_capture(&cs, REGISTRY_DNSSEC_Client_Usage);
 
     return ret;
 }
@@ -681,10 +708,8 @@ bool ComputeM8::GetM8_3()
 bool ComputeM8::GetM8_4()
 {
     bool ret = true;
-    std::vector<CaptureLine*> extractClientOccurence;
 
-    cs.Extract(DnsStats::GetTableName(REGISTRY_QNAME_MINIMIZATION_Usage), &extractClientOccurence);
-    m8_4 = DNSSEC_metric_from_extract(&extractClientOccurence);
+    m8_4 = scalar_metric_from_capture(&cs, REGISTRY_QNAME_MINIMIZATION_Usage);
 
     return ret;
 }
