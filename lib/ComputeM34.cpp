@@ -42,6 +42,23 @@ bool metric34_line_is_bigger(metric34_line_t x, metric34_line_t y)
     return (ret);
 }
 
+bool metric8_line_is_bigger(metric8_line_t x, metric8_line_t y)
+{
+    bool ret = false;
+
+    if (x.frequency > y.frequency)
+    {
+        ret = true;
+    }
+    else if (x.frequency == y.frequency)
+    {
+        ret = x.opt_code < y.opt_code;
+    }
+
+    return (ret);
+}
+
+
 void GetStringM_X(CaptureSummary * cs, uint32_t table_id,
     std::vector<metric34_line_t>* mstring_x, uint64_t nbqueries, double min_share)
 {
@@ -507,8 +524,9 @@ bool ComputeM4::GetM4_DNSSEC()
 
 ComputeM8::ComputeM8() :
     m8_1(0),
-    m8_2(0),
-    m8_3(0)
+    m8_2_1(0),
+    m8_3(0),
+    m8_4(0)
 {
 }
 
@@ -530,7 +548,8 @@ bool ComputeM8::Compute()
 {
     bool ret = GetM8_1() &&
         GetM8_2() &&
-        GetM8_3();
+        GetM8_3() &&
+        GetM8_4();
 
     return ret;
 }
@@ -540,11 +559,21 @@ bool ComputeM8::Write(FILE * F_out)
     bool ret = fprintf(F_out, "M8.1, , %6f,\n", m8_1) > 0;
 
     if (ret) {
-        ret = fprintf(F_out, "M8.2, , %6f,\n", m8_2) > 0;
+        ret = fprintf(F_out, "M8.2.1, , %6f,\n", m8_2_1) > 0;
+    }
+
+    for (size_t i = 0; ret && i < m8_2_2.size(); i++) {
+        ret = fprintf(F_out, "M8.2.2, %d, %6f,\n", 
+            m8_2_2[i].opt_code,
+            m8_2_2[i].frequency) > 0;
     }
 
     if (ret) {
         ret = fprintf(F_out, "M8.3, , %6f,\n", m8_3) > 0;
+    }
+
+    if (ret) {
+        ret = fprintf(F_out, "M8.4, , %6f,\n", m8_4) > 0;
     }
 
     return ret;
@@ -577,6 +606,7 @@ bool ComputeM8::GetM8_1()
 bool ComputeM8::GetM8_2()
 {
     bool ret = true;
+#if 0
     uint64_t nb_noerror = cs.GetCountByNumber(
         DnsStats::GetTableName(REGISTRY_DNS_RCODES), 0);
     uint64_t nb_nxdomain = cs.GetCountByNumber(
@@ -599,7 +629,41 @@ bool ComputeM8::GetM8_2()
         m8_2 = 0;
         ret = false;
     }
+#else
+    std::vector<CaptureLine*> extractClientOccurence;
+    uint64_t nb_edns_opt_usage_ref = cs.GetCountByNumber(
+        DnsStats::GetTableName(REGISTRY_EDNS_OPT_USAGE_REF), 0);
 
+    cs.Extract(DnsStats::GetTableName(REGISTRY_EDNS_Client_Usage), &extractClientOccurence);
+    m8_2_1 = DNSSEC_metric_from_extract(&extractClientOccurence);
+
+    if (nb_edns_opt_usage_ref > 0) {
+        std::vector<CaptureLine *> extract;
+
+        cs.Extract(
+            DnsStats::GetTableName(REGISTRY_EDNS_OPT_USAGE), &extract);
+
+        if (extract.size() > 0) {
+            m8_2_2.reserve(extract.size());
+
+            for (size_t i = 0; i < extract.size(); i++)
+            {
+                metric8_line_t line;
+
+                line.opt_code = extract[i]->key_number;
+                line.frequency = ((double)extract[i]->count) / ((double)nb_edns_opt_usage_ref);
+
+                if (extract.size() < 8 || line.frequency >= 0.001)
+                {
+                    m8_2_2.push_back(line);
+                }
+            }
+
+            std::sort(m8_2_2.begin(), m8_2_2.end(), metric8_line_is_bigger);
+        }
+    }
+
+#endif
     return ret;
 }
 
@@ -610,6 +674,17 @@ bool ComputeM8::GetM8_3()
 
     cs.Extract(DnsStats::GetTableName(REGISTRY_DNSSEC_Client_Usage), &extractClientOccurence);
     m8_3 = DNSSEC_metric_from_extract(&extractClientOccurence);
+
+    return ret;
+}
+
+bool ComputeM8::GetM8_4()
+{
+    bool ret = true;
+    std::vector<CaptureLine*> extractClientOccurence;
+
+    cs.Extract(DnsStats::GetTableName(REGISTRY_QNAME_MINIMIZATION_Usage), &extractClientOccurence);
+    m8_4 = DNSSEC_metric_from_extract(&extractClientOccurence);
 
     return ret;
 }

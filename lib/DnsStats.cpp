@@ -2400,11 +2400,11 @@ void DnsStats::ExportStatsByIp()
     SubmitRegistryNumberAndCount(REGISTRY_DNSSEC_Client_Usage, 0, not_using_do_count);
     SubmitRegistryNumberAndCount(REGISTRY_DNSSEC_Client_Usage, 1, using_do_count);
 
-    SubmitRegistryNumberAndCount(REGISTRY_EDNS_Client_Usage, 0, using_edns_count);
-    SubmitRegistryNumberAndCount(REGISTRY_EDNS_Client_Usage, 1, not_using_edns_count);
+    SubmitRegistryNumberAndCount(REGISTRY_EDNS_Client_Usage, 0, not_using_edns_count);
+    SubmitRegistryNumberAndCount(REGISTRY_EDNS_Client_Usage, 1, using_edns_count);
 
-    SubmitRegistryNumberAndCount(REGISTRY_QNAME_MINIMIZATION_Usage, 0, qname_minimizing_count);
-    SubmitRegistryNumberAndCount(REGISTRY_QNAME_MINIMIZATION_Usage, 1, not_minimizing_count);
+    SubmitRegistryNumberAndCount(REGISTRY_QNAME_MINIMIZATION_Usage, 0, not_minimizing_count);
+    SubmitRegistryNumberAndCount(REGISTRY_QNAME_MINIMIZATION_Usage, 1, qname_minimizing_count);
 
     SubmitRegistryNumberAndCount(REGISTRY_EDNS_OPT_USAGE_REF, 0, total_queries);
 

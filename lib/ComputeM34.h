@@ -30,6 +30,11 @@ typedef struct _st_metric34_line_t {
     double frequency;
 } metric34_line_t;
 
+typedef struct _st_metric8_line_t {
+    int opt_code;
+    double frequency;
+} metric8_line_t;
+
 class ComputeM3 : public ComputeMetric
 {
 public:
@@ -106,11 +111,14 @@ private:
     CaptureSummary cs;
 
     double m8_1;
-    double m8_2;
+    double m8_2_1;
     double m8_3;
+    double m8_4;
+    std::vector<metric8_line_t> m8_2_2;
 
     bool GetM8_1();
     bool GetM8_2();
     bool GetM8_3();
+    bool GetM8_4();
 };
 #endif /* COMPUTE_M346_H */
