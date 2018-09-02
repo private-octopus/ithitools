@@ -138,54 +138,44 @@ bool StatsByIpTest::DoTest()
     StatsByIP * y = NULL;
 
     for (size_t i = 0; ret && i < nb_stats_by_ip_test_input; i++) {
-        StatsByIP * x = new StatsByIP(
+        bool stored = false;
+        StatsByIP x(
             stats_by_ip_test_input[i].addr,
             stats_by_ip_test_input[i].addr_len,
             stats_by_ip_test_input[i].has_do,
             stats_by_ip_test_input[i].has_edns,
             stats_by_ip_test_input[i].mini_qname);
-        x->response_seen = true;
-
-        if (x == NULL) {
-            TEST_LOG("Cannot create StatsByIp for input #%d\n", (int)i);
-            ret = false;
-        }
-        else {
-            bool stored = false;
-            if (stats_by_ip_test_input[i].add_query) {
-                StatsByIP q (
-                    stats_by_ip_test_input[i].addr,
-                    stats_by_ip_test_input[i].addr_len,
-                    false,
-                    false,
-                    false);
-                q.query_seen = true;
-                if (stats.Retrieve(&q) == NULL &&
-                    stats.InsertOrAdd(&q, true, &stored) == NULL) {
-                    TEST_LOG("Cannot add query #%d to hash table\n", (int)i);
-                    ret = false;
-                }
+        x.response_seen = true;
+        if (stats_by_ip_test_input[i].add_query) {
+            StatsByIP q (
+                stats_by_ip_test_input[i].addr,
+                stats_by_ip_test_input[i].addr_len,
+                false,
+                false,
+                false);
+            q.query_seen = true;
+            if (stats.Retrieve(&q) == NULL &&
+                stats.InsertOrAdd(&q, true, &stored) == NULL) {
+                TEST_LOG("Cannot add query #%d to hash table\n", (int)i);
+                ret = false;
             }
-            if (ret) {
-                y = stats.InsertOrAdd(x, false, &stored);
-                if (y == NULL) {
-                    TEST_LOG("Cannot add input #%d to hash table\n", (int)i);
-                    ret = false;
-                }
-                else {
-                    if (stats_by_ip_test_input[i].is_new) {
-                        if (!stored) {
-                            TEST_LOG("test input #%d was not stored, expected stored!\n", (int)i);
-                            ret = false;
-                        }
-                    }
-                    else if (stored) {
-                        TEST_LOG("test input #%d was stored, not expected!\n", (int)i);
+        }
+        if (ret) {
+            y = stats.InsertOrAdd(&x, true, &stored);
+            if (y == NULL) {
+                TEST_LOG("Cannot add input #%d to hash table\n", (int)i);
+                ret = false;
+            }
+            else {
+                if (stats_by_ip_test_input[i].is_new) {
+                    if (!stored) {
+                        TEST_LOG("test input #%d was not stored, expected stored!\n", (int)i);
                         ret = false;
                     }
-                    if (!stored) {
-                        delete x;
-                    }
+                }
+                else if (stored) {
+                    TEST_LOG("test input #%d was stored, not expected!\n", (int)i);
+                    ret = false;
                 }
             }
         }
