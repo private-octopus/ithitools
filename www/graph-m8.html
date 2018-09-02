@@ -11,14 +11,6 @@
 
 <script type="text/javascript">
 
-    var canvas ;
-    var context ;
-    var Val_max;
-    var Val_min;
-    var sections;
-    var xScale;
-    var yScale;
-
     var M8Data; // Will be obtained from the web server.
 
     function init() {
@@ -42,17 +34,14 @@
         // set these values for your data
 
         setDateElement(M8Data.date);
-        elementRefList = ["valM81", "valM82", "valM83", "valM84"];
-        elementAverageList = ["averageM81", "averageM82", "averageM83", "averageM84" ];
-        
-        for (i = 0; i < 4 && i < M8Data.M8DataSet.length; i++) {
-            setValElement(elementRefList[i], getLastElement(M8Data.M8DataSet[i]));
-            setValElement(elementAverageList[i], getAverageElement(M8Data.M8DataSet[i]));
-        }
 
-        if (M8Data.M8DataSet.length >= 5) {
-            fillMetricTable("M8.2.2, Resolver Usage of EDNS Options", "m822Table", M8Data.M8DataSet[4]);
-        }
+        setValElement("valM81", getLastElement(M8Data.M81));
+        setValElement("averageM81", getAverageElement(M8Data.M81));
+
+
+        var resolverMetricNames = ["M8.1", "M8.3", "M8.4"];
+
+        fillEdnsDoQname(resolverMetricNames, M8Data.M82, M8Data.M83, M8Data.M84);
     }
 
 </script>
@@ -65,52 +54,20 @@
     <h1>M8: DNS Authoritative Servers Analysis</h1>
     <h2 id="dateHeading">-</h2>
     <p>
-The M8 metrics analyze the DNS traffic at Authoritative Servers. The
-data collected by participating servers gives us a good statistical
-sampling of that traffic originating from recursive resolvers, or
-from clients interacting directly with authoritative servers.
-We track this behavior with three metrics. The first metric is about usage:
+        The M8 metrics analyze the DNS traffic at Authoritative Servers. The
+        data collected by participating servers gives us a good statistical
+        sampling of that traffic originating from recursive resolvers, or
+        from clients interacting directly with authoritative servers.
+        We track this behavior with several metrics.
     </p>
-    <ul>
-        <li>
-            M8.1: the fraction of queries that trigger an NX_DOMAIN responses.
-        </li>
-</ul>
-<p>
-The next three metrics are about properties of the resolvers. Resolvers are identified by IP address,
-and a given IP address is only counted once. For a given server, the ratios are computed over the total number
-of resolvers that contacted this server. The ratios measured at different authoritative
-servers are then averaged to compute the metric. The metrics tracking resolver behavior are:
-</p>
-<ul>
-<li>
-M8.2: usage of Extended DNS (EDNS) by resolvers:
-</li>
-<ul>
-<li>
-M8.2.1: the fraction of resolvers that use Extended DNS (EDNS).
-</li>
-<li>
-M8.2.2.X: the fraction of resolvers that use Extended DNS option X.
-</li>
-</ul>
-<li>
-M8.3: the fraction of DNS Resolvers that sent requests with the EDNS "DNSSEC OK"
-option set.
-</li>
-
-<li>
-M8.4: the fraction of DNS Resolvers that are probably using QName Minimization.
-</li>
-</ul>
     <p>
+        The first metric, M8.1 is about usage.
         In the following table, the <em>current value</em> is the
         value of the metric for the current month.
         The <em>average value</em> is the average value of that metric
         over the 12 months preceeding this one -- or the average since the beginning
         of measurements if measurements started fewer than 12 months ago.
     </p>
-
     <table class="metrics">
         <tr>
             <th></th>
@@ -128,46 +85,46 @@ M8.4: the fraction of DNS Resolvers that are probably using QName Minimization.
                 -
             </td>
         </tr>
-        <tr>
-            <td>
-                M8.2.1: % of resolvers using EDNS
-            </td>
-            <td class="number" id="valM82">
-                -
-            </td>
-            <td class="number" id="averageM82">
-                -
-            </td>
-         </tr>
-         <tr>
-            <td>
-                M8.3: % of resolvers setting DNSSEC OK option
-            </td>
-            <td class="number" id="valM83">
-                -
-            </td>
-            <td class="number" id="averageM83">
-                -
-            </td>
-         </tr>
-         <tr>
-            <td>
-                M8.4: % of resolvers using QName Minimization
-            </td>
-            <td class="number" id="valM84">
-                -
-            </td>
-            <td class="number" id="averageM84">
-                -
-            </td>
-        </tr>
     </table>
+    <p>
+        The next three metrics are about properties of the resolvers. Resolvers are identified by IP address,
+        and a given IP address is only counted once. For a given server, the ratios are computed over the total number
+        of resolvers that contacted this server. The ratios measured at different authoritative
+        servers are then averaged to compute the metric. The metrics tracking resolver behavior are:
+    </p>
 
-<p>
-The following table shows the frequency with which specific Extended DNS options were used by resolvers:
-</p>
+    <ul>
+        <li>
+            M8.2: usage of Extended DNS (EDNS) by resolvers:
+            <ul>
+                <li>
+                    M8.2.1: the fraction of resolvers that use Extended DNS (EDNS).
+                </li>
+                <li>
+                    M8.2.2.X: the fraction of resolvers that use Extended DNS option X.
+                </li>
+            </ul>
+        </li>
+        <li>
+            M8.3: the fraction of DNS Resolvers that sent requests with the EDNS "DNSSEC OK"
+            option set.
+        </li>
 
-    <div id="m822Table">Table M8.2.2 not found</div>
+        <li>
+            M8.4: the fraction of DNS Resolvers that are probably using QName Minimization.
+        </li>
+    </ul>
+    <p>
+        In the following table, the <em>current value</em> is the
+        value of the metric for the current month.
+        The <em>average value</em> is the average value of that metric
+        over the 12 months preceeding this one -- or the average since the beginning
+        of measurements if measurements started fewer than 12 months ago.
+    </p>
+
+    <div id="tableEdnsDoQname">
+        Table M8.2, M8.3 and M8.4 was not initialized.
+    </div>
 
 
 </body>

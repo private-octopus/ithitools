@@ -742,7 +742,7 @@ bool ithipublisher::PublishDataM3(FILE * F)
         ret &= fprintf(F, "]") > 0;
     }
 
-    /* Add M3.6 and M3.7 */
+    /* Add M3.5 and M3.6 */
     for (int m = 6; ret && m<8; m++)
     {
         memset(mvec, 0, sizeof(mvec));
@@ -1036,6 +1036,7 @@ bool ithipublisher::PublishOptTable(FILE * F, char const * metric_name)
 
 bool ithipublisher::PublishDataM8(FILE * F)
 {
+#if 0
     double m8x[12];
     bool ret = true;
     char const * subMetX[4] = { "M8.1", "M8.2.1", "M8.3", "M8.4" };
@@ -1057,6 +1058,42 @@ bool ithipublisher::PublishDataM8(FILE * F)
         ret &= PublishOptTable(F, "M8.2.2");
     }
     ret &= fprintf(F, "]\n") > 0;
+#else
+    double mvec[12];
+    bool ret = true;
+    char const * met_data_name[4] = { "M81", "M82", "M83", "M84" };
+    char const * sub_met[4] = { "M8.1", "M8.2", "M8.3", "M8.4" };
+
+
+    /* Publish M8.1 */
+    memset(mvec, 0, sizeof(mvec));
+    ret &= GetVector(sub_met[0], NULL, mvec);
+    ret &= fprintf(F, "\"%s\" : ", met_data_name[0]) > 0;
+    ret &= PrintVector(F, mvec, 100.0);
+    ret &= fprintf(F, ",\n") > 0;
+
+    /* Add M8.2 data */
+    if (ret) {
+        ret &= fprintf(F, "\"%s\" : [", met_data_name[1]) > 0;
+        memset(mvec, 0, sizeof(mvec));
+        ret &= GetVector("M8.2.1", NULL, mvec);
+        ret &= PrintVector(F, mvec, 100.0);
+        ret &= fprintf(F, ",\n") > 0;
+        ret &= PublishOptTable(F, "M8.2.2");
+        ret &= fprintf(F, "]") > 0;
+    }
+
+    /* Add M8.3 and M8.4 */
+    for (int m = 2; ret && m<4; m++)
+    {
+        memset(mvec, 0, sizeof(mvec));
+        ret &= GetVector(sub_met[m], NULL, mvec);
+        ret &= fprintf(F, ",\n") > 0;
+        ret &= fprintf(F, "\"%s\" : ", met_data_name[m]) > 0;
+        ret &= PrintVector(F, mvec, 100.0);
+    }
+    ret &= fprintf(F, "\n") > 0;
+#endif
 
     return ret;
 }
