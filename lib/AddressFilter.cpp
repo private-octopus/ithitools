@@ -333,7 +333,8 @@ StatsByIP::StatsByIP(uint8_t * addr, size_t addr_len, bool has_do, bool has_edns
     nb_edns((has_edns)?1:0),
     nb_mini_qname((mini_qname)?1:0),
     query_seen(false),
-    response_seen(false)
+    response_seen(false),
+    option_mask(0)
 {
     if (addr_len > 16)
     {
@@ -381,6 +382,7 @@ StatsByIP * StatsByIP::CreateCopy()
         x->nb_mini_qname = nb_mini_qname;
         x->query_seen = query_seen;
         x->response_seen = response_seen;
+        x->option_mask = option_mask;
     }
 
     return x;
@@ -394,6 +396,7 @@ void StatsByIP::Add(StatsByIP * key)
     nb_mini_qname += key->nb_mini_qname;
     query_seen |= key->query_seen;
     response_seen |= key->response_seen;
+    option_mask |= key->option_mask;
 }
 
 bool StatsByIP::IsDoUsed()
@@ -416,3 +419,32 @@ bool StatsByIP::IsQnameMinimized()
 
     return(nb_mini_qname == ref_count);
 }
+
+/* Options should be counted at most once per resolver. To
+ * verify that, we use a simple bit mask, much like a simplified
+ * Bloome filter */
+
+bool StatsByIP::RegisterNewOption(uint16_t option_code)
+{
+    uint32_t option_hash = option_code;
+
+    /* Compute a minimal 16 bit hash */
+    option_hash ^= (option_code * 102);
+    option_hash ^= (option_hash >> 11);
+    option_hash *= 31;
+    option_hash ^= (option_hash >> 6);
+
+    /* Retain only the last 6 bits */
+    option_hash &= 0x3F;
+    uint64_t bit_mask = (1ull << option_hash);
+
+    /* check the mask */
+    bool ret = (option_mask&bit_mask) == 0;
+
+    if (ret) {
+        option_mask |= bit_mask;
+    }
+
+    return ret;
+}
+

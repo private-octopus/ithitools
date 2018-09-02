@@ -230,5 +230,43 @@ bool StatsByIpTest::DoTest()
         }
     }
 
+    if (ret) {
+        ret = OptionHashTest();
+    }
+
+    return ret;
+}
+
+/* Given the small size of the bit mask used to check for
+ * double registrations, collisions are possible. We simply verify
+ * that theydo not happen between the most popular OPT Option codes */
+
+static uint16_t option_test_cases[] = { 8, 5, 6, 7, 10, 3, 0, 65001, 4 };
+static const size_t nb_option_test_cases = sizeof(option_test_cases) / sizeof(uint16_t);
+
+bool StatsByIpTest::OptionHashTest()
+{
+    bool ret = true;
+    StatsByIP x(
+        stats_by_ip_test_input[0].addr,
+        stats_by_ip_test_input[0].addr_len,
+        stats_by_ip_test_input[0].has_do,
+        stats_by_ip_test_input[0].has_edns,
+        stats_by_ip_test_input[0].mini_qname);
+
+    for (size_t i = 0; ret && i < nb_option_test_cases; i++) {
+        if (!x.RegisterNewOption(option_test_cases[i])) {
+            TEST_LOG("Could not register option #%d, value=%d\n", (int)i,
+                option_test_cases[i]);
+            ret = false;
+        }
+        else {
+            if (x.RegisterNewOption(option_test_cases[i])) {
+                TEST_LOG("Could register option #%d twice, value=%d\n", (int)i,
+                    option_test_cases[i]);
+                ret = false;
+            }
+        }
+    }
     return ret;
 }

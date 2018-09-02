@@ -115,6 +115,8 @@ public:
     bool IsEdnsSupported();
     bool IsQnameMinimized();
 
+    bool RegisterNewOption(uint16_t option_code);
+
     size_t addr_len;
     uint8_t addr[16];
     uint32_t count;
@@ -124,6 +126,7 @@ public:
     uint32_t nb_mini_qname;
     bool query_seen;
     bool response_seen;
+    uint64_t option_mask;
 };
 
 #endif /* ADDRESS_FILTER_H */

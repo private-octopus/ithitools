@@ -2317,34 +2317,35 @@ void DnsStats::RegisterOptionsByIp(uint8_t * source_addr, size_t source_addr_len
 {
     StatsByIP x(source_addr, source_addr_length, false, false, false);
     StatsByIP * y = statsByIp.Retrieve(&x);
-    bool is_first_query = false;
 
     if (y == NULL) {
         if (statsByIp.GetCount() < max_stats_by_ip_count) {
             bool stored = false;
 
             if ((y = statsByIp.InsertOrAdd(&x, true, &stored)) != NULL) {
-                is_first_query = true;
                 y->query_seen = true;
             }
         }
     } else {
-        if (y->query_seen) {
+        if (!y->query_seen) {
             y->count++;
-            is_first_query = true;
             y->query_seen = true;
         }
     }
 
-    if (is_first_query && is_using_edns && edns_options != NULL) {
+    if (y != NULL && is_using_edns && edns_options != NULL) {
         /* Should export the EDNS Options to new table. */
         uint32_t current_index = 0;
         while (current_index + 4 <= edns_options_length)
         {
-            uint32_t o_code = (edns_options[current_index] << 8) | edns_options[current_index + 1];
-            uint32_t o_length = (edns_options[current_index + 2] << 8) | edns_options[current_index + 3];
+            uint16_t o_code = (edns_options[current_index] << 8) | edns_options[current_index + 1];
+            uint16_t o_length = (edns_options[current_index + 2] << 8) | edns_options[current_index + 3];
+            bool should_export = y->RegisterNewOption(o_code);
+
+            if (should_export) {
+                SubmitRegistryNumber(REGISTRY_EDNS_OPT_USAGE, o_code);
+            }
             current_index += 4 + o_length;
-            SubmitRegistryNumber(REGISTRY_EDNS_OPT_USAGE, o_code);
         }
     }
 }

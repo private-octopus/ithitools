@@ -33,6 +33,8 @@ public:
 
     bool DoTest() override;
 
+    bool OptionHashTest();
+
 };
 
 #endif /* STATS_BY_IP_TEST_H */
