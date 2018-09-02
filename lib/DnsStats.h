@@ -241,6 +241,7 @@ public:
     uint32_t max_tld_leakage_table_count;
     uint32_t max_query_usage_count;
     uint32_t max_tld_string_usage_count;
+    uint32_t max_tld_string_leakage_count;
     uint32_t max_stats_by_ip_count;
     uint32_t dnsstat_flags;
     int record_count; 
@@ -313,7 +314,7 @@ private:
     bool IsNumericDomain(uint8_t * tld, uint32_t length);
 
     void ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id, 
-        bool do_accounting);
+        bool do_accounting, uint32_t max_leak_count);
     void ExportLeakedDomains();
     void ExportStringUsage();
 

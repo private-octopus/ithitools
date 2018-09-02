@@ -38,6 +38,7 @@ DnsStats::DnsStats()
     max_tld_leakage_table_count(0x8000),
     max_query_usage_count(0x8000),
     max_tld_string_usage_count(0x8000),
+    max_tld_string_leakage_count(0x200),
     max_stats_by_ip_count(0x8000),
     dnsstat_flags(0),
     record_count(0),
@@ -1143,7 +1144,7 @@ bool DnsStats::IsNumericDomain(uint8_t * tld, uint32_t length)
 }
 
 void DnsStats::ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id,
-    bool do_accounting)
+    bool do_accounting, uint32_t max_leak_count)
 {
     TldAsKey *tld_entry;
     std::vector<TldAsKey *> lines(table->GetCount());
@@ -1167,7 +1168,7 @@ void DnsStats::ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id,
     /* Retain the N most interesting values */
     for (size_t i = 0; i < lines.size(); i++)
     {
-        if (export_count < max_tld_leakage_count &&
+        if (export_count < max_leak_count &&
             !IsNumericDomain(lines[i]->tld, (uint32_t) lines[i]->tld_len))
         {
             SubmitRegistryStringAndCount(registry_id,
@@ -1180,7 +1181,7 @@ void DnsStats::ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id,
             SubmitRegistryNumberAndCount(REGISTRY_DNS_LeakByLength, 
                 (uint32_t) lines[i]->tld_len, lines[i]->count);
         }
-        else if (export_count >= max_tld_leakage_count)
+        else if (export_count >= max_leak_count)
         {
             break;
         }
@@ -1189,13 +1190,13 @@ void DnsStats::ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id,
 
 void DnsStats::ExportLeakedDomains()
 {
-    ExportDomains(&tldLeakage, REGISTRY_DNS_LeakedTLD, true);
+    ExportDomains(&tldLeakage, REGISTRY_DNS_LeakedTLD, true, max_tld_leakage_count);
     tldLeakage.Clear();
 }
 
 void DnsStats::ExportStringUsage()
 {
-    ExportDomains(&tldStringUsage, REGISTRY_DNS_Frequent_TLD_Usage, false);
+    ExportDomains(&tldStringUsage, REGISTRY_DNS_Frequent_TLD_Usage, false, max_tld_string_leakage_count);
     tldStringUsage.Clear();
 }
 
