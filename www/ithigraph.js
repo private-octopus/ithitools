@@ -54,7 +54,7 @@ function getAverageElement(dataSet) {
         for (i = first; i <= last; i++) {
             average += dataSet[i];
         }
-        average /= (last + 1 - first);
+        average /= last + 1 - first;
 
         return average;
     }
@@ -89,12 +89,12 @@ function getMaxRange(rawMax) {
         if (2.0 * t_max > rawMax) {
             return 2.0 * t_max;
         } else if (5.0 * t_max > rawMax) {
-            return (5.0 * t_max);
+            return 5.0 * t_max;
         } else {
             t_max *= 10.0;
 
             if (t_max > rawMax) {
-                return (t_max);
+                return t_max;
             }
         }
     }
@@ -147,7 +147,7 @@ function plotPieChart(canvasPieId, dataSet, colorSet) {
 
     for (i = 0; i < dataSet.length; i++) {
         ctx.fillStyle = colorSet[colorIndex];
-        alpha2 = alpha + (2 * dataSet[i] / 100);
+        alpha2 = alpha + 2 * dataSet[i] / 100;
         ctx.beginPath();
         ctx.moveTo(xc, yc);
         ctx.arc(xc, yc, radius, alpha * Math.PI, alpha2 * Math.PI);
@@ -191,7 +191,7 @@ function fillEdnsDoQname(rowNames, vEdns, vDo, vQname) {
     var current = 0;
     var average = 0;
 
-    tableText += "<tr><th colspan=2>Metric</th>"
+    tableText += "<tr><th colspan=2>Metric</th>";
     tableText += "<th class=\"number\">Current Value</th>";
     tableText += "<th class=\"number\">Average Value</th></tr>\n";
 
@@ -255,13 +255,13 @@ function setScale(canvasId, v_max, sections, unit) {
     var columnSize = 50;
     var rowSize = 50;
     var margin = 10;
-    var xAxis = [" ", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    var xAxis = [" ", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     var graph = new Object();
     var i = 0;
     graph.canvas = document.getElementById(canvasId);
     graph.context = graph.canvas.getContext("2d");
-    graph.context.fillStyle = "#808080"
-    graph.context.font = "20 pt Verdana"
+    graph.context.fillStyle = "#808080";
+    graph.context.font = "20 pt Verdana";
 
     graph.yScale = (graph.canvas.height - columnSize - margin) / (v_max - v_min);
     graph.xScale = (graph.canvas.width - rowSize) / sections;
@@ -279,7 +279,7 @@ function setScale(canvasId, v_max, sections, unit) {
     var count = 0;
     var scale = 0;
     for (scale = v_max; scale >= v_min; scale = scale - stepSize) {
-        var y = columnSize + (graph.yScale * count * stepSize);
+        var y = columnSize + graph.yScale * count * stepSize;
         var fscale;
         if (v_max >= 10.0) {
             fscale = scale.toFixed(0);
@@ -289,8 +289,8 @@ function setScale(canvasId, v_max, sections, unit) {
             fscale = scale;
         }
         graph.context.fillText(fscale + unit, margin, y + margin);
-        graph.context.moveTo(rowSize, y + margin)
-        graph.context.lineTo(graph.canvas.width, y + margin)
+        graph.context.moveTo(rowSize, y + margin);
+        graph.context.lineTo(graph.canvas.width, y + margin);
         count++;
     }
     graph.context.stroke();
@@ -325,7 +325,7 @@ function plotGraph(canvasId, dataSet, range_max, graphColor, unit) {
         graph.context.lineTo((i + 1) * graph.xScale, this_val);
     }
 
-    graph.context.lineTo((l) * graph.xScale, 0);
+    graph.context.lineTo(l * graph.xScale, 0);
     graph.context.closePath();
     graph.context.fill();
 }
