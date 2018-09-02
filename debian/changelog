@@ -1,3 +1,10 @@
+ithitools (1.03.ppa1-0ubuntu1) xenial; urgency=medium
+
+  [ Christian Huitema ]
+  * Add code and pages for M8, also new data in M3
+
+ -- Christian Huitema <huitema@huitema.net>  Sat, 1 Sep 2018 23:23:23 -0700
+
 ithitools (1.02.ppa8-0ubuntu1) xenial; urgency=medium
 
   [ Christian Huitema ]
