@@ -184,6 +184,71 @@ function fillMetricTable(tableName, tableId, dataSet) {
     tableElem.innerHTML = tableText;
 }
 
+function fillEdnsDoQname(rowNames, vEdns, vDo, vQname) {
+    var i = 0;
+    var tableElem = document.getElementById("tableEdnsDoQname");
+    var tableText = "<table  class=\"metrics\">";
+    var current = 0;
+    var average = 0;
+
+    tableText += "<tr><th colspan=2>Metric</th>"
+    tableText += "<th class=\"number\">Current Value</th>";
+    tableText += "<th class=\"number\">Average Value</th></tr>\n";
+
+    // Set the Edns basic row 
+    var vEdns1 = vEdns[0];
+    var vEdns2 = vEdns[1];
+    current = getLastElement(vEdns1);
+    average = getAverageElement(vEdns1);
+
+    tableText += "<tr><td>" + rowNames[0] + ".1</td><td>%resolvers using Extended DNS (EDNS) </td>";
+    tableText += "<td class=\"number\">" + current.toFixed(3) + "%</td>";
+    tableText += "<td class=\"number\">" + average.toFixed(3) + "%</td></tr>\n";
+
+    // Set the per option rows 
+    if (vEdns2.length > 0) {
+        tableText += "<tr><td rowspan=" + vEdns2.length + ">" + rowNames[0] + ".2</td>";
+
+        for (i = 0; i < vEdns2.length; i++) {
+            var j = 0;
+            var lineSet = vEdns2[i];
+
+            if (i > 0) {
+                tableText += "<tr>";
+            }
+
+            tableText += "<td> %resolvers using " + lineSet[0] + "</td>";
+
+            for (j = 1; j < 3 && j < lineSet.length; j++) {
+                tableText += "<td class=\"number\">" + lineSet[j].toFixed(3) + "%</td>";
+            }
+            tableText += "</tr>\n";
+        }
+    }
+
+    // DO line 
+    current = getLastElement(vDo);
+    average = getAverageElement(vDo);
+
+    tableText += "<tr><td>" + rowNames[1] + "</td><td>%resolvers setting DNSSEC OK (DO) flag </td>";
+    tableText += "<td class=\"number\">" + current.toFixed(3) + "%</td>";
+    tableText += "<td class=\"number\">" + average.toFixed(3) + "%</td></tr>\n";
+
+
+
+    // QName line 
+    current = getLastElement(vQname);
+    average = getAverageElement(vQname);
+
+    tableText += "<tr><td>" + rowNames[1] + "</td><td>%resolvers using QName minimization </td>";
+    tableText += "<td class=\"number\">" + current.toFixed(3) + "%</td>";
+    tableText += "<td class=\"number\">" + average.toFixed(3) + "%</td></tr>\n";
+
+
+    tableText += "</table>\n";
+    tableElem.innerHTML = tableText;
+}
+
 function setScale(canvasId, v_max, sections, unit) {
     var v_min = 0;
     var stepSize = v_max / 10;

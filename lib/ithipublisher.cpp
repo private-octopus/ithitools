@@ -664,9 +664,9 @@ bool ithipublisher::PublishDataM2(FILE * F)
 bool ithipublisher::PublishDataM3(FILE * F)
 {
     bool ret = true;
-    const char * sub_met[5] = { "M3.1", "M3.2", "M3.3.1", "M3.3.2", "M3.3.3" };
-    const char * met_data_name[5] = { "M31", "M32", "m331Set", "m332Set", "m333Set"};
-    double m31[12], m32[12];
+    const char * sub_met[8] = { "M3.1", "M3.2", "M3.3.1", "M3.3.2", "M3.3.3", "M3.4", "M3.5", "M3.6" };
+    const char * met_data_name[8] = { "M31", "M32", "m331Set", "m332Set", "m333Set", "M34", "M35", "M36" };
+    double m31[12], m32[12], mvec[12];
 
     memset(m31, 0, sizeof(m31));
     memset(m32, 0, sizeof(m32));
@@ -730,6 +730,28 @@ bool ithipublisher::PublishDataM3(FILE * F)
             ret &= fprintf(F, "],\n") > 0;
         }
     }
+
+    /* Add M3.4 data */
+    if (ret) {
+        ret &= fprintf(F, "\"%s\" : [", met_data_name[5]) > 0;
+        memset(mvec, 0, sizeof(mvec));
+        ret &= GetVector("M3.4.1", NULL, mvec);
+        ret &= PrintVector(F, mvec, 100.0);
+        ret &= fprintf(F, ",\n") > 0;
+        ret &= PublishOptTable(F, "M3.4.2");
+        ret &= fprintf(F, "]") > 0;
+    }
+
+    /* Add M3.6 and M3.7 */
+    for (int m = 6; ret && m<8; m++)
+    {
+        memset(mvec, 0, sizeof(mvec));
+        ret &= GetVector(sub_met[m], NULL, mvec);
+        ret &= fprintf(F, ",\n") > 0;
+        ret &= fprintf(F, "\"%s\" : ", met_data_name[m]) > 0;
+        ret &= PrintVector(F, mvec, 100.0);
+    }
+    ret &= fprintf(F, "\n") > 0;
 
     return ret;
 }
@@ -1018,7 +1040,7 @@ bool ithipublisher::PublishDataM8(FILE * F)
     bool ret = true;
     char const * subMetX[4] = { "M8.1", "M8.2.1", "M8.3", "M8.4" };
 
-    fprintf(F, "\"M8DataSet\" : [\n");
+    ret &= fprintf(F, "\"M8DataSet\" : [\n") > 0;
 
     for (int i = 0; ret && i < 4; i++) {
         if (GetVector(subMetX[i], NULL, m8x))
@@ -1027,14 +1049,14 @@ bool ithipublisher::PublishDataM8(FILE * F)
             if (i > 0) {
                 ret &= (fprintf(F, ",\n") > 0);
             }
-            ret = PrintVector(F, m8x, 100.0);
+            ret &= PrintVector(F, m8x, 100.0);
         }
     }
 
     if (ret) {
-        ret = PublishOptTable(F, "M8.2.2");
+        ret &= PublishOptTable(F, "M8.2.2");
     }
-    fprintf(F, "]\n");
+    ret &= fprintf(F, "]\n") > 0;
 
     return ret;
 }
