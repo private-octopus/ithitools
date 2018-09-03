@@ -19,11 +19,22 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef ITHITOOLS_VERSION_H
-#define ITHITOOLS_VERSION_H
+#ifndef STATS_BY_IP_TEST_H
+#define STATS_BY_IP_TEST_H
 
-#define ITHITOOLS_VERSION_MAJOR 1
-#define ITHITOOLS_VERSION_MINOR 3
-#define ITHITOOLS_VERSION ((ITHITOOLS_VERSION_MAJOR*100) + ITHITOOLS_VERSION_MINOR)
+#include "ithi_test_class.h"
 
-#endif /* ITHITOOLS_VERSION_H */
+class StatsByIpTest :
+    public ithi_test_class
+{
+public:
+    StatsByIpTest();
+    virtual ~StatsByIpTest();
+
+    bool DoTest() override;
+
+    bool OptionHashTest();
+
+};
+
+#endif /* STATS_BY_IP_TEST_H */

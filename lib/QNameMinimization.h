@@ -19,11 +19,18 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef ITHITOOLS_VERSION_H
-#define ITHITOOLS_VERSION_H
+#ifndef QNAME_MINIMIZATION_H
+#define QNAME_MINIMIZATION_H
 
-#define ITHITOOLS_VERSION_MAJOR 1
-#define ITHITOOLS_VERSION_MINOR 3
-#define ITHITOOLS_VERSION ((ITHITOOLS_VERSION_MAJOR*100) + ITHITOOLS_VERSION_MINOR)
+#include <stdint.h>
 
-#endif /* ITHITOOLS_VERSION_H */
+class QNameMinimization
+{
+public:
+    QNameMinimization();
+    ~QNameMinimization();
+
+    static bool isMinimized(uint8_t * packet, uint32_t length, uint32_t nb_queries, uint32_t qr_index, uint32_t an_index, uint32_t ns_index);
+};
+
+#endif /* QNAME_MINIMIZATION_H */

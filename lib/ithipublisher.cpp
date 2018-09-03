@@ -664,9 +664,9 @@ bool ithipublisher::PublishDataM2(FILE * F)
 bool ithipublisher::PublishDataM3(FILE * F)
 {
     bool ret = true;
-    const char * sub_met[5] = { "M3.1", "M3.2", "M3.3.1", "M3.3.2", "M3.3.3" };
-    const char * met_data_name[5] = { "M31", "M32", "m331Set", "m332Set", "m333Set"};
-    double m31[12], m32[12];
+    const char * sub_met[8] = { "M3.1", "M3.2", "M3.3.1", "M3.3.2", "M3.3.3", "M3.4", "M3.5", "M3.6" };
+    const char * met_data_name[8] = { "M31", "M32", "m331Set", "m332Set", "m333Set", "M34", "M35", "M36" };
+    double m31[12], m32[12], mvec[12];
 
     memset(m31, 0, sizeof(m31));
     memset(m32, 0, sizeof(m32));
@@ -730,6 +730,28 @@ bool ithipublisher::PublishDataM3(FILE * F)
             ret &= fprintf(F, "],\n") > 0;
         }
     }
+
+    /* Add M3.4 data */
+    if (ret) {
+        ret &= fprintf(F, "\"%s\" : [", met_data_name[5]) > 0;
+        memset(mvec, 0, sizeof(mvec));
+        ret &= GetVector("M3.4.1", NULL, mvec);
+        ret &= PrintVector(F, mvec, 100.0);
+        ret &= fprintf(F, ",\n") > 0;
+        ret &= PublishOptTable(F, "M3.4.2");
+        ret &= fprintf(F, "]") > 0;
+    }
+
+    /* Add M3.5 and M3.6 */
+    for (int m = 6; ret && m<8; m++)
+    {
+        memset(mvec, 0, sizeof(mvec));
+        ret &= GetVector(sub_met[m], NULL, mvec);
+        ret &= fprintf(F, ",\n") > 0;
+        ret &= fprintf(F, "\"%s\" : ", met_data_name[m]) > 0;
+        ret &= PrintVector(F, mvec, 100.0);
+    }
+    ret &= fprintf(F, "\n") > 0;
 
     return ret;
 }
@@ -973,34 +995,105 @@ bool ithipublisher::PublishDataM7(FILE * F)
     return ret;
 }
 
-bool ithipublisher::PublishDataM8(FILE * F)
+bool ithipublisher::PublishOptTable(FILE * F, char const * metric_name)
 {
-    double m7x[12];
-    char subMetX[16];
-    bool ret = true;
+    std::vector<MetricNameLine> name_list;
+    const metric6_def_t * opt_def = ComputeM6::GetTable("M6.DNS.08");
+    bool ret = GetNameList(metric_name, &name_list);
 
-    fprintf(F, "\"M8DataSet\" : [\n");
+    ret &= (opt_def != NULL);
 
-    for (int i = 1; ret && i <= 3; i++) {
+    ret &= fprintf(F, "[") > 0;
+    
+    for (size_t i=0; ret && i<name_list.size(); i++){
+        /* Parse name to code */
+        char const * opt_long_name = NULL;
+        uint32_t opt_code = (uint32_t)atoi(name_list[i].name);
 
-        ret = snprintf(subMetX, sizeof(subMetX), "M8.%d", i) > 0;
-
-        if (ret) {
-            if (GetVector(subMetX, NULL, m7x))
-            {
-                /* M7.x is present */
-                ret = PrintVector(F, m7x, 100.0);
-
-                if (i == 2) {
-                    ret &= (fprintf(F, "\n") > 0);
-                }
-                else {
-                    ret &= (fprintf(F, ",\n") > 0);
-                }
+        for (size_t j = 0; j < opt_def->nb_registered; j++) {
+            if (opt_def->registry[j].key == opt_code) {
+                opt_long_name = opt_def->registry[j].key_name;
+                break;
             }
         }
+
+        if (i > 0) {
+            ret &= fprintf(F, ",\n") > 0;
+        }
+
+        if (opt_long_name != NULL) {
+            ret &= fprintf(F, "[ \"%s(%s)\", %6f, %6f]", opt_long_name, name_list[i].name, 100.0*name_list[i].current, 100.0*name_list[i].average) > 0;
+        }
+        else {
+            ret &= fprintf(F, "[ \"%s\", %6f, %6f]", name_list[i].name, 100.0*name_list[i].current, 100.0*name_list[i].average) > 0;
+        }
     }
-    fprintf(F, "]\n");
+
+    ret &= fprintf(F, "]\n") > 0;
+
+    return ret;
+}
+
+bool ithipublisher::PublishDataM8(FILE * F)
+{
+#if 0
+    double m8x[12];
+    bool ret = true;
+    char const * subMetX[4] = { "M8.1", "M8.2.1", "M8.3", "M8.4" };
+
+    ret &= fprintf(F, "\"M8DataSet\" : [\n") > 0;
+
+    for (int i = 0; ret && i < 4; i++) {
+        if (GetVector(subMetX[i], NULL, m8x))
+        {
+            /* M7.x is present */
+            if (i > 0) {
+                ret &= (fprintf(F, ",\n") > 0);
+            }
+            ret &= PrintVector(F, m8x, 100.0);
+        }
+    }
+
+    if (ret) {
+        ret &= PublishOptTable(F, "M8.2.2");
+    }
+    ret &= fprintf(F, "]\n") > 0;
+#else
+    double mvec[12];
+    bool ret = true;
+    char const * met_data_name[4] = { "M81", "M82", "M83", "M84" };
+    char const * sub_met[4] = { "M8.1", "M8.2", "M8.3", "M8.4" };
+
+
+    /* Publish M8.1 */
+    memset(mvec, 0, sizeof(mvec));
+    ret &= GetVector(sub_met[0], NULL, mvec);
+    ret &= fprintf(F, "\"%s\" : ", met_data_name[0]) > 0;
+    ret &= PrintVector(F, mvec, 100.0);
+    ret &= fprintf(F, ",\n") > 0;
+
+    /* Add M8.2 data */
+    if (ret) {
+        ret &= fprintf(F, "\"%s\" : [", met_data_name[1]) > 0;
+        memset(mvec, 0, sizeof(mvec));
+        ret &= GetVector("M8.2.1", NULL, mvec);
+        ret &= PrintVector(F, mvec, 100.0);
+        ret &= fprintf(F, ",\n") > 0;
+        ret &= PublishOptTable(F, "M8.2.2");
+        ret &= fprintf(F, "]") > 0;
+    }
+
+    /* Add M8.3 and M8.4 */
+    for (int m = 2; ret && m<4; m++)
+    {
+        memset(mvec, 0, sizeof(mvec));
+        ret &= GetVector(sub_met[m], NULL, mvec);
+        ret &= fprintf(F, ",\n") > 0;
+        ret &= fprintf(F, "\"%s\" : ", met_data_name[m]) > 0;
+        ret &= PrintVector(F, mvec, 100.0);
+    }
+    ret &= fprintf(F, "\n") > 0;
+#endif
 
     return ret;
 }

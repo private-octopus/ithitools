@@ -36,6 +36,7 @@
  * will link to a static set of C++ objects for doing the capture.
  */
 #include "config.h"
+#include "Version.h"
 
 #ifdef HAVE_GETOPT
 #include <unistd.h>
@@ -66,11 +67,18 @@ static logerr_t* logerr = NULL;
 
 extern "C"
 {
+
+    void libithicap_version() {
+        fprintf(stderr, "libithicap.so. Version %d.%02d.\n", ITHITOOLS_VERSION_MAJOR, ITHITOOLS_VERSION_MINOR);
+    }
+
     void libithicap_usage()
     {
         fprintf(stderr, "ITHICAP -- a DNSCAP plugin for ITHI data extraction.\n");
         fprintf(stderr, "Usage: ithitools <options>\n");
         fprintf(stderr, "Options:\n");
+        fprintf(stderr, "  -? -h              Print this page.\n");
+        fprintf(stderr, "  -v                 Print the current version number.\n");
         fprintf(stderr, "  -o file.csv        output file containing the computed summary.\n");
         fprintf(stderr, "  -r root-addr.txt   text file containing the list of root server addresses.\n");
         fprintf(stderr, "  -a res-addr.txt	  allowed list of resolver addresses. Traffic to or from\n");
@@ -139,7 +147,10 @@ extern "C"
                 fprintf(stderr, "Sorry, update list of special usage names (RFC6761) not implemented yet.\n");
                 exit(1);
                 break;
-
+            case 'v':
+                libithicap_version();
+                exit(1);
+            case '?':
             case 'h':
             default:
                 libithicap_usage();

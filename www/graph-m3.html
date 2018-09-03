@@ -8,18 +8,9 @@
 <script src="ithigraph.js"></script>
         
 <script type="text/javascript">
-    /*
-var canvas ;
-var context ;
-var Val_max;
-var Val_min;
-var sections;
-var xScale;
-    var yScale;
-    */
     var colorSet = ["#404040C0", "#A0A0A0C0", "#EFEFEFC0", "#404040C0"];
 
-    // Values for the M3.1 and M3.2 metrics, since Jan 2017 -- this is test data
+    // Values for the M3.1 and M3.2 metrics
     var M3Data;
 
     function init() {
@@ -108,6 +99,11 @@ var xScale;
         fillMetricTable("RFC 6761 name", "m331Table", M3Data.m331Set);
         fillMetricTable("Frequently used string", "m332Table", M3Data.m332Set);
         fillMetricTable("Frequent pattern", "m333Table", M3Data.m333Set);
+
+        // Add the EDNs metrics, etc.
+        var resolverMetricNames = ["M3.4", "M3.5", "M3.6"];
+
+        fillEdnsDoQname(resolverMetricNames, M3Data.M34, M3Data.M35, M3Data.M36);
     }
 
     function plotStackGraphM3(canvasId, dataSet1, dataSet2, colorSet) {
@@ -184,13 +180,13 @@ var xScale;
 </script>
 </head>
 
-<nav id="navMenu"></nav>
-
 <body onLoad="init()">
 
-<h1>M3: DNS Root Traffic Analysis</h1>
+    <nav id="navMenu"></nav>
 
-<h2 id="dateHeading">-</h2>
+    <h1>M3: DNS Root Traffic Analysis</h1>
+
+    <h2 id="dateHeading">-</h2>
 
     <p>
         The usage of the DNS root servers is tracked by measuring the number of
@@ -199,7 +195,11 @@ var xScale;
         that would not have been necessary if the DNS resolvers cached
         the previous replies (M3.2).
         The number of requests that would be necessary in any case is given
-        by the difference: 100% - M3.1 - M3.2.
+        by the difference: 100% - M3.1 - M3.2. The causes for "name leaks" is further 
+        explained by <a href="#MetricM33">metrics M3.3</a>.
+        In addition, the characteristics
+        such as usage of EDNS, DNSSEC or QNAME minimizations are
+        tracked by <a href="#rootResolverStats">metrics M3.4, M3.5 and M3.6</a>.
     </p>
     <p>
         In the following table, the <em>current value</em> is the
@@ -208,71 +208,72 @@ var xScale;
         over the 12 months preceeding this one -- or the average since the beginning
         of measurements if measurements started fewer than 12 months ago.
     </p>
-<table class="metrics">
-    <tr>
-        <td rowspan="4">
-            <canvas display="inline" id="pieChartM3" height="160" width="160"></canvas>
-        </td>
-        <th colspan="2">
-            Metric
-        </th>
-        <th class="number">
-            Current Value
-        </th>
-        <th class="number">
-            Average Value
-        </th>
-    </tr>
-    <tr>
-        <td>
-            <canvas id="colorBlobM31" height="32" width="32"></canvas>
-        </td>
-        <td>
-            M3.1 (% No Such Domain queries)
-        </td>
-        <td class="number" id="valM31">
-            -
-        </td>
-        <td class="number" id="averageM31">
-            -
-        </td>
-    </tr>
-    <tr>
-        <td>
-            <canvas id="colorBlobM32" height="32" width="32"></canvas>
-        </td>
-        <td>
-            M3.2 (% cacheable queries)
-        </td>
-        <td class="number" id="valM32">
-            -
-        </td>
-        <td class="number" id="averageM32">
-            -
-        </td>
-    </tr>
-    <tr>
-        <td>
-            <canvas id="colorBlobM3Zero" height="32" width="32"></canvas>
-        </td>
-        <td>
-            Core (100% - M3.1 - M3.2)
-        </td>
-        <td class="number" id="valM3Zero">
-            -
-        </td>
-        <td class="number" id="averageM3Zero">
-            -
-        </td>
-    </tr>
-</table>
+    <table class="metrics">
+        <tr>
+            <td rowspan="4">
+                <canvas display="inline" id="pieChartM3" height="160" width="160"></canvas>
+            </td>
+            <th colspan="2">
+                Metric
+            </th>
+            <th class="number">
+                Current Value
+            </th>
+            <th class="number">
+                Average Value
+            </th>
+        </tr>
+        <tr>
+            <td>
+                <canvas id="colorBlobM31" height="32" width="32"></canvas>
+            </td>
+            <td>
+                M3.1 (% No Such Domain queries)
+            </td>
+            <td class="number" id="valM31">
+                -
+            </td>
+            <td class="number" id="averageM31">
+                -
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <canvas id="colorBlobM32" height="32" width="32"></canvas>
+            </td>
+            <td>
+                M3.2 (% cacheable queries)
+            </td>
+            <td class="number" id="valM32">
+                -
+            </td>
+            <td class="number" id="averageM32">
+                -
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <canvas id="colorBlobM3Zero" height="32" width="32"></canvas>
+            </td>
+            <td>
+                Core (100% - M3.1 - M3.2)
+            </td>
+            <td class="number" id="valM3Zero">
+                -
+            </td>
+            <td class="number" id="averageM3Zero">
+                -
+            </td>
+        </tr>
+    </table>
 
     <p>
-    The following graph shows the evolution of M3.1 and M3.2 over time:
+        The following graph shows the evolution of M3.1 and M3.2 over time:
     </p>
 
     <canvas display="inline" id="stackGraphM3" height="400" width="650"></canvas>
 
+    <h2 id="MetricM33">Metrics M3.3, analysis of leaks</h2>
     <p>
         The number of requests to non-existing TLD, or “leaks”, is further explained
         by a set of sub-metrics measuring various forms of name leakage,
@@ -282,7 +283,7 @@ var xScale;
         all other forms of names, including malformed names (M3.3.4).
     </p>
     <p>
-        In the following table, the <em>current value</em> is the 
+        In the following table, the <em>current value</em> is the
         value of the metric for the current month.
         The <em>average value</em> is the value of that fraction
         over the 12 months preceeding this one -- or the average since the beginning
@@ -329,7 +330,7 @@ var xScale;
             <td>
                 <canvas id="colorBlobM333" height="32" width="32"></canvas>
             </td>
-            <td >
+            <td>
                 <a href="#M333">M3.3.3 (% Queries to frequently found name patterns)</a>
             </td>
             <td class="number" id="valM333">
@@ -363,9 +364,9 @@ var xScale;
     <h3 id="M331">Queries to RFC 6761 reserved names</h3>
     <p>
         In the following table, the <em>current value</em> is the fraction of queries to the root
-        directed at RFC 6761 names in the current month. 
+        directed at RFC 6761 names in the current month.
         The <em>average value</em> is the value of that fraction
-        over the 12 months preceeding this one -- or the average since the beginning 
+        over the 12 months preceeding this one -- or the average since the beginning
         of measurements if measurements started fewer than 12 months ago.
     </p>
     <div id="m331Table">Table M331 not found</div>
@@ -383,11 +384,23 @@ var xScale;
     <h3 id="M333">Queries to frequently found name patterns</h3>
     <p>
         In the following table, the <em>current value</em> is the fraction of queries to the root
-        following a specific name pattern in the current month. 
+        following a specific name pattern in the current month.
         The <em>average value</em> is the value of that fraction
         over the 12 months preceeding this one -- or the average since the beginning
         of measurements if measurements started fewer than 12 months ago.
     </p>
     <div id="m333Table">Table M333 not found</div>
+
+    <h2 id="rootResolverStats">Characteristics of resolvers seen at the root</h2>
+<p>
+Additional metrics characterize the options found in queries sent to the root, such as whether resolvers use extended DNS (M3.4.1),
+what EDNS options they use (M3.4.2), whether they set the DNSSEC OK bit in queries (M3.5), and whether they appear to
+enforce QName Minimization (M3.6). The current and average values of these metrics are provided in the following table:
+</p>
+
+<div id="tableEdnsDoQname">
+Table M3.4, M3.5 and M3.6 was not initialized.
+</div>
+
 </body>
 </html>

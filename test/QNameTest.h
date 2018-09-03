@@ -1,5 +1,4 @@
 /*
-* Author: Christian Huitema
 * Copyright (c) 2018, Private Octopus, Inc.
 * All rights reserved.
 *
@@ -19,11 +18,33 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef ITHITOOLS_VERSION_H
-#define ITHITOOLS_VERSION_H
+#ifndef QNAME_TEST_H
+#define QNAME_TEST_H
 
-#define ITHITOOLS_VERSION_MAJOR 1
-#define ITHITOOLS_VERSION_MINOR 3
-#define ITHITOOLS_VERSION ((ITHITOOLS_VERSION_MAJOR*100) + ITHITOOLS_VERSION_MINOR)
+#include "ithi_test_class.h"
 
-#endif /* ITHITOOLS_VERSION_H */
+#if __cplusplus < 199711L
+#ifndef override
+#define override 
+#endif
+#endif
+
+class CmpNameTest : public ithi_test_class
+{
+public:
+    CmpNameTest();
+    ~CmpNameTest();
+
+    bool DoTest() override;
+};
+
+class QNameTest : public ithi_test_class
+{
+public:
+    QNameTest();
+    ~QNameTest();
+
+    bool DoTest() override;
+};
+
+#endif /* QNAME_TEST_H */

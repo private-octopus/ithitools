@@ -323,3 +323,128 @@ IPAsKeyLRU * IPAsKeyLRU::CreateCopy()
 
     return x;
 }
+
+
+StatsByIP::StatsByIP(uint8_t * addr, size_t addr_len, bool has_do, bool has_edns, bool mini_qname) :
+    HashNext(NULL),
+    count(1),
+    hash(0),
+    nb_do((has_do)?1:0),
+    nb_edns((has_edns)?1:0),
+    nb_mini_qname((mini_qname)?1:0),
+    query_seen(false),
+    response_seen(false),
+    option_mask(0)
+{
+    if (addr_len > 16)
+    {
+        addr_len = 16;
+    }
+
+    memcpy(this->addr, addr, addr_len);
+    this->addr_len = addr_len;
+}
+
+StatsByIP::~StatsByIP()
+{
+}
+
+bool StatsByIP::IsSameKey(StatsByIP * key)
+{
+    bool ret = (key->addr_len == this->addr_len &&
+        memcmp(key->addr, this->addr, this->addr_len) == 0);
+    return ret;
+}
+
+uint32_t StatsByIP::Hash()
+{
+    if (hash == 0)
+    {
+        hash = 0xDEADBEEF;
+        for (size_t i = 0; i < addr_len; i++)
+        {
+            hash = hash * 101 + addr[i];
+        }
+    }
+    return hash;
+}
+
+
+StatsByIP * StatsByIP::CreateCopy()
+{
+    StatsByIP * x = new StatsByIP(addr, addr_len, false, false, false);
+
+    if (x != NULL)
+    {
+        x->hash = hash;
+        x->nb_do = nb_do;
+        x->nb_edns = nb_edns;
+        x->nb_mini_qname = nb_mini_qname;
+        x->query_seen = query_seen;
+        x->response_seen = response_seen;
+        x->option_mask = option_mask;
+    }
+
+    return x;
+}
+
+void StatsByIP::Add(StatsByIP * key)
+{
+    count += key->count;
+    nb_do += key->nb_do;
+    nb_edns += key->nb_edns;
+    nb_mini_qname += key->nb_mini_qname;
+    query_seen |= key->query_seen;
+    response_seen |= key->response_seen;
+    option_mask |= key->option_mask;
+}
+
+bool StatsByIP::IsDoUsed()
+{
+    return (nb_do > 0);
+}
+
+bool StatsByIP::IsEdnsSupported()
+{
+    return (nb_edns > 0);
+}
+
+bool StatsByIP::IsQnameMinimized()
+{
+    uint32_t ref_count = count;
+
+    if (query_seen) {
+        ref_count--;
+    }
+
+    return(nb_mini_qname == ref_count);
+}
+
+/* Options should be counted at most once per resolver. To
+ * verify that, we use a simple bit mask, much like a simplified
+ * Bloome filter */
+
+bool StatsByIP::RegisterNewOption(uint16_t option_code)
+{
+    uint32_t option_hash = option_code;
+
+    /* Compute a minimal 16 bit hash */
+    option_hash ^= (option_code * 102);
+    option_hash ^= (option_hash >> 11);
+    option_hash *= 31;
+    option_hash ^= (option_hash >> 6);
+
+    /* Retain only the last 6 bits */
+    option_hash &= 0x3F;
+    uint64_t bit_mask = (1ull << option_hash);
+
+    /* check the mask */
+    bool ret = (option_mask&bit_mask) == 0;
+
+    if (ret) {
+        option_mask |= bit_mask;
+    }
+
+    return ret;
+}
+
