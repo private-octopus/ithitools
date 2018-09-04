@@ -1,4 +1,11 @@
-ithitools (1.03.ppa1-0ubuntu1) xenial; urgency=medium
+ithitools (1.03.ppa2-0ubuntu1) xenial; urgency=medium
+
+  [ Christian Huitema ]
+  * Fix gcc compile warning in OdiPublishTest
+
+ -- Christian Huitema <huitema@huitema.net>  Mon, 3 Sep 2018 19:23:58 -0700
+ 
+ ithitools (1.03.ppa1-0ubuntu1) xenial; urgency=medium
 
   [ Christian Huitema ]
   * Add code and pages for M8, also new data in M3
