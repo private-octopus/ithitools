@@ -52,9 +52,9 @@ typedef struct st_odi_update_time_test_t {
 static time_t test_publish_time = 0x5b73baf4;
 
 static const odi_update_time_test_t update_time_test[] = {
-    {0, "1970-01-01T00:00:00UTC" },
-    {0x5b73baf4, "2018-08-15T05:32:36UTC"},
-    {0xdeadbeef, "2088-05-20T21:55:59UTC"}
+    { 0, "1970-01-01T00:00:00UTC" },
+    { static_cast<time_t>(0x5b73baf4), "2018-08-15T05:32:36UTC"},
+    { static_cast<time_t>(0xdeadbeef), "2088-05-20T21:55:59UTC"}
 };
 
 static const size_t nb_testupdate_time_test = sizeof(update_time_test) / sizeof(odi_update_time_test_t);
