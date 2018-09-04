@@ -27,6 +27,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include <algorithm>
 
 #include "DnsStats.h"
