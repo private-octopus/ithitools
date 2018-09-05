@@ -456,7 +456,7 @@ bool TldCountTest::DoTest()
                 {
                     int tld_index = GetTldIndex(tld_entry->tld, tld_entry->tld_len);
                     if (tld_index >= 0) {
-                        if (tld_index < max_tld_leakage_count &&
+                        if (((uint32_t)tld_index) < max_tld_leakage_count &&
                             count_per_string[tld_index + 1] != (int)tld_entry->count) {
                             TEST_LOG("TLD %s, count %d instead of %d\n",
                                 TargetNames[tld_index], tld_entry->count, count_per_string[tld_index + 1]);
