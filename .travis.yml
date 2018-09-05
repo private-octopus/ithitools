@@ -2,17 +2,20 @@ sudo: false
 language: cpp
 before_install:
   - |
-      if $ANALYSIS || $COVERAGE || $DOXYGEN; then
-        openssl aes-256-cbc -K $encrypted_e845a59f36e1_key -iv $encrypted_e845a59f36e1_iv -in travis/ithipages-publish-key.enc -out ~/.ssh/ithipages-publish-key -d
-        chmod u=rw,og= ~/.ssh/ithipages-publish-key
-        echo "Host github.com" >> ~/.ssh/config
-        echo "  IdentityFile ~/.ssh/ithipages-publish-key" >> ~/.ssh/config
-        ( cd /tmp
-          git clone git@github.com:private-octopus/ithipages.git
-          cd ithipages
-          git checkout gh-pages
-          ls -l
-        )
+      if [ ! -z "$encrypted_e845a59f36e1_key" -a ! -z "$encrypted_e845a59f36e1_iv" ] ; then
+        if $ANALYSIS || $COVERAGE || $DOXYGEN; then
+          openssl aes-256-cbc -K $encrypted_e845a59f36e1_key -iv $encrypted_e845a59f36e1_iv -in travis/ithipages-publish-key.enc -out ~/.ssh/ithipages-publish-key -d && (
+            chmod u=rw,og= ~/.ssh/ithipages-publish-key
+            echo "Host github.com" >> ~/.ssh/config
+            echo "  IdentityFile ~/.ssh/ithipages-publish-key" >> ~/.ssh/config
+            ( cd /tmp
+              git clone git@github.com:private-octopus/ithipages.git
+              cd ithipages
+              git checkout gh-pages
+              ls -l
+            )
+          )
+        fi
       fi
 addons:
   apt:
@@ -86,14 +89,17 @@ script:
       fi
 after_script:
   - |
-      if $ANALYSIS || $COVERAGE || $DOXYGEN ; then
-        cp README.md /tmp/ithipages/README.md.orig
-        ( cd /tmp/ithipages
-          ./mkreadme.sh
-          [ -d analysis ] && git add analysis
-          [ -d coverage ] && git add coverage
-          [ -d doxygen  ] && git add doxygen
-          git commit -a -m "update from travis at `date`" \
-          && git push
-        )
+      if [ ! -z "$encrypted_e845a59f36e1_key" -a ! -z "$encrypted_e845a59f36e1_iv" ] ; then
+        if $ANALYSIS || $COVERAGE || $DOXYGEN ; then
+          cp README.md /tmp/ithipages/README.md.orig
+          ( cd /tmp/ithipages
+            ./mkreadme.sh && (
+              [ -d analysis ] && git add analysis
+              [ -d coverage ] && git add coverage
+              [ -d doxygen  ] && git add doxygen
+              git commit -a -m "update from travis at `date`" \
+              && git push
+            )
+          )
+        fi
       fi
