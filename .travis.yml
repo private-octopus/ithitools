@@ -41,7 +41,7 @@ matrix:
       env: VALGRIND=false ANALYSIS=false COVERAGE=false DOXYGEN=false
 script:
   - |
-      if $COVERAGE ; then
+      if [ ! -z "$encrypted_e845a59f36e1_key" -a ! -z "$encrypted_e845a59f36e1_iv" ] && $COVERAGE ; then
         CXXFLAGS="-Wall -Wextra -Wpedantic -Werror -g -fprofile-arcs -ftest-coverage -O0" \
           CFLAGS="-Wall -Wextra -Wpedantic -Werror -g -fprofile-arcs -ftest-coverage -O0" \
          LDFLAGS="-lgcov --coverage" cmake .
@@ -68,7 +68,7 @@ script:
         )
       fi
   - |
-      if $COVERAGE ; then
+      if [ ! -z "$encrypted_e845a59f36e1_key" -a ! -z "$encrypted_e845a59f36e1_iv" ] && $COVERAGE ; then
         geninfo .  -o ithitest.info
         lcov --remove ithitest.info '/usr/include/*' -o ithi.info
         if [ $TRAVIS_PULL_REQUEST = "false" ] ; then
