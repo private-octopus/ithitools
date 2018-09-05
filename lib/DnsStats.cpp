@@ -1410,7 +1410,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     uint8_t * source_addr, size_t source_addr_length,
     uint8_t * dest_addr, size_t dest_addr_length)
 {
-    bool is_response;
+    bool is_response = false;
 
     bool has_header = true;
     uint32_t flags = 0;

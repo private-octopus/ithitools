@@ -142,7 +142,7 @@ bool PublishTest::DoOneTest(int metric_id, char const ** metric_files, size_t nb
     char const * target_file, char const * ref_file)
 {
 
-    bool ret = CreateTestDirectory(metric_id, metric_files, nb_files);
+    bool ret = CreateTestDirectory(metric_id, metric_files, (int)nb_files);
 
     if (ret) {
         ithipublisher pub(publish_test_dir_ithi, metric_id);
