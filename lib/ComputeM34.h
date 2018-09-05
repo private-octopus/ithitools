@@ -30,6 +30,11 @@ typedef struct _st_metric34_line_t {
     double frequency;
 } metric34_line_t;
 
+typedef struct _st_metric8_line_t {
+    int opt_code;
+    double frequency;
+} metric8_line_t;
+
 class ComputeM3 : public ComputeMetric
 {
 public:
@@ -49,6 +54,10 @@ private:
     std::vector<metric34_line_t> m33_2;
     std::vector<metric34_line_t> m33_3;
     double m33_4;
+    double m3_4_1; /* EDNS usage */
+    std::vector<metric8_line_t> m3_4_2;
+    double m3_5; /* DNS OK Option */
+    double m3_6; /* FQDN Minimization */
     CaptureSummary cs;
 
     void GetM3_X(uint32_t table_id,
@@ -58,6 +67,9 @@ private:
     bool GetM33_1();
     bool GetM33_2();
     bool GetM33_3();
+    bool GetM3_4();
+    bool GetM3_5();
+    bool GetM3_6();
 };
 
 class ComputeM4 : public ComputeMetric
@@ -102,15 +114,20 @@ public:
     bool Compute() override;
     bool Write(FILE * F_out) override;
 
+    static bool ComputeEdnsMetrics(CaptureSummary * cs, double * m_edns, std::vector<metric8_line_t>* m_edns_opt);
+
 private:
     CaptureSummary cs;
 
     double m8_1;
-    double m8_2;
+    double m8_2_1;
     double m8_3;
+    double m8_4;
+    std::vector<metric8_line_t> m8_2_2;
 
     bool GetM8_1();
     bool GetM8_2();
     bool GetM8_3();
+    bool GetM8_4();
 };
 #endif /* COMPUTE_M346_H */

@@ -1,7 +1,7 @@
 Summary: DNS capture tools for the ITHI metrics defined by ICANN
 Name: ithitools
-Version: 1.02
-Release: 4
+Version: 1.03
+Release: 1
 
 License: MIT
 URL: https://github.com/private-octopus/ithitools
@@ -32,12 +32,14 @@ make install DESTDIR=$RPM_BUILD_ROOT
 
 %files
 /usr/local/bin/ithitools
-/usr/local/bin/ithitools-1.02
+/usr/local/bin/ithitools-1.03
 /usr/local/include/ithicap.h
 /usr/local/lib/libithicap.so
-/usr/local/lib/libithicap.so.1.02
+/usr/local/lib/libithicap.so.1.03
 
 %changelog
+* Sat Sep 1 2018 Christian Huitema <huitema@huitema.net> 1.03-1
+- Add revised metric M8 and new definition of M3, M4
 * Sat Aug 4 2018 Christian Huitema <huitema@huitema.net> 1.02-4
 - Add metric M8 and add -g flag to CXX compile options
 * Sat Aug 4 2018 Christian Huitema <huitema@huitema.net> 1.02-3

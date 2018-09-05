@@ -82,6 +82,10 @@
 #define REGISTRY_DNS_Local_TLD_Usage_Count 40
 #define REGISTRY_DNSSEC_Client_Usage 41
 #define REGISTRY_DNSSEC_Zone_Usage 42
+#define REGISTRY_EDNS_Client_Usage 43
+#define REGISTRY_QNAME_MINIMIZATION_Usage 44
+#define REGISTRY_EDNS_OPT_USAGE 45
+#define REGISTRY_EDNS_OPT_USAGE_REF 46
 
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
@@ -216,7 +220,7 @@ public:
 
     BinHash<DnsPrefixEntry> dnsPrefixTable;
     BinHash<DnssecPrefixEntry> dnssecPrefixTable;
-    BinHash<DnssecPrefixEntry> dnssecAddressTable;
+    BinHash<StatsByIP> statsByIp;
 
     /* For the plug in */
     void SubmitPacket(uint8_t * packet, uint32_t length,
@@ -237,6 +241,8 @@ public:
     uint32_t max_tld_leakage_table_count;
     uint32_t max_query_usage_count;
     uint32_t max_tld_string_usage_count;
+    uint32_t max_tld_string_leakage_count;
+    uint32_t max_stats_by_ip_count;
     uint32_t dnsstat_flags;
     int record_count; 
     int query_count;
@@ -244,6 +250,10 @@ public:
     uint32_t error_flags;
     uint32_t dnssec_name_index;
     bool is_do_flag_set;
+    bool is_using_edns;
+    uint8_t * edns_options;
+    uint32_t edns_options_length;
+    bool is_qname_minimized;
 
 
     static bool IsRfc6761Tld(uint8_t * tld, size_t length);
@@ -256,8 +266,17 @@ public:
         bool is_dnssec);
     void ExportDnssecUsage();
 
-    int GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
+    void RegisterStatsByIp(uint8_t * dest_addr, size_t dest_addr_length);
+    void RegisterOptionsByIp(uint8_t * source_addr, size_t source_addr_length);
+
+    void ExportStatsByIp();
+
+    static int GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
         uint8_t * name, size_t name_max, size_t * name_length);
+
+    static int CompareDnsName(uint8_t * packet, uint32_t length, uint32_t start1, uint32_t start2);
+
+    static bool IsQNameMinimized(uint8_t * packet, uint32_t length, uint32_t nb_queries, int q_rclass, int q_rtype, uint32_t qr_index, uint32_t an_index, uint32_t ns_index);
 
     static void GetSourceAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
     static void GetDestAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
@@ -266,7 +285,7 @@ private:
     bool LoadPcapFile(char const * fileName);
     void SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header);
 
-    int SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start, bool is_response);
+    int SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start, bool is_response, int * qclass, int * qtype);
     int SubmitRecord(uint8_t * packet, uint32_t length, uint32_t start, 
         uint32_t * e_rcode, uint32_t * e_length, bool is_response);
     int SubmitName(uint8_t * packet, uint32_t length, uint32_t start, bool should_tabulate);
@@ -288,14 +307,14 @@ private:
 
 
 
-    void NormalizeNamePart(uint32_t length, uint8_t * value, uint8_t * normalized, uint32_t * flags);
+    static void NormalizeNamePart(uint32_t length, uint8_t * value, uint8_t * normalized, uint32_t * flags);
 
 
 
     bool IsNumericDomain(uint8_t * tld, uint32_t length);
 
     void ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id, 
-        bool do_accounting);
+        bool do_accounting, uint32_t max_leak_count);
     void ExportLeakedDomains();
     void ExportStringUsage();
 
