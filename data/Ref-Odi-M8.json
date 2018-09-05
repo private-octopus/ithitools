@@ -2,10 +2,7 @@
 "identifier" : "ITHI-M8",
 "modified" : "2018-08-15T05:32:36UTC",
 "title" : "DNS Authoritative Servers Analysis",
-"description" : "The metric M8 tracks the traffic at participatig resolvers by measuring three values:
-the fraction of queries that trigger an NX_DOMAIN responses (M8.1);
-the fraction of queries that use Extended DNS (EDNS) (M8.2); and,
-the fraction of DNS Resolvers ready for DNSSEC.",
+"description" : "The metric M8 tracks the traffic at participatig resolvers by measuring three values: the fraction of queries that trigger an NX_DOMAIN responses (M8.1); the fraction of resolvers that use Extended DNS (EDNS) (M8.2.1); the frequency of usage by resolvers of EDNS Options (M8.2.2); the fraction of resolvers that set the DNSSEC OK flag (M8.3); and, the fraction of resolvers that use QName Minimization (M8.4).",
 "keyword" : [ "ITHI", "DNS Authoritative Servers", "EDNS", "DNSSEC" ],
 "theme" : [],
 "publisher": {
