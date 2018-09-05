@@ -184,7 +184,7 @@ bool ithipublisher::CollectMetricFiles()
         /* Load the selected data */
         for (size_t i = 0; ret &&  i < file_list.size(); i++)
         {
-            ret = LoadFileData(i, dir_met_name);
+            ret = LoadFileData((int)i, dir_met_name);
         }
 
         if (ret)

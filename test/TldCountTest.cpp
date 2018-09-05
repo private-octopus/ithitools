@@ -296,7 +296,7 @@ static void fill_initial_table(BinHash<DnsHashEntry> * hashTable) {
             key.key_type = 0; /* number */
             key.key_number = hash_input_table[i].key_number;
         } else {
-            key.key_length = strlen(hash_input_table[i].key_text);
+            key.key_length = (uint32_t)strlen(hash_input_table[i].key_text);
             key.key_type = 1; /* string */
             memcpy(key.key_value, hash_input_table[i].key_text, key.key_length);
             key.key_value[key.key_length] = 0;
@@ -350,9 +350,9 @@ bool TldCountTest::DoTest()
     BinHash<DnsHashEntry> hashTable;
     int count_per_string[nbTargetNames+1];
     const int initial_count = 0x10000;
-    const int max_hash_size = 0x8000;
+    const uint32_t max_hash_size = 0x8000;
     const int max_delta_count = 0x80;
-    const int max_tld_leakage_count = 0x80;
+    const uint32_t max_tld_leakage_count = 0x80;
     int current_count = initial_count;
     int total_keys = 0;
     int dropped_keys = 0;
@@ -487,7 +487,7 @@ bool TldCountTest::DoTest()
 
                     key.count = lines[i]->count;
                     key.registry_id = REGISTRY_DNS_Frequent_TLD_Usage;
-                    key.key_length = lines[i]->tld_len;
+                    key.key_length = (uint32_t)lines[i]->tld_len;
                     key.key_type = 1; /* string */
                     memcpy(key.key_value, lines[i]->tld, lines[i]->tld_len);
                     key.key_value[lines[i]->tld_len] = 0;

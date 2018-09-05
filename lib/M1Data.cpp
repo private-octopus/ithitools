@@ -188,7 +188,7 @@ int M1Data::GetCategoryIndex(char const * category)
         char * x = new char[len + 1];
         if (x != NULL) {
             memcpy(x, category, len + 1);
-            ret = category_indices.size();
+            ret = (int)category_indices.size();
             category_indices.push_back((char const *)x);
         }
     }
