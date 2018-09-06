@@ -38,7 +38,7 @@ make install DESTDIR=$RPM_BUILD_ROOT
 /usr/local/lib/libithicap.so.1.03
 
 %changelog
-* Sat Sep 5 2018 Christian Huitema <huitema@huitema.net> 1.03-2
+* Wed Sep 5 2018 Christian Huitema <huitema@huitema.net> 1.03-2
 - Fix warnings and update CMakefile for version 1.03
 * Sat Sep 1 2018 Christian Huitema <huitema@huitema.net> 1.03-1
 - Add revised metric M8 and new definition of M3, M4
