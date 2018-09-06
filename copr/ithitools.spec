@@ -1,7 +1,7 @@
 Summary: DNS capture tools for the ITHI metrics defined by ICANN
 Name: ithitools
 Version: 1.03
-Release: 1
+Release: 2
 
 License: MIT
 URL: https://github.com/private-octopus/ithitools
