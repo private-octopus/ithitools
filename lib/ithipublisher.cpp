@@ -720,15 +720,8 @@ bool ithipublisher::PublishDataM3(FILE * F)
         {
             ret = PrintNameList(F, &name_list, 100.0);
         }
-
-        if (m == 4)
-        {
-            ret &= fprintf(F, "]\n") > 0;
-        }
-        else
-        {
-            ret &= fprintf(F, "],\n") > 0;
-        }
+        
+        ret &= fprintf(F, "],\n") > 0;
     }
 
     /* Add M3.4 data */
