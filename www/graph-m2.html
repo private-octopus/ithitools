@@ -57,8 +57,8 @@
         if (metricLine.length >= 3 && pilotLine.length >= 5) {
             setValElementX(pilotLine[0], getLastElement(metricLine[0]));
             setValElementX(pilotLine[1], getAverageElement(metricLine[0]));
-            setValElementX(pilotLine[2], metricLine[1]);
-            setValElementX(pilotLine[3], metricLine[2]);
+            setValElementI(pilotLine[2], metricLine[1]);
+            setValElementI(pilotLine[3], metricLine[2]);
             plotGraph(pilotLine[4], metricLine[0], getMaxRange(getMaxElement(metricLine[0])), graphColor, "");
         }
     }
@@ -79,7 +79,7 @@
         names used in four kinds of abuse: phishing, malware distribution,
         command and control of botnets, and spam. The number of abusive domains are tabulated
         either based on the TLD in which they are registered (Measures M2.1.*.*) or based
-        on the registrar that registered tham (Measures M2.2.*.*). The values measured
+        on the registrar that registered them (Measures M2.2.*.*). The values measured
         each way differ. One reason for the difference is the inclusion of "parked"
         domains in the TLD counts. These domains are known to be used for abuse, have
         been taken over by law enforcement or by other regulation systems, and are 

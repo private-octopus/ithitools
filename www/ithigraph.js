@@ -27,6 +27,17 @@ function setValElementX(valElementId, x) {
     }
 }
 
+function setValElementI(valElementId, x) {
+    elm = document.getElementById(valElementId);
+    if (x.toFixed(0)) {
+        elm.innerHTML = "<b>" + x.toFixed(0) + "</b>";
+    }
+    else {
+        elm.innerHTML = "<b>" + x + "</b>";
+    }
+}
+
+
 function getLastElement(dataSet) {
     if (dataSet.length < 1) {
         return 0;
