@@ -27,16 +27,11 @@
 #ifdef _WINDOWS
 #ifndef _WINDOWS64
 static char const * pcap_input_test = "..\\data\\tiny-capture.pcap";
-static char const * pcap_test_output = "..\\data\\tiny-capture.csv";
 #else
 static char const * pcap_input_test = "..\\..\\data\\tiny-capture.pcap";
-static char const * pcap_test_output = "..\\..\\data\\tiny-capture.csv";
 #endif
-static char const * pcap_test_debug = "tiny-capture-out.csv";
 #else
 static char const * pcap_input_test = "data/tiny-capture.pcap";
-static char const * pcap_test_output = "data/tiny-capture.csv";
-static char const * pcap_test_debug = "tiny-capture-out.csv";
 #endif
 
 
