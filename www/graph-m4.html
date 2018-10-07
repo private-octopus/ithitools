@@ -76,8 +76,6 @@
         setValElement("averageM44", average44);
         setValElement("valM45", getLastElement(M4Data.M45Data));
         setValElement("averageM45", getAverageElement(M4Data.M45Data));
-        setValElement("valM46", getLastElement(M4Data.M46Data));
-        setValElement("averageM46", getAverageElement(M4Data.M46Data));
 
         // Set the color blobs in the M4 table, then plot the M4 pie chart
         setColorBlob("colorBlobM41", colorSet[0]);
@@ -113,28 +111,15 @@
         to other strings.
     </p>
 <p>
-The M4 metric also tracks the usage of DNSSEC at recursive servers through two metrics:
+The M4 metric also tracks the usage of DNSSEC at recursive servers through metric M4.5:
 </p>
 <ul>
-
         <li>
             M4.5: the fraction of DNS Clients ready for DNSSEC.
             This is computed at recursive resolvers.
             We compute the ratio of the number of clients that sent requests with the EDNS "DNSSEC OK"
             option set, over the total number of clients. Clients are identified by IP address,
             and a given IP address is only counted once. The ratios measured at recursive
-            resolvers are then averaged to compute the metric.
-        </li>
-        <li>
-            M4.6: the fraction of Zones publishing DNSSEC records.
-            This is also computed at recursive resolvers.
-            We compute the ratio of the number of DNS zones for which we saw at
-            least one DNSSEC record (DNSKEY, RRSIG, NSEC, NSEC3 or DS) over the
-            total number of zones queried at the recursive resolver.
-            Zones are identified by a prefix, computed using
-            <a href="https://publicsuffix.org/">Mozilla's Public Suffix List</a>.
-            Each prefix is only counted once.
-            The ratios measured at recursive
             resolvers are then averaged to compute the metric.
         </li>
 </ul>
@@ -218,23 +203,12 @@ The M4 metric also tracks the usage of DNSSEC at recursive servers through two m
         <tr>
             <td rowspan = 2 colspan=2> DNSSEC </td>
             <td>
-                M4.5: % of Clients ready for DNSSEC
+                M4.5:  % of Clients setting the DNSSEC OK bit in queries
             </td>
             <td class="number" id="valM45">
                 -
             </td>
             <td class="number" id="averageM45">
-                -
-            </td>
-        </tr>
-        <tr>
-            <td>
-                M4.6: % of Zones publishing DNSSEC
-            </td>
-            <td class="number" id="valM46">
-                -
-            </td>
-            <td class="number" id="averageM46">
                 -
             </td>
         </tr>
