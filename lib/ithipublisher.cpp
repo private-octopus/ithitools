@@ -781,7 +781,8 @@ bool ithipublisher::PublishDataM4(FILE * F)
         ret &= fprintf(F, "],\n") > 0;
     }
 
-    for (int m = 3; ret && m < 5; m++)
+    /* Only publish M4.5, not M4.6, until we clarify M4.6 computation */
+    for (int m = 3; ret && m < 4; m++)
     {
         ret = fprintf(F, "\"%s\" : ", met_data_name[m]);
 
@@ -790,7 +791,7 @@ bool ithipublisher::PublishDataM4(FILE * F)
             /* M7.x is present */
             ret = PrintVector(F, mdns, 100.0);
 
-            if (m == 4) {
+            if (m == 3) {
                 ret &= (fprintf(F, "\n") > 0);
             }
             else {

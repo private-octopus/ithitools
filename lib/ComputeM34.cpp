@@ -386,8 +386,7 @@ ComputeM4::ComputeM4()
     nb_delegated(0),
     m4_1(0),
     m4_4(0),
-    m4_5(0),
-    m4_6(0)
+    m4_5(0)
 {
 }
 
@@ -459,10 +458,12 @@ bool ComputeM4::Write(FILE * F_out)
     if (ret) {
         ret = fprintf(F_out, "M4.5, , %6f,\n", m4_5) > 0;
     }
-
+    /* Removing metric M4.6 until investigation completes */
+#if 0
     if (ret) {
         ret = fprintf(F_out, "M4.6, , %6f,\n", m4_6) > 0;
     }
+#endif
 
     return ret;
 }
@@ -570,7 +571,8 @@ bool ComputeM4::GetM4_DNSSEC()
     bool ret = true;
 
     m4_5 = scalar_metric_from_capture(&cs, REGISTRY_DNSSEC_Client_Usage);
-    m4_6 = scalar_metric_from_capture(&cs, REGISTRY_DNSSEC_Zone_Usage);
+    /* Removing M4.6 for now, until investigation completes */
+    /* m4_6 = scalar_metric_from_capture(&cs, REGISTRY_DNSSEC_Zone_Usage); */
 
     return ret;
 }

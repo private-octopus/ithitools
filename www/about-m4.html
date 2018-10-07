@@ -55,11 +55,10 @@ we tabulate all frequently leaked global names individually, but we group all lo
 under a single category, "local host names".
 </p>
 <p>
-In addition to measuring name leakage, we also measure DNSSEC deployment with 2 metrics:
+In addition to measuring name leakage, we also measure DNSSEC deployment with 1 metric:
 </p>
 <ul>
-<li>M4.5: % of Clients ready for DNSSEC.</li>
-<li>M4.6: % of Zones publishing DNSSEC.</li>
+<li>M4.5: % of Clients setting the DNSSEC OK bit in queries.</li>
 </ul>
 <p>
 To compute the metric 4.5, we identify the clients by their IP address, and we weight
