@@ -94,7 +94,8 @@ private:
     std::vector<metric34_line_t> m4_3;
     double m4_4;
     double m4_5;
-    double m4_6;
+    /* Remove M4.6 for now */
+    /* double m4_6; */
 
     bool GetM4_X(uint32_t table_id, std::vector<metric34_line_t>* mstring_x, double min_share);
     bool GetM4_1();

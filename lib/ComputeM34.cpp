@@ -386,8 +386,7 @@ ComputeM4::ComputeM4()
     nb_delegated(0),
     m4_1(0),
     m4_4(0),
-    m4_5(0),
-    m4_6(0)
+    m4_5(0)
 {
 }
 
