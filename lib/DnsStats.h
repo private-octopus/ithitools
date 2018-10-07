@@ -281,9 +281,9 @@ public:
     static void GetSourceAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
     static void GetDestAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
 
+    void SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header);
 private:
     bool LoadPcapFile(char const * fileName);
-    void SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header);
 
     int SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start, bool is_response, int * qclass, int * qtype);
     int SubmitRecord(uint8_t * packet, uint32_t length, uint32_t start, 

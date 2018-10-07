@@ -40,6 +40,7 @@
 #include "OdiPublishTest.h"
 #include "QNameTest.h"
 #include "StatsByIpTest.h"
+#include "capture_fuzz.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -235,6 +236,14 @@ namespace ithiunit
         TEST_METHOD(StatsByIp)
         {
             StatsByIpTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(CaptureFuzz)
+        {
+            capture_fuzz test;
             bool ret = test.DoTest();
 
             Assert::AreEqual(ret, true);

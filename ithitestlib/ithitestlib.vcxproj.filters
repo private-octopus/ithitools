@@ -78,6 +78,9 @@
     <ClCompile Include="..\test\StatsByIpTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\test\capture_fuzz.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\test\CaptureTest.h">
@@ -138,6 +141,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\test\StatsByIpTest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\test\capture_fuzz.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
