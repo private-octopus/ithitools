@@ -24,6 +24,7 @@
 #include "OdiPublishTest.h"
 #include "QNameTest.h"
 #include "StatsByIpTest.h"
+#include "capture_fuzz.h"
 
 enum test_list_enum {
     test_enum_hash = 0,
@@ -50,6 +51,7 @@ enum test_list_enum {
     test_enum_CmpName,
     test_enum_QNameMini,
     test_enum_StatsByIp,
+    test_enum_CaptureFuzz,
     test_enum_max_number
 };
 
@@ -117,6 +119,8 @@ char const * ithi_test_class::GetTestName(int number)
         return("QNameMini");
     case test_enum_StatsByIp:
         return("StatsByIp");
+    case test_enum_CaptureFuzz:
+        return("CaptureFuzz");
     default:
         break;
     }
@@ -215,6 +219,9 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_enum_StatsByIp:
         test = new StatsByIpTest();
+        break;
+    case test_enum_CaptureFuzz:
+        test = new capture_fuzz();
         break;
     default:
         break;

@@ -135,6 +135,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\test\CaptureTest.cpp" />
+    <ClCompile Include="..\test\capture_fuzz.cpp" />
     <ClCompile Include="..\test\CsvTest.cpp" />
     <ClCompile Include="..\test\DnsPrefixTest.cpp" />
     <ClCompile Include="..\test\GetNameTest.cpp" />
@@ -158,6 +159,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\test\CaptureTest.h" />
+    <ClInclude Include="..\test\capture_fuzz.h" />
     <ClInclude Include="..\test\CsvTest.h" />
     <ClInclude Include="..\test\DnsPrefixTest.h" />
     <ClInclude Include="..\test\GetNameTest.h" />
