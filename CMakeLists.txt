@@ -53,6 +53,7 @@ SET(ITHITOOLS_TEST_LIBRARY_FILES
    test/OdiPublishTest.cpp
    test/QNameTest.cpp
    test/StatsByIpTest.cpp
+   test/capture_fuzz.cpp
 )
 
 ADD_EXECUTABLE(ithitools 
@@ -116,6 +117,7 @@ ADD_EXECUTABLE(ithitest
    test/OdiPublishTest.cpp
    test/QNameTest.cpp
    test/StatsByIpTest.cpp
+   test/capture_fuzz.cpp
 )
 
 ADD_LIBRARY(ithicap SHARED
