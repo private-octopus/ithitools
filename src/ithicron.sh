@@ -86,4 +86,4 @@ echo "Ingesting M5 for $LAST_DAY"
 python ithitools/src/m5ingest.py /home/gih/data/$YEAR/$MM/ /home/ubuntu/ithi/M5/M5-$LAST_DAY.csv
 
 echo "Computing JSON Data for publication"
-./ithitools/ithitools -i /home/ubuntu/ithi -w /var/www/html/ithi -p
+./ithitools/ithitools -i /home/ubuntu/ithi -w /var/www/html -p
