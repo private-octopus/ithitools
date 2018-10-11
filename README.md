@@ -151,7 +151,11 @@ The process has two steps:
 sudo add-apt-repository ppa:chuitema/ppa
 sudo apt-get update
 ```
-2) Updates should arrive as part of the regular updates for Ubuntu packages.
+2) Install ithitools:
+```
+sudo apt-get install ithitools
+```
+3) Updates should arrive as part of the regular updates for Ubuntu packages.
 
 ## Other distributions
 
