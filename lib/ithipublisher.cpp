@@ -352,7 +352,7 @@ bool ithipublisher::Publish(char const * web_folder)
     if (ret)
     {
         /* Opening braces and date */
-        ret = fprintf(F, "{\n\"date\" : \"%04d/%02d/%02d\",\n", last_year, last_month, last_day) > 0;
+        ret = fprintf(F, "{\n\"date\" : \"%04d/%02d\",\n", last_year, last_month) > 0;
         /* Data */
         if (ret)
         {
