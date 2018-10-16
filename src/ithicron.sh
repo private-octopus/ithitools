@@ -70,6 +70,20 @@ M46F2=/home/ubuntu/ithi/input/M46/M46-$LAST_LAST_DAY-summary.csv
 echo "Creating summary file in $M46F2"
 ./ithitools/ithitools -S m46_previous_month.txt -o $M46F2
 
+>m8_this_month.txt
+find /home/kaznic/* | grep $DATE_DASH | grep ".csv" >> m8_this_month.txt
+echo "Found $(wc -l m8_this_month.txt) authoritative resolver reports for $DATE_DASH*"
+M8F1=/home/ubuntu/ithi/input/M8/M8-$LAST_DAY-summary.csv
+echo "Creating summary file in $M8F1"
+./ithitools/ithitools -S m8_this_month.txt -o $M8F1
+
+>m8_previous_month.txt
+find /home/kaznic/* | grep $PREVIOUS_DASH | grep ".csv" >> m8_this_month.txt
+echo "Found $(wc -l m8_this_month.txt) authoritative resolver reports for $PREVIOUS_DASH*"
+M8F2=/home/ubuntu/ithi/input/M8/M8-$LAST_LAST_DAY-summary.csv
+echo "Creating summary file in $M8F2"
+./ithitools/ithitools -S m8_this_month.txt -o $M8F2
+
 M7F1=/home/ubuntu/ithi/input/M7/M7-$LAST_DAY.zone
 echo "Copying root zone file to $M7F1"
 wget https://www.internic.net/domain/root.zone -O $M7F1
