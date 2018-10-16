@@ -79,7 +79,7 @@ echo "Creating summary file in $M8F1"
 
 >m8_previous_month.txt
 find /home/kaznic/* | grep $PREVIOUS_DASH | grep ".csv" >> m8_this_month.txt
-echo "Found $(wc -l m8_this_month.txt) authoritative resolver reports for $PREVIOUS_DASH*"
+echo "Found $(wc -l m8_previous_month.txt) authoritative resolver reports for $PREVIOUS_DASH*"
 M8F2=/home/ubuntu/ithi/input/M8/M8-$LAST_LAST_DAY-summary.csv
 echo "Creating summary file in $M8F2"
 ./ithitools/ithitools -S m8_this_month.txt -o $M8F2
