@@ -252,7 +252,7 @@ bool PublishTest::DoTest()
         ret = DoOneTest(7, m7_files, 2, publish_test_target_m7, publish_ref_m7);
     }
 
-    /* M7 test */
+    /* M8 test */
     char const * m8_files[2] = { publish_test_m81, publish_test_m82 };
 
     if (ret)
