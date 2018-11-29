@@ -63,7 +63,7 @@ echo "Creating summary file in $M46F1"
 python ithitools/src/tlsaInput.py tlsa-data-$PREVIOUS_DASH.csv /home/viktor/data/tlsa-$PREVIOUS_DASH
 echo tlsa-data-$PREVIOUS_DASH.csv >> m46_previous_month.txt
 find /home/matiasf/* | grep $PREVIOUS_DATE | grep ".csv" >> m46_previous_month.txt
-#find /home/uccgh/ithi-capture-v2/* | grep $PREVIOUS_DASH | grep ".csv" >> m46_previous_month.txt
+find /home/uccgh/ithi-capture-v2/* | grep $PREVIOUS_DASH | grep ".csv" >> m46_previous_month.txt
 find /home/nawala/data/* | grep $PREVIOUS_DASH | grep ".csv" >> m46_previous_month.txt
 echo "Found $(wc -l m46_previous_month.txt) recursive resolver reports for $PREVIOUS_DATE*"
 M46F2=/home/ubuntu/ithi/input/M46/M46-$LAST_LAST_DAY-summary.csv
