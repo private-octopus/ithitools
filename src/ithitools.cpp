@@ -61,6 +61,7 @@ static int usage()
     fprintf(stderr, "  -m                 compute the ITHI metrics.\n");
     fprintf(stderr, "  -p                 publish the HTML pages for the metrics.\n");
     fprintf(stderr, "  -P metric_file.csv publish the specified metric to ODI folder.\n");
+    fprintf(stderr, "  -W                 publish the partner's web pages.\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Options used in capture mode:\n");
     fprintf(stderr, "  -o file.csv        output file containing the computed summary.\n");
@@ -139,6 +140,7 @@ enum ithi_tool_mode {
     ithi_mode_metrics,
     ithi_mode_publish,
     ithi_mode_publish_odi,
+    ithi_mode_publish_partner,
     ithi_mode_max
 };
 
@@ -178,7 +180,7 @@ int main(int argc, char ** argv)
 
     /* Get the parameters */
     int opt;
-    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:V:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:O:P:D:hfcsmpTv?")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:V:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:O:P:D:hfcsmpTvW?")) != -1)
     {
         switch (opt)
         {
@@ -197,6 +199,9 @@ int main(int argc, char ** argv)
         case 'P':
             exit_code = check_execution_mode(ithi_mode_publish_odi, &exec_mode);
             metric_file_name = optarg;
+            break;
+        case 'W':
+            exit_code = check_execution_mode(ithi_mode_publish_partner, &exec_mode);
             break;
         case 'o':
             out_file = optarg;
@@ -466,8 +471,9 @@ int main(int argc, char ** argv)
             }
         }
     }
-    else if (exec_mode == ithi_mode_publish) {
+    else if (exec_mode == ithi_mode_publish || exec_mode == ithi_mode_publish_partner) {
         bool ret = true;
+        bool at_least_one = false;
 
         if (ithi_folder == NULL) {
             ithi_folder = ITHI_DEFAULT_FOLDER;
@@ -482,16 +488,27 @@ int main(int argc, char ** argv)
             ret = pub.CollectMetricFiles();
 
             if (!ret) {
-                fprintf(stderr, "Cannot collect metric file <%s%sM%d>.\n", ithi_folder, ITHI_FILE_PATH_SEP, metric_id);
+                if (exec_mode == ithi_mode_publish_partner) {
+                    ret = true;
+                }
+                else {
+                    fprintf(stderr, "Cannot collect metric file <%s%sM%d>.\n", ithi_folder, ITHI_FILE_PATH_SEP, metric_id);
+                }
             }
             else
             {
                 ret = pub.Publish(web_root);
+                at_least_one |= ret;
                 if (!ret) {
                     fprintf(stderr, "Cannot publish json file <%s%sM%d...>.\n", web_root, ITHI_FILE_PATH_SEP, metric_id);
                 }
             }
         }
+        if (ret && !at_least_one) {
+            fprintf(stderr, "Could not publish any data.\n");
+            ret = false;
+        }
+
         if (ret) {
             printf("ITHI JSON Data saved in directory <%s>.\n", web_root);
         }
