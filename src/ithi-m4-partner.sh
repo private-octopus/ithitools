@@ -37,25 +37,23 @@ LAST_LAST_DAY=$(date -d "$(date -d $DATE_CURRENT +%Y-%m-01) -1 days" +%Y-%m-%d)
 echo "Last day of previous month: $LAST_LAST_DAY"
 
 >m46_$1_this_month.txt
-find $2/* | grep $DATE | grep ".csv" >> m46_$1_this_month.txt
-find $2/* | grep $DATE_DASH | grep ".csv" >> m46_$1_this_month.txt
+grep $1 < m46_this_month.txt >> m46_$1_this_month.txt
 echo "Found $(wc -l m46_$1_this_month.txt) recursive resolver reports for $1 at rm $DATE*"
-M46F1=/home/$1/ithi/input/M46/M46-$LAST_DAY-summary.csv
+M46F1=ithi/$1/input/M46/M46-$LAST_DAY-summary.csv
 echo "Creating summary file in $M46F1"
 ./ithitools/ithitools -S m46_$1_this_month.txt -o $M46F1
 
 >m46_$1previous_month.txt
-find $2/* | grep $PREVIOUS_DASH | grep ".csv" >> m46_$1_previous_month.txt
-find $2/* | grep $PREVIOUS_DASH | grep ".csv" >> m46_$1_previous_month.txt
-echo "Found $(wc -l m46_previous_month.txt) recursive resolver reports for $1 at $PREVIOUS_DATE*"
-M46F2=/home/$1/ithi/input/M46/M46-$LAST_LAST_DAY-summary.csv
+grep $1 < m46_previous_month.txt >> m46_$1_previous_month.txt
+echo "Found $(wc -l m46_$1_previous_month.txt) recursive resolver reports for $1 at $PREVIOUS_DATE*"
+M46F2=ithi/$1/input/M46/M46-$LAST_LAST_DAY-summary.csv
 echo "Creating summary file in $M46F2"
 ./ithitools/ithitools -S m46_previous_month.txt -o $M46F2
 
 echo "Computing $1 metrics for $LAST_LAST_DAY"
-./ithitools/ithitools -i /home/$1/ithi -d $LAST_LAST_DAY -m
+./ithitools/ithitools -i ithi/$1 -d $LAST_LAST_DAY -m
 echo "Computing metrics for $LAST_DAY"
-./ithitools/ithitools -i /home/$1/ithi -d $LAST_DAY -m
+./ithitools/ithitools -i ithi/$1 -d $LAST_DAY -m
 
 echo "Computing JSON Data for publication"
-./ithitools/ithitools -i /home/$1/ithi -w /var/www/html/$1 -W
+./ithitools/ithitools -i ithi/$1 -w /var/www/html/$1 -W
