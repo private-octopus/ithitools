@@ -103,3 +103,11 @@ python ithitools/src/m5ingest.py /home/gih/data/$YEAR/$MM/ /home/ubuntu/ithi/M5/
 
 echo "Computing JSON Data for publication"
 ./ithitools/ithitools -i /home/ubuntu/ithi -w /var/www/html -p
+
+echo "Computing the pages of partners"
+./ithitools/src/ithi-m4-partner.sh uccgh
+./ithitools/src/ithi-m4-partner.sh unlp
+./ithitools/src/ithi-m4-partner.sh nawala
+./ithitools/src/ithi-m8-partner.sh kaznic
+./ithitools/src/ithi-m8-partner.sh twnic
+

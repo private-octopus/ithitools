@@ -40,8 +40,10 @@ function initnavL1(level) {
         '<a href="' + levelString + 'uccgh/graph-m6.html">M6: DNS parameters at UCC, Ghana</a>' +
         '<a href="' + levelString + 'nawala/graph-m4.html">M4: Recursive Server Analysis for Nawala</a>' +
         '<a href="' + levelString + 'nawala/graph-m6.html">M6: DNS parameters at Nawala</a>' +
-        '<a href="' + levelString + 'kaznic/graph-m8.html">M8: Authoritative Servers Analysis for KazNIC</a>' +
-        '<a href="' + levelString + 'twnic/graph-m8.html">M8: Authoritative Servers Analysis for TWNIC</a>' +
+        '<a href="' + levelString + 'kaznic/graph-m8.html">M8: Authoritative Server analysis at KazNIC </a>' +
+        '<a href="' + levelString + 'kaznic/graph-m6.html">M6: DNS Parameters at KazNIC</a>' +
+        '<a href="' + levelString + 'twnic/graph-m8.html">M8: Authoritative Server Analysis for TWNIC</a>' +
+        '<a href="' + levelString + 'twnic/graph-m6.html">M6: DNS Parameters at TWNIC</a>' +
         '</div>' +
         '</div>' +
 

@@ -42,6 +42,9 @@ echo "Found $(wc -l m8_$1_this_month.txt) authoritative resolver reports for $1 
 M8F1=ithi/$1/input/M8/M8-$LAST_DAY-summary.csv
 echo "Creating summary file in $M8F1"
 ./ithitools/ithitools -S m8_$1_this_month.txt -o $M8F1
+M46F1=ithi/$1/input/M46/M46-$LAST_DAY-summary.csv
+echo "Copying summary file to $M46F1"
+cp $M8F1 $M46F1
 
 >m8_$1_previous_month.txt
 grep $1 < m8_previous_month.txt >> m8_$1_previous_month.txt
@@ -49,6 +52,9 @@ echo "Found $(wc -l m8_$1_previous_month.txt) authoritative resolver reports for
 M8F2=ithi/$1/input/M8/M8-$LAST_LAST_DAY-summary.csv
 echo "Creating summary file in $M8F2"
 ./ithitools/ithitools -S m8_$1_previous_month.txt -o $M8F2
+M46F2=ithi/$1/input/M46/M46-$LAST_LAST_DAY-summary.csv
+echo "Copying summary file to $M46F2"
+cp $M8F2 $M46F2
 
 echo "Computing $1 metrics for $LAST_LAST_DAY"
 ./ithitools/ithitools -i ithi/$1 -d $LAST_LAST_DAY -m
