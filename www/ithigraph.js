@@ -37,6 +37,10 @@ function setValElementI(valElementId, x) {
     }
 }
 
+function setStringElement(valElementId, x) {
+    elm = document.getElementById(valElementId);
+    elm.innerHTML = "<b>" + x + "</b>";
+}
 
 function getLastElement(dataSet) {
     if (dataSet.length < 1) {

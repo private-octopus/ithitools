@@ -1,0 +1,197 @@
+<html>
+<head>
+
+<title>ITHI Metric M6</title>
+
+<link rel="stylesheet" type="text/css" href="../ithistyle.css">
+
+<script src="../ithinavL1.js"></script>
+<script src="../ithigraph.js"></script>
+	
+<script type="text/javascript">
+
+    var canvas ;
+    var context ;
+    var Val_max;
+    var Val_min;
+    var sections;
+    var xScale;
+    var yScale;
+    var colorSet = ["#404040C0", "#A0A0A0C0", "#EFEFEFC0", "#404040C0"];
+
+    var M6Data;
+    var PartnerName;
+
+    function init() {
+        initnavL1();
+        loadName();
+    }
+
+
+    function loadName() {
+        var xhttp2 = new XMLHttpRequest();
+        xhttp2.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                PartnerName = JSON.parse(this.responseText);
+                loadDoc();
+            }
+        };
+        xhttp2.open("GET", "PartnerName.txt", true);
+        xhttp2.send();
+    }
+
+
+    function loadDoc() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                M6Data = JSON.parse(this.responseText);
+                draw_page();
+            }
+        };
+        xhttp.open("GET", "M6Data.txt", true);
+        xhttp.send();
+    }
+
+    function draw_page() {
+
+        // Set the partner name
+        setStringElement("M6PreparedFor", "M6: DNS parameters at " + PartnerName.Name);
+
+        // Set the text values that depend on the current data
+        setDateElement(M6Data.date);
+
+        // Set main table data
+        fillM6Table("tableM6", M6Data.m6Val);
+
+        // Set the value tables
+        fillM63Tables("tableM63", M6Data.m6Val);
+    }
+
+    function fillM6Table(tableId, dataSet) {
+        tableElem = document.getElementById(tableId);
+        tableText = "<table class=\"metrics\"><tr><th rowspan=\"2\">Metric</th><th th rowspan=\"2\">Registry table name</th>";
+        tableText += "<th colspan=\"2\">M6.N.X.1: Usage</th> <th colspan=\"2\">M6.N.X.2: Squatting</th> </tr>";
+        tableText += "<tr><th class=\"number\">Current</th> <th class=\"number\">Average</th>";
+        tableText += "<th class=\"number\">Current</th> <th class=\"number\">Average</th></tr>";
+
+        for (i = 0; i < dataSet.length; i++) {
+            lineSet = dataSet[i];
+            valueSet = [];
+
+            if (lineSet.length > 6) {
+                valueSet = lineSet[6];
+            }
+
+            if (valueSet.length > 0) {
+                tableText += "<tr><td><a href=\"#" + lineSet[0] + "\">" + lineSet[0] + "</a></td>";
+                tableText += "<td><a href=\"#" + lineSet[0] + "\">" + lineSet[1] + "</a></td>";
+            } else {
+                tableText += "<tr><td>" + lineSet[0] + "</td>";
+                tableText += "<td>" + lineSet[1] + "</td>";
+            }
+
+            for (j = 2; j < 6 && j < lineSet.length; j++) {
+                tableText += "<td class=\"number\">" + lineSet[j].toFixed(2) + "%</td>";
+            }
+            tableText += "</tr>\n";
+        }
+        tableText += "</table>\n";
+
+        tableElem.innerHTML = tableText;
+    }
+
+    function fillM63Tables(tableId, dataSet) {
+        tableElem = document.getElementById(tableId);
+        tableText = "";
+
+        for (i = 0; i < dataSet.length; i++) {
+            lineSet = dataSet[i];
+            valueSet = [];
+
+            if (lineSet.length > 6) {
+                valueSet = lineSet[6];
+            }
+            
+            if (valueSet.length > 0) {
+                tableText += "<h3 id=\"" + lineSet[0] + "\">" + lineSet[0] + ": " + lineSet[1] + "</h3>\n";
+
+                tableText += "<table class=\"metrics\"><tr><th>Key</th><th>Name</th>";
+                tableText += "<th class=\"number\">Current Value</th> <th class=\"number\">Average Value</th></tr >\n";
+
+                for (j = 0; j < valueSet.length; j++) {
+                    valueLine = valueSet[j];
+                    if (valueLine.length >= 4) {
+                        tableText += "<tr><td>" + valueLine[0] + "</td>";
+                        tableText += "<td>" + valueLine[1] + "</td>";
+                        tableText += "<td class=\"number\">" + valueLine[2].toFixed(3) + "%</td>";
+                        tableText += "<td class=\"number\">" + valueLine[3].toFixed(3) + "%</td></tr>\n";
+                    }
+                }
+
+                tableText += "</table>";
+            }
+        }
+
+        tableElem.innerHTML = tableText;
+    }
+
+</script>
+</head>
+
+<body onLoad="init()">
+
+    <nav id="navMenu"></nav>
+
+    <h1 id="M6PreparedFor" >M6: DNS parameters</h1>
+
+    <h2 id="dateHeading">-</h2>
+    <p>
+        The M6 metrics tracks the health of three set of registries maintained by IANA:
+        the Domain Name System (DNS) Parameters, the Domain Name System Security
+        (DNSSEC) Algorithm Numbers, and the DNS-Based Authentication of Named Entities
+        (DANE) Parameters. Each of these groups includes different parameter sets. We will
+        track the health of each of these parameters by a set of metrics of the form “M6.N.X.*”,
+        where “M6.N.X” is the metric index composed of the registry name “N” and the parameter
+        set index “X”. The following tables present the value of the metrics M6.N.X.1 and
+        M6.N.X.2:
+    </p>
+    <ul>
+        <li>
+            The metrics M6.N.X.1 tracks "usage" as the ratio of the number of parameters
+            found at least once in real traffic, divided by the total number of parameters found
+            registered in the table.
+        </li>
+        <li>
+            The metrics M6.X.N.2 tracks "squatting" as the ratio of the total number of
+            instances of unregistered parameters (squat) found in real traffic, divided by the total
+            number of parameter instances found in real traffic.
+        </li>
+    </ul>
+    <p>
+        In the following table, the <em>current value</em> is the
+        value of the usage metric for the current month.
+        The <em>average value</em> is the average value of that metric
+        over the 12 months preceeding this one -- or the average since the beginning
+        of measurements if measurements started fewer than 12 months ago.
+    </p>
+
+    <div id="tableM6">
+        Table M6 not found.
+    </div>
+
+    <h2>Metrics M6.X.N.3</h2>
+    <p>
+        The metrics M6.X.N.3 track the occurences in live traffic of specific values defined
+        in the registries. In the following tables, we present for each registry the relative
+        frequency of each parameter.
+        The <em>average value</em> is the average value of that parameter's frequency
+        over the 12 months preceeding this one -- or the average since the beginning
+        of measurements if measurements started fewer than 12 months ago.
+    </p>
+
+    <div id="tableM63">
+        Table M63 not found.
+    </div>
+</body>
+</html>

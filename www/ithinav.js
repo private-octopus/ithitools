@@ -15,7 +15,15 @@ function initnav() {
         '<a href="graph-m8.html">M8: Authoritative</a>' +
         '</div>' +
         '</div>' +
+
+        '<div class="dropdown">' +
         '<a href="participating.html">Participate</a>' +
+        '<div class="dropdown-content">' +
+        '<a href="participating.html">Participate</a>' +
+        '<a href="partners/partnersOnly.html">Partners Only</a>' +
+        '</div>' +
+        '</div>' +
+
         '<div class="dropdown">' +
         '<a href="about.html">About</a>' +
         '<div class="dropdown-content">' +
