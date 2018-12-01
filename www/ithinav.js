@@ -34,7 +34,7 @@ function initnavL1(level) {
         '<div class="dropdown-content">' +
         '<a href="' + levelString + 'participating.html">Participate</a>' +
         '<a href="' + levelString + 'partners/partnersOnly.html">Partners Only</a>' +
-        '<a href="' + levelString + 'unlp/graph-m4.html">M4: Recursive Server Analysis for ULNP</a>' +
+        '<a href="' + levelString + 'unlp/graph-m4.html">M4: Recursive Server Analysis for UNLP</a>' +
         '<a href="' + levelString + 'unlp/graph-m6.html">M6: DNS parameters at UNLP</a>' +
         '<a href="' + levelString + 'uccgh/graph-m4.html">M4: Recursive Server Analysis for UCC, Ghana</a>' +
         '<a href="' + levelString + 'uccgh/graph-m6.html">M6: DNS parameters at UCC, Ghana</a>' +
