@@ -5,6 +5,43 @@ function setDateElement(dateValue) {
     dateElement.innerHTML = dateValue;
 }
 
+function setFormattedValElement(valElementId, x, format) {
+
+    var elm;
+
+    elm = document.getElementById(valElementId);
+
+    switch (format) {
+        case 0:
+            if (x.toFixed(0)) {
+                elm.innerHTML = "<b>" + x.toFixed(0) + "</b>";
+            }
+            else {
+                elm.innerHTML = "<b>" + x + "</b>";
+            }
+            break;
+        case 1:
+            if (x.toFixed(2)) {
+                elm.innerHTML = "<b>" + x.toFixed(2) + "%</b>";
+            }
+            else {
+                elm.innerHTML = "<b>" + x + "</b>";
+            }
+            break;
+        case 2:
+            if (x.toFixed(2)) {
+                elm.innerHTML = "<b>" + x.toFixed(2) + "</b>";
+            }
+            else {
+                elm.innerHTML = "<b>" + x + "</b>";
+            }
+            break;
+        default:
+            elm.innerHTML = "<b>" + x + "</b>";
+            break;
+    }
+}
+
 function setValElement(valElementId, x) {
     var elm;
 
@@ -347,60 +384,60 @@ function plotGraph(canvasId, dataSet, range_max, graphColor, unit) {
 
 
 
-    function fillValueAverageMinMax(pilot, dataSet) {
-       setValElement(pilot[0], 100*getLastElement(dataSet));
-       setValElement(pilot[1], 100*getAverageLastN(dataSet, 3));
-       setValElement(pilot[2], 100*getMin(dataSet));
-       setValElement(pilot[3], 100*getMax(dataSet));
-    }
+function fillValueAverageMinMax(pilot, dataSet, format) {
+    setFormattedValElement(pilot[0], getLastElement(dataSet), format[0]);
+    setFormattedValElement(pilot[1], getAverageLastN(dataSet, 3), format[1]);
+    setFormattedValElement(pilot[2], getMin(dataSet), format[2]);
+    setFormattedValElement(pilot[3], getMax(dataSet), format[3]);
+}
 
-    function getAverageLastN(dataSet, N) {
-        var i = 0;
-        var last = 0;
-        var first = 0;
-        var average = 0;
+function getAverageLastN(dataSet, N) {
+    var i = 0;
+    var last = 0;
+    var first = 0;
+    var average = 0;
 
-        if (dataSet.length > 1) {
-            last = dataSet.length - 2;
-            if (dataSet.length > N+1) {
-                first = dataSet.length - (N+1);
-            }
-
-            for (i = first; i <= last; i++) {
-                average += dataSet[i];
-            }
-            average /= last + 1 - first;
+    if (dataSet.length > 1) {
+        last = dataSet.length - 2;
+        if (dataSet.length > N + 1) {
+            first = dataSet.length - (N + 1);
         }
 
-        return average;
+        for (i = first; i <= last; i++) {
+            average += dataSet[i];
+        }
+        average /= last + 1 - first;
     }
+
+    return average;
+}
  
-    function getMin(dataSet) {
-        var i = 0;
-        var v_min = dataSet[0];
-        
-        for (i = 1; i < dataSet.length; i++) {
-            if (v_min > dataSet[i]) {
-                v_min = dataSet[i];
-            }
-        }
+function getMin(dataSet) {
+    var i = 0;
+    var v_min = dataSet[0];
 
-        return v_min;
+    for (i = 1; i < dataSet.length; i++) {
+        if (v_min > dataSet[i]) {
+            v_min = dataSet[i];
+        }
     }
 
+    return v_min;
+}
 
-    function getMax(dataSet) {
-        var i = 0;
-        var v_max = dataSet[0];
-        
-        for (i = 1; i < dataSet.length; i++) {
-            if (v_max < dataSet[i]) {
-                v_max = dataSet[i];
-            }
+
+function getMax(dataSet) {
+    var i = 0;
+    var v_max = dataSet[0];
+
+    for (i = 1; i < dataSet.length; i++) {
+        if (v_max < dataSet[i]) {
+            v_max = dataSet[i];
         }
-
-        return v_max;
     }
+
+    return v_max;
+}
 
 function setScaleNew(canvasId, v_max, sections, firstMonth, unit) {
     var v_min = 0;
@@ -522,69 +559,68 @@ function plotGraphNew(canvasId, dataSet, range_max, firstMonth, graphColor, unit
 
 
 
-    function plotStackGraphNew(canvasId, dataSet1, dataSet2, rangeMax, firstMonth, colorSet, unit) {
-        var sections = 12;
-        var l = dataSet1.length;
+function plotStackGraphNew(canvasId, dataSet1, dataSet2, rangeMax, firstMonth, colorSet, unit) {
+    var sections = 12;
+    var l = dataSet1.length;
 
-        if (l >= sections)
-        {
-            sections = l+1;
-        }
-
-        var graph = setScaleNew(canvasId, rangeMax, sections, firstMonth, unit);
-    
-        // Start with first data set
-        var context = graph.context;
-        var xScale = graph.xScale;
-        var yScale = graph.yScale;
-
-        context.fillStyle = colorSet[0];
-        context.beginPath();
-        context.moveTo(0, 0);
-
-        for (i=0; i<l; i++) { 
-            context.lineTo(i * xScale, dataSet1[i]);
-            context.lineTo((i+1) * xScale, dataSet1[i]);
-        }
-
-        context.lineTo(l * xScale, 0);
-        context.closePath();
-        context.fill();
-
-        // Continue with second data set
-
-        context.fillStyle = colorSet[1];
-        context.beginPath();
-        context.moveTo(0, dataSet1[0]);
-
-        for (i=0; i<l; i++) { 
-            context.lineTo(i * xScale, dataSet1[i] + dataSet2[i]);
-            context.lineTo((i + 1) * xScale, dataSet1[i] + dataSet2[i]);
-        }
-
-        for (i=l-1; i>=0; i--) {
-            context.lineTo((i + 1) * xScale, dataSet1[i]);
-            context.lineTo(i * xScale, dataSet1[i]);
-        }
-
-        context.closePath();
-        context.fill();
-
-        // Continue with the complement, core
-
-        context.fillStyle = colorSet[2];
-        context.beginPath();
-
-        context.moveTo(0, dataSet1[0] + dataSet2[0]);
-    
-        for (i=1; i<l; i++) {
-            context.lineTo(i * xScale, dataSet1[i] + dataSet2[i]);
-            context.lineTo((i + 1) * xScale, dataSet1[i] + dataSet2[i]);
-        }
-
-        context.lineTo(l*xScale, rangeMax);
-        context.lineTo(0, rangeMax);
-        context.closePath();
-        context.fill();
+    if (l >= sections) {
+        sections = l + 1;
     }
+
+    var graph = setScaleNew(canvasId, rangeMax, sections, firstMonth, unit);
+
+    // Start with first data set
+    var context = graph.context;
+    var xScale = graph.xScale;
+    var yScale = graph.yScale;
+
+    context.fillStyle = colorSet[0];
+    context.beginPath();
+    context.moveTo(0, 0);
+
+    for (i = 0; i < l; i++) {
+        context.lineTo(i * xScale, dataSet1[i]);
+        context.lineTo((i + 1) * xScale, dataSet1[i]);
+    }
+
+    context.lineTo(l * xScale, 0);
+    context.closePath();
+    context.fill();
+
+    // Continue with second data set
+
+    context.fillStyle = colorSet[1];
+    context.beginPath();
+    context.moveTo(0, dataSet1[0]);
+
+    for (i = 0; i < l; i++) {
+        context.lineTo(i * xScale, dataSet1[i] + dataSet2[i]);
+        context.lineTo((i + 1) * xScale, dataSet1[i] + dataSet2[i]);
+    }
+
+    for (i = l - 1; i >= 0; i--) {
+        context.lineTo((i + 1) * xScale, dataSet1[i]);
+        context.lineTo(i * xScale, dataSet1[i]);
+    }
+
+    context.closePath();
+    context.fill();
+
+    // Continue with the complement, core
+
+    context.fillStyle = colorSet[2];
+    context.beginPath();
+
+    context.moveTo(0, dataSet1[0] + dataSet2[0]);
+
+    for (i = 1; i < l; i++) {
+        context.lineTo(i * xScale, dataSet1[i] + dataSet2[i]);
+        context.lineTo((i + 1) * xScale, dataSet1[i] + dataSet2[i]);
+    }
+
+    context.lineTo(l * xScale, rangeMax);
+    context.lineTo(0, rangeMax);
+    context.closePath();
+    context.fill();
+}
 
