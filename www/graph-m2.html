@@ -48,18 +48,24 @@
 
         if (M2Data.m2Val.length >= 8 && M2DisplayPilot.length >= 8) {
             for (xMet = 0; xMet < 8; xMet++) {
-                setM2MetricLine(M2Data.m2Val[xMet], M2DisplayPilot[xMet], "#404040C0");
+                var firstMonth = 1;
+
+                if ("month" in M2Data) {
+                    firstMonth = getFirstMonthIndex(M2Data.month, M2Data.m2Val[xMet].length);
+                }
+
+                setM2MetricLine(M2Data.m2Val[xMet], M2DisplayPilot[xMet], firstMonth, "#404040C0");
             }
         }
     }
 
-    function setM2MetricLine(metricLine, pilotLine, graphColor) {
+    function setM2MetricLine(metricLine, pilotLine, firstMonth, graphColor) {
         if (metricLine.length >= 3 && pilotLine.length >= 5) {
             setValElementX(pilotLine[0], getLastElement(metricLine[0]));
             setValElementX(pilotLine[1], getAverageElement(metricLine[0]));
             setValElementI(pilotLine[2], metricLine[1]);
             setValElementI(pilotLine[3], metricLine[2]);
-            plotGraph(pilotLine[4], metricLine[0], getMaxRange(getMaxElement(metricLine[0])), graphColor, "");
+            plotGraphNew(pilotLine[4], metricLine[0], getMaxRange(getMaxElement(metricLine[0])), firstMonth, graphColor, "");
         }
     }
 

@@ -39,7 +39,12 @@
             setValElementX("averageM12", getAverageElement(M1Data.m1Val[1]));
             setValElementX("averageM13", getAverageElement(M1Data.m1Val[2]));
 
-            plotGraph("graphM11", M1Data.m1Val[0], getMaxRange(maxElement), "#404040C0", "");
+            var firstMonth = 1;
+            if ("month" in M1Data) {
+                firstMonth = getFirstMonthIndex(M1Data.month, M1Data.m1Val[0].length);
+            }
+
+            plotGraphNew("graphM11", M1Data.m1Val[0], getMaxRange(maxElement), firstMonth, "#404040C0", "");
         }
     }
 

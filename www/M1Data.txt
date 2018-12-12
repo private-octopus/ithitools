@@ -1,4 +1,5 @@
 {
     "date" : "February 2017 (Fictitious data, for test and illustration only)",
+    "month" : 2,
     "m1Val" : [[84, 78], [1, 2], [5, 5]]
 }

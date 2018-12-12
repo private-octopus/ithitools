@@ -1,5 +1,6 @@
 {
     "date" : "September 2017 (Fictitious data, for test and illustration only)",
+    "month" : 9,
 	"M7DataSet" : [
 		[89.700000, 90.100000, 90.500000],
 		[49.700000, 50.200000, 55.000000]

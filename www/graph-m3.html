@@ -85,7 +85,12 @@
         setColorBlob("colorBlobM3Zero", colorSet[2]);
 
         plotPieChart("pieChartM3", M3Set, colorSet);
-        plotStackGraphM3("stackGraphM3",M3Data.M31, M3Data.M32, colorSet);
+
+        var firstMonth = 1;
+        if ("month" in M3Data) {
+            firstMonth = getFirstMonthIndex(M3Data.month, M3Data.M31.length);
+        }
+        plotStackGraphNew("stackGraphM3", M3Data.M31, M3Data.M32, 100, firstMonth, colorSet, "%");
 
         // Set the color blobs for the M3.3 table, then plot the pie chart
         setColorBlob("colorBlobM331", colorSet[0]);

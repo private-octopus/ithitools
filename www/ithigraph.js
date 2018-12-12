@@ -344,3 +344,247 @@ function plotGraph(canvasId, dataSet, range_max, graphColor, unit) {
     graph.context.closePath();
     graph.context.fill();
 }
+
+
+
+    function fillValueAverageMinMax(pilot, dataSet) {
+       setValElement(pilot[0], 100*getLastElement(dataSet));
+       setValElement(pilot[1], 100*getAverageLastN(dataSet, 3));
+       setValElement(pilot[2], 100*getMin(dataSet));
+       setValElement(pilot[3], 100*getMax(dataSet));
+    }
+
+    function getAverageLastN(dataSet, N) {
+        var i = 0;
+        var last = 0;
+        var first = 0;
+        var average = 0;
+
+        if (dataSet.length > 1) {
+            last = dataSet.length - 2;
+            if (dataSet.length > N+1) {
+                first = dataSet.length - (N+1);
+            }
+
+            for (i = first; i <= last; i++) {
+                average += dataSet[i];
+            }
+            average /= last + 1 - first;
+        }
+
+        return average;
+    }
+ 
+    function getMin(dataSet) {
+        var i = 0;
+        var v_min = dataSet[0];
+        
+        for (i = 1; i < dataSet.length; i++) {
+            if (v_min > dataSet[i]) {
+                v_min = dataSet[i];
+            }
+        }
+
+        return v_min;
+    }
+
+
+    function getMax(dataSet) {
+        var i = 0;
+        var v_max = dataSet[0];
+        
+        for (i = 1; i < dataSet.length; i++) {
+            if (v_max < dataSet[i]) {
+                v_max = dataSet[i];
+            }
+        }
+
+        return v_max;
+    }
+
+function setScaleNew(canvasId, v_max, sections, firstMonth, unit) {
+    var v_min = 0;
+    var stepSize = v_max / 10;
+    var columnSize = 50;
+    var rowSize = 50;
+    var margin = 10;
+    var graph = new Object();
+    var i = 0;
+    graph.canvas = document.getElementById(canvasId);
+    graph.context = graph.canvas.getContext("2d");
+    graph.context.fillStyle = "#555555";
+    graph.context.font = "20 pt Verdana";
+
+    graph.yScale = (graph.canvas.height - columnSize - margin) / (v_max - v_min);
+    graph.xScale = (graph.canvas.width - rowSize) / (sections);
+
+    graph.context.strokeStyle = "#555555"; // color of grid lines
+    graph.context.beginPath();
+
+    // print Parameters on X axis, and grid lines on the graph
+    for (i = 1; i <= sections + 1; i++) {
+        var x = rowSize + (i -1) * graph.xScale;
+        if (i <= sections){
+            graph.context.fillText(getMonthId( firstMonth + i - 1), x, columnSize - margin);
+        }
+        graph.context.moveTo(x, columnSize + margin);
+        graph.context.lineTo(x, graph.canvas.height);
+    }
+    // print row header and draw horizontal grid lines
+    var count = 0;
+    var scale = 0;
+    for (scale = v_max; scale >= v_min; scale = scale - stepSize) {
+        var y = columnSize + graph.yScale * count * stepSize;
+        var fscale;
+        if (v_max >= 10.0) {
+            fscale = scale.toFixed(0);
+        } else if (v_max >= 1.0) {
+            fscale = scale.toFixed(1);
+        } else {
+            fscale = scale;
+        }
+        graph.context.fillText(fscale + unit, margin, y + margin);
+        graph.context.moveTo(rowSize, y + margin);
+        graph.context.lineTo(graph.canvas.width, y + margin);
+        count++;
+    }
+    graph.context.stroke();
+
+    graph.context.translate(rowSize, graph.canvas.height + v_min * graph.yScale);
+    graph.context.scale(1, -1 * graph.yScale);
+
+    return graph;
+}
+
+function getMonthId(monthIndex){
+    var monthList = ["   ", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    while (monthIndex < 1) {
+        monthIndex += 12;
+    }
+
+    while (monthIndex > 12) {
+        monthIndex -= 12;
+    }
+
+    return monthList[monthIndex];
+}
+
+function getMonthIndex(lastMonth, delta){
+
+    var monthIndex = lastMonth - delta;
+    while (monthIndex < 1) {
+        monthIndex += 12;
+    }
+
+    return monthIndex;
+}
+
+function getFirstMonthIndex(lastMonth, nbData){
+
+    var monthIndex = lastMonth - nbData + 1;
+    while (monthIndex < 1) {
+        monthIndex += 12;
+    }
+
+    return monthIndex;
+}
+
+function plotGraphNew(canvasId, dataSet, range_max, firstMonth, graphColor, unit) {
+    var sections = 12;
+
+    l = dataSet.length;
+    if (l >= sections) {
+        sections = l+1;
+    }
+
+    var graph = setScaleNew(canvasId, range_max, sections, firstMonth, unit);
+
+    graph.context.fillStyle = graphColor;
+    graph.context.beginPath();
+    graph.context.moveTo(0, 0);
+
+    for (i = 0; i < l; i++) {
+        var this_val = dataSet[i];
+        if (this_val > range_max) {
+            this_val = range_max;
+        } else if (this_val < 0) {
+            this_val = 0;
+        }
+        graph.context.lineTo(i * graph.xScale, this_val);
+        graph.context.lineTo((i + 1) * graph.xScale, this_val);
+    }
+
+    graph.context.lineTo(l * graph.xScale, 0);
+    graph.context.closePath();
+    graph.context.fill();
+}
+
+
+
+    function plotStackGraphNew(canvasId, dataSet1, dataSet2, rangeMax, firstMonth, colorSet, unit) {
+        var sections = 12;
+        var l = dataSet1.length;
+
+        if (l >= sections)
+        {
+            sections = l+1;
+        }
+
+        var graph = setScaleNew(canvasId, rangeMax, sections, firstMonth, unit);
+    
+        // Start with first data set
+        var context = graph.context;
+        var xScale = graph.xScale;
+        var yScale = graph.yScale;
+
+        context.fillStyle = colorSet[0];
+        context.beginPath();
+        context.moveTo(0, 0);
+
+        for (i=0; i<l; i++) { 
+            context.lineTo(i * xScale, dataSet1[i]);
+            context.lineTo((i+1) * xScale, dataSet1[i]);
+        }
+
+        context.lineTo(l * xScale, 0);
+        context.closePath();
+        context.fill();
+
+        // Continue with second data set
+
+        context.fillStyle = colorSet[1];
+        context.beginPath();
+        context.moveTo(0, dataSet1[0]);
+
+        for (i=0; i<l; i++) { 
+            context.lineTo(i * xScale, dataSet1[i] + dataSet2[i]);
+            context.lineTo((i + 1) * xScale, dataSet1[i] + dataSet2[i]);
+        }
+
+        for (i=l-1; i>=0; i--) {
+            context.lineTo((i + 1) * xScale, dataSet1[i]);
+            context.lineTo(i * xScale, dataSet1[i]);
+        }
+
+        context.closePath();
+        context.fill();
+
+        // Continue with the complement, core
+
+        context.fillStyle = colorSet[2];
+        context.beginPath();
+
+        context.moveTo(0, dataSet1[0] + dataSet2[0]);
+    
+        for (i=1; i<l; i++) {
+            context.lineTo(i * xScale, dataSet1[i] + dataSet2[i]);
+            context.lineTo((i + 1) * xScale, dataSet1[i] + dataSet2[i]);
+        }
+
+        context.lineTo(l*xScale, rangeMax);
+        context.lineTo(0, rangeMax);
+        context.closePath();
+        context.fill();
+    }
+
