@@ -13,16 +13,60 @@
     // Values for the M3.1 and M3.2 metrics, since Jan 2017 -- this is test data
     
     var M2Data;
-    var M2DisplayPilot = [
-        ["valM2111", "averageM2111", "valM2112", "valM2113", "graphM211"],
-        ["valM2121", "averageM2121", "valM2122", "valM2123", "graphM212"],
-        ["valM2131", "averageM2131", "valM2132", "valM2133", "graphM213"],
-        ["valM2141", "averageM2141", "valM2142", "valM2143", "graphM214"],
-        ["valM2211", "averageM2211", "valM2212", "valM2213", "graphM221"],
-        ["valM2221", "averageM2221", "valM2222", "valM2223", "graphM222"],
-        ["valM2231", "averageM2231", "valM2232", "valM2233", "graphM223"],
-        ["valM2241", "averageM2241", "valM2242", "valM2243", "graphM224"],
-    ];
+    var pilot = [
+        ["valM2111", "averageM2111", "minM2111", "maxM2111"],
+        ["valM2121", "averageM2121", "minM2121", "maxM2121"],
+        ["valM2131", "averageM2131", "minM2131", "maxM2131"],
+        ["valM2141", "averageM2141", "minM2141", "maxM2141"],
+        ["valM2112", "averageM2112", "minM2112", "maxM2112"],
+        ["valM2122", "averageM2122", "minM2122", "maxM2122"],
+        ["valM2132", "averageM2132", "minM2132", "maxM2132"],
+        ["valM2142", "averageM2142", "minM2142", "maxM2142"],
+        ["valM2113", "averageM2113", "minM2113", "maxM2113"],
+        ["valM2123", "averageM2123", "minM2123", "maxM2123"],
+        ["valM2133", "averageM2133", "minM2133", "maxM2133"],
+        ["valM2143", "averageM2143", "minM2143", "maxM2143"],
+        ["valM2211", "averageM2211", "minM2211", "maxM2211"],
+        ["valM2221", "averageM2221", "minM2221", "maxM2221"],
+        ["valM2231", "averageM2231", "minM2231", "maxM2231"],
+        ["valM2241", "averageM2241", "minM2241", "maxM2241"],
+        ["valM2212", "averageM2212", "minM2212", "maxM2212"],
+        ["valM2222", "averageM2222", "minM2222", "maxM2222"],
+        ["valM2232", "averageM2232", "minM2232", "maxM2232"],
+        ["valM2242", "averageM2242", "minM2242", "maxM2242"],
+        ["valM2213", "averageM2213", "minM2213", "maxM2213"],
+        ["valM2223", "averageM2223", "minM2223", "maxM2223"],
+        ["valM2233", "averageM2233", "minM2233", "maxM2233"],
+        ["valM2243", "averageM2243", "minM2243", "maxM2243"]];
+    var formats = [
+        [2, 2, 2, 2],
+        [2, 2, 2, 2],
+        [2, 2, 2, 2],
+        [2, 2, 2, 2],
+        [0, 2, 0, 0],
+        [0, 2, 0, 0],
+        [0, 2, 0, 0],
+        [0, 2, 0, 0],
+        [0, 2, 0, 0],
+        [0, 2, 0, 0],
+        [0, 2, 0, 0],
+        [0, 2, 0, 0],
+        [2, 2, 2, 2],
+        [2, 2, 2, 2],
+        [2, 2, 2, 2],
+        [2, 2, 2, 2],
+        [0, 2, 0, 0],
+        [0, 2, 0, 0],
+        [0, 2, 0, 0],
+        [0, 2, 0, 0],
+        [0, 2, 0, 0],
+        [0, 2, 0, 0],
+        [0, 2, 0, 0],
+        [0, 2, 0, 0]];
+    var graphPilot = [
+        "graphM211", "graphM212", "graphM213", "graphM214",
+        "graphM221", "graphM222", "graphM223", "graphM224"];
+    var graphMetricIndex = [0, 1, 2, 3, 12, 13, 14, 15];
 
     function init() {
         initnav();
@@ -42,30 +86,27 @@
     }
 
     function draw_page() {
+        var i = 0;
 
         // Set the text values that depend on the current data
         setDateElement(M2Data.date);
 
-        if (M2Data.m2Val.length >= 8 && M2DisplayPilot.length >= 8) {
-            for (xMet = 0; xMet < 8; xMet++) {
-                var firstMonth = 1;
+        if (M2Data.m2Val.length == pilot.length) {
+            for (i = 0; i < pilot.length; i++) {
+                fillValueAverageMinMax(pilot[i], M2Data.m2Val[i], formats[i]);
+            }
 
-                if ("month" in M2Data) {
-                    firstMonth = getFirstMonthIndex(M2Data.month, M2Data.m2Val[xMet].length);
+            for (i = 0; i < graphPilot.length; i++) {
+                var dataSet = M2Data.m2Val[graphMetricIndex[i]];
+                var firstMonth = getFirstMonthIndex(M2Data.month, dataSet.length);
+                var maxRange = getMaxRange(getMaxElement(dataSet));
+
+                if (maxRange < 1) {
+                    maxRange = 1; /* Simplification to avoid bad display of Y Axis legends. */
                 }
 
-                setM2MetricLine(M2Data.m2Val[xMet], M2DisplayPilot[xMet], firstMonth, "#404040C0");
+                plotGraphNew(graphPilot[i], dataSet, maxRange, 1, "#404040C0", "");
             }
-        }
-    }
-
-    function setM2MetricLine(metricLine, pilotLine, firstMonth, graphColor) {
-        if (metricLine.length >= 3 && pilotLine.length >= 5) {
-            setValElementX(pilotLine[0], getLastElement(metricLine[0]));
-            setValElementX(pilotLine[1], getAverageElement(metricLine[0]));
-            setValElementI(pilotLine[2], metricLine[1]);
-            setValElementI(pilotLine[3], metricLine[2]);
-            plotGraphNew(pilotLine[4], metricLine[0], getMaxRange(getMaxElement(metricLine[0])), firstMonth, graphColor, "");
         }
     }
 
@@ -103,182 +144,215 @@
     <p>
         The following table provides the value observed
         for the "abuse per 10,000 domains" metric in the current month, as well as the average value over the
-        12 months preceeding this one -- or the average since the beginning of
-        measurements if measurements started fewer than 12 months ago. The columns "Nb 50%"
-        and "Nb 90%" provide the minimum number of TLD or Registrars that account for 50% or 90%
-        of the abuse.
+        3 previous months, and the "historical" minimum and maximum observed since the beginning of the
+        measurements.
     </p>
 
     <table class="metrics">
+        <tr><th colspan=3>Metric</th><th class="number" id="currentId">Current Value</th><th class="number">Past 3 months</th><th class="number">Historic Low</th><th class="number">Historic High</th></tr>
         <tr>
-            <th>M2 metric name</th>
-            <th class="number">Current</th>
-            <th class="number">Average</th>
-            <th class="number">Nb 50%</th>
-            <th class="number">Nb 90%</th>
+            <td rowspan=4>Abuse Domains per 10,000 names registered in GTLDs</td>
+            <td>Phishing</td>
+            <td>M2111</td>
+            <td class="number" id="valM2111"> - </td>
+            <td class="number" id="averageM2111"> - </td>
+            <td class="number" id="minM2111"> - </td>
+            <td class="number" id="maxM2111"> - </td>
         </tr>
         <tr>
-            <th colspan="5"><em>Metrics for Registries (TLD)</em></th>
+            <td>Malware</td>
+            <td>M2131</td>
+            <td class="number" id="valM2121"> - </td>
+            <td class="number" id="averageM2121"> - </td>
+            <td class="number" id="minM2121"> - </td>
+            <td class="number" id="maxM2121"> - </td>
         </tr>
         <tr>
-            <td>
-                <a href="#M211">
-                    M2.1.1 = number of Phishing Domains per 10000 domain names
-                </a>
-            </td>
-            <td align="right" id="valM2111" class="number">
-                -
-            </td>
-            <td align="right" id="averageM2111" class="number">
-                -
-            </td>
-            <td align="right" id="valM2112" class="number">
-                -
-            </td>
-            <td align="right" id="valM2113" class="number">
-                -
-            </td>
+            <td>Botnets C&C</td>
+            <td>M2131</td>
+            <td class="number" id="valM2131"> - </td>
+            <td class="number" id="averageM2131"> - </td>
+            <td class="number" id="minM2131"> - </td>
+            <td class="number" id="maxM2131"> - </td>
         </tr>
         <tr>
-            <td>
-                <a href="#M212">
-                    M2.1.2 = number of Malware Domains per 10,000 domain names
-                </a>
-            </td>
-            <td align="right" id="valM2121" class="number">
-                -
-            </td>
-            <td align="right" id="averageM2121" class="number">
-                -
-            </td>
-            <td align="right" id="valM2122" class="number">
-                -
-            </td>
-            <td align="right" id="valM2123" class="number">
-                -
-            </td>
+            <td>Spam</td>
+            <td>M2141</td>
+            <td class="number" id="valM2141"> - </td>
+            <td class="number" id="averageM2141"> - </td>
+            <td class="number" id="minM2141"> - </td>
+            <td class="number" id="maxM2141"> - </td>
         </tr>
         <tr>
-            <td>
-                <a href="#M213">
-                    M2.1.3 = number of Botnet C&C Domains per 10,000 domain names
-                </a>
-            </td>
-            <td align="right" id="valM2131" class="number">
-                -
-            </td>
-            <td align="right" id="averageM2131" class="number">
-                -
-            </td>
-            <td align="right" id="valM2132" class="number">
-                -
-            </td>
-            <td align="right" id="valM2133" class="number">
-                -
-            </td>
+            <td rowspan=4>Number of GTLDs to account for 50% of abuses</td>
+            <td>Phishing</td>
+            <td>M2112</td>
+            <td class="number" id="valM2112"> - </td>
+            <td class="number" id="averageM2112"> - </td>
+            <td class="number" id="minM2112"> - </td>
+            <td class="number" id="maxM2112"> - </td>
         </tr>
         <tr>
-            <td>
-                <a href="#M214">
-                    M2.1.4 = number of Spam Domains per 10,000 domain names
-                </a>
-            </td>
-            <td align="right" id="valM2141" class="number">
-                -
-            </td>
-            <td align="right" id="averageM2141" class="number">
-                -
-            </td>
-            <td align="right" id="valM2142" class="number">
-                -
-            </td>
-            <td align="right" id="valM2143" class="number">
-                -
-            </td>
-        </tr>
-        <tr><td colspan="5"> </td></tr>
-        <tr>
-            <th colspan="5"><em>Metrics for registrars</em></th>
+            <td>Malware</td>
+            <td>M2122</td>
+            <td class="number" id="valM2122"> - </td>
+            <td class="number" id="averageM2122"> - </td>
+            <td class="number" id="minM2122"> - </td>
+            <td class="number" id="maxM2122"> - </td>
         </tr>
         <tr>
-            <td>
-                <a href="#M221">
-                    M2.2.1 = number of Phishing Domains per 10000 registered domain names
-                </a>
-            </td>
-            <td align="right" id="valM2211" class="number">
-                -
-            </td>
-            <td align="right" id="averageM2211" class="number">
-                -
-            </td>
-            <td align="right" id="valM2212" class="number">
-                -
-            </td>
-            <td align="right" id="valM2213" class="number">
-                -
-            </td>
+            <td>Botnets C&C</td>
+            <td>M2132</td>
+            <td class="number" id="valM2132"> - </td>
+            <td class="number" id="averageM2132"> - </td>
+            <td class="number" id="minM2132"> - </td>
+            <td class="number" id="maxM2132"> - </td>
         </tr>
         <tr>
-            <td>
-                <a href="#M222">
-                    M2.2.2 = number of Malware Domains per 10,000 registered domain names
-                </a>
-            </td>
-            <td align="right" id="valM2221" class="number">
-                -
-            </td>
-            <td align="right" id="averageM2221" class="number">
-                -
-            </td>
-            <td align="right" id="valM2222" class="number">
-                -
-            </td>
-            <td align="right" id="valM2223" class="number">
-                -
-            </td>
+            <td>Spam</td>
+            <td>M2142</td>
+            <td class="number" id="valM2142"> - </td>
+            <td class="number" id="averageM2142"> - </td>
+            <td class="number" id="minM2142"> - </td>
+            <td class="number" id="maxM2142"> - </td>
         </tr>
         <tr>
-            <td>
-                <a href="#M223">
-                    M2.2.3 = number of Botnet C&C Domains per 10,000 registered domain names
-                </a>
-            </td>
-            <td align="right" id="valM2231" class="number">
-                -
-            </td>
-            <td align="right" id="averageM2231" class="number">
-                -
-            </td>
-            <td align="right" id="valM2232" class="number">
-                -
-            </td>
-            <td align="right" id="valM2233" class="number">
-                -
-            </td>
+            <td rowspan=4>Number of GTLDs to account for 90% of abuses</td>
+            <td>Phishing</td>
+            <td>M2113</td>
+            <td class="number" id="valM2113"> - </td>
+            <td class="number" id="averageM2113"> - </td>
+            <td class="number" id="minM2113"> - </td>
+            <td class="number" id="maxM2113"> - </td>
         </tr>
         <tr>
-            <td>
-                <a href="#M224">
-                    M2.2.4 = number of Spam Domains per 10,000 registered domain names
-                </a>
-            </td>
-            <td align="right" id="valM2241" class="number">
-                -
-            </td>
-            <td align="right" id="averageM2241" class="number">
-                -
-            </td>
-            <td align="right" id="valM2242" class="number">
-                -
-            </td>
-            <td align="right" id="valM2243" class="number">
-                -
-            </td>
+            <td>Malware</td>
+            <td>M2123</td>
+            <td class="number" id="valM2123"> - </td>
+            <td class="number" id="averageM2123"> - </td>
+            <td class="number" id="minM2123"> - </td>
+            <td class="number" id="maxM2123"> - </td>
+        </tr>
+        <tr>
+            <td>Botnets C&C</td>
+            <td>M2133</td>
+            <td class="number" id="valM2133"> - </td>
+            <td class="number" id="averageM2133"> - </td>
+            <td class="number" id="minM2133"> - </td>
+            <td class="number" id="maxM2133"> - </td>
+        </tr>
+        <tr>
+            <td>Spam</td>
+            <td>M2143</td>
+            <td class="number" id="valM2143"> - </td>
+            <td class="number" id="averageM2143"> - </td>
+            <td class="number" id="minM2143"> - </td>
+            <td class="number" id="maxM2143"> - </td>
+        </tr>
+        <tr>
+            <td rowspan=4>Abuse Domains per 10,000 names registered by Registrars</td>
+            <td>Phishing</td>
+            <td>M2211</td>
+            <td class="number" id="valM2211"> - </td>
+            <td class="number" id="averageM2211"> - </td>
+            <td class="number" id="minM2211"> - </td>
+            <td class="number" id="maxM2211"> - </td>
+        </tr>
+        <tr>
+            <td>Malware</td>
+            <td>M2231</td>
+            <td class="number" id="valM2221"> - </td>
+            <td class="number" id="averageM2221"> - </td>
+            <td class="number" id="minM2221"> - </td>
+            <td class="number" id="maxM2221"> - </td>
+        </tr>
+        <tr>
+            <td>Botnets C&C</td>
+            <td>M2231</td>
+            <td class="number" id="valM2231"> - </td>
+            <td class="number" id="averageM2231"> - </td>
+            <td class="number" id="minM2231"> - </td>
+            <td class="number" id="maxM2231"> - </td>
+        </tr>
+        <tr>
+            <td>Spam</td>
+            <td>M2241</td>
+            <td class="number" id="valM2241"> - </td>
+            <td class="number" id="averageM2241"> - </td>
+            <td class="number" id="minM2241"> - </td>
+            <td class="number" id="maxM2241"> - </td>
+        </tr>
+        <tr>
+            <td rowspan=4>Number of Registrars to account for 50% of abuses</td>
+            <td>Phishing</td>
+            <td>M2212</td>
+            <td class="number" id="valM2212"> - </td>
+            <td class="number" id="averageM2212"> - </td>
+            <td class="number" id="minM2212"> - </td>
+            <td class="number" id="maxM2212"> - </td>
+        </tr>
+        <tr>
+            <td>Malware</td>
+            <td>M2222</td>
+            <td class="number" id="valM2222"> - </td>
+            <td class="number" id="averageM2222"> - </td>
+            <td class="number" id="minM2222"> - </td>
+            <td class="number" id="maxM2222"> - </td>
+        </tr>
+        <tr>
+            <td>Botnets C&C</td>
+            <td>M2232</td>
+            <td class="number" id="valM2232"> - </td>
+            <td class="number" id="averageM2232"> - </td>
+            <td class="number" id="minM2232"> - </td>
+            <td class="number" id="maxM2232"> - </td>
+        </tr>
+        <tr>
+            <td>Spam</td>
+            <td>M2242</td>
+            <td class="number" id="valM2242"> - </td>
+            <td class="number" id="averageM2242"> - </td>
+            <td class="number" id="minM2242"> - </td>
+            <td class="number" id="maxM2242"> - </td>
+        </tr>
+        <tr>
+            <td rowspan=4>Number of Registrars to account for 90% of abuses</td>
+            <td>Phishing</td>
+            <td>M2213</td>
+            <td class="number" id="valM2213"> - </td>
+            <td class="number" id="averageM2213"> - </td>
+            <td class="number" id="minM2213"> - </td>
+            <td class="number" id="maxM2213"> - </td>
+        </tr>
+        <tr>
+            <td>Malware</td>
+            <td>M2223</td>
+            <td class="number" id="valM2223"> - </td>
+            <td class="number" id="averageM2223"> - </td>
+            <td class="number" id="minM2223"> - </td>
+            <td class="number" id="maxM2223"> - </td>
+        </tr>
+        <tr>
+            <td>Botnets C&C</td>
+            <td>M2233</td>
+            <td class="number" id="valM2233"> - </td>
+            <td class="number" id="averageM2233"> - </td>
+            <td class="number" id="minM2233"> - </td>
+            <td class="number" id="maxM2233"> - </td>
+        </tr>
+        <tr>
+            <td>Spam</td>
+            <td>M2243</td>
+            <td class="number" id="valM2243"> - </td>
+            <td class="number" id="averageM2243"> - </td>
+            <td class="number" id="minM2243"> - </td>
+            <td class="number" id="maxM2243"> - </td>
         </tr>
     </table>
+
     <p>
-        The following graphs show the evolution over time of these 4 metrics.
+        The following graphs show the evolution over time of the value metrics
+        for each class of abuse, first by registrar and then by GTLD.
         Please pay attention to the scale, as the number of spam domains is much
         larger than the number of domains involved in the other forms of malware.
     </p>
