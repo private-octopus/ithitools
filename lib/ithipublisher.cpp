@@ -590,7 +590,7 @@ bool ithipublisher::PrintNameVectorMetric(FILE * F, char const * sub_met_name, c
     bool ret = GetNameList(sub_met_name, &name_list);
 
 
-    ret = fprintf(F, "\"%s\" : [", metric_name) > 0;
+    ret &= fprintf(F, "\"%s\" : [", metric_name) > 0;
 
     for (size_t i = 0; ret && i < name_list.size(); i++) {
         if (i == 0) {
@@ -606,7 +606,7 @@ bool ithipublisher::PrintNameVectorMetric(FILE * F, char const * sub_met_name, c
 
             if (ret)
             {
-                ret = PrintVector(F, mvec, 100.0);
+                ret = PrintVector(F, mvec, mult);
             }
         }
         ret &= fprintf(F, "]") > 0;
@@ -671,12 +671,13 @@ bool ithipublisher::PublishDataM2(FILE * F)
 
     ret &= fprintf(F, "\"m2Val\" : [") > 0;
 
-    for (int m = 0; m < 24; m++)
+    for (int m = 0; ret && m < 24; m++)
     {
         ret &= fprintf(F, "%s", (m==0)?"\n":",\n") > 0;
-        
-        if ((ret = GetVector(subMet[m], NULL, m2x))) {
-            ret = PrintVector(F, m2x, 1.0);
+        if (ret) {
+            if (ret = GetVector(subMet[m], NULL, m2x)) {
+                ret = PrintVector(F, m2x, 1.0);
+            }
         }
     }
     
@@ -763,7 +764,6 @@ bool ithipublisher::PublishDataM3(FILE * F)
 bool ithipublisher::PublishDataM4(FILE * F)
 {
     bool ret = true;
-    double average, current;
     double mvec[12];
     const char * sub_met[5] = { "M4.1", "M4.2", "M4.3", "M4.5", "M4.6" };
     const char * met_data_name[5] = { "M41Data", "M42DataSet", "M43DataSet", "M45Data", "M46Data" };
