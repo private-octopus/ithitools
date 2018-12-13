@@ -641,7 +641,7 @@ bool ithipublisher::PublishDataM1(FILE * F)
     char const * subMet[3] = { "M1.1", "M1.2", "M1.3"};
 
     ret &= fprintf(F, "\"m1Val\" : [") > 0;
-    for (int m = 0; m < 3; m++)
+    for (int m = 0; ret && m < 3; m++)
     {
         ret &= fprintf(F, "%s", (m == 0) ? "\n" : ",\n") > 0;
 
