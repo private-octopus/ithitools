@@ -1061,10 +1061,10 @@ bool ithipublisher::PublishOptTableNew(FILE * F, char const * metric_name)
         }
 
         if (opt_long_name != NULL) {
-            ret &= fprintf(F, "[ \"%s(%s)\",", opt_long_name, name_list[i].name, 100.0*name_list[i].current, 100.0*name_list[i].average) > 0;
+            ret &= fprintf(F, "[ \"%s(%s)\",", opt_long_name, name_list[i].name) > 0;
         }
         else {
-            ret &= fprintf(F, "[ \"%s\",", name_list[i].name, 100.0*name_list[i].current, 100.0*name_list[i].average) > 0;
+            ret &= fprintf(F, "[ \"%s\",", name_list[i].name) > 0;
         }
 
         if (ret) {
