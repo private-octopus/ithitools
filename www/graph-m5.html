@@ -7,20 +7,24 @@
 <script src="ithinav.js"></script>
 <script src="ithigraph.js"></script>
 <script type="text/javascript">
-    var M5valId = [
-        "valM511", "valM512", "valM513", "valM514", "valM515", "valM516",
-        "valM521", "valM522", "valM523",
-        "valM531", "valM532",
-        "valM541", "valM542",
-        "valM551"
+    var pilot = [
+        ["valM511", "averageM511", "minM511", "maxM511"],
+        ["valM512", "averageM512", "minM512", "maxM512"],
+        ["valM513", "averageM513", "minM513", "maxM513"],
+        ["valM514", "averageM514", "minM514", "maxM514"],
+        ["valM515", "averageM515", "minM515", "maxM515"],
+        ["valM516", "averageM516", "minM516", "maxM516"],
+        ["valM521", "averageM521", "minM521", "maxM521"],
+        ["valM522", "averageM522", "minM522", "maxM522"],
+        ["valM523", "averageM523", "minM523", "maxM523"],
+        ["valM531", "averageM531", "minM531", "maxM531"],
+        ["valM532", "averageM532", "minM532", "maxM532"],
+        ["valM541", "averageM541", "minM541", "maxM541"],
+        ["valM542", "averageM542", "minM542", "maxM542"],
+        ["valM551", "averageM551", "minM551", "maxM551"]
     ];
-    var M5averageId = [
-        "averageM511", "averageM512", "averageM513", "averageM514", "averageM515", "averageM516",
-        "averageM521", "averageM522", "averageM523",
-        "averageM531", "averageM532",
-        "averageM541", "averageM542",
-        "averageM551"
-    ];
+
+    var format = [1, 1, 1, 1];
 
     var M5Data;
 
@@ -42,20 +46,14 @@
     }
 
     function draw_page() {
+        var i = 0;
         // Set the date
         setDateElement(M5Data.date);
         // Compute and set the values of the metrics
         rowSet = M5Data.M5;
 
-        for (i = 0; i < rowSet.length; i++) {
-            currentRow = rowSet[i].v;
-            if (i < M5valId.length) {
-                setValElement(M5valId[i], getLastElement(currentRow));
-            }
-
-            if (i < M5averageId.length) {
-                setValElement(M5averageId[i], getAverageElement(currentRow));
-            }
+        for (i = 0; i < pilot.length; i++) {
+            fillValueAverageMinMax(pilot[i], M5Data.M5[i].v, format);
         }
     }
 
@@ -122,156 +120,215 @@ over the 12 months preceeding this one -- or the average since the beginning
 of measurements if measurements started fewer than 12 months ago.
 </p>
 <table display="inline" class="metrics" >
-<tr>
-   <th colspan=2>M5.1 (% alignment of cache time to SOA TTL)</th>
+    <tr>
+        <th colspan=2>M5.1 (% alignment of cache time to SOA TTL)</th>
+        <th class="number" id="currentId1">Current Value</th>
+        <th class="number">Past 3 months</th>
+        <th class="number">Historic Low</th>
+        <th class="number">Historic High</th>
+    </tr>
+    <tr>
 
-   <th>Current value</th>
-   <th>Average value</th>
-</tr>
-<tr>
-
-   <td class="number">
-   M5.1.1
-   </td>
-   <td>
-   % of users using resolvers that re-fetch early
-   </td>
-   <td class="number" id="valM511">
-   -
-   </td>
-   <td class="number" id="averageM511">
-   -
-   </td>
-</tr>
-<tr>
-   <td class="number">
-   M5.1.2
-   </td>
-   <td>
-   % of users using resolvers that re-fetch according to TTL
-   </td>
-   <td class="number" id="valM512">
-   -
-   </td>
-   <td class="number" id="averageM512">
-   -
-   </td>
-</tr>
-<tr>
-   <td class="number">
-   M5.1.3
-   </td>
-   <td>
-   % of users using indeterminate resolvers
-   </td>
-   <td class="number" id="valM513">
-   -
-   </td>
-   <td class="number" id="averageM513">
-   -
-   </td>
-</tr>
-<tr>
-   <td class="number">
-   M5.1.4
-   </td>
-   <td>
-   % of resolvers that re-fetch early
-   </td>
-   <td class="number" id="valM514">
-   -
-   </td>
-   <td class="number" id="averageM514">
-   -
-   </td>
-</tr>
-<tr>
-   <td class="number">
-   M5.1.5
-   </td>
-   <td>
-   % of resolvers that re-fetch according to TTL
-   </td>
-   <td class="number" id="valM515">
-   -
-   </td>
-   <td class="number" id="averageM515">
-   -
-   </td>
-</tr>
-<tr>
-   <td class="number">
-   M5.1.6
-   </td>
-   <td>
-   % of resolvers where cache time is indeterminate
-   </td>
-   <td class="number" id="valM516">
-   -
-   </td>
-   <td class="number" id="averageM516">
-   -
-   </td>
-</tr>
+        <td class="number">
+            M5.1.1
+        </td>
+        <td>
+            % of users using resolvers that re-fetch early
+        </td>
+        <td class="number" id="valM511">
+            -
+        </td>
+        <td class="number" id="averageM511">
+            -
+        </td>
+        <td class="number" id="minM511">
+            -
+        </td>
+        <td class="number" id="maxM511">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.1.2
+        </td>
+        <td>
+            % of users using resolvers that re-fetch according to TTL
+        </td>
+        <td class="number" id="valM512">
+            -
+        </td>
+        <td class="number" id="averageM512">
+            -
+        </td>
+        <td class="number" id="minM512">
+            -
+        </td>
+        <td class="number" id="maxM512">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.1.3
+        </td>
+        <td>
+            % of users using indeterminate resolvers
+        </td>
+        <td class="number" id="valM513">
+            -
+        </td>
+        <td class="number" id="averageM513">
+            -
+        </td>
+        <td class="number" id="minM513">
+            -
+        </td>
+        <td class="number" id="maxM513">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.1.4
+        </td>
+        <td>
+            % of resolvers that re-fetch early
+        </td>
+        <td class="number" id="valM514">
+            -
+        </td>
+        <td class="number" id="averageM514">
+            -
+        </td>
+        <td class="number" id="minM514">
+            -
+        </td>
+        <td class="number" id="maxM514">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.1.5
+        </td>
+        <td>
+            % of resolvers that re-fetch according to TTL
+        </td>
+        <td class="number" id="valM515">
+            -
+        </td>
+        <td class="number" id="averageM515">
+            -
+        </td>
+        <td class="number" id="minM515">
+            -
+        </td>
+        <td class="number" id="maxM515">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.1.6
+        </td>
+        <td>
+            % of resolvers where cache time is indeterminate
+        </td>
+        <td class="number" id="valM516">
+            -
+        </td>
+        <td class="number" id="averageM516">
+            -
+        </td>
+        <td class="number" id="minM516">
+            -
+        </td>
+        <td class="number" id="maxM516">
+            -
+        </td>
+    </tr>
 <tr></tr>
 <tr>
-   <th colspan=2>
-   M5.2 (% auto cache refresh)
-   </th>
-   <th>Current value</th>
-   <th>Average value</th>
+    <th colspan=2>
+        M5.2 (% auto cache refresh)
+    </th>
+    <th class="number" id="currentId2">Current Value</th>
+    <th class="number">Past 3 months</th>
+    <th class="number">Historic Low</th>
+    <th class="number">Historic High</th>
 </tr>
-        <tr>
-            <td class="number">
-                M5.2.1
-            </td>
-            <td>
-                % of users using resolvers that auto-refresh their cache
-            </td>
-            <td class="number" id="valM521">
-                -
-            </td>
-            <td class="number" id="averageM521">
-                -
-            </td>
-        </tr>
-
-        <tr>
-            <td class="number">
-                M5.2.2
-            </td>
-            <td>
-                % of query load due to cache refresh
-            </td>
-            <td class="number" id="valM522">
-                -
-            </td>
-            <td class="number" id="averageM522">
-                -
-            </td>
-        </tr>
-
-        <tr>
-            <td class="number">
-                M5.2.3
-            </td>
-            <td>
-                % of resolvers that auto-refresh their cache
-            </td>
-            <td class="number" id="valM523">
-                -
-            </td>
-            <td class="number" id="averageM523">
-                -
-            </td>
-        </tr>
 <tr>
-   <th colspan=2>
-   M5.3 (% EDNS0 DO query rate)
-   </th>
-   <th>Current value</th>
-   <th>Average value</th>
+    <td class="number">
+        M5.2.1
+    </td>
+    <td>
+        % of users using resolvers that auto-refresh their cache
+    </td>
+    <td class="number" id="valM521">
+        -
+    </td>
+    <td class="number" id="averageM521">
+        -
+    </td>
+    <td class="number" id="minM521">
+        -
+    </td>
+    <td class="number" id="maxM521">
+        -
+    </td>
 </tr>
+
+<tr>
+    <td class="number">
+        M5.2.2
+    </td>
+    <td>
+        % of query load due to cache refresh
+    </td>
+    <td class="number" id="valM522">
+        -
+    </td>
+    <td class="number" id="averageM522">
+        -
+    </td>
+    <td class="number" id="minM522">
+        -
+    </td>
+    <td class="number" id="maxM522">
+        -
+    </td>
+</tr>
+
+<tr>
+    <td class="number">
+        M5.2.3
+    </td>
+    <td>
+        % of resolvers that auto-refresh their cache
+    </td>
+    <td class="number" id="valM523">
+        -
+    </td>
+    <td class="number" id="averageM523">
+        -
+    </td>
+    <td class="number" id="minM523">
+        -
+    </td>
+    <td class="number" id="maxM523">
+        -
+    </td>
+</tr>
+        <tr>
+            <th colspan=2>
+                M5.3 (% EDNS0 DO query rate)
+            </th>
+            <th class="number" id="currentId3">Current Value</th>
+            <th class="number">Past 3 months</th>
+            <th class="number">Historic Low</th>
+            <th class="number">Historic High</th>
+        </tr>
 
         <tr>
             <td class="number">
@@ -284,6 +341,12 @@ of measurements if measurements started fewer than 12 months ago.
                 -
             </td>
             <td class="number" id="averageM531">
+                -
+            </td>
+            <td class="number" id="minM531">
+                -
+            </td>
+            <td class="number" id="maxM531">
                 -
             </td>
         </tr>
@@ -301,68 +364,96 @@ of measurements if measurements started fewer than 12 months ago.
             <td class="number" id="averageM532">
                 -
             </td>
-        </tr>
-<tr></tr>
-<tr>
-   <th colspan=2>
-   M5.4 (%DNSSEC Validation rate)
-   </th>
-   <th>Current value</th>
-   <th>Average value</th>
-</tr>
-
-        <tr>
-            <td class="number">
-                M5.4.1
-            </td>
-            <td>
-                % of users using resolvers that perform DNSSEC validation
-            </td>
-            <td class="number" id="valM541">
+            <td class="number" id="minM532">
                 -
             </td>
-            <td class="number" id="averageM541">
-                -
-            </td>
-        </tr>
-
-        <tr>
-            <td class="number">
-                M5.4.2
-            </td>
-            <td>
-                % of resolvers that perform DNSSEC validation
-            </td>
-            <td class="number" id="valM542">
-                -
-            </td>
-            <td class="number" id="averageM542">
+            <td class="number" id="maxM532">
                 -
             </td>
         </tr>
 <tr></tr>
 <tr>
-   <th colspan=2>
-   M5.5 (Distribution of resolver use)
-   </th>
-   <th>Current value</th>
-   <th>Average value</th>
+    <th colspan=2>
+        M5.4 (%DNSSEC Validation rate)
+    </th>
+    <th class="number" id="currentId4">Current Value</th>
+    <th class="number">Past 3 months</th>
+    <th class="number">Historic Low</th>
+    <th class="number">Historic High</th>
 </tr>
 
-        <tr>
-            <td class="number">
-                M5.5
-            </td>
-            <td>
-                % of users using one of the top 10,000 resolvers
-            </td>
-            <td class="number" id="valM551">
-                -
-            </td>
-            <td class="number" id="averageM551">
-                -
-            </td>
-        </tr>
+<tr>
+    <td class="number">
+        M5.4.1
+    </td>
+    <td>
+        % of users using resolvers that perform DNSSEC validation
+    </td>
+    <td class="number" id="valM541">
+        -
+    </td>
+    <td class="number" id="averageM541">
+        -
+    </td>
+    <td class="number" id="minM541">
+        -
+    </td>
+    <td class="number" id="maxM541">
+        -
+    </td>
+</tr>
+
+<tr>
+    <td class="number">
+        M5.4.2
+    </td>
+    <td>
+        % of resolvers that perform DNSSEC validation
+    </td>
+    <td class="number" id="valM542">
+        -
+    </td>
+    <td class="number" id="averageM542">
+        -
+    </td>
+    <td class="number" id="minM542">
+        -
+    </td>
+    <td class="number" id="maxM542">
+        -
+    </td>
+</tr>
+<tr></tr>
+<tr>
+    <th colspan=2>
+        M5.5 (Distribution of resolver use)
+    </th>
+    <th class="number" id="currentId5">Current Value</th>
+    <th class="number">Past 3 months</th>
+    <th class="number">Historic Low</th>
+    <th class="number">Historic High</th>
+</tr>
+
+<tr>
+    <td class="number">
+        M5.5
+    </td>
+    <td>
+        % of users using one of the top 10,000 resolvers
+    </td>
+    <td class="number" id="valM551">
+        -
+    </td>
+    <td class="number" id="averageM551">
+        -
+    </td>
+    <td class="number" id="minM551">
+        -
+    </td>
+    <td class="number" id="maxM551">
+        -
+    </td>
+</tr>
 
     </table>
 
