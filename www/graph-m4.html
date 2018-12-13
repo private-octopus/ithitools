@@ -101,25 +101,25 @@
 
 <body onLoad="init()">
 
-<nav id="navMenu"></nav>
+    <nav id="navMenu"></nav>
 
-<h1>M4: DNS Recursive Server Analysis</h1>
+    <h1>M4: DNS Recursive Server Analysis</h1>
 
-<h2 id="dateHeading"> - </h2>
+    <h2 id="dateHeading"> - </h2>
 
     <p>
         The M4 metrics analyze the DNS traffic at Recursive Servers.
         This is somewhat similar to the M3.3 set of metrics, with the difference that M3.3 analyze
-        the traffic arriving to the root, which may be heavily filtered by the recursive resolvers. 
-        M4 attempts to measure the original behavior of DNS clients. 
+        the traffic arriving to the root, which may be heavily filtered by the recursive resolvers.
+        M4 attempts to measure the original behavior of DNS clients.
         M4 comprises 4 metrics, measuring the fraction of queries going to delegated
         TLD, to RFC 6761 special use names, to frequently leaked strings, and
         to other strings.
     </p>
-<p>
-The M4 metric also tracks the usage of DNSSEC at recursive servers through metric M4.5:
-</p>
-<ul>
+    <p>
+        The M4 metric also tracks the usage of DNSSEC at recursive servers through metric M4.5:
+    </p>
+    <ul>
         <li>
             M4.5: the fraction of DNS Clients ready for DNSSEC.
             This is computed at recursive resolvers.
@@ -128,16 +128,15 @@ The M4 metric also tracks the usage of DNSSEC at recursive servers through metri
             and a given IP address is only counted once. The ratios measured at recursive
             resolvers are then averaged to compute the metric.
         </li>
-</ul>
+    </ul>
     <p>
-        In the following table, the <em>current value</em> is the
-        value of the metric for the current month.
-        The <em>average value</em> is the average value of that metric
-        over the 12 months preceeding this one -- or the average since the beginning
-        of measurements if measurements started fewer than 12 months ago.
+        The following table provides the value observed for these
+        metrics in the current month, as well as the average value over the
+        3 months preceeding this one, and the lowest and highest values
+        observed since the start of the measurement.
     </p>
 
-    <table display="inline" class="metrics" >
+    <table display="inline" class="metrics">
         <tr>
             <td rowspan="5">
                 <canvas display="inline" id="pieChartM4" height="160" width="160"></canvas>
@@ -230,26 +229,26 @@ The M4 metric also tracks the usage of DNSSEC at recursive servers through metri
             </td>
         </tr>
 
-	<tr> </tr>
+        <tr> </tr>
 
-    <tr>
-        <td rowspan=1 colspan=2> DNSSEC </td>
-        <td>
-            M4.5:  % of Clients setting the DNSSEC OK bit in queries
-        </td>
-        <td class="number" id="valM45">
-            -
-        </td>
-        <td class="number" id="averageM45">
-            -
-        </td>
-        <td class="number" id="minM45">
-            -
-        </td>
-        <td class="number" id="maxM45">
-            -
-        </td>
-    </tr>
+        <tr>
+            <td rowspan=1 colspan=2> DNSSEC </td>
+            <td>
+                M4.5:  % of Clients setting the DNSSEC OK bit in queries
+            </td>
+            <td class="number" id="valM45">
+                -
+            </td>
+            <td class="number" id="averageM45">
+                -
+            </td>
+            <td class="number" id="minM45">
+                -
+            </td>
+            <td class="number" id="maxM45">
+                -
+            </td>
+        </tr>
     </table>
 
     <p>
@@ -258,25 +257,13 @@ The M4 metric also tracks the usage of DNSSEC at recursive servers through metri
     </p>
 
     <h3 id="M42">Queries to RFC 6761 names</h3>
-    <p>
-        In the following table, the <em>current value</em> is the fraction of queries
-        directed at RFC 6761 names in the current month. The <em>average value</em>
-        is the average of
-        that fraction since the beginning of the year.
-    </p>
     <div id="m42Table">Table M42 not found</div>
 
     <h3 id="M43">Queries to frequently leaked strings</h3>
     <p>
-        In the following table, the <em>current value</em> is the fraction of queries
-        directed  in the current month at frequently used strings. 
-        The <em>average value</em> is the average of
-        that fraction since the beginning of the year.
-    </p>
-    <p>
         Many of the strings frequently used at recursive resolvers correspond to local
         values, such as names of specific servers in the local network. We don't want to
-        publish these names for privacy reasons. The corresponding queries are 
+        publish these names for privacy reasons. The corresponding queries are
         tabulated under a generic category, "(local host names)". The only strings that
         we list are those found in the top 128 strings leaked to the root, as measured
         with metric M3.
