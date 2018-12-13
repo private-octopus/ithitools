@@ -94,6 +94,7 @@ public:
     bool PublishDataM6(FILE * F);
     bool PublishDataM7(FILE * F);
     bool PublishOptTable(FILE * F, char const * metricId);
+    bool PublishOptTableNew(FILE * F, char const * metricId);
     bool PublishDataM8(FILE * F);
 };
 

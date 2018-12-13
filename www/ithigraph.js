@@ -112,15 +112,52 @@ function getAverageElement(dataSet) {
     }
 }
 
+function getAverageLastN(dataSet, N) {
+    var i = 0;
+    var last = 0;
+    var first = 0;
+    var average = 0;
+
+    if (dataSet.length > 1) {
+        last = dataSet.length - 2;
+        if (dataSet.length > N + 1) {
+            first = dataSet.length - (N + 1);
+        }
+
+        for (i = first; i <= last; i++) {
+            average += dataSet[i];
+        }
+        average /= last + 1 - first;
+    }
+
+    return average;
+}
+
+function getMinElement(dataSet) {
+    if (dataSet.length < 1) {
+        return 0;
+    } else {
+        var i = 0;
+        var minEl = dataSet[0];
+
+        for (i = 1; i < dataSet.length; i++) {
+            if (minEl > dataSet[i]) {
+                minEl = dataSet[i];
+            }
+        }
+
+        return minEl;
+    }
+}
+
 function getMaxElement(dataSet) {
     if (dataSet.length < 1) {
         return 0;
     } else {
         var i = 0;
-
         var maxEl = dataSet[0];
 
-        for (i = 0; i < dataSet.length; i++) {
+        for (i = 1; i < dataSet.length; i++) {
             if (maxEl < dataSet[i]) {
                 maxEl = dataSet[i];
             }
@@ -164,6 +201,47 @@ function columnSum(dataSet, columnIndex) {
     }
 
     return sum;
+}
+
+function columnReminder(dataSet, targetTotal) {
+    var i = 0;
+    var j = 0;
+
+    var reminder = new Array(dataSet[0].length);
+
+    for (i = 0; i < reminder.length; i++) {
+        reminder[i] = targetTotal;
+    }
+
+    for (j = 0; j < dataSet.length; j++) {
+        var lineSet = dataSet[j];
+        for (i = 0; i < reminder.length; i++) {
+            reminder[i] -= lineSet[i];
+        }
+    }
+
+    return reminder;
+}
+
+function summarizeNameSet(nameSet) {
+    var i = 0;
+    var j = 0;
+    var example = nameSet[0];
+    var summary = new Array(example.length);
+
+    for (i = 0; i < summary.length; i++) {
+        summary[i] = 0;
+    }
+
+    for (j = 0; j < nameSet.length; j++) {
+        var lineSet = nameSet[j];
+        var nameDataSet = lineSet[1];
+        for (i = 0; i < summary.length; i++) {
+            summary[i] += nameDataSet[i];
+        }
+    }
+
+    return summary;
 }
 
 function setColorBlob(canvasId, colorValue) {
@@ -236,6 +314,38 @@ function fillMetricTable(tableName, tableId, dataSet) {
     tableElem.innerHTML = tableText;
 }
 
+function fillMetricTableNew(tableName, tableId, dataSet) {
+    var i = 0;
+
+    var tableElem = document.getElementById(tableId);
+    var tableText = "<table class=\"metrics\"><tr><th>" + tableName + "</th>";
+
+    tableText += "<th class=\"number\">Current Value</th>" +
+           "<th class=\"number\">Past 3 months</th>" +
+           "<th class=\"number\">Historic Low</th>" +
+           "<th class=\"number\">Historic High</th></tr>\n";
+
+    for (i = 0; i < dataSet.length; i++) {
+        var j = 0;
+        var lineSet = dataSet[i];
+        var lineValueSet = lineSet[1];
+        var lineValues = [
+            getLastElement(lineSet[1]),
+            getAverageLastN(lineSet[1], 3),
+            getMinElement(lineSet[1]),
+            getMaxElement(lineSet[1])];
+
+        tableText += "<tr><td>" + lineSet[0] + "</td>";
+        for (j = 0; j < 4; j++) {
+            tableText += "<td class=\"number\">" + lineValues[j].toFixed(3) + "%</td>";
+        }
+        tableText += "</tr>\n";
+    }
+    tableElem.innerHTML += "</table>\n";
+
+    tableElem.innerHTML = tableText;
+}
+
 function fillEdnsDoQname(rowNames, vEdns, vDo, vQname) {
     var i = 0;
     var tableElem = document.getElementById("tableEdnsDoQname");
@@ -300,6 +410,97 @@ function fillEdnsDoQname(rowNames, vEdns, vDo, vQname) {
     tableText += "</table>\n";
     tableElem.innerHTML = tableText;
 }
+
+function fillEdnsDoQnameNew(rowNames, vEdns, vDo, vQname) {
+    var i = 0;
+    var tableElem = document.getElementById("tableEdnsDoQname");
+    var tableText = "<table  class=\"metrics\">";
+    var current = 0;
+    var average = 0;
+    var vMin = 0;
+    var vMax = 0;
+
+    tableText += "<tr><th colspan=2>Metric</th>";
+    tableText += "<th class=\"number\">Current Value</th>";
+    tableText += "<th class=\"number\">Average Value</th>";
+    tableText += "<th class=\"number\">Historic Low</th>";
+    tableText += "<th class=\"number\">Historic High</th></tr>\n";
+
+    // Set the Edns basic row 
+    var vEdns1 = vEdns[0];
+    var vEdns2 = vEdns[1];
+    current = getLastElement(vEdns1);
+    average = getAverageLastN(vEdns1, 3);
+    vMin = getMinElement(vEdns1);
+    vMax = getMaxElement(vEdns1);
+
+
+    tableText += "<tr><td>" + rowNames[0] + ".1</td><td>%resolvers using Extended DNS (EDNS) </td>";
+    tableText += "<td class=\"number\">" + current.toFixed(3) + "%</td>";
+    tableText += "<td class=\"number\">" + average.toFixed(3) + "%</td>\n";
+    tableText += "<td class=\"number\">" + vMin.toFixed(3) + "%</td>";
+    tableText += "<td class=\"number\">" + vMax.toFixed(3) + "%</td></tr>\n";
+
+    // Set the per option rows 
+    if (vEdns2.length > 0) {
+        tableText += "<tr><td rowspan=" + vEdns2.length + ">" + rowNames[0] + ".2</td>";
+
+        for (i = 0; i < vEdns2.length; i++) {
+            var j = 0;
+            var lineSet = vEdns2[i];
+
+            if (i > 0) {
+                tableText += "<tr>";
+            }
+
+            tableText += "<td> %resolvers using " + lineSet[0] + "</td>";
+
+            current = getLastElement(lineSet[1]);
+            average = getAverageLastN(lineSet[1], 3);
+            vMin = getMinElement(lineSet[1]);
+            vMax = getMaxElement(lineSet[1]);
+
+            tableText += "<td class=\"number\">" + current.toFixed(3) + "%</td>";
+            tableText += "<td class=\"number\">" + average.toFixed(3) + "%</td>\n";
+            tableText += "<td class=\"number\">" + vMin.toFixed(3) + "%</td>";
+            tableText += "<td class=\"number\">" + vMax.toFixed(3) + "%</td></tr>\n";
+
+            tableText += "</tr>\n";
+        }
+    }
+
+    // DO line 
+    current = getLastElement(vDo);
+    average = getAverageLastN(vDo, 3);
+    vMin = getMinElement(vDo);
+    vMax = getMaxElement(vDo);
+
+
+    tableText += "<tr><td>" + rowNames[1] + "</td><td>%resolvers setting DNSSEC OK (DO) flag </td>";
+    tableText += "<td class=\"number\">" + current.toFixed(3) + "%</td>";
+    tableText += "<td class=\"number\">" + average.toFixed(3) + "%</td>\n";
+    tableText += "<td class=\"number\">" + vMin.toFixed(3) + "%</td>";
+    tableText += "<td class=\"number\">" + vMax.toFixed(3) + "%</td></tr>\n";
+
+
+
+    // QName line 
+    current = getLastElement(vQname);
+    average = getAverageLastN(vQname, 3);
+    vMin = getMinElement(vQname);
+    vMax = getMaxElement(vQname);
+
+    tableText += "<tr><td>" + rowNames[2] + "</td><td>%resolvers using QName minimization </td>";
+    tableText += "<td class=\"number\">" + current.toFixed(3) + "%</td>";
+    tableText += "<td class=\"number\">" + average.toFixed(3) + "%</td>\n";
+    tableText += "<td class=\"number\">" + vMin.toFixed(3) + "%</td>";
+    tableText += "<td class=\"number\">" + vMax.toFixed(3) + "%</td></tr>\n";
+
+
+    tableText += "</table>\n";
+    tableElem.innerHTML = tableText;
+}
+
 
 function setScale(canvasId, v_max, sections, unit) {
     var v_min = 0;
@@ -387,56 +588,8 @@ function plotGraph(canvasId, dataSet, range_max, graphColor, unit) {
 function fillValueAverageMinMax(pilot, dataSet, format) {
     setFormattedValElement(pilot[0], getLastElement(dataSet), format[0]);
     setFormattedValElement(pilot[1], getAverageLastN(dataSet, 3), format[1]);
-    setFormattedValElement(pilot[2], getMin(dataSet), format[2]);
-    setFormattedValElement(pilot[3], getMax(dataSet), format[3]);
-}
-
-function getAverageLastN(dataSet, N) {
-    var i = 0;
-    var last = 0;
-    var first = 0;
-    var average = 0;
-
-    if (dataSet.length > 1) {
-        last = dataSet.length - 2;
-        if (dataSet.length > N + 1) {
-            first = dataSet.length - (N + 1);
-        }
-
-        for (i = first; i <= last; i++) {
-            average += dataSet[i];
-        }
-        average /= last + 1 - first;
-    }
-
-    return average;
-}
- 
-function getMin(dataSet) {
-    var i = 0;
-    var v_min = dataSet[0];
-
-    for (i = 1; i < dataSet.length; i++) {
-        if (v_min > dataSet[i]) {
-            v_min = dataSet[i];
-        }
-    }
-
-    return v_min;
-}
-
-
-function getMax(dataSet) {
-    var i = 0;
-    var v_max = dataSet[0];
-
-    for (i = 1; i < dataSet.length; i++) {
-        if (v_max < dataSet[i]) {
-            v_max = dataSet[i];
-        }
-    }
-
-    return v_max;
+    setFormattedValElement(pilot[2], getMinElement(dataSet), format[2]);
+    setFormattedValElement(pilot[3], getMaxElement(dataSet), format[3]);
 }
 
 function setScaleNew(canvasId, v_max, sections, firstMonth, unit) {

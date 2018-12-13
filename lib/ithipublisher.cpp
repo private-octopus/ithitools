@@ -706,9 +706,24 @@ bool ithipublisher::PublishDataM3(FILE * F)
             ret = GetNameList(sub_met[m], &name_list);
         }
 
-        if (ret)
+        for (size_t i = 0; ret && i < name_list.size(); i++)
         {
-            ret = PrintNameList(F, &name_list, 100.0);
+            if (i != 0)
+            {
+                ret = fprintf(F, ",\n") > 0;
+            }
+            ret &= (fprintf(F, "[\"%s\", ", name_list[i].name) > 0);
+
+            if (ret)
+            {
+                ret = GetVector(sub_met[m], name_list[i].name, mvec);
+
+                if (ret)
+                {
+                    ret = PrintVector(F, mvec, 100.0);
+                }
+            }
+            ret &= fprintf(F, "]") > 0;
         }
         
         ret &= fprintf(F, "],\n") > 0;
@@ -721,7 +736,7 @@ bool ithipublisher::PublishDataM3(FILE * F)
         ret &= GetVector("M3.4.1", NULL, mvec);
         ret &= PrintVector(F, mvec, 100.0);
         ret &= fprintf(F, ",\n") > 0;
-        ret &= PublishOptTable(F, "M3.4.2");
+        ret &= PublishOptTableNew(F, "M3.4.2");
         ret &= fprintf(F, "]") > 0;
     }
 
@@ -1011,6 +1026,56 @@ bool ithipublisher::PublishOptTable(FILE * F, char const * metric_name)
         else {
             ret &= fprintf(F, "[ \"%s\", %6f, %6f]", name_list[i].name, 100.0*name_list[i].current, 100.0*name_list[i].average) > 0;
         }
+    }
+
+    ret &= fprintf(F, "]\n") > 0;
+
+    return ret;
+}
+
+bool ithipublisher::PublishOptTableNew(FILE * F, char const * metric_name)
+{
+    std::vector<MetricNameLine> name_list;
+    const metric6_def_t * opt_def = ComputeM6::GetTable("M6.DNS.08");
+    bool ret = GetNameList(metric_name, &name_list);
+    double mvec[12];
+
+    ret &= (opt_def != NULL);
+
+    ret &= fprintf(F, "[") > 0;
+
+    for (size_t i = 0; ret && i < name_list.size(); i++) {
+        /* Parse name to code */
+        char const * opt_long_name = NULL;
+        uint32_t opt_code = (uint32_t)atoi(name_list[i].name);
+
+        for (size_t j = 0; j < opt_def->nb_registered; j++) {
+            if (opt_def->registry[j].key == opt_code) {
+                opt_long_name = opt_def->registry[j].key_name;
+                break;
+            }
+        }
+
+        if (i > 0) {
+            ret &= fprintf(F, ",\n") > 0;
+        }
+
+        if (opt_long_name != NULL) {
+            ret &= fprintf(F, "[ \"%s(%s)\",", opt_long_name, name_list[i].name, 100.0*name_list[i].current, 100.0*name_list[i].average) > 0;
+        }
+        else {
+            ret &= fprintf(F, "[ \"%s\",", name_list[i].name, 100.0*name_list[i].current, 100.0*name_list[i].average) > 0;
+        }
+
+        if (ret) {
+            ret = GetVector(metric_name, name_list[i].name, mvec);
+
+            if (ret) {
+                ret = PrintVector(F, mvec, 100);
+            }
+        }
+
+        ret &= fprintf(F, "]");
     }
 
     ret &= fprintf(F, "]\n") > 0;
