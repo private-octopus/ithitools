@@ -83,6 +83,7 @@ public:
     bool GetNameList(char const * metric_name, std::vector<MetricNameLine> * name_list);
 
     bool PrintVector(FILE * F, double * vx, double mult);
+    bool PrintNameVectorMetric(FILE * F, char const * sub_met_name, char const * metric_name, double mult);
     bool PrintNameList(FILE * F, std::vector<MetricNameLine> * name_list, double mult);
 
     /* Metric specific publishers */

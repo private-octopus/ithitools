@@ -1,5 +1,5 @@
 {
-"date" : "2017/02 (Test data, for illustration only)",
+"date" : "February 2017 (Fictitious data, for test and illustration only)",
 "year" : 2017,
 "month" : 2,
 "M31" : [64.439000, 64.828200],
