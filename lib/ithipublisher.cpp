@@ -534,7 +534,7 @@ bool ithipublisher::GetNameList(char const * metric_name, std::vector<MetricName
 bool ithipublisher::PrintVector(FILE * F, std::vector<double> * vx, double mult)
 {
     bool ret = (fprintf(F, "[") > 0);
-    for (int i = 0; i < vx->size(); i++)
+    for (size_t i = 0; i < vx->size(); i++)
     {
         if (i != 0)
         {
