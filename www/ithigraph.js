@@ -227,7 +227,7 @@ function summarizeNameSet(nameSet) {
     var i = 0;
     var j = 0;
     var example = nameSet[0];
-    var summary = new Array(example.length);
+    var summary = new Array(example[1].length);
 
     for (i = 0; i < summary.length; i++) {
         summary[i] = 0;
