@@ -451,7 +451,7 @@ function setScale(canvasId, v_max, sections, firstMonth, unit) {
     graph.context.font = "20 pt Verdana";
 
     graph.yScale = (graph.canvas.height - columnSize - margin) / (v_max - v_min);
-    graph.xScale = (graph.canvas.width - rowSize) / (sections);
+    graph.xScale = (graph.canvas.width - rowSize) / sections;
 
     graph.context.strokeStyle = "#555555"; // color of grid lines
     graph.context.beginPath();

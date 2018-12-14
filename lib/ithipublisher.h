@@ -77,12 +77,12 @@ public:
     static bool MetricNameLineIsBigger(MetricNameLine l1, MetricNameLine l2);
 
     /* Get the nb_months values of a specific metric */
-    bool GetVector(char const * metric_name, char const * key_value, double * metric);
+    bool GetVector(char const * metric_name, char const * key_value, std::vector<double> * metric);
     bool GetCurrent(char const * metric_name, char const * key_value, double * current);
     bool GetAverageAndCurrent(char const * metric_name, char const * key_value, double * average, double * current);
     bool GetNameList(char const * metric_name, std::vector<MetricNameLine> * name_list);
 
-    bool PrintVector(FILE * F, double * vx, double mult);
+    bool PrintVector(FILE * F, std::vector<double> * vx, double mult);
     bool PrintNameVectorMetric(FILE * F, char const * sub_met_name, char const * metric_name, double mult);
     bool PrintNameList(FILE * F, std::vector<MetricNameLine> * name_list, double mult);
 
