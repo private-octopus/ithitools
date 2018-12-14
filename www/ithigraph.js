@@ -434,7 +434,6 @@ function fillEdnsDoQnameNew(rowNames, vEdns, vDo, vQname) {
     vMin = getMinElement(vEdns1);
     vMax = getMaxElement(vEdns1);
 
-
     tableText += "<tr><td>" + rowNames[0] + ".1</td><td>%resolvers using Extended DNS (EDNS) </td>";
     tableText += "<td class=\"number\">" + current.toFixed(3) + "%</td>";
     tableText += "<td class=\"number\">" + average.toFixed(3) + "%</td>\n";
@@ -464,8 +463,6 @@ function fillEdnsDoQnameNew(rowNames, vEdns, vDo, vQname) {
             tableText += "<td class=\"number\">" + average.toFixed(3) + "%</td>\n";
             tableText += "<td class=\"number\">" + vMin.toFixed(3) + "%</td>";
             tableText += "<td class=\"number\">" + vMax.toFixed(3) + "%</td></tr>\n";
-
-            tableText += "</tr>\n";
         }
     }
 
@@ -475,14 +472,11 @@ function fillEdnsDoQnameNew(rowNames, vEdns, vDo, vQname) {
     vMin = getMinElement(vDo);
     vMax = getMaxElement(vDo);
 
-
     tableText += "<tr><td>" + rowNames[1] + "</td><td>%resolvers setting DNSSEC OK (DO) flag </td>";
     tableText += "<td class=\"number\">" + current.toFixed(3) + "%</td>";
     tableText += "<td class=\"number\">" + average.toFixed(3) + "%</td>\n";
     tableText += "<td class=\"number\">" + vMin.toFixed(3) + "%</td>";
     tableText += "<td class=\"number\">" + vMax.toFixed(3) + "%</td></tr>\n";
-
-
 
     // QName line 
     current = getLastElement(vQname);

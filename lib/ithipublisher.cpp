@@ -1100,7 +1100,7 @@ bool ithipublisher::PublishDataM8(FILE * F)
         ret &= GetVector("M8.2.1", NULL, mvec);
         ret &= PrintVector(F, mvec, 100.0);
         ret &= fprintf(F, ",\n") > 0;
-        ret &= PublishOptTable(F, "M8.2.2");
+        ret &= PublishOptTableNew(F, "M8.2.2");
         ret &= fprintf(F, "]") > 0;
     }
 
