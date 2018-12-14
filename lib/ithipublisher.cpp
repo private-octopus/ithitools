@@ -673,11 +673,10 @@ bool ithipublisher::PublishDataM2(FILE * F)
 
     for (int m = 0; ret && m < 24; m++)
     {
-        ret &= fprintf(F, "%s", (m==0)?"\n":",\n") > 0;
+        ret = GetVector(subMet[m], NULL, m2x);
         if (ret) {
-            if (ret = GetVector(subMet[m], NULL, m2x)) {
-                ret = PrintVector(F, m2x, 1.0);
-            }
+            ret = fprintf(F, "%s", (m==0)?"\n":",\n") > 0;
+            ret &= PrintVector(F, m2x, 1.0);
         }
     }
     
