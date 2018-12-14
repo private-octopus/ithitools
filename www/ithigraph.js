@@ -352,71 +352,6 @@ function fillEdnsDoQname(rowNames, vEdns, vDo, vQname) {
     var tableText = "<table  class=\"metrics\">";
     var current = 0;
     var average = 0;
-
-    tableText += "<tr><th colspan=2>Metric</th>";
-    tableText += "<th class=\"number\">Current Value</th>";
-    tableText += "<th class=\"number\">Average Value</th></tr>\n";
-
-    // Set the Edns basic row 
-    var vEdns1 = vEdns[0];
-    var vEdns2 = vEdns[1];
-    current = getLastElement(vEdns1);
-    average = getAverageElement(vEdns1);
-
-    tableText += "<tr><td>" + rowNames[0] + ".1</td><td>%resolvers using Extended DNS (EDNS) </td>";
-    tableText += "<td class=\"number\">" + current.toFixed(3) + "%</td>";
-    tableText += "<td class=\"number\">" + average.toFixed(3) + "%</td></tr>\n";
-
-    // Set the per option rows 
-    if (vEdns2.length > 0) {
-        tableText += "<tr><td rowspan=" + vEdns2.length + ">" + rowNames[0] + ".2</td>";
-
-        for (i = 0; i < vEdns2.length; i++) {
-            var j = 0;
-            var lineSet = vEdns2[i];
-
-            if (i > 0) {
-                tableText += "<tr>";
-            }
-
-            tableText += "<td> %resolvers using " + lineSet[0] + "</td>";
-
-            for (j = 1; j < 3 && j < lineSet.length; j++) {
-                tableText += "<td class=\"number\">" + lineSet[j].toFixed(3) + "%</td>";
-            }
-            tableText += "</tr>\n";
-        }
-    }
-
-    // DO line 
-    current = getLastElement(vDo);
-    average = getAverageElement(vDo);
-
-    tableText += "<tr><td>" + rowNames[1] + "</td><td>%resolvers setting DNSSEC OK (DO) flag </td>";
-    tableText += "<td class=\"number\">" + current.toFixed(3) + "%</td>";
-    tableText += "<td class=\"number\">" + average.toFixed(3) + "%</td></tr>\n";
-
-
-
-    // QName line 
-    current = getLastElement(vQname);
-    average = getAverageElement(vQname);
-
-    tableText += "<tr><td>" + rowNames[1] + "</td><td>%resolvers using QName minimization </td>";
-    tableText += "<td class=\"number\">" + current.toFixed(3) + "%</td>";
-    tableText += "<td class=\"number\">" + average.toFixed(3) + "%</td></tr>\n";
-
-
-    tableText += "</table>\n";
-    tableElem.innerHTML = tableText;
-}
-
-function fillEdnsDoQnameNew(rowNames, vEdns, vDo, vQname) {
-    var i = 0;
-    var tableElem = document.getElementById("tableEdnsDoQname");
-    var tableText = "<table  class=\"metrics\">";
-    var current = 0;
-    var average = 0;
     var vMin = 0;
     var vMax = 0;
 
@@ -495,90 +430,6 @@ function fillEdnsDoQnameNew(rowNames, vEdns, vDo, vQname) {
     tableElem.innerHTML = tableText;
 }
 
-
-function setScale(canvasId, v_max, sections, unit) {
-    var v_min = 0;
-    var stepSize = v_max / 10;
-    var columnSize = 50;
-    var rowSize = 50;
-    var margin = 10;
-    var xAxis = [" ", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    var graph = new Object();
-    var i = 0;
-    graph.canvas = document.getElementById(canvasId);
-    graph.context = graph.canvas.getContext("2d");
-    graph.context.fillStyle = "#808080";
-    graph.context.font = "20 pt Verdana";
-
-    graph.yScale = (graph.canvas.height - columnSize - margin) / (v_max - v_min);
-    graph.xScale = (graph.canvas.width - rowSize) / sections;
-
-    graph.context.strokeStyle = "#808080"; // color of grid lines
-    graph.context.beginPath();
-    // print Parameters on X axis, and grid lines on the graph
-    for (i = 1; i <= sections + 1; i++) {
-        var x = i * graph.xScale;
-        graph.context.fillText(xAxis[i], x, columnSize - margin);
-        graph.context.moveTo(x, columnSize + margin);
-        graph.context.lineTo(x, graph.canvas.height);
-    }
-    // print row header and draw horizontal grid lines
-    var count = 0;
-    var scale = 0;
-    for (scale = v_max; scale >= v_min; scale = scale - stepSize) {
-        var y = columnSize + graph.yScale * count * stepSize;
-        var fscale;
-        if (v_max >= 10.0) {
-            fscale = scale.toFixed(0);
-        } else if (v_max >= 1.0) {
-            fscale = scale.toFixed(1);
-        } else {
-            fscale = scale;
-        }
-        graph.context.fillText(fscale + unit, margin, y + margin);
-        graph.context.moveTo(rowSize, y + margin);
-        graph.context.lineTo(graph.canvas.width, y + margin);
-        count++;
-    }
-    graph.context.stroke();
-
-    graph.context.translate(rowSize, graph.canvas.height + v_min * graph.yScale);
-    graph.context.scale(1, -1 * graph.yScale);
-
-    return graph;
-}
-
-function plotGraph(canvasId, dataSet, range_max, graphColor, unit) {
-    var sections = 12;
-    var graph = setScale(canvasId, range_max, sections, unit);
-
-    l = dataSet.length;
-    if (l > sections) {
-        l = sections;
-    }
-
-    graph.context.fillStyle = graphColor;
-    graph.context.beginPath();
-    graph.context.moveTo(0, 0);
-
-    for (i = 0; i < l; i++) {
-        var this_val = dataSet[i];
-        if (this_val > range_max) {
-            this_val = range_max;
-        } else if (this_val < 0) {
-            this_val = 0;
-        }
-        graph.context.lineTo(i * graph.xScale, this_val);
-        graph.context.lineTo((i + 1) * graph.xScale, this_val);
-    }
-
-    graph.context.lineTo(l * graph.xScale, 0);
-    graph.context.closePath();
-    graph.context.fill();
-}
-
-
-
 function fillValueAverageMinMax(pilot, dataSet, format) {
     setFormattedValElement(pilot[0], getLastElement(dataSet), format[0]);
     setFormattedValElement(pilot[1], getAverageLastN(dataSet, 3), format[1]);
@@ -586,7 +437,7 @@ function fillValueAverageMinMax(pilot, dataSet, format) {
     setFormattedValElement(pilot[3], getMaxElement(dataSet), format[3]);
 }
 
-function setScaleNew(canvasId, v_max, sections, firstMonth, unit) {
+function setScale(canvasId, v_max, sections, firstMonth, unit) {
     var v_min = 0;
     var stepSize = v_max / 10;
     var columnSize = 50;
@@ -674,7 +525,7 @@ function getFirstMonthIndex(lastMonth, nbData){
     return monthIndex;
 }
 
-function plotGraphNew(canvasId, dataSet, range_max, firstMonth, graphColor, unit) {
+function plotGraph(canvasId, dataSet, range_max, firstMonth, graphColor, unit) {
     var sections = 12;
 
     l = dataSet.length;
@@ -682,7 +533,7 @@ function plotGraphNew(canvasId, dataSet, range_max, firstMonth, graphColor, unit
         sections = l+1;
     }
 
-    var graph = setScaleNew(canvasId, range_max, sections, firstMonth, unit);
+    var graph = setScale(canvasId, range_max, sections, firstMonth, unit);
 
     graph.context.fillStyle = graphColor;
     graph.context.beginPath();
@@ -704,9 +555,7 @@ function plotGraphNew(canvasId, dataSet, range_max, firstMonth, graphColor, unit
     graph.context.fill();
 }
 
-
-
-function plotStackGraphNew(canvasId, dataSet1, dataSet2, rangeMax, firstMonth, colorSet, unit) {
+function plotStackGraph(canvasId, dataSet1, dataSet2, rangeMax, firstMonth, colorSet, unit) {
     var sections = 12;
     var l = dataSet1.length;
 
@@ -714,7 +563,7 @@ function plotStackGraphNew(canvasId, dataSet1, dataSet2, rangeMax, firstMonth, c
         sections = l + 1;
     }
 
-    var graph = setScaleNew(canvasId, rangeMax, sections, firstMonth, unit);
+    var graph = setScale(canvasId, rangeMax, sections, firstMonth, unit);
 
     // Start with first data set
     var context = graph.context;

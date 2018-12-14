@@ -92,7 +92,7 @@
         if ("month" in M3Data) {
             firstMonth = getFirstMonthIndex(M3Data.month, M3Data.M31.length);
         }
-        plotStackGraphNew("stackGraphM3", M3Data.M31, M3Data.M32, 100, firstMonth, colorSet, "%");
+        plotStackGraph("stackGraphM3", M3Data.M31, M3Data.M32, 100, firstMonth, colorSet, "%");
 
         // Generate the value for the tables of elements 
         fillMetricTableNew("RFC 6761 name", "m331Table", M3Data.m331Set);
@@ -102,7 +102,7 @@
         // Add the EDNs metrics, etc.
         var resolverMetricNames = ["M3.4", "M3.5", "M3.6"];
 
-        fillEdnsDoQnameNew(resolverMetricNames, M3Data.M34, M3Data.M35, M3Data.M36);
+        fillEdnsDoQname(resolverMetricNames, M3Data.M34, M3Data.M35, M3Data.M36);
     }
     
 </script>
