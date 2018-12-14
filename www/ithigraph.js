@@ -76,7 +76,7 @@ function setValElementI(valElementId, x) {
 
 function setStringElement(valElementId, x) {
     elm = document.getElementById(valElementId);
-    elm.innerHTML = "<b>" + x + "</b>";
+    elm.innerHTML = x;
 }
 
 function getLastElement(dataSet) {
@@ -314,14 +314,19 @@ function fillMetricTable(tableName, tableId, dataSet) {
     tableElem.innerHTML = tableText;
 }
 
-function fillMetricTableNew(tableName, tableId, dataSet) {
+function fillMetricTableNew(tableName, tableId, dataSet, MData) {
     var i = 0;
 
     var tableElem = document.getElementById(tableId);
-    var tableText = "<table class=\"metrics\"><tr><th>" + tableName + "</th>";
+    var tableText = "<table class=\"metrics\"><tr><th>" + tableName + "</th> <th class=\"number\">";
 
-    tableText += "<th class=\"number\">Current Value</th>" +
-           "<th class=\"number\">Past 3 months</th>" +
+    if ("year" in MData && "month" in MData) {
+        tableText += "As of " + getMonthId(MData.month) + " " + MData.year;
+    } else {
+        tableText += "Current Value";
+    }
+
+    tableText += "</th><th class=\"number\">Past 3 months</th>" +
            "<th class=\"number\">Historic Low</th>" +
            "<th class=\"number\">Historic High</th></tr>\n";
 
@@ -346,7 +351,7 @@ function fillMetricTableNew(tableName, tableId, dataSet) {
     tableElem.innerHTML = tableText;
 }
 
-function fillEdnsDoQname(rowNames, vEdns, vDo, vQname) {
+function fillEdnsDoQname(rowNames, vEdns, vDo, vQname, MData) {
     var i = 0;
     var tableElem = document.getElementById("tableEdnsDoQname");
     var tableText = "<table  class=\"metrics\">";
@@ -355,9 +360,15 @@ function fillEdnsDoQname(rowNames, vEdns, vDo, vQname) {
     var vMin = 0;
     var vMax = 0;
 
-    tableText += "<tr><th colspan=2>Metric</th>";
-    tableText += "<th class=\"number\">Current Value</th>";
-    tableText += "<th class=\"number\">Average Value</th>";
+    tableText += "<tr><th colspan=2>Metric</th><th class=\"number\">";
+
+    if ("year" in MData && "month" in MData) {
+        tableText += "As of " + getMonthId(MData.month) + " " + MData.year;
+    } else {
+        tableText += "Current Value";
+    }
+
+    tableText += "</th><th class=\"number\">Average Value</th>";
     tableText += "<th class=\"number\">Historic Low</th>";
     tableText += "<th class=\"number\">Historic High</th></tr>\n";
 
@@ -523,6 +534,16 @@ function getFirstMonthIndex(lastMonth, nbData){
     }
 
     return monthIndex;
+}
+
+function fillCurrentDateFields(fieldIds, MData) {
+    if ("year" in MData && "month" in MData) {
+        var i = 0;
+        var current = "As of " + getMonthId(MData.month) + " " + MData.year;
+        for (i = 0; i < fieldIds.length; i++) {
+            setStringElement(fieldIds[i], current);
+        }
+    }
 }
 
 function plotGraph(canvasId, dataSet, range_max, firstMonth, graphColor, unit) {

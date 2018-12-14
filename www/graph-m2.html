@@ -91,6 +91,8 @@
         // Set the text values that depend on the current data
         setDateElement(M2Data.date);
 
+        fillCurrentDateFields(["currentId"], M2Data);
+
         if (M2Data.m2Val.length == pilot.length) {
             for (i = 0; i < pilot.length; i++) {
                 fillValueAverageMinMax(pilot[i], M2Data.m2Val[i], formats[i]);

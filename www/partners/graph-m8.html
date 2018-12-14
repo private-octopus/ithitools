@@ -55,11 +55,13 @@
 
         setDateElement(M8Data.date);
 
+        fillCurrentDateFields(["currentId1"], M8Data);
+
         fillValueAverageMinMax(pilot, M8Data.M81, format);
 
         var resolverMetricNames = ["M8.2", "M8.3", "M8.4"];
 
-        fillEdnsDoQname(resolverMetricNames, M8Data.M82, M8Data.M83, M8Data.M84);
+        fillEdnsDoQname(resolverMetricNames, M8Data.M82, M8Data.M83, M8Data.M84, M8Data);
     }
 
 </script>

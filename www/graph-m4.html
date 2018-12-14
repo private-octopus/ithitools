@@ -78,6 +78,8 @@
         // Set the text values that depend on the current data
         setDateElement(M4Data.date);
 
+        fillCurrentDateFields(["currentId1"], M4Data);
+
         for (i = 0; i < 5; i++) {
             fillValueAverageMinMax(pilot[i], M4List[i], format);
         }
@@ -92,8 +94,8 @@
 
         // Generate the value for the tables of elements
 
-        fillMetricTableNew("RFC 6761 name", "m42Table", M4Data.M42DataSet);
-        fillMetricTableNew("Frequently used string", "m43Table", M4Data.M43DataSet);
+        fillMetricTableNew("RFC 6761 name", "m42Table", M4Data.M42DataSet, M4Data);
+        fillMetricTableNew("Frequently used string", "m43Table", M4Data.M43DataSet, M4Data);
     }
 
 </script>

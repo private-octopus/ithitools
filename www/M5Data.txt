@@ -1,5 +1,7 @@
 {
 "date" : "September 2017  (Fictitious data, for test and illustration only)",
+"year" : 2017,
+"month" : 9,
 "M5" : [{ "v" : [27.5, 29.6]},
 { "v" : [31.8, 33.9]},
 { "v" : [41.7, 36.5]},

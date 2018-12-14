@@ -34,6 +34,8 @@
         /* Set the date */
         setDateElement(M3Data.date);
 
+        fillCurrentDateFields(["currentId1", "currentId2"], M3Data);
+
         /* Compute the metrics values and average based on tables */
         var i = 0;
 
@@ -95,14 +97,14 @@
         plotStackGraph("stackGraphM3", M3Data.M31, M3Data.M32, 100, firstMonth, colorSet, "%");
 
         // Generate the value for the tables of elements 
-        fillMetricTableNew("RFC 6761 name", "m331Table", M3Data.m331Set);
-        fillMetricTableNew("Frequently used string", "m332Table", M3Data.m332Set);
-        fillMetricTableNew("Frequent pattern", "m333Table", M3Data.m333Set);
+        fillMetricTableNew("RFC 6761 name", "m331Table", M3Data.m331Set, M3Data);
+        fillMetricTableNew("Frequently used string", "m332Table", M3Data.m332Set, M3Data);
+        fillMetricTableNew("Frequent pattern", "m333Table", M3Data.m333Set, M3Data);
 
         // Add the EDNs metrics, etc.
         var resolverMetricNames = ["M3.4", "M3.5", "M3.6"];
 
-        fillEdnsDoQname(resolverMetricNames, M3Data.M34, M3Data.M35, M3Data.M36);
+        fillEdnsDoQname(resolverMetricNames, M3Data.M34, M3Data.M35, M3Data.M36, M3Data);
     }
     
 </script>

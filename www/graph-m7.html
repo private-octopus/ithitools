@@ -36,6 +36,8 @@
         var format = [1, 1, 1, 1];
 
         setDateElement(M7Data.date);
+
+        fillCurrentDateFields(["currentId1"], M7Data);
         
         for (i = 0; i < 2; i++) {
             fillValueAverageMinMax(pilot[i], M7Data.M7DataSet[i], format);
