@@ -27,24 +27,36 @@
     }
 
     function draw_page() {
+        var pilot = [
+            ["valM11", "averageM11", "minM11", "maxM11"],
+            ["valM12", "averageM12", "minM12", "maxM12"],
+            ["valM13", "averageM13", "minM13", "maxM13"]
+        ];
+
+        var formats = [
+            [1, 1, 1, 1],
+            [0, 2, 0, 0],
+            [0, 2, 0, 0]
+        ];
+
         // Set the text values that depend on the current data
         setDateElement(M1Data.date);
 
-        if (M1Data.m1Val.length >= 3) {
-            var maxElement = getMaxElement(M1Data.m1Val[0]);
-            setValElementX("valM11", getLastElement(M1Data.m1Val[0]));
-            setValElementI("valM12", getLastElement(M1Data.m1Val[1]));
-            setValElementI("valM13", getLastElement(M1Data.m1Val[2]));
-            setValElementX("averageM11", getAverageElement(M1Data.m1Val[0]));
-            setValElementX("averageM12", getAverageElement(M1Data.m1Val[1]));
-            setValElementX("averageM13", getAverageElement(M1Data.m1Val[2]));
+        fillCurrentDateFields(["currentId"], M1Data);
 
+        if (M1Data.m1Val.length >= 3) {
+            for (i = 0; i < 3; i++) {
+                fillValueAverageMinMax(pilot[i], M1Data.m1Val[i], formats[i]);
+            }
+
+            var maxElement = getMaxElement(M1Data.m1Val[0]);
             var firstMonth = 1;
+
             if ("month" in M1Data) {
                 firstMonth = getFirstMonthIndex(M1Data.month, M1Data.m1Val[0].length);
             }
 
-            plotGraphNew("graphM11", M1Data.m1Val[0], getMaxRange(maxElement), firstMonth, "#404040C0", "");
+            plotGraph("graphM11", M1Data.m1Val[0], getMaxRange(maxElement), firstMonth, "#404040C0", "");
         }
     }
 
@@ -81,25 +93,37 @@
     <p>
         The following table provides the value observed for these
         metrics in the current month, as well as the average value over the
-        12 months preceeding this one -- or the average since the beginning of
-        measurements if measurements started fewer than 12 months ago.
+        3 months preceeding this one, and the lowest and highest values
+        observed since the start of the measurement.
     </p>
     <table class="metrics">
-        <tr><th>M1 metric name</th><th class="number">Current value</th><th class="number">Average value</th></tr>
+        <tr>
+            <th>M1 metric name</th>
+            <th class="number" id="currentId">Current value</th>
+            <th class="number">Last 3 months</th>
+            <th class="number">Historic Min</th>
+            <th class="number">Historic Max</th>
+        </tr>
         <tr>
             <td><a href="#M11">M1.1: Number of “validated complaints” per million registrations.</a></td>
             <td class="number" id="valM11">-</td>
             <td class="number" id="averageM11">-</td>
+            <td class="number" id="minM11">-</td>
+            <td class="number" id="maxM11">-</td>
         </tr>
         <tr>
             <td>M1.2: Smallest number of registrars explaining 50% of complaints.</td>
             <td class="number" id="valM12">-</td>
             <td class="number" id="averageM12">-</td>
+            <td class="number" id="minM12">-</td>
+            <td class="number" id="maxM12">-</td>
         </tr>
         <tr>
             <td>M1.3: Smallest number of registrars explaining 90% of complaints.</td>
             <td class="number" id="valM13">-</td>
             <td class="number" id="averageM13">-</td>
+            <td class="number" id="minM13">-</td>
+            <td class="number" id="maxM13">-</td>
         </tr>
     </table>
 

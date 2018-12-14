@@ -29,18 +29,18 @@
     }
 
     function draw_page() {
-        // set these values for your data
+        var pilot = [
+            ["valM71", "averageM71", "minM71", "maxM71"],
+            ["valM72", "averageM72", "minM72", "maxM72"]
+        ];
+        var format = [1, 1, 1, 1];
 
         setDateElement(M7Data.date);
-        elementRefList = ["valM71", "valM72"];
-        elementAverageList = ["averageM71", "averageM72"];
-        elementRefVal = [ getLastElement(M7Data.M7DataSet[0]), getLastElement(M7Data.M7DataSet[1])];
-        elementAverageVal = [getAverageElement(M7Data.M7DataSet[0]), getAverageElement(M7Data.M7DataSet[1])];
+
+        fillCurrentDateFields(["currentId1"], M7Data);
         
         for (i = 0; i < 2; i++) {
-            dataM7x = M7Data.M7DataSet[i];
-            setValElement(elementRefList[i], elementRefVal[i]);
-            setValElement(elementAverageList[i], elementAverageVal[i]);
+            fillValueAverageMinMax(pilot[i], M7Data.M7DataSet[i], format);
         }
         
         // Plot the charts
@@ -50,12 +50,12 @@
         if ("month" in M7Data) {
             firstMonth = getFirstMonthIndex(M7Data.month, M7Data.M7DataSet[0].length);
         }
-        plotGraphNew("graphM71", M7Data.M7DataSet[0], 100, firstMonth, "#404040C0", "%");
+        plotGraph("graphM71", M7Data.M7DataSet[0], 100, firstMonth, "#404040C0", "%");
 
         if ("month" in M7Data) {
             firstMonth = getFirstMonthIndex(M7Data.month, M7Data.M7DataSet[1].length);
         }
-        plotGraphNew("graphM72", M7Data.M7DataSet[1], 100, firstMonth, "#404040C0", "%");
+        plotGraph("graphM72", M7Data.M7DataSet[1], 100, firstMonth, "#404040C0", "%");
     }
 </script>
 </head>
@@ -86,18 +86,18 @@
         </li>
     </ul>
     <p>
-        In the following table, the <em>current value</em> is the
-        value of the metric for the current month.
-        The <em>average value</em> is the average value of that metric
-        over the 12 months preceeding this one -- or the average since the beginning
-        of measurements if measurements started fewer than 12 months ago.
+        The following table provides the value observed for the
+        metrics in the current month, as well as the average value over the 3 previous months,
+        and the "historical" minimum and maximum observed since the beginning of the measurements.
     </p>
 
     <table class="metrics">
         <tr>
             <th></th>
-            <th class="number">Current value</th>
-            <th class="number">Average value</th>
+            <th class="number" id="currentId1">Current Value</th>
+            <th class="number">Past 3 months</th>
+            <th class="number">Historic Low</th>
+            <th class="number">Historic High</th>
         </tr>
         <tr>
             <td>
@@ -109,6 +109,12 @@
             <td class="number" id="averageM71">
                 -
             </td>
+            <td class="number" id="minM71">
+                -
+            </td>
+            <td class="number" id="maxM71">
+                -
+            </td>
         </tr>
         <tr>
             <td>
@@ -118,6 +124,12 @@
                 -
             </td>
             <td class="number" id="averageM72">
+                -
+            </td>
+            <td class="number" id="minM72">
+                -
+            </td>
+            <td class="number" id="maxM72">
                 -
             </td>
         </tr>

@@ -57,6 +57,7 @@ static char const * publish_ref_m5 = "..\\..\\data\\M5Data-test-ref.txt";
 static char const * publish_test_m61 = "..\\..\\data\\M6-2017-01-31.csv";
 static char const * publish_test_m62 = "..\\..\\data\\M6-2017-02-28.csv";
 static char const * publish_ref_m6 = "..\\..\\data\\M6Data-test-ref.txt";
+static char const * publish_test_m70 = "..\\..\\data\\M7-2016-12-31.csv";
 static char const * publish_test_m71 = "..\\..\\data\\M7-2017-01-31.csv";
 static char const * publish_test_m72 = "..\\..\\data\\M7-2017-02-28.csv";
 static char const * publish_ref_m7 = "..\\..\\data\\M7Data-test-ref.txt";
@@ -82,6 +83,7 @@ static char const * publish_ref_m5 = "..\\data\\M5Data-test-ref.txt";
 static char const * publish_test_m61 = "..\\data\\M6-2017-01-31.csv";
 static char const * publish_test_m62 = "..\\data\\M6-2017-02-28.csv";
 static char const * publish_ref_m6 = "..\\data\\M6Data-test-ref.txt";
+static char const * publish_test_m70 = "..\\data\\M7-2016-12-31.csv";
 static char const * publish_test_m71 = "..\\data\\M7-2017-01-31.csv";
 static char const * publish_test_m72 = "..\\data\\M7-2017-02-28.csv";
 static char const * publish_ref_m7 = "..\\data\\M7Data-test-ref.txt";
@@ -117,6 +119,7 @@ static char const * publish_test_m61 = "./data/M6-2017-01-31.csv";
 static char const * publish_test_m62 = "./data/M6-2017-02-28.csv";
 static char const * publish_ref_m6 = "./data/M6Data-test-ref.txt";
 static char const * publish_test_target_m7 = "./M7Data.txt";
+static char const * publish_test_m70 = "./data/M7-2016-12-31.csv";
 static char const * publish_test_m71 = "./data/M7-2017-01-31.csv";
 static char const * publish_test_m72 = "./data/M7-2017-02-28.csv";
 static char const * publish_ref_m7 = "./data/M7Data-test-ref.txt";
@@ -245,11 +248,11 @@ bool PublishTest::DoTest()
     }
 
     /* M7 test */
-    char const * m7_files[2] = { publish_test_m71, publish_test_m72 };
+    char const * m7_files[3] = { publish_test_m70, publish_test_m71, publish_test_m72 };
 
     if (ret)
     {
-        ret = DoOneTest(7, m7_files, 2, publish_test_target_m7, publish_ref_m7);
+        ret = DoOneTest(7, m7_files, 3, publish_test_target_m7, publish_ref_m7);
     }
 
     /* M8 test */

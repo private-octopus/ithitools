@@ -137,49 +137,10 @@ bool ithipublisher::CollectMetricFiles()
         last_year = file_list[last_index]->year;
         last_month = file_list[last_index]->month;
         last_day = file_list[last_index]->day;
-        nb_months = 12;
+        first_year = file_list[0]->year;
+        first_month = file_list[0]->month;
 
-        first_year = last_year;
-        first_month = last_month - 11;
-        if (first_month < 1)
-        {
-            first_month += 12;
-            first_year -= 1;
-        }
-
-        /* Remove the list elements that are too old*/
-        size_t to_erase = 0;
-        while (file_list[to_erase]->year < first_year ||
-            (file_list[to_erase]->year == first_year &&
-                file_list[to_erase]->month < first_month))
-        {
-            to_erase++;
-        }
-
-        if (to_erase > 0)
-        {
-            for (size_t i = 0; i < to_erase; i++)
-            {
-                MetricFileHolder * pmf = file_list[i];
-                delete pmf;
-                file_list[i] = NULL;
-            }
-            file_list.erase(file_list.begin(), file_list.begin() + to_erase);
-        }
-
-        /* Adjust the first year and month if needed */
-        if (first_year < file_list[0]->year)
-        {
-            first_year = file_list[0]->year;
-            nb_months -= (file_list[0]->month + 12 - first_month);
-            first_month = file_list[0]->month;
-        }
-        else if (first_year == file_list[0]->year &&
-            first_month < file_list[0]->month)
-        {
-            nb_months -= (file_list[0]->month - first_month);
-            first_month = file_list[0]->month;
-        }
+        nb_months = 1 + last_month - first_month + 12 * (last_year - first_year);
 
         /* Load the selected data */
         for (size_t i = 0; ret &&  i < file_list.size(); i++)
@@ -353,6 +314,8 @@ bool ithipublisher::Publish(char const * web_folder)
     {
         /* Opening braces and date */
         ret = fprintf(F, "{\n\"date\" : \"%04d/%02d\",\n", last_year, last_month) > 0;
+        ret &= fprintf(F, "\"year\" : %d,\n", last_year) > 0;
+        ret &= fprintf(F, "\"month\" : %d,\n", last_month) > 0;
         /* Data */
         if (ret)
         {
@@ -400,11 +363,13 @@ bool ithipublisher::Publish(char const * web_folder)
     return ret;
 }
 
-bool ithipublisher::GetVector(char const * metric_name, char const * key_value, double * metric)
+bool ithipublisher::GetVector(char const * metric_name, char const * key_value, std::vector<double> * metric)
 {
     size_t line_index = 0;
     int current_year = first_year;
     int current_month = first_month;
+
+    metric->clear();
 
     while (line_index < line_list.size())
     {
@@ -434,6 +399,7 @@ bool ithipublisher::GetVector(char const * metric_name, char const * key_value, 
         
     for (int i = 0; i < nb_months; i++)
     {
+        double m;
 
         if (line_index >= line_list.size() ||
             strcmp(line_list[line_index]->metric_name, metric_name) != 0 ||
@@ -442,13 +408,15 @@ bool ithipublisher::GetVector(char const * metric_name, char const * key_value, 
             (line_list[line_index]->year == current_year &&
                 line_list[line_index]->month > current_month))
         {
-            metric[i] = 0;
+            m = 0;
         }
         else
         {
-            metric[i] = line_list[line_index]->frequency;
+            m = line_list[line_index]->frequency;
             line_index++;
         }
+        metric->push_back(m);
+
         current_month++;
         if (current_month > 12)
         {
@@ -462,8 +430,8 @@ bool ithipublisher::GetVector(char const * metric_name, char const * key_value, 
 
 bool ithipublisher::GetCurrent(char const * metric_name, char const * key_value, double * current)
 {
-    double val[12];
-    bool ret = GetVector(metric_name, key_value, val);
+    std::vector<double> val;
+    bool ret = GetVector(metric_name, key_value, &val);
 
     *current = val[nb_months - 1];
 
@@ -472,8 +440,8 @@ bool ithipublisher::GetCurrent(char const * metric_name, char const * key_value,
 
 bool ithipublisher::GetAverageAndCurrent(char const * metric_name, char const * key_value, double * average, double * current)
 {
-    double val[12];
-    bool ret = GetVector(metric_name, key_value, val);
+    std::vector<double>  val;
+    bool ret = GetVector(metric_name, key_value, &val);
     double sum = 0;
 
     *average = 0;
@@ -563,20 +531,54 @@ bool ithipublisher::GetNameList(char const * metric_name, std::vector<MetricName
     return true;
 }
 
-bool ithipublisher::PrintVector(FILE * F, double * vx, double mult)
+bool ithipublisher::PrintVector(FILE * F, std::vector<double> * vx, double mult)
 {
     bool ret = (fprintf(F, "[") > 0);
-    for (int i = 0; i < nb_months; i++)
+    for (size_t i = 0; i < vx->size(); i++)
     {
         if (i != 0)
         {
             ret &= fprintf(F, ", ") > 0;
         }
 
-        ret &= fprintf(F, "%8f", mult*vx[i]) > 0;
+        ret &= fprintf(F, "%8f", mult*(*vx)[i]) > 0;
     }
 
     ret &= fprintf(F, "]") > 0;
+
+    return ret;
+}
+
+bool ithipublisher::PrintNameVectorMetric(FILE * F, char const * sub_met_name, char const * metric_name, double mult)
+{
+    std::vector<double>  mvec;
+    std::vector<MetricNameLine> name_list;
+    bool ret = GetNameList(sub_met_name, &name_list);
+
+
+    ret &= fprintf(F, "\"%s\" : [", metric_name) > 0;
+
+    for (size_t i = 0; ret && i < name_list.size(); i++) {
+        if (i == 0) {
+            ret = fprintf(F, "\n") > 0;
+        } else {
+            ret = fprintf(F, ",\n") > 0;
+        }
+        ret &= (fprintf(F, "[\"%s\", ", name_list[i].name) > 0);
+
+        if (ret)
+        {
+            ret = GetVector(sub_met_name, name_list[i].name, &mvec);
+
+            if (ret)
+            {
+                ret = PrintVector(F, &mvec, mult);
+            }
+        }
+        ret &= fprintf(F, "]") > 0;
+    }
+
+    ret &= fprintf(F, "],\n") > 0;
 
     return ret;
 }
@@ -600,18 +602,18 @@ bool ithipublisher::PrintNameList(FILE * F, std::vector<MetricNameLine>* name_li
 
 bool ithipublisher::PublishDataM1(FILE * F)
 {
-    double m1x[12];
+    std::vector<double>  m1x;
     bool ret = true;
     char const * subMet[3] = { "M1.1", "M1.2", "M1.3"};
 
     ret &= fprintf(F, "\"m1Val\" : [") > 0;
-    for (int m = 0; m < 3; m++)
+    for (int m = 0; ret && m < 3; m++)
     {
         ret &= fprintf(F, "%s", (m == 0) ? "\n" : ",\n") > 0;
 
         if (ret) {
-            if ((ret = GetVector(subMet[m], NULL, m1x))) {
-                ret = PrintVector(F, m1x, 1.0);
+            if ((ret = GetVector(subMet[m], NULL, &m1x))) {
+                ret = PrintVector(F, &m1x, 1.0);
             }
         }
     }
@@ -623,37 +625,25 @@ bool ithipublisher::PublishDataM1(FILE * F)
 
 bool ithipublisher::PublishDataM2(FILE * F)
 {
-    double m2x[12];
+    std::vector<double> m2x;
     bool ret = true;
-    char const * subMet[8] = { "M2.1.1", "M2.1.2", "M2.1.3", "M2.1.4", "M2.2.1", "M2.2.2", "M2.2.3", "M2.2.4" };
-    char subsubmet[32];
+    char const * subMet[24] = {
+        "M2.1.1.1", "M2.1.2.1", "M2.1.3.1", "M2.1.4.1",
+        "M2.1.1.2", "M2.1.2.2", "M2.1.3.2", "M2.1.4.2",
+        "M2.1.1.3", "M2.1.2.3", "M2.1.3.3", "M2.1.4.3",
+        "M2.2.1.1", "M2.2.2.1", "M2.2.3.1", "M2.2.4.1",
+        "M2.2.1.2", "M2.2.2.2", "M2.2.3.2", "M2.2.4.2",
+        "M2.2.1.3", "M2.2.2.3", "M2.2.3.3", "M2.2.4.3" };
 
     ret &= fprintf(F, "\"m2Val\" : [") > 0;
-    for (int m = 0; m < 8; m++)
+
+    for (int m = 0; ret && m < 24; m++)
     {
-        ret &= fprintf(F, "%s[", (m==0)?"\n":",\n") > 0;
-
-        ret &= snprintf(subsubmet, sizeof(subsubmet), "%s.1", subMet[m]) > 0;
-        
+        ret = GetVector(subMet[m], NULL, &m2x);
         if (ret) {
-            if ((ret = GetVector(subsubmet, NULL, m2x))) {
-                ret = PrintVector(F, m2x, 1.0);
-            }
+            ret = fprintf(F, "%s", (m==0)?"\n":",\n") > 0;
+            ret &= PrintVector(F, &m2x, 1.0);
         }
-
-        for (int m2s = 2; ret && m2s < 4; m2s++) {
-            ret &= fprintf(F, ",") > 0;
-            ret &= snprintf(subsubmet, sizeof(subsubmet), "%s.%d", subMet[m], m2s) > 0;
-            if (ret) {
-                double v = 0;
-
-                ret = GetCurrent(subsubmet, NULL, &v);
-
-                ret &= fprintf(F, "%f", v) > 0;
-            }
-        }
-
-        ret &= fprintf(F, "]") > 0;
     }
     
     ret &= fprintf(F, "]\n") > 0;
@@ -666,20 +656,17 @@ bool ithipublisher::PublishDataM3(FILE * F)
     bool ret = true;
     const char * sub_met[8] = { "M3.1", "M3.2", "M3.3.1", "M3.3.2", "M3.3.3", "M3.4", "M3.5", "M3.6" };
     const char * met_data_name[8] = { "M31", "M32", "m331Set", "m332Set", "m333Set", "M34", "M35", "M36" };
-    double m31[12], m32[12], mvec[12];
-
-    memset(m31, 0, sizeof(m31));
-    memset(m32, 0, sizeof(m32));
+    std::vector<double> m31, m32, mvec;
     
     ret = fprintf(F, "\"%s\" : ", met_data_name[0]) > 0;
 
     if (ret)
     {
-        ret = GetVector(sub_met[0], NULL, m31);
+        ret = GetVector(sub_met[0], NULL, &m31);
 
         if (ret)
         {
-            ret = PrintVector(F, m31, 100.0);
+            ret = PrintVector(F, &m31, 100.0);
         }
     }
     ret &= fprintf(F, ",\n") > 0;
@@ -688,7 +675,7 @@ bool ithipublisher::PublishDataM3(FILE * F)
 
     if (ret)
     {
-        ret = GetVector(sub_met[1], NULL, m32);
+        ret = GetVector(sub_met[1], NULL, &m32);
 
         for (int i = 0; ret && i < nb_months; i++)
         {
@@ -701,35 +688,21 @@ bool ithipublisher::PublishDataM3(FILE * F)
 
         if (ret)
         {
-            ret = PrintVector(F, m32, 100.0);
+            ret = PrintVector(F, &m32, 100.0);
         }
     }
     ret &= fprintf(F, ",\n") > 0;
 
     for (int m = 2; ret && m<5; m++)
     {
-        std::vector<MetricNameLine> name_list;
-        ret = fprintf(F, "\"%s\" : [\n", met_data_name[m]) > 0;
-
-        if (ret)
-        {
-            ret = GetNameList(sub_met[m], &name_list);
-        }
-
-        if (ret)
-        {
-            ret = PrintNameList(F, &name_list, 100.0);
-        }
-        
-        ret &= fprintf(F, "],\n") > 0;
+        ret = PrintNameVectorMetric(F, sub_met[m], met_data_name[m], 100.0);
     }
 
     /* Add M3.4 data */
     if (ret) {
         ret &= fprintf(F, "\"%s\" : [", met_data_name[5]) > 0;
-        memset(mvec, 0, sizeof(mvec));
-        ret &= GetVector("M3.4.1", NULL, mvec);
-        ret &= PrintVector(F, mvec, 100.0);
+        ret &= GetVector("M3.4.1", NULL, &mvec);
+        ret &= PrintVector(F, &mvec, 100.0);
         ret &= fprintf(F, ",\n") > 0;
         ret &= PublishOptTable(F, "M3.4.2");
         ret &= fprintf(F, "]") > 0;
@@ -738,11 +711,10 @@ bool ithipublisher::PublishDataM3(FILE * F)
     /* Add M3.5 and M3.6 */
     for (int m = 6; ret && m<8; m++)
     {
-        memset(mvec, 0, sizeof(mvec));
-        ret &= GetVector(sub_met[m], NULL, mvec);
+        ret &= GetVector(sub_met[m], NULL, &mvec);
         ret &= fprintf(F, ",\n") > 0;
         ret &= fprintf(F, "\"%s\" : ", met_data_name[m]) > 0;
-        ret &= PrintVector(F, mvec, 100.0);
+        ret &= PrintVector(F, &mvec, 100.0);
     }
     ret &= fprintf(F, "\n") > 0;
 
@@ -752,33 +724,21 @@ bool ithipublisher::PublishDataM3(FILE * F)
 bool ithipublisher::PublishDataM4(FILE * F)
 {
     bool ret = true;
-    double average, current;
-    double mdns[12];
+    std::vector<double> mvec;
     const char * sub_met[5] = { "M4.1", "M4.2", "M4.3", "M4.5", "M4.6" };
     const char * met_data_name[5] = { "M41Data", "M42DataSet", "M43DataSet", "M45Data", "M46Data" };
 
-    ret = GetAverageAndCurrent(sub_met[0], NULL, &average, &current);
+    ret = GetVector(sub_met[0], NULL, &mvec);
     if (ret)
     {
-        ret = fprintf(F, "\"%s\" : [ %8f, %8f],\n", met_data_name[0], 100*current, 100*average) > 0;
+        ret = fprintf(F, "\"%s\" :", met_data_name[0]) > 0;
+        ret &= PrintVector(F, &mvec, 100);
+        ret &= fprintf(F, ",\n") > 0;
     }
 
     for (int m=1; ret && m<3; m++)
     {
-        std::vector<MetricNameLine> name_list;
-        ret = fprintf(F, "\"%s\" : [\n", met_data_name[m]) > 0;
-
-        if (ret)
-        {
-            ret = GetNameList(sub_met[m], &name_list);
-
-            if (ret)
-            {
-                ret = PrintNameList(F, &name_list, 100.0);
-            }
-        }
-        
-        ret &= fprintf(F, "],\n") > 0;
+        ret = PrintNameVectorMetric(F, sub_met[m], met_data_name[m], 100.0);
     }
 
     /* Only publish M4.5, not M4.6, until we clarify M4.6 computation */
@@ -786,10 +746,10 @@ bool ithipublisher::PublishDataM4(FILE * F)
     {
         ret = fprintf(F, "\"%s\" : ", met_data_name[m]);
 
-        if (GetVector(sub_met[m], NULL, mdns))
+        if (GetVector(sub_met[m], NULL, &mvec))
         {
             /* M7.x is present */
-            ret = PrintVector(F, mdns, 100.0);
+            ret = PrintVector(F, &mvec, 100.0);
 
             if (m == 3) {
                 ret &= (fprintf(F, "\n") > 0);
@@ -814,10 +774,9 @@ bool ithipublisher::PublishDataM5(FILE * F)
     ret &= fprintf(F, "\"M5\" : [") > 0;
 
     for (size_t i=0; i<nbSubMet; i++) {
-        double mvec[12];
-        memset(mvec, 0, sizeof(mvec));
+        std::vector<double> mvec;
 
-        ret = GetVector(subMet[i], NULL, mvec);
+        ret = GetVector(subMet[i], NULL, &mvec);
 
         if (i != 0) {
             ret &= fprintf(F, ",\n") > 0;
@@ -827,7 +786,7 @@ bool ithipublisher::PublishDataM5(FILE * F)
 
         if (ret)
         {
-            ret = PrintVector(F, mvec, 1.0);
+            ret = PrintVector(F, &mvec, 1.0);
         }
 
         ret &= fprintf(F, "}") > 0;
@@ -959,7 +918,7 @@ bool ithipublisher::PublishDataM6(FILE * F)
 
 bool ithipublisher::PublishDataM7(FILE * F)
 {
-    double m7x[12];
+    std::vector<double> m7x;
     char subMetX[16];
     bool ret = true;
 
@@ -970,10 +929,10 @@ bool ithipublisher::PublishDataM7(FILE * F)
         ret = snprintf(subMetX, sizeof(subMetX), "M7.%d", i) > 0;
 
         if (ret) {
-            if (GetVector(subMetX, NULL, m7x))
+            if (GetVector(subMetX, NULL, &m7x))
             {
                 /* M7.x is present */
-                ret = PrintVector(F, m7x, 100.0);
+                ret = PrintVector(F, &m7x, 100.0);
 
                 if (i == 2) {
                     ret &= (fprintf(F, "\n") > 0);
@@ -994,12 +953,13 @@ bool ithipublisher::PublishOptTable(FILE * F, char const * metric_name)
     std::vector<MetricNameLine> name_list;
     const metric6_def_t * opt_def = ComputeM6::GetTable("M6.DNS.08");
     bool ret = GetNameList(metric_name, &name_list);
+    std::vector<double>  mvec;
 
     ret &= (opt_def != NULL);
 
     ret &= fprintf(F, "[") > 0;
-    
-    for (size_t i=0; ret && i<name_list.size(); i++){
+
+    for (size_t i = 0; ret && i < name_list.size(); i++) {
         /* Parse name to code */
         char const * opt_long_name = NULL;
         uint32_t opt_code = (uint32_t)atoi(name_list[i].name);
@@ -1016,11 +976,21 @@ bool ithipublisher::PublishOptTable(FILE * F, char const * metric_name)
         }
 
         if (opt_long_name != NULL) {
-            ret &= fprintf(F, "[ \"%s(%s)\", %6f, %6f]", opt_long_name, name_list[i].name, 100.0*name_list[i].current, 100.0*name_list[i].average) > 0;
+            ret &= fprintf(F, "[ \"%s(%s)\",", opt_long_name, name_list[i].name) > 0;
         }
         else {
-            ret &= fprintf(F, "[ \"%s\", %6f, %6f]", name_list[i].name, 100.0*name_list[i].current, 100.0*name_list[i].average) > 0;
+            ret &= fprintf(F, "[ \"%s\",", name_list[i].name) > 0;
         }
+
+        if (ret) {
+            ret = GetVector(metric_name, name_list[i].name, &mvec);
+
+            if (ret) {
+                ret = PrintVector(F, &mvec, 100);
+            }
+        }
+
+        ret &= fprintf(F, "]") > 0;
     }
 
     ret &= fprintf(F, "]\n") > 0;
@@ -1030,48 +1000,23 @@ bool ithipublisher::PublishOptTable(FILE * F, char const * metric_name)
 
 bool ithipublisher::PublishDataM8(FILE * F)
 {
-#if 0
-    double m8x[12];
-    bool ret = true;
-    char const * subMetX[4] = { "M8.1", "M8.2.1", "M8.3", "M8.4" };
-
-    ret &= fprintf(F, "\"M8DataSet\" : [\n") > 0;
-
-    for (int i = 0; ret && i < 4; i++) {
-        if (GetVector(subMetX[i], NULL, m8x))
-        {
-            /* M7.x is present */
-            if (i > 0) {
-                ret &= (fprintf(F, ",\n") > 0);
-            }
-            ret &= PrintVector(F, m8x, 100.0);
-        }
-    }
-
-    if (ret) {
-        ret &= PublishOptTable(F, "M8.2.2");
-    }
-    ret &= fprintf(F, "]\n") > 0;
-#else
-    double mvec[12];
+    std::vector<double> mvec;
     bool ret = true;
     char const * met_data_name[4] = { "M81", "M82", "M83", "M84" };
     char const * sub_met[4] = { "M8.1", "M8.2", "M8.3", "M8.4" };
 
 
     /* Publish M8.1 */
-    memset(mvec, 0, sizeof(mvec));
-    ret &= GetVector(sub_met[0], NULL, mvec);
+    ret &= GetVector(sub_met[0], NULL, &mvec);
     ret &= fprintf(F, "\"%s\" : ", met_data_name[0]) > 0;
-    ret &= PrintVector(F, mvec, 100.0);
+    ret &= PrintVector(F, &mvec, 100.0);
     ret &= fprintf(F, ",\n") > 0;
 
     /* Add M8.2 data */
     if (ret) {
         ret &= fprintf(F, "\"%s\" : [", met_data_name[1]) > 0;
-        memset(mvec, 0, sizeof(mvec));
-        ret &= GetVector("M8.2.1", NULL, mvec);
-        ret &= PrintVector(F, mvec, 100.0);
+        ret &= GetVector("M8.2.1", NULL, &mvec);
+        ret &= PrintVector(F, &mvec, 100.0);
         ret &= fprintf(F, ",\n") > 0;
         ret &= PublishOptTable(F, "M8.2.2");
         ret &= fprintf(F, "]") > 0;
@@ -1080,14 +1025,12 @@ bool ithipublisher::PublishDataM8(FILE * F)
     /* Add M8.3 and M8.4 */
     for (int m = 2; ret && m<4; m++)
     {
-        memset(mvec, 0, sizeof(mvec));
-        ret &= GetVector(sub_met[m], NULL, mvec);
+        ret &= GetVector(sub_met[m], NULL, &mvec);
         ret &= fprintf(F, ",\n") > 0;
         ret &= fprintf(F, "\"%s\" : ", met_data_name[m]) > 0;
-        ret &= PrintVector(F, mvec, 100.0);
+        ret &= PrintVector(F, &mvec, 100.0);
     }
     ret &= fprintf(F, "\n") > 0;
-#endif
 
     return ret;
 }

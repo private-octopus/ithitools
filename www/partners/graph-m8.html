@@ -50,15 +50,18 @@
         // Set the partner name
         setStringElement("M8PreparedFor", "M8: Authoritative Servers Analysis for " + PartnerName.Name);
 
+        var pilot = ["valM81", "averageM81", "minM81", "maxM81"];
+        var format = [1, 1, 1, 1];
+
         setDateElement(M8Data.date);
 
-        setValElement("valM81", getLastElement(M8Data.M81));
-        setValElement("averageM81", getAverageElement(M8Data.M81));
+        fillCurrentDateFields(["currentId1"], M8Data);
 
+        fillValueAverageMinMax(pilot, M8Data.M81, format);
 
         var resolverMetricNames = ["M8.2", "M8.3", "M8.4"];
 
-        fillEdnsDoQname(resolverMetricNames, M8Data.M82, M8Data.M83, M8Data.M84);
+        fillEdnsDoQname(resolverMetricNames, M8Data.M82, M8Data.M83, M8Data.M84, M8Data);
     }
 
 </script>
@@ -69,8 +72,7 @@
     <nav id="navMenu"></nav>
 
     <h1 id="M8PreparedFor">M8: Authoritative Servers Analysis</h1>
-    <h2 id="dateHeading">-</h2>
-    <p>
+    <h2 id="dateHeading">-</h2>    <p>
         The M8 metrics analyze the DNS traffic at Authoritative Servers. The
         data collected by participating servers gives us a good statistical
         sampling of that traffic originating from recursive resolvers, or
@@ -81,15 +83,17 @@
         The first metric, M8.1 is about usage.
         In the following table, the <em>current value</em> is the
         value of the metric for the current month.
-        The <em>average value</em> is the average value of that metric
-        over the 12 months preceeding this one -- or the average since the beginning
-        of measurements if measurements started fewer than 12 months ago.
+        The following table provides the value observed for the
+        metric in the current month, as well as the average value over the 3 previous months,
+        and the "historical" minimum and maximum observed since the beginning of the measurements.
     </p>
     <table class="metrics">
         <tr>
             <th></th>
-            <th class="number">Current value</th>
-            <th class="number">Average value</th>
+            <th class="number" id="currentId1">Current Value</th>
+            <th class="number">Past 3 months</th>
+            <th class="number">Historic Low</th>
+            <th class="number">Historic High</th>
         </tr>
         <tr>
             <td>
@@ -99,6 +103,12 @@
                 -
             </td>
             <td class="number" id="averageM81">
+                -
+            </td>
+            <td class="number" id="minM81">
+                -
+            </td>
+            <td class="number" id="maxM81">
                 -
             </td>
         </tr>
@@ -132,17 +142,14 @@
         </li>
     </ul>
     <p>
-        In the following table, the <em>current value</em> is the
-        value of the metric for the current month.
-        The <em>average value</em> is the average value of that metric
-        over the 12 months preceeding this one -- or the average since the beginning
-        of measurements if measurements started fewer than 12 months ago.
+        The following table provides the value observed for the
+        metrics in the current month, as well as the average value over the 3 previous months,
+        and the "historical" minimum and maximum observed since the beginning of the measurements.
     </p>
 
     <div id="tableEdnsDoQname">
         Table M8.2, M8.3 and M8.4 was not initialized.
     </div>
-
 
 </body>
 </html>

@@ -31,66 +31,51 @@
     }
 
     function draw_page() {
-        /* Compute the metrics values and average based on tables */
-
-        M3Set = [
-            getLastElement(M3Data.M31),
-            getLastElement(M3Data.M32),
-            0];
-        M3Set[2] = 100 - M3Set[0] - M3Set[1];
-
-        M3Average = [
-            getAverageElement(M3Data.M31),
-            getAverageElement(M3Data.M32),
-            0];
-        M3Average[2] = 100 - M3Average[0] - M3Average[1];
-
-
-        M33Set = [
-            columnSum(M3Data.m331Set, 1),
-            columnSum(M3Data.m332Set, 1),
-            columnSum(M3Data.m333Set, 1),
-            0];
-        M33Set[3] = M3Set[0] - M33Set[0] - M33Set[1] - M33Set[2];
-
-        M33Average = [
-            columnSum(M3Data.m331Set, 2),
-            columnSum(M3Data.m332Set, 2),
-            columnSum(M3Data.m333Set, 2),
-            0];
-        M33Average[3] = M3Average[0] - M33Average[0] - M33Average[1] - M33Average[2];
-
-        // Set the text values that depend on the current data
-
+        /* Set the date */
         setDateElement(M3Data.date);
-        setValElement("valM31", M3Set[0]);
-        setValElement("valM32", M3Set[1]);
-        setValElement("valM3Zero", M3Set[2]);
-        setValElement("averageM31", M3Average[0]);
-        setValElement("averageM32", M3Average[1]);
-        setValElement("averageM3Zero", M3Average[2]);
 
-        setValElement("valM331", M33Set[0]);
-        setValElement("valM332", M33Set[1]);
-        setValElement("valM333", M33Set[2]);
-        setValElement("valM334", M33Set[3]);
-        setValElement("averageM331", M33Average[0]);
-        setValElement("averageM332", M33Average[1]);
-        setValElement("averageM333", M33Average[2]);
-        setValElement("averageM334", M33Average[3]);
+        fillCurrentDateFields(["currentId1", "currentId2"], M3Data);
 
-        // Set the color blobs in the M3 table, then plot the M3.1 and M3.2 charts and graphs
+        /* Compute the metrics values and average based on tables */
+        var i = 0;
+
+        pilot = [
+            ["valM31", "averageM31", "minM31", "maxM31"],
+            ["valM32", "averageM32", "minM32", "maxM32"],
+            ["valM3Zero", "averageM3Zero", "minM3Zero", "maxM3Zero"],
+            ["valM331", "averageM331", "minM331", "maxM331"],
+            ["valM332", "averageM332", "minM332", "maxM332"],
+            ["valM333", "averageM333", "minM333", "maxM333"],
+            ["valM334", "averageM334", "minM334", "maxM334"]
+        ];
+
+        format = [1, 1, 1, 1];
+
+        /* Compute the core metric, which is not part of the direct input */
+        var M3Zero = columnReminder([M3Data.M31, M3Data.M32], 100);
+
+        /* Compute the components of M3.3 */
+        var m331sum = summarizeNameSet(M3Data.m331Set);
+        var m332sum = summarizeNameSet(M3Data.m332Set);
+        var m333sum = summarizeNameSet(M3Data.m333Set);
+        var m334sum = columnReminder([M3Data.M32, M3Zero, m331sum, m332sum, m333sum], 100);
+
+        /* Display all the average, current, min, max values */
+
+        var dataList = [M3Data.M31, M3Data.M32, M3Zero, m331sum, m332sum, m333sum, m334sum];
+
+        for (i = 0; i < pilot.length; i++) {
+            fillValueAverageMinMax(pilot[i], dataList[i], format);
+        }
+
+        // Set the color blobs in the M3 table, then plot the M3.1 and M3.2 pie chart
         setColorBlob("colorBlobM31", colorSet[0]);
         setColorBlob("colorBlobM32", colorSet[1])
         setColorBlob("colorBlobM3Zero", colorSet[2]);
 
-        plotPieChart("pieChartM3", M3Set, colorSet);
+        var M3Set = [getLastElement(M3Data.M31), getLastElement(M3Data.M32), getLastElement(M3Zero)];
 
-        var firstMonth = 1;
-        if ("month" in M3Data) {
-            firstMonth = getFirstMonthIndex(M3Data.month, M3Data.M31.length);
-        }
-        plotStackGraphNew("stackGraphM3", M3Data.M31, M3Data.M32, 100, firstMonth, colorSet, "%");
+        plotPieChart("pieChartM3", M3Set, colorSet);
 
         // Set the color blobs for the M3.3 table, then plot the pie chart
         setColorBlob("colorBlobM331", colorSet[0]);
@@ -98,90 +83,30 @@
         setColorBlob("colorBlobM333", colorSet[2]);
         setColorBlob("colorBlobM334", colorSet[3]);
 
+
+        var M33Set = [getLastElement(m331sum), getLastElement(m332sum), getLastElement(m333sum), getLastElement(m334sum)];
+
         plotPieChart("pieChartM33", M33Set, colorSet);
 
-        // Generate the value for the tables of elements
-        fillMetricTable("RFC 6761 name", "m331Table", M3Data.m331Set);
-        fillMetricTable("Frequently used string", "m332Table", M3Data.m332Set);
-        fillMetricTable("Frequent pattern", "m333Table", M3Data.m333Set);
+        // Plot the graph
+
+        var firstMonth = 1;
+        if ("month" in M3Data) {
+            firstMonth = getFirstMonthIndex(M3Data.month, M3Data.M31.length);
+        }
+        plotStackGraph("stackGraphM3", M3Data.M31, M3Data.M32, 100, firstMonth, colorSet, "%");
+
+        // Generate the value for the tables of elements 
+        fillMetricTableNew("RFC 6761 name", "m331Table", M3Data.m331Set, M3Data);
+        fillMetricTableNew("Frequently used string", "m332Table", M3Data.m332Set, M3Data);
+        fillMetricTableNew("Frequent pattern", "m333Table", M3Data.m333Set, M3Data);
 
         // Add the EDNs metrics, etc.
         var resolverMetricNames = ["M3.4", "M3.5", "M3.6"];
 
-        fillEdnsDoQname(resolverMetricNames, M3Data.M34, M3Data.M35, M3Data.M36);
+        fillEdnsDoQname(resolverMetricNames, M3Data.M34, M3Data.M35, M3Data.M36, M3Data);
     }
-
-    function plotStackGraphM3(canvasId, dataSet1, dataSet2, colorSet) {
-        var Val_max = 100;
-        var sections = 12;
-        var graph = setScale(canvasId, Val_max, sections, "%");
-        var l = dataSet1.length;
-        if (dataSet2.length < l)
-        {
-            l = dataSet2.length;
-        }
-
-        if (l > sections)
-        {
-            l = sections;
-        }
-
-        // Start with first data set, M31
-        var context = graph.context;
-        var xScale = graph.xScale;
-        var yScale = graph.yScale;
-
-        context.fillStyle = colorSet[0];
-        context.beginPath();
-        context.moveTo(0, 0);
-
-        for (i=0; i<l; i++) {
-            context.lineTo(i * xScale, dataSet1[i]);
-            context.lineTo((i + 1) * xScale, dataSet1[i]);
-        }
-
-        context.lineTo(l * xScale, 0);
-        context.closePath();
-        context.fill();
-
-        // Continue with second data set, M32
-
-        context.fillStyle = colorSet[1];
-        context.beginPath();
-        context.moveTo(0, dataSet1[0]);
-
-        for (i=0; i<l; i++) {
-            
-            context.lineTo(i * xScale, dataSet1[i]+dataSet2[i]);
-            context.lineTo((i + 1) * xScale, dataSet1[i]+dataSet2[i]);
-        }
-
-        for (i=l-1; i>=0; i--) {
-            context.lineTo((i + 1) * xScale, dataSet1[i]);
-            context.lineTo(i * xScale, dataSet1[i]);
-        }
-
-        context.closePath();
-        context.fill();
-
-
-        // Continue with the complement, core
-
-        context.fillStyle = colorSet[2];
-        context.beginPath();
-        context.moveTo(0, dataSet1[0]+dataSet2[0]);
     
-        for (i=1; i<l; i++) {
-            context.lineTo(i * xScale, dataSet1[i]+dataSet2[i]);
-            context.lineTo((i + 1) * xScale, dataSet1[i]+dataSet2[i]);
-        }
-
-        context.lineTo(l*xScale, Val_max);
-        context.lineTo(0, Val_max);
-        context.closePath();
-        context.fill();
-    }
-
 </script>
 </head>
 
@@ -207,11 +132,9 @@
         tracked by <a href="#rootResolverStats">metrics M3.4, M3.5 and M3.6</a>.
     </p>
     <p>
-        In the following table, the <em>current value</em> is the
-        value of the metric for the current month.
-        The <em>average value</em> is the value of that fraction
-        over the 12 months preceeding this one -- or the average since the beginning
-        of measurements if measurements started fewer than 12 months ago.
+        The following table provides the value observed for the
+        metrics in the current month, as well as the average value over the 3 previous months,
+        and the "historical" minimum and maximum observed since the beginning of the measurements.
     </p>
     <table class="metrics">
         <tr>
@@ -221,12 +144,10 @@
             <th colspan="2">
                 Metric
             </th>
-            <th class="number">
-                Current Value
-            </th>
-            <th class="number">
-                Average Value
-            </th>
+            <th class="number" id="currentId1">Current Value</th>
+            <th class="number">Past 3 months</th>
+            <th class="number">Historic Low</th>
+            <th class="number">Historic High</th>
         </tr>
         <tr>
             <td>
@@ -239,6 +160,12 @@
                 -
             </td>
             <td class="number" id="averageM31">
+                -
+            </td>
+            <td class="number" id="minM31">
+                -
+            </td>
+            <td class="number" id="maxM31">
                 -
             </td>
         </tr>
@@ -255,6 +182,12 @@
             <td class="number" id="averageM32">
                 -
             </td>
+            <td class="number" id="minM32">
+                -
+            </td>
+            <td class="number" id="maxM32">
+                -
+            </td>
         </tr>
         <tr>
             <td>
@@ -267,6 +200,12 @@
                 -
             </td>
             <td class="number" id="averageM3Zero">
+                -
+            </td>
+            <td class="number" id="minM3Zero">
+                -
+            </td>
+            <td class="number" id="maxM3Zero">
                 -
             </td>
         </tr>
@@ -288,11 +227,9 @@
         all other forms of names, including malformed names (M3.3.4).
     </p>
     <p>
-        In the following table, the <em>current value</em> is the
-        value of the metric for the current month.
-        The <em>average value</em> is the value of that fraction
-        over the 12 months preceeding this one -- or the average since the beginning
-        of measurements if measurements started fewer than 12 months ago.
+        The following table provides the value observed for the
+        metrics in the current month, as well as the average value over the 3 previous months,
+        and the "historical" minimum and maximum observed since the beginning of the measurements.
     </p>
     <table class="metrics">
         <tr>
@@ -300,8 +237,10 @@
                 <canvas display="inline" id="pieChartM33" height="160" width="160"></canvas>
             </td>
             <th colspan="2"> Metric </th>
-            <th class="number">Current Value</th>
-            <th class="number">Average Value</th>
+            <th class="number" id="currentId2">Current Value</th>
+            <th class="number">Past 3 months</th>
+            <th class="number">Historic Low</th>
+            <th class="number">Historic High</th>
         </tr>
         <tr>
             <td>
@@ -315,6 +254,12 @@
             </td>
             <td class="number" id="averageM331">
                 <b>-</b>
+            </td>
+            <td class="number" id="minM331">
+                -
+            </td>
+            <td class="number" id="maxM331">
+                -
             </td>
         </tr>
         <tr>
@@ -330,6 +275,12 @@
             <td class="number" id="averageM332">
                 <b>-</b>
             </td>
+            <td class="number" id="minM332">
+                -
+            </td>
+            <td class="number" id="maxM332">
+                -
+            </td>
         </tr>
         <tr>
             <td>
@@ -343,6 +294,12 @@
             </td>
             <td class="number" id="averageM333">
                 <b>-</b>
+            </td>
+            <td class="number" id="minM333">
+                -
+            </td>
+            <td class="number" id="maxM333">
+                -
             </td>
         </tr>
         <tr>
@@ -358,6 +315,12 @@
             <td class="number" id="averageM334">
                 <b>-</b>
             </td>
+            <td class="number" id="minM334">
+                -
+            </td>
+            <td class="number" id="maxM334">
+                -
+            </td>
         </tr>
     </table>
 
@@ -370,9 +333,8 @@
     <p>
         In the following table, the <em>current value</em> is the fraction of queries to the root
         directed at RFC 6761 names in the current month.
-        The <em>average value</em> is the value of that fraction
-        over the 12 months preceeding this one -- or the average since the beginning
-        of measurements if measurements started fewer than 12 months ago.
+        The table also provides the average value over the 3 previous months,
+        and the "historical" minimum and maximum observed since the beginning of the measurements.
     </p>
     <div id="m331Table">Table M331 not found</div>
 
@@ -380,9 +342,8 @@
     <p>
         In the following table, the <em>current value</em> is the fraction of queries to the root
         directed at frequently used strings in the current month.
-        The <em>average value</em> is the value of that fraction
-        over the 12 months preceeding this one -- or the average since the beginning
-        of measurements if measurements started fewer than 12 months ago.
+        The table also provides the average value over the 3 previous months,
+        and the "historical" minimum and maximum observed since the beginning of the measurements.
     </p>
     <div id="m332Table">Table M332 not found</div>
 
@@ -390,9 +351,8 @@
     <p>
         In the following table, the <em>current value</em> is the fraction of queries to the root
         following a specific name pattern in the current month.
-        The <em>average value</em> is the value of that fraction
-        over the 12 months preceeding this one -- or the average since the beginning
-        of measurements if measurements started fewer than 12 months ago.
+        The table also provides the average value over the 3 previous months,
+        and the "historical" minimum and maximum observed since the beginning of the measurements.
     </p>
     <div id="m333Table">Table M333 not found</div>
 
@@ -400,7 +360,7 @@
 <p>
 Additional metrics characterize the options found in queries sent to the root, such as whether resolvers use extended DNS (M3.4.1),
 what EDNS options they use (M3.4.2), whether they set the DNSSEC OK bit in queries (M3.5), and whether they appear to
-enforce QName Minimization (M3.6). The current and average values of these metrics are provided in the following table:
+enforce QName Minimization (M3.6):
 </p>
 
 <div id="tableEdnsDoQname">
