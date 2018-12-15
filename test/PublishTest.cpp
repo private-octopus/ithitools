@@ -330,7 +330,7 @@ bool PublishIndexTest::DoTest()
     char const * m3_files[2] = { publish_test_m31, publish_test_m32 };
     char const * m4_files[2] = { publish_test_m41, publish_test_m42 };
     char const * m5_files[2] = { publish_test_m51, publish_test_m52 };
-    const char const ** file_list[4] = {
+    char const ** file_list[4] = {
         m2_files, m3_files, m4_files, m5_files
     };
     size_t const nb_files[4] = {
