@@ -35,9 +35,19 @@ public:
     bool DoOneTest(int metric_id, char const ** metric_files, size_t nb_files,
         char const * target_file, char const * ref_file);
 
-    bool CreateTestDirectory(int metric_id, char const ** file_names, int nb_files);
+    static bool CreateTestDirectory(int metric_id, char const ** file_names, int nb_files);
 
-    bool CopyFileToDirectory(char const * file_name, char const * dir_name);
+    static bool CopyFileToDirectory(char const * file_name, char const * dir_name);
 };
+
+class PublishIndexTest : public ithi_test_class
+{
+public:
+    PublishIndexTest();
+    ~PublishIndexTest();
+
+    bool DoTest() override;
+};
+
 
 #endif /* METRIC_COLLECTION_TEST_H */

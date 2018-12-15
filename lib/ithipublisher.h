@@ -98,4 +98,23 @@ public:
     bool PublishDataM8(FILE * F);
 };
 
+class ithiIndexPublisher
+{
+public:
+    ithiIndexPublisher(char const * ithi_folder);
+    ~ithiIndexPublisher();
+
+    bool CollectMetricFiles();
+
+    bool Publish(char const * web_folder);
+
+    bool PickThreeNames(FILE * F, char ** threeNames, ithipublisher *mdata, char const * subMet1, char const * subMet2);
+
+    char const * ithi_folder;
+
+private:
+    ithipublisher * MData[4];
+    char * threeRootNames[3];
+    char * threeStubNames[3];
+};
 #endif /* ITHI_PUBLISHER_H */

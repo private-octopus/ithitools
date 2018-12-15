@@ -28,6 +28,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <algorithm>
+#include "DnsStats.h"
 #include "CsvHelper.h"
 #include "CaptureSummary.h"
 #include "ComputeM6.h"
@@ -1034,3 +1035,261 @@ bool ithipublisher::PublishDataM8(FILE * F)
 
     return ret;
 }
+
+
+static const int ithiIndexPublisherInputMetrics[4] = { 2, 3, 4, 5 };
+
+ithiIndexPublisher::ithiIndexPublisher(char const * ithi_folder) :
+    ithi_folder(ithi_folder)
+{
+    for (int i = 0; i < 4; i++) {
+        MData[i] = NULL;
+    }
+    for (int i = 0; i < 3; i++) {
+        threeRootNames[i] = NULL;
+        threeStubNames[i] = NULL;
+    }
+}
+
+ithiIndexPublisher::~ithiIndexPublisher()
+{
+    for (int i = 0; i < 4; i++) {
+        if (MData[i] != NULL) {
+            delete MData[i];
+            MData[i] = NULL;
+        }
+    }
+
+
+    for (int i = 0; i < 3; i++) {
+        if (threeRootNames[i] != NULL) {
+            delete[] threeRootNames[i];
+            threeRootNames[i] = NULL;
+        }
+
+        if (threeStubNames[i] != NULL) {
+            delete[] threeStubNames[i];
+            threeStubNames[i] = NULL;
+        }
+    }
+}
+
+bool ithiIndexPublisher::CollectMetricFiles()
+{
+    bool ret = true;
+
+    for (int i = 0; ret && i < 4; i++) {
+        MData[i] = new ithipublisher(ithi_folder, ithiIndexPublisherInputMetrics[i]);
+        if (MData[i] == NULL) {
+            ret = false;
+        }
+    }
+
+    if (ret) {
+        for (int i = 0; ret && i < 4; i++) {
+            ret = MData[i]->CollectMetricFiles();
+        }
+    }
+
+    return ret;
+}
+
+bool ithiIndexPublisher::Publish(char const * web_folder)
+{
+    std::vector<double> mvec;
+    /* Find the date */
+    int year = 0;
+    int month = 0;
+    for (int i = 0; i < 4; i++) {
+        if (MData[i]->last_year > year ||
+            (MData[i]->last_year == year &&
+                MData[i]->last_month > month)) {
+            year = MData[i]->last_year;
+            month = MData[i]->last_month;
+        }
+    }
+
+    /* Create file name for the metric */
+    FILE * F = NULL;
+    char file_name[512];
+    bool ret = snprintf(file_name, sizeof(file_name), "%s%sIndexData.txt",
+        web_folder, ITHI_FILE_PATH_SEP) > 0;
+
+    if (ret)
+    {
+        /* Create the file */
+#ifdef _WINDOWS
+        errno_t err = fopen_s(&F, file_name, "w");
+        ret = (err == 0 && F != NULL);
+#else
+        F = fopen(file_name, "w");
+        ret = (F != NULL);
+#endif
+    }
+
+    if (ret)
+    {
+        /* Opening braces and date */
+        ret = fprintf(F, "{\n\"date\" : \"%04d/%02d\",\n", year, month) > 0;
+        ret &= fprintf(F, "\"year\" : %d,\n", year) > 0;
+        ret &= fprintf(F, "\"month\" : %d,\n", month) > 0;
+        ret &= fprintf(F, "\"mDate\" : [") > 0;
+        for (int i = 0; ret && i < 4; i++) {
+            if (i != 0) {
+                ret &= fprintf(F, ", ") > 0;
+            }
+            ret &= fprintf(F, "[%d, %d]", MData[i]->last_year, MData[i]->last_month) > 0;
+        }
+        ret &= fprintf(F, "],\n\"mData\" : [") > 0;
+
+        /* First line: Metric M3.1 */
+        if (ret)
+        {
+            ret = MData[1]->GetVector("M3.1", NULL, &mvec);
+            if (ret) {
+                ret = MData[1]->PrintVector(F, &mvec, 100.0);
+            }
+        }
+        /* Second line: Metric M5.4.2 */
+        if (ret)
+        {
+            ret = fprintf(F, ",\n") > 0;
+            ret &= MData[3]->GetVector("M5.4.2", NULL, &mvec);
+            if (ret) {
+                ret = MData[3]->PrintVector(F, &mvec, 1.0);
+            }
+        }
+        /* Next lines: first three names from metric M3. This is interesting,
+         * because we need to pick the largest used from reserved and frequent names */
+        if (ret) {
+            ret = PickThreeNames(F, threeRootNames, MData[1], "M3.3.1", "M3.3.2");
+        }
+
+         /* Next lines: first three names from metric M4. This is interesting,
+          * because we need to pick the largest used from reserved and frequent names */
+
+        if (ret) {
+            ret = PickThreeNames(F, threeStubNames, MData[2], "M4.2", "M4.3");
+        }
+
+        /* Then a set of submetrics from M2 */
+        char const * M2Metrics[12] = { 
+            "M2.2.1.1", "M2.2.2.1", "M2.2.3.1", "M2.2.4.1",
+            "M2.1.1.2", "M2.1.2.2", "M2.1.3.2", "M2.1.4.2",
+            "M2.1.1.3", "M2.1.2.3", "M2.1.3.3", "M2.1.4.3" };
+
+        for (int i = 0; ret && i < 12; i++) {
+            ret = fprintf(F, ",\n") > 0;
+            ret &= MData[0]->GetVector(M2Metrics[i], NULL, &mvec);
+            if (ret) {
+                ret = MData[0]->PrintVector(F, &mvec, 1.0);
+            }
+        }
+        
+        /* Closing brackets, this is the end of the data part */
+        ret &= (fprintf(F, "],\n") > 0);
+
+
+        /* Now, write the 3 names selected in M3, and also the 3 names from M4. */
+        if (ret) {
+            fprintf(F, "\"RootNames\" : [");
+            for (int i = 0; i < 3; i++) {
+                if (i != 0) {
+                    ret &= fprintf(F, ", ") > 0;
+                }
+                ret &= fprintf(F, "\"%s\"", (threeRootNames[i] == NULL) ? "-" : threeRootNames[i]) > 0;
+            }
+            fprintf(F, "],\n");
+        }
+
+        if (ret) {
+            fprintf(F, "\"StubNames\" : [");
+            for (int i = 0; i < 3; i++) {
+                if (i != 0) {
+                    ret &= fprintf(F, ", ") > 0;
+                }
+                ret &= fprintf(F, "\"%s\"", (threeRootNames[i] == NULL) ? "-" : threeStubNames[i]) > 0;
+            }
+            fprintf(F, "]\n");
+        }
+
+        /* Closing brackets, this is the end of the data part */
+        ret &= (fprintf(F, "}\n") > 0);
+    }
+
+    /* Close the file */
+    if (F != NULL)
+    {
+        fclose(F);
+    }
+
+    return ret;
+}
+
+bool ithiIndexPublisher::PickThreeNames(FILE * F, char ** threeNames, ithipublisher * mdata, char const * subMet1, char const * subMet2)
+{
+    bool ret = true;
+    std::vector<MetricNameLine> name_list1;
+    std::vector<MetricNameLine> name_list2;
+
+    ret = mdata->GetNameList(subMet1, &name_list1);
+    ret &= mdata->GetNameList(subMet2, &name_list2);
+
+    if (ret) {
+        int nb_published = 0;
+        size_t index_1 = 0;
+        size_t index_2 = 0;
+        std::vector<double> mvec;
+
+        while (ret && nb_published < 3 && (index_1 < name_list1.size() || index_2 < name_list2.size())){
+            double frequency = 0;
+            char const * name;
+
+            if (index_1 < name_list1.size()) {
+                frequency = name_list1[index_1].current;
+            }
+
+            if (index_2 < name_list1.size() && name_list2[index_2].current > frequency) {
+                name = name_list2[index_2].name;
+                index_2++;
+                ret = mdata->GetVector(subMet2, name, &mvec);
+            }
+            else {
+                name = name_list1[index_1].name;
+                index_1++;
+                ret = mdata->GetVector(subMet1, name, &mvec);
+            }
+
+            if (ret && DnsStats::IsValidTldSyntax((uint8_t*) name, strlen(name))) {
+                size_t name_len;
+                name_len = strlen(name) + 1;
+                threeNames[nb_published] = new char[name_len];
+
+                if (threeNames[nb_published] == NULL) {
+                    ret = false;
+                }
+                else {
+                    ret = fprintf(F, ",\n") > 0;
+                    ret &= mdata->PrintVector(F, &mvec, 100);
+                    if (ret) {
+                        memcpy(threeNames[nb_published], name, name_len);
+                        nb_published++;
+                    }
+                    else {
+                        delete[] threeNames[nb_published];
+                        threeNames[nb_published] = NULL;
+                    }
+                }
+            }
+        }
+
+        if (ret && nb_published < 3) {
+            for (int i = nb_published; i < 3; i++) {
+                ret &= fprintf(F, ",[0, 0]\n") > 0;
+            }
+        }
+    }
+
+    return ret;
+}
+

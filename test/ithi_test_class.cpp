@@ -44,6 +44,7 @@ enum test_list_enum {
     test_enum_M1Data,
     test_enum_M2Data,
     test_enum_Publish,
+    test_enum_PublishIndex, 
     test_enum_TldCount,
     test_enum_DnsPrefix,
     test_enum_GetName,
@@ -105,6 +106,8 @@ char const * ithi_test_class::GetTestName(int number)
         return("m2data");
     case test_enum_Publish:
         return("publish");
+    case test_enum_PublishIndex:
+        return("publishIndex");
     case test_enum_TldCount:
         return("TldCount");
     case test_enum_DnsPrefix:
@@ -198,6 +201,9 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_enum_Publish:
         test = new PublishTest();
+        break;
+    case test_enum_PublishIndex:
+        test = new PublishIndexTest();
         break;
     case test_enum_TldCount:
         test = new TldCountTest();
