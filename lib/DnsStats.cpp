@@ -1260,6 +1260,17 @@ static char const * rfc6761_tld[] = {
 
 const uint32_t nb_rfc6771_tld = sizeof(rfc6761_tld) / sizeof(char const *);
 
+bool DnsStats::IsValidTldSyntax(uint8_t * tld, size_t length)
+{
+    bool ret = length > 0;
+
+    for (size_t i = 0; ret && i < length; i++) {
+        int x = tld[i];
+        ret = (x >= 'A' && x <= 'Z') || (x >= '0' && x <= '9') || x == '-' || (x >= 'a' && x <= 'z');
+    }
+    return ret;
+}
+
 bool DnsStats::IsRfc6761Tld(uint8_t * tld, size_t length)
 {
     bool ret = false;

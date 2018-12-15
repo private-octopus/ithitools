@@ -185,6 +185,14 @@ namespace ithiunit
             Assert::AreEqual(ret, true);
         }
 
+        TEST_METHOD(PublishIndex)
+        {
+            PublishIndexTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
         TEST_METHOD(TldCount)
         {
             TldCountTest test;

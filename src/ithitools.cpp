@@ -509,6 +509,19 @@ int main(int argc, char ** argv)
             ret = false;
         }
 
+        if (ret && exec_mode != ithi_mode_publish_partner) {
+            ithiIndexPublisher pub(ithi_folder);
+
+            ret = pub.CollectMetricFiles();
+
+            if (!ret) {
+                fprintf(stderr, "Cannot collect metric files.\n");
+            }
+            else {
+                ret = pub.Publish(web_root);
+            }
+        }
+
         if (ret) {
             printf("ITHI JSON Data saved in directory <%s>.\n", web_root);
         }

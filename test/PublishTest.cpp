@@ -35,6 +35,7 @@ static char const * publish_test_target_m5 = ".\\M5Data.txt";
 static char const * publish_test_target_m6 = ".\\M6Data.txt";
 static char const * publish_test_target_m7 = ".\\M7Data.txt";
 static char const * publish_test_target_m8 = ".\\M8Data.txt";
+static char const * publish_test_target_index = ".\\IndexData.txt";
 #ifndef ITHI_FILE_PATH_SEP
 #define ITHI_FILE_PATH_SEP "\\"
 #endif
@@ -64,6 +65,7 @@ static char const * publish_ref_m7 = "..\\..\\data\\M7Data-test-ref.txt";
 static char const * publish_test_m81 = "..\\..\\data\\M8-2017-01-31.csv";
 static char const * publish_test_m82 = "..\\..\\data\\M8-2017-02-28.csv";
 static char const * publish_ref_m8 = "..\\..\\data\\M8Data-test-ref.txt";
+static char const * publish_ref_index = "..\\..\\data\\IndexData-test-ref.txt";
 #else
 static char const * publish_test_m11 = "..\\data\\M1-2017-01-31.csv";
 static char const * publish_test_m12 = "..\\data\\M1-2017-02-28.csv";
@@ -90,6 +92,7 @@ static char const * publish_ref_m7 = "..\\data\\M7Data-test-ref.txt";
 static char const * publish_test_m81 = "..\\data\\M8-2017-01-31.csv";
 static char const * publish_test_m82 = "..\\data\\M8-2017-02-28.csv";
 static char const * publish_ref_m8 = "..\\data\\M8Data-test-ref.txt";
+static char const * publish_ref_index = "..\\data\\IndexData-test-ref.txt";
 #endif
 #else
 static char const * publish_test_dir_ithi = "./ithi";
@@ -127,6 +130,8 @@ static char const * publish_test_target_m8 = "./M8Data.txt";
 static char const * publish_test_m81 = "./data/M8-2017-01-31.csv";
 static char const * publish_test_m82 = "./data/M8-2017-02-28.csv";
 static char const * publish_ref_m8 = "./data/M8Data-test-ref.txt";
+static char const * publish_test_target_index = "./IndexData.txt";
+static char const * publish_ref_index = "./data/IndexData-test-ref.txt";
 #ifndef ITHI_FILE_PATH_SEP
 #define ITHI_FILE_PATH_SEP "/"
 #endif
@@ -304,6 +309,67 @@ bool PublishTest::CopyFileToDirectory(char const * file_name, char const * dir_n
     if (ret)
     {
         ret = MetricCaptureFileTest::CopyFileToDestination(dest_file_name, file_name);
+    }
+
+    return ret;
+}
+
+PublishIndexTest::PublishIndexTest()
+{
+}
+
+PublishIndexTest::~PublishIndexTest()
+{
+}
+
+bool PublishIndexTest::DoTest()
+{
+    bool ret = true;
+    int const metricId[4] = { 2, 3, 4, 5 };
+    char const * m2_files[2] = { publish_test_m21, publish_test_m22 };
+    char const * m3_files[2] = { publish_test_m31, publish_test_m32 };
+    char const * m4_files[2] = { publish_test_m41, publish_test_m42 };
+    char const * m5_files[2] = { publish_test_m51, publish_test_m52 };
+    const char const ** file_list[4] = {
+        m2_files, m3_files, m4_files, m5_files
+    };
+    size_t const nb_files[4] = {
+        sizeof(m2_files) / sizeof(char const *),
+        sizeof(m3_files) / sizeof(char const *),
+        sizeof(m4_files) / sizeof(char const *),
+        sizeof(m5_files) / sizeof(char const *),
+    };
+    ithiIndexPublisher pub(publish_test_dir_ithi);
+
+    /* Create directories and prepare all the required files */
+    for (int i = 0; ret && i < 4; i++) {
+        ret = PublishTest::CreateTestDirectory(metricId[i], file_list[i], (int)nb_files[i]);
+    }
+
+    /* Create the index json file in the test directory */
+    if (ret) {
+        ret = pub.CollectMetricFiles();
+
+        if (!ret) {
+            TEST_LOG("Cannot collect metric files for index data.\n");
+        }
+    }
+
+    if (ret) {
+        ret = pub.Publish(publish_test_target);
+        if (!ret) {
+            TEST_LOG("Cannot publish index data.\n");
+        }
+    }
+
+    /* Verify that the content is as expected */
+    if (ret)
+    {
+        ret = MetricTest::compare_files(publish_test_target_index, publish_ref_index);
+        if (!ret)
+        {
+            TEST_LOG("For index data, %s != %s\n", publish_test_target_index, publish_ref_index);
+        }
     }
 
     return ret;
