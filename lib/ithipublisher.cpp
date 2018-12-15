@@ -1269,8 +1269,8 @@ bool ithiIndexPublisher::PickThreeNames(FILE * F, char ** threeNames, ithipublis
                     ret = false;
                 }
                 else {
-                    ret &= fprintf(F, ",\n") > 0;
-                    ret = mdata->PrintVector(F, &mvec, 100);
+                    ret = fprintf(F, ",\n") > 0;
+                    ret &= mdata->PrintVector(F, &mvec, 100);
                     if (ret) {
                         memcpy(threeNames[nb_published], name, name_len);
                         nb_published++;
