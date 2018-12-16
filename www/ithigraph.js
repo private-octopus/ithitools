@@ -133,6 +133,43 @@ function getAverageLastN(dataSet, N) {
     return average;
 }
 
+function getAverageLastNSkip0(dataSet, N) {
+    var i = 0;
+    var last = 0;
+    var first = 0;
+    var average = 0;
+    var nonZero = -1;
+
+    for (i = 0; nonZero < 0 && i < dataSet.length; i++) {
+        if (dataSet[i] > 0) {
+            nonZero = i;
+        }
+    }
+
+    if (nonZero >= 0) {
+        if (dataSet.length > nonZero+1) {
+            last = dataSet.length - 2;
+            if (dataSet.length > N + 1) {
+                first = dataSet.length - (N + 1);
+                if (first < nonZero) {
+                    first = nonZero;
+                }
+            } else {
+                first = nonZero;
+            }
+
+            for (i = first; i <= last; i++) {
+                average += dataSet[i];
+            }
+            average /= last + 1 - first;
+        } else {
+            average = dataSet[nonZero];
+        }
+    }
+
+    return average;
+}
+
 function getMinElement(dataSet) {
     if (dataSet.length < 1) {
         return 0;
@@ -402,7 +439,7 @@ function fillEdnsDoQname(rowNames, vEdns, vDo, vQname, MData) {
     var vEdns1 = vEdns[0];
     var vEdns2 = vEdns[1];
     current = getLastElement(vEdns1);
-    average = getAverageLastN(vEdns1, 3);
+    average = getAverageLastNSkip0(vEdns1, 3);
     vMin = getMinElementSkip0(vEdns1);
     vMax = getMaxElement(vEdns1);
 
@@ -427,7 +464,7 @@ function fillEdnsDoQname(rowNames, vEdns, vDo, vQname, MData) {
             tableText += "<td> %resolvers using " + lineSet[0] + "</td>";
 
             current = getLastElement(lineSet[1]);
-            average = getAverageLastN(lineSet[1], 3);
+            average = getAverageLastNSkip0(lineSet[1], 3);
             vMin = getMinElementSkip0(lineSet[1]);
             vMax = getMaxElement(lineSet[1]);
 
@@ -440,7 +477,7 @@ function fillEdnsDoQname(rowNames, vEdns, vDo, vQname, MData) {
 
     // DO line 
     current = getLastElement(vDo);
-    average = getAverageLastN(vDo, 3);
+    average = getAverageLastNSkip0(vDo, 3);
     vMin = getMinElementSkip0(vDo);
     vMax = getMaxElement(vDo);
 
@@ -452,7 +489,7 @@ function fillEdnsDoQname(rowNames, vEdns, vDo, vQname, MData) {
 
     // QName line 
     current = getLastElement(vQname);
-    average = getAverageLastN(vQname, 3);
+    average = getAverageLastNSkip0(vQname, 3);
     vMin = getMinElementSkip0(vQname);
     vMax = getMaxElement(vQname);
 
