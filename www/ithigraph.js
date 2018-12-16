@@ -133,6 +133,43 @@ function getAverageLastN(dataSet, N) {
     return average;
 }
 
+function getAverageLastNSkip0(dataSet, N) {
+    var i = 0;
+    var last = 0;
+    var first = 0;
+    var average = 0;
+    var nonZero = -1;
+
+    for (i = 0; nonZero < 0 && i < dataSet.length; i++) {
+        if (dataSet[i] > 0) {
+            nonZero = i;
+        }
+    }
+
+    if (nonZero >= 0) {
+        if (dataSet.length > nonZero+1) {
+            last = dataSet.length - 2;
+            if (dataSet.length > N + 1) {
+                first = dataSet.length - (N + 1);
+                if (first < nonZero) {
+                    first = nonZero;
+                }
+            } else {
+                first = nonZero;
+            }
+
+            for (i = first; i <= last; i++) {
+                average += dataSet[i];
+            }
+            average /= last + 1 - first;
+        } else {
+            average = dataSet[nonZero];
+        }
+    }
+
+    return average;
+}
+
 function getMinElement(dataSet) {
     if (dataSet.length < 1) {
         return 0;
@@ -140,9 +177,35 @@ function getMinElement(dataSet) {
         var i = 0;
         var minEl = dataSet[0];
 
-        for (i = 1; i < dataSet.length; i++) {
+        for (i = 1; i < dataSet.length - 1; i++) {
             if (minEl > dataSet[i]) {
                 minEl = dataSet[i];
+            }
+        }
+
+        return minEl;
+    }
+}
+
+function getMinElementSkip0(dataSet) {
+    if (dataSet.length < 1) {
+        return 0;
+    } else {
+        var i = 0;
+        var nonZero = -1;
+        var minEl = dataSet[0];
+
+        for (i = 0; nonZero < 0 && i < dataSet.length; i++) {
+            if (dataSet[i] > 0) {
+                nonZero = i;
+                minEl = dataSet[i];
+            }
+        }
+        if (nonZero > 0) {
+            for (i = nonZero+1; i < dataSet.length - 1; i++) {
+                if (minEl > dataSet[i]) {
+                    minEl = dataSet[i];
+                }
             }
         }
 
@@ -157,7 +220,7 @@ function getMaxElement(dataSet) {
         var i = 0;
         var maxEl = dataSet[0];
 
-        for (i = 1; i < dataSet.length; i++) {
+        for (i = 1; i < dataSet.length - 1; i++) {
             if (maxEl < dataSet[i]) {
                 maxEl = dataSet[i];
             }
@@ -368,7 +431,7 @@ function fillEdnsDoQname(rowNames, vEdns, vDo, vQname, MData) {
         tableText += "Current Value";
     }
 
-    tableText += "</th><th class=\"number\">Average Value</th>";
+    tableText += "</th><th class=\"number\">Past 3 months</th>";
     tableText += "<th class=\"number\">Historic Low</th>";
     tableText += "<th class=\"number\">Historic High</th></tr>\n";
 
@@ -376,8 +439,8 @@ function fillEdnsDoQname(rowNames, vEdns, vDo, vQname, MData) {
     var vEdns1 = vEdns[0];
     var vEdns2 = vEdns[1];
     current = getLastElement(vEdns1);
-    average = getAverageLastN(vEdns1, 3);
-    vMin = getMinElement(vEdns1);
+    average = getAverageLastNSkip0(vEdns1, 3);
+    vMin = getMinElementSkip0(vEdns1);
     vMax = getMaxElement(vEdns1);
 
     tableText += "<tr><td>" + rowNames[0] + ".1</td><td>%resolvers using Extended DNS (EDNS) </td>";
@@ -401,8 +464,8 @@ function fillEdnsDoQname(rowNames, vEdns, vDo, vQname, MData) {
             tableText += "<td> %resolvers using " + lineSet[0] + "</td>";
 
             current = getLastElement(lineSet[1]);
-            average = getAverageLastN(lineSet[1], 3);
-            vMin = getMinElement(lineSet[1]);
+            average = getAverageLastNSkip0(lineSet[1], 3);
+            vMin = getMinElementSkip0(lineSet[1]);
             vMax = getMaxElement(lineSet[1]);
 
             tableText += "<td class=\"number\">" + current.toFixed(3) + "%</td>";
@@ -414,8 +477,8 @@ function fillEdnsDoQname(rowNames, vEdns, vDo, vQname, MData) {
 
     // DO line 
     current = getLastElement(vDo);
-    average = getAverageLastN(vDo, 3);
-    vMin = getMinElement(vDo);
+    average = getAverageLastNSkip0(vDo, 3);
+    vMin = getMinElementSkip0(vDo);
     vMax = getMaxElement(vDo);
 
     tableText += "<tr><td>" + rowNames[1] + "</td><td>%resolvers setting DNSSEC OK (DO) flag </td>";
@@ -426,8 +489,8 @@ function fillEdnsDoQname(rowNames, vEdns, vDo, vQname, MData) {
 
     // QName line 
     current = getLastElement(vQname);
-    average = getAverageLastN(vQname, 3);
-    vMin = getMinElement(vQname);
+    average = getAverageLastNSkip0(vQname, 3);
+    vMin = getMinElementSkip0(vQname);
     vMax = getMaxElement(vQname);
 
     tableText += "<tr><td>" + rowNames[2] + "</td><td>%resolvers using QName minimization </td>";
