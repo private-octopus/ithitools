@@ -258,10 +258,9 @@ public:
     static bool IsValidTldSyntax(uint8_t * tld, size_t length);
     static bool IsRfc6761Tld(uint8_t * tld, size_t length);
     static void SetToUpperCase(uint8_t * domain, size_t length);
-    static char const * GetTableName(uint32_t tableId);
+   static char const * GetTableName(uint32_t tableId);
     const char * GetZonePrefix(const char * dnsName);
 
-    void RegisterDnssecUsageByAddress(uint8_t * source_addr, size_t source_addr_length);
     void RegisterDnssecUsageByName(uint8_t * packet, uint32_t length, uint32_t name_start,
         bool is_dnssec);
     void ExportDnssecUsage();

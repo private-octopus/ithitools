@@ -67,7 +67,7 @@ public:
 
     bool Load(char const * monthly_csv_file_name);
 
-    void ComputeMetrics(double ithi_m2[4], double ithi_media[4], double ithi_ninety[4]);
+    void ComputeMetrics(double ithi_m2[4], double ithi_media[4], double ithi_ninety[4], uint32_t * nb_entries);
 
     void Sort();
 
@@ -97,6 +97,9 @@ public:
     bool Compute() override;
     bool Write(FILE * F_out) override;
 
+    void SetNbRegistrars(uint32_t nb_registrars);
+    void SetNbGtld(uint32_t nb_gtld);
+
 private:
     M2Data m2Data_tlds;
     M2Data m2Data_registrars;
@@ -109,6 +112,9 @@ private:
     double ithi_m2_registrars[4];
     double ithi_median_registrars[4];
     double ithi_ninety_registrars[4];
+
+    uint32_t nb_registrars;
+    uint32_t nb_gtld;
 };
 
 #endif /* M2DATA_H */

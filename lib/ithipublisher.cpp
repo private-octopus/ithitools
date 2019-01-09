@@ -35,6 +35,10 @@
 #include "ithimetrics.h"
 #include "ithipublisher.h"
 
+// Place holder data, if metrics do not provide actual number
+#define NB_GTLD 1212
+#define NB_REGISTRARS 2463
+
 ithipublisher::ithipublisher(char const * ithi_folder, int metric_id)
     :
     ithi_folder(ithi_folder),
@@ -606,6 +610,16 @@ bool ithipublisher::PublishDataM1(FILE * F)
     std::vector<double>  m1x;
     bool ret = true;
     char const * subMet[3] = { "M1.1", "M1.2", "M1.3"};
+    char const * M1Metric_nbRegistrars = "M1.4";
+    double d_registrars = 0;
+
+    if (ret && !GetCurrent(M1Metric_nbRegistrars, NULL, &d_registrars)) {
+        d_registrars = NB_REGISTRARS;
+    }
+
+    if (ret) {
+        ret &= fprintf(F, "\"NbRegistrars\" : %d,\n", (int)d_registrars) > 0;
+    }
 
     ret &= fprintf(F, "\"m1Val\" : [") > 0;
     for (int m = 0; ret && m < 3; m++)
@@ -635,6 +649,22 @@ bool ithipublisher::PublishDataM2(FILE * F)
         "M2.2.1.1", "M2.2.2.1", "M2.2.3.1", "M2.2.4.1",
         "M2.2.1.2", "M2.2.2.2", "M2.2.3.2", "M2.2.4.2",
         "M2.2.1.3", "M2.2.2.3", "M2.2.3.3", "M2.2.4.3" };
+    char const * M2Metric_nbGtld = "M2.1.5";
+    char const * M2Metric_nbRegistrars = "M2.2.5";
+    double d_gtld = 0;
+    double d_registrars = 0;
+
+    if (ret && !GetCurrent(M2Metric_nbGtld, NULL, &d_gtld)) {
+        d_gtld = NB_GTLD;
+    }
+    if (ret && !GetCurrent(M2Metric_nbRegistrars, NULL, &d_registrars)) {
+        d_registrars = NB_REGISTRARS;
+    }
+
+    if (ret) {
+        ret &= fprintf(F, "\"NbGtld\" : %d,\n", (int)d_gtld) > 0;
+        ret &= fprintf(F, "\"NbRegistrars\" : %d,\n", (int)d_registrars) > 0;
+    }
 
     ret &= fprintf(F, "\"m2Val\" : [") > 0;
 
@@ -1189,28 +1219,44 @@ bool ithiIndexPublisher::Publish(char const * web_folder)
         /* Closing brackets, this is the end of the data part */
         ret &= (fprintf(F, "],\n") > 0);
 
+        char const * M2Metric_nbGtld = "M2.1.5";
+        char const * M2Metric_nbRegistrars = "M2.2.5";
+        double d_gtld = 0;
+        double d_registrars = 0;
+
+        if (ret && !MData[0]->GetCurrent(M2Metric_nbGtld, NULL, &d_gtld)) {
+            d_gtld = NB_GTLD;
+        }
+        if (ret && !MData[0]->GetCurrent(M2Metric_nbRegistrars, NULL, &d_registrars)) {
+            d_registrars = NB_REGISTRARS;
+        }
+
+        if (ret) {
+            ret &= fprintf(F, "\"NbGtld\" : %d,\n", (int)d_gtld) > 0;
+            ret &= fprintf(F, "\"NbRegistrars\" : %d,\n", (int)d_registrars) > 0;
+        }
 
         /* Now, write the 3 names selected in M3, and also the 3 names from M4. */
         if (ret) {
-            fprintf(F, "\"RootNames\" : [");
+            ret &= fprintf(F, "\"RootNames\" : [") > 0;
             for (int i = 0; i < 3; i++) {
                 if (i != 0) {
                     ret &= fprintf(F, ", ") > 0;
                 }
                 ret &= fprintf(F, "\"%s\"", (threeRootNames[i] == NULL) ? "-" : threeRootNames[i]) > 0;
             }
-            fprintf(F, "],\n");
+            ret &= fprintf(F, "],\n") > 0;
         }
 
         if (ret) {
-            fprintf(F, "\"StubNames\" : [");
+            ret &= fprintf(F, "\"StubNames\" : [") > 0;
             for (int i = 0; i < 3; i++) {
                 if (i != 0) {
                     ret &= fprintf(F, ", ") > 0;
                 }
                 ret &= fprintf(F, "\"%s\"", (threeRootNames[i] == NULL) ? "-" : threeStubNames[i]) > 0;
             }
-            fprintf(F, "]\n");
+            ret &= fprintf(F, "]\n") > 0;
         }
 
         /* Closing brackets, this is the end of the data part */
