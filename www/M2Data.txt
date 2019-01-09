@@ -2,6 +2,8 @@
 "date" : "February 2017 (Fictitious data, for test and illustration only)",
 "year" : 2017,
 "month" : 2,
+"NbGtld" : 5,
+"NbRegistrars" : 4,
 "m2Val" : [
 [0.456789, 0.356789],
 [1.955153, 1.855153],
