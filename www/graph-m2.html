@@ -93,6 +93,8 @@
 
         fillCurrentDateFields(["currentId"], M2Data);
 
+        setStringElement("NbRegistrars", "The metrics incorporate data from <strong>" + M2Data.NbGtld + " GTLD and " + M2Data.NbRegistrars + " registrars.</strong>");
+
         if (M2Data.m2Val.length == pilot.length) {
             for (i = 0; i < pilot.length; i++) {
                 fillValueAverageMinMax(pilot[i], M2Data.m2Val[i], formats[i]);
@@ -143,6 +145,9 @@
         of agents (TLD or registrars) that account for 50% of this type of abuse, and the minimum
         number that account for 90% of the abuse.
     </p>
+    <div id="NbRegistrars">
+        The metrics incorporate data from many GTLD and many registrars.
+    </div>
     <p>
         The following table provides the value observed
         for the "abuse per 10,000 domains" metric in the current month, as well as the average value over the

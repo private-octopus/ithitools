@@ -71,6 +71,7 @@ public:
     uint64_t total1stN;
     int nbRegistrars50pc;
     int nbRegistrars90pc;
+    uint32_t nb_registrars;
 };
 
 class ComputeM1 : public ComputeMetric
@@ -87,6 +88,7 @@ private:
     M1Data m1Data;
 
     double ithi_m1[3];
+    uint32_t nb_registrars;
 };
 
 

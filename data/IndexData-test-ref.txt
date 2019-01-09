@@ -23,6 +23,8 @@
 [3.000000, 3.000000],
 [3.000000, 3.000000],
 [2.000000, 2.000000]],
+"NbGtld" : 5,
+"NbRegistrars" : 4,
 "RootNames" : ["HOME", "LOCAL", "DHCP"],
 "StubNames" : ["LOCALHOST", "HOME", "DNS"]
 }

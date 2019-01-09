@@ -44,6 +44,8 @@
 
         fillCurrentDateFields(["currentId"], M1Data);
 
+        setStringElement("NbRegistrars", "The metrics incorporate data from <strong>" + M1Data.NbRegistrars + " registrars.</strong>");
+
         if (M1Data.m1Val.length >= 3) {
             for (i = 0; i < 3; i++) {
                 fillValueAverageMinMax(pilot[i], M1Data.m1Val[i], formats[i]);
@@ -90,6 +92,9 @@
         <li>M1.2 = Smallest number of registrars explaining 50% of complaints.</li>
         <li>M1.3 = Smallest number of registrars explaining 90% of complaints.</li>
     </ul>
+    <div id="NbRegistrars">
+    The metrics incoprorate reports from many registrars.
+    </div>
     <p>
         The following table provides the value observed for these
         metrics in the current month, as well as the average value over the

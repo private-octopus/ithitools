@@ -32,7 +32,8 @@
 M1Data::M1Data()
     :
     totalDomain(0),
-    total1stN(0)
+    total1stN(0),
+    nb_registrars(0)
 {
 }
 
@@ -169,6 +170,8 @@ bool M1Data::Load(char const * monthly_compliance_file_name)
     }
     nbRegistrars90pc = (int)current_reg;
 
+    nb_registrars = (uint32_t)firstNotice.size();
+
     return ret;
 }
 
@@ -213,7 +216,8 @@ bool M1Data::FirstNoticeIsBigger(M1RegSummary_t x, M1RegSummary_t y)
     return (x.nb1stNotices > y.nb1stNotices);
 }
 
-ComputeM1::ComputeM1()
+ComputeM1::ComputeM1() :
+    nb_registrars(0)
 {
     for (int i = 0; i < 3; i++) {
         ithi_m1[1] = 0;
@@ -237,6 +241,7 @@ bool ComputeM1::Compute()
         ithi_m1[0] = (1000000*(double)m1Data.total1stN) / ((double)m1Data.totalDomain);
         ithi_m1[1] = (double)m1Data.nbRegistrars50pc;
         ithi_m1[2] = (double)m1Data.nbRegistrars90pc;
+        nb_registrars = m1Data.nb_registrars;
         ret = true;
     }
     return ret;
@@ -249,6 +254,7 @@ bool ComputeM1::Write(FILE * F_out)
     ret &= fprintf(F_out, "M1.1, , %8f,\n", ithi_m1[0]) > 0;
     ret &= fprintf(F_out, "M1.2, , %f,\n", ithi_m1[1]) > 0;
     ret &= fprintf(F_out, "M1.3, , %f,\n", ithi_m1[2]) > 0;
+    ret &= fprintf(F_out, "M1.4, , %d,\n", nb_registrars) > 0;
 
     return ret;
 }

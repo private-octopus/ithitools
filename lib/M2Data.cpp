@@ -179,11 +179,13 @@ bool M2Data::Load(char const * monthly_csv_file_name)
     return ret;
 }
 
-void M2Data::ComputeMetrics(double ithi_m2[4], double ithi_median[4], double ithi_ninety[4])
+void M2Data::ComputeMetrics(double ithi_m2[4], double ithi_median[4], double ithi_ninety[4], uint32_t * nb_entries)
 {
     int totals[4] = { 0,0,0,0 };
     std::vector<double> point_list[4];
     int total_domains = 0;
+
+    *nb_entries = (uint32_t) dataset.size();
 
     for (int i = 0; i < 4; i++) {
         point_list[i].reserve(dataset.size());
@@ -499,7 +501,9 @@ char const * M2Data::get_file_suffix(M2DataType f_type)
     return suffix;
 }
 
-ComputeM2::ComputeM2()
+ComputeM2::ComputeM2() :
+    nb_registrars(0),
+    nb_gtld(0)
 {
     for (int i = 0; i < 4; i++)
     {
@@ -561,8 +565,8 @@ bool ComputeM2::LoadTwoFiles(char const * tld_file_name, char const * registrars
 
 bool ComputeM2::Compute()
 {
-    m2Data_tlds.ComputeMetrics(ithi_m2_tlds, ithi_median_tlds, ithi_ninety_tlds);
-    m2Data_registrars.ComputeMetrics(ithi_m2_registrars, ithi_median_registrars, ithi_ninety_registrars);
+    m2Data_tlds.ComputeMetrics(ithi_m2_tlds, ithi_median_tlds, ithi_ninety_tlds, &nb_gtld);
+    m2Data_registrars.ComputeMetrics(ithi_m2_registrars, ithi_median_registrars, ithi_ninety_registrars, &nb_registrars);
 
     return true;
 }
@@ -573,15 +577,18 @@ bool ComputeM2::Write(FILE * F_out)
 
     for (int m = 1; m < 3; m++) {
         double * average, *median, *ninety;
+        uint32_t count;
 
         if (m == 1) {
             average = ithi_m2_tlds;
             median = ithi_median_tlds;
             ninety = ithi_ninety_tlds;
+            count = nb_gtld;
         } else {
             average = ithi_m2_registrars;
             median = ithi_median_registrars;
             ninety = ithi_ninety_registrars;
+            count = nb_registrars;
         }
 
         for (int i = 0; i < 4; i++)
@@ -590,6 +597,17 @@ bool ComputeM2::Write(FILE * F_out)
             ret &= (fprintf(F_out, "M2.%d.%d.2, , %6f,\n", m, i + 1, median[i]) > 0);
             ret &= (fprintf(F_out, "M2.%d.%d.3, , %6f,\n", m, i + 1, ninety[i]) > 0);
         }
+        ret &= (fprintf(F_out, "M2.%d.5, , %d,\n", m, count) > 0);
     }
     return ret;
+}
+
+void ComputeM2::SetNbRegistrars(uint32_t nb_registrars)
+{
+    this->nb_registrars = nb_registrars;
+}
+
+void ComputeM2::SetNbGtld(uint32_t nb_gtld)
+{
+    this->nb_gtld = nb_gtld;
 }
