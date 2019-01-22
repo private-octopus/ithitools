@@ -81,7 +81,15 @@
 
             // Set the text values that depend on the current data
 
-            fillCurrentDateFields(["currentId"], IndexData);
+            fillCurrentDateFields(["currentId", "t-currentId"], IndexData);
+
+            setFormattedValElement("t-valM31", getLastElement(IndexData.mData[0]), 1);
+            setFormattedValElement("t-valM542", getLastElement(IndexData.mData[1]), 1);
+            setFormattedValElement("t-valNroot1", getLastElement(IndexData.mData[2]), 1);
+            setFormattedValElement("t-valNrecurs1", getLastElement(IndexData.mData[5]), 1);
+            setFormattedValElement("t-valM2211", getLastElement(IndexData.mData[8]), 2);
+            setStringElement("t-Nroot1", "." + IndexData.RootNames[0]);
+            setStringElement("t-Nrecurs1", "." + IndexData.StubNames[0]);
 
             for (i = 0; i < pilot.length; i++) {
                 fillValueAverageMinMax(pilot[i], IndexData.mData[i], formats[i]);
@@ -108,6 +116,71 @@
 
 <body onload="init()">
     <nav id="navMenu"></nav>
+    <table class="metrics">
+
+	<tr><th colspan=2 class="mainTitle">ITHI by <a href="https://icann.org/">ICANN</a></th><th><a href="#fullTable">Full table </a></th></tr>
+        
+        <tr><th colspan=2>Identifier Technology Health Indicator</th><th class="number" id="t-currentId">-</th></tr>
+        <tr>
+            <th colspan=2 class="title"><a href="graph-m3.html">% No Such Domain queries seen by root servers</a></th>
+            <td class="number" id="t-valM31">-</td>
+        </tr>
+
+        <tr>
+            <th colspan=2 class="title"><a href="graph-m5.html#currentId4">% of resolvers that perform DNSSEC validation</a></th>
+            <td class="number" id="t-valM542">-</td>
+        </tr>
+
+        <tr>
+            <th class="title"><a href="graph-m3.html#MetricM33">%requests to top name at the root</a></th>
+            <td id="t-Nroot1">-</td>
+            <td class="number" id="t-valNroot1">-</td>
+        </tr>
+        <tr>
+            <th class="title"><a href="graph-m4.html">%requests to top name at resolvers</a></th>
+            <td id="t-Nrecurs1">-</td>
+            <td class="number" id="t-valNrecurs1">-</td>
+        </tr>
+        <tr>
+            <th colspan=2 class="title">Number of resolvers accounting for 50% of eyeballs </th>
+            <td>Coming soon</td>
+        </tr>
+
+        <tr>
+            <th colspan=2 class="title"><a href="graph-m2.html">Phishing Domains per 10,000 registered names</a></th>
+            <td class="number" id="t-valM2211"> - </td>
+        </tr>
+    </table>
+
+
+    <p>
+        In 2017, <a href="https://icann.org">ICANN</a> started a project to
+        monitor the health of the registered identifiers ecosystem,
+        through a set of Identifier Technology Health Indicators (ITHI),
+        or ITHI Metrics. There are eight detailed
+        <a href="./metrics.html">metrics</a> for which data can be seen on this site.
+        The metrics are computed using data captured from
+        <a href="about.html">various sources</a>
+        including data collected by ICANN projects and traces obtained from
+        <a href="participating.html">participating</a>
+        root DNS servers, authoritative DNS servers, and recursive DNS resolvers.
+        Our first data collection partners are:
+    </p>
+    <ul>
+        <li>
+            <a href="https://unlp.edu.ar/">
+                National University of La Plata (UNLP), Argentina
+            </a>,
+        </li>
+        <li><a href="https://www.ucc.edu.gh/">University of Cape Coast, Ghana</a>,</li>
+        <li><a href="http://nawala.id/">DNS Nawala, Indonesia,</a></li>
+        <li><a href="https://www.nic.kz">KazNIC Organization, Kazakhstan</a>, and</li>
+        <li><a href="https://www.twnic.net.tw/">Taiwan Network Information Center (TWNIC).</a></li>
+    </ul>
+
+    <p>The table above presents our top 5 indicators. The table below presents a bigger list, with more details. </p>
+
+    <h3 id="fullTable">Full table of main ITHI indicators</h3>
 
     <table class="metrics">
         <tr><th class="mainTitle">ITHI by <a href="https://icann.org/">ICANN</a></th><th colspan=2>Identifier Technology Health Indicator</th><th class="number" id="currentId">-</th><th class="number">Past 3 months</th><th class="number">Historic Low</th><th class="number">Historic High</th></tr>
@@ -274,30 +347,5 @@
             <td class="number" id="maxM2143"> - </td>
         </tr>
     </table>
-
-    <p>
-        In 2017, <a href="https://icann.org">ICANN</a> started a project to
-        monitor the health of the registered identifiers ecosystem,
-        through a set of Identifier Technology Health Indicators (ITHI),
-        or ITHI Metrics. There are eight detailed
-        <a href="./metrics.html">metrics</a> for which data can be seen on this site.
-        The metrics are computed using data captured from
-        <a href="about.html">various sources</a>
-        including data collected by ICANN projects and traces obtained from
-        <a href="participating.html">participating</a>
-        root DNS servers, authoritative DNS servers, and recursive DNS resolvers.
-        Our first data collection partners are:
-    </p>
-    <ul>
-        <li>
-            <a href="https://unlp.edu.ar/">
-                National University of La Plata (UNLP), Argentina
-            </a>,
-        </li>
-        <li><a href="https://www.ucc.edu.gh/">University of Cape Coast, Ghana</a>,</li>
-        <li><a href="http://nawala.id/">DNS Nawala, Indonesia,</a></li>
-        <li><a href="https://www.nic.kz">KazNIC Organization, Kazakhstan</a>, and</li>
-        <li><a href="https://www.twnic.net.tw/">Taiwan Network Information Center (TWNIC).</a></li>
-    </ul>
 </body>
 </html>
