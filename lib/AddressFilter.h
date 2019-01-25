@@ -99,10 +99,37 @@ public:
     LruHash<IPAsKeyLRU> table;
 };
 
+/*
+ * Keeping statistics per IP address:
+ *
+ * - Count: total number of queries from that address.
+ * - nb_do: total number of queries with DO option.
+ * - nb_edns: total number of queries with EDNS option.
+ * - nb_min_qname: total number of queries with qname minimization.
+ * - query_seen: if queries were observed.
+ * - option_mask: one bit per hash(option code) for options used.
+ *
+ * The entries are created when a response is encountered to that specific IP,
+ * see: DnsStats::RegisterStatsByIp(). They may also be created when an
+ * option is found in a query, in DnsStats::RegisterOptionsByIp(), to update the 
+ * option mask.
+ *
+ * The total number of entries maxes out at 0x8000, by default set up.
+ *
+ * When tallying the results, we look at whether queries from the IP address
+ * use the DO bit, EDNS, or QName minimization. The first 2 are easy: just
+ * count whether there is at least one DO bit query or at least one EDNS query.
+ * The QName minimization is only true if no "not minimized" query was found.
+ * 
+ *
+ * 
+ */
+
 class StatsByIP
 {
 public:
-    StatsByIP(uint8_t * addr, size_t addr_len, bool has_do, bool has_edns, bool mini_qname);
+    StatsByIP(uint8_t * addr, size_t addr_len, bool has_do, bool has_edns, 
+        bool not_qname_mini);
     virtual ~StatsByIP();
 
     bool IsSameKey(StatsByIP* key);
@@ -123,7 +150,7 @@ public:
     uint32_t hash;
     uint32_t nb_do;
     uint32_t nb_edns;
-    uint32_t nb_mini_qname;
+    uint32_t nb_not_qname_mini;
     bool query_seen;
     bool response_seen;
     uint64_t option_mask;

@@ -17,7 +17,11 @@
 * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
+#include <string.h>
+#ifdef _WINDOWS
+#include <fcntl.h>
+#include <io.h>
+#endif
 #include "pcap_reader.h"
 
 pcap_reader::pcap_reader()
@@ -71,12 +75,28 @@ bool pcap_reader::Open(char const * f_name, char * f_extract_name)
     else
     {
 #ifdef _WINDOWS
-        errno_t err = fopen_s(&F_pcap, f_name, "rb");
-        errno_t err2 = (f_extract_name == NULL)? 0:
+        errno_t err = 0;
+        if (strcmp(f_name, "-") == 0) {
+            F_pcap = stdin;
+            if (_setmode(_fileno(F_pcap), _O_BINARY) == -1) {
+                err = -1;
+            }
+        }
+        else {
+            err = fopen_s(&F_pcap, f_name, "rb");
+        }
+        errno_t err2 = (f_extract_name == NULL) ? 0 :
             fopen_s(&F_extract, f_extract_name, "wb");
-#else
-        F_pcap = fopen(f_name, "rb");
-        int err = (F_pcap == NULL) ? -1 : 0;
+#else    
+        int err = 0;
+
+        if (strcmp(f_name, "-") == 0) {
+            F_pcap = freopen(NULL, "rb", stdin);
+        }
+        else {
+            F_pcap = fopen(f_name, "rb");
+        }
+        err = (F_pcap == NULL) ? -1 : 0;
 
         if (err != 0 && f_extract_name != NULL)
         {
@@ -183,37 +203,37 @@ bool pcap_reader::ReadNext()
 
     if (ret && (header.network == 1 || header.network == 101))
     {
-	int ip_length;
+        int ip_length;
 
-	if (header.network == 1)
-	{
-	    /* Ethernet */
-	    int payload_type = (buffer[12] << 8) | (buffer[13]);
+        if (header.network == 1)
+        {
+            /* Ethernet */
+            int payload_type = (buffer[12] << 8) | (buffer[13]);
 
-	    ip_offset = 14;
-	    ip_version = payload_type == 0x0800 && buffer[ip_offset] >> 4 == 4 ? 4
-	               : payload_type == 0x86DD && buffer[ip_offset] >> 4 == 6 ? 6
-	               : -1;
-	}
-	else
-	{
-	    /* Raw */
-	    ip_offset = 0;
-	    ip_version = buffer[ip_offset] >> 4;
-	}
+            ip_offset = 14;
+            ip_version = payload_type == 0x0800 && buffer[ip_offset] >> 4 == 4 ? 4
+                : payload_type == 0x86DD && buffer[ip_offset] >> 4 == 6 ? 6
+                : -1;
+        }
+        else
+        {
+            /* Raw */
+            ip_offset = 0;
+            ip_version = buffer[ip_offset] >> 4;
+        }
         switch (ip_version)
         {
         case 4:
             /* IPv4 */
-	    ip_length = (buffer[ip_offset + 2] << 8) | (buffer[ip_offset + 3]);
-	    is_fragment = ((buffer[ip_offset + 6] & 0x20) != 0);
-	    fragment_length = (is_fragment) ?
-		((buffer[ip_offset + 6] & 0x1F) << 8) | (buffer[ip_offset + 7]) :
-		ip_length;
+            ip_length = (buffer[ip_offset + 2] << 8) | (buffer[ip_offset + 3]);
+            is_fragment = ((buffer[ip_offset + 6] & 0x20) != 0);
+            fragment_length = (is_fragment) ?
+                ((buffer[ip_offset + 6] & 0x1F) << 8) | (buffer[ip_offset + 7]) :
+                ip_length;
 
-	    tp_offset = ip_offset + 20;
-	    tp_version = buffer[ip_offset + 9];
-	    tp_length = ip_length - (tp_offset - ip_offset);
+            tp_offset = ip_offset + 20;
+            tp_version = buffer[ip_offset + 9];
+            tp_length = ip_length - (tp_offset - ip_offset);
             break;
 
         case 6:

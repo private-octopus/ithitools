@@ -109,22 +109,22 @@ typedef struct st_stats_by_ip_test_out_t {
     uint32_t count;
     uint32_t nb_do;
     uint32_t nb_edns;
-    uint32_t nb_mini_qname;
+    uint32_t nb_not_mini_qname;
     bool is_do_used;
     bool is_edns_supported;
     bool is_qname_minimized;
 } stats_by_ip_test_out_t;
 
 static const stats_by_ip_test_out_t stats_by_ip_test_output[] = {
-    { ip1, sizeof(ip1), 9, 0, 0, 0, false, false, false },
-    { ip2, sizeof(ip2), 7, 0, 0, 7, false, false, true },
-    { ip3, sizeof(ip3), 7, 0, 6, 0, false, true, false },
-    { ip4, sizeof(ip4), 5, 0, 5, 5, false, true, true },
-    { ip5, sizeof(ip5), 5, 4, 0, 0, true, false, false },
-    { ip6, sizeof(ip6), 3, 3, 0, 3, true, false, true },
-    { ip7, sizeof(ip7), 3, 2, 2, 0, true, true, false },
+    { ip1, sizeof(ip1), 9, 0, 0, 9, false, false, false },
+    { ip2, sizeof(ip2), 7, 0, 0, 0, false, false, true },
+    { ip3, sizeof(ip3), 7, 0, 6, 7, false, true, false },
+    { ip4, sizeof(ip4), 5, 0, 5, 0, false, true, true },
+    { ip5, sizeof(ip5), 5, 4, 0, 5, true, false, false },
+    { ip6, sizeof(ip6), 3, 3, 0, 0, true, false, true },
+    { ip7, sizeof(ip7), 3, 2, 2, 3, true, true, false },
     { ip8, sizeof(ip8), 1, 1, 1, 1, true, true, true },
-    { ip9, sizeof(ip9), 9, 4, 4, 4, true, true, false }
+    { ip9, sizeof(ip9), 9, 4, 4, 5, true, true, false }
 };
 
 
@@ -144,7 +144,7 @@ bool StatsByIpTest::DoTest()
             stats_by_ip_test_input[i].addr_len,
             stats_by_ip_test_input[i].has_do,
             stats_by_ip_test_input[i].has_edns,
-            stats_by_ip_test_input[i].mini_qname);
+            !stats_by_ip_test_input[i].mini_qname);
         x.response_seen = true;
         if (stats_by_ip_test_input[i].add_query) {
             StatsByIP q (
@@ -208,9 +208,9 @@ bool StatsByIpTest::DoTest()
                 y->nb_edns, stats_by_ip_test_output[i].nb_edns);
             ret = false;
         }
-        else if (y->nb_mini_qname != stats_by_ip_test_output[i].nb_mini_qname) {
+        else if (y->nb_not_qname_mini != stats_by_ip_test_output[i].nb_not_mini_qname) {
             TEST_LOG("Output case #%d, nb_mini_qname = %d instead of %d\n", (int)i,
-                y->nb_mini_qname, stats_by_ip_test_output[i].nb_mini_qname);
+                y->nb_not_qname_mini, stats_by_ip_test_output[i].nb_not_mini_qname);
             ret = false;
         }
         else if (y->IsDoUsed() != stats_by_ip_test_output[i].is_do_used) {
@@ -252,7 +252,7 @@ bool StatsByIpTest::OptionHashTest()
         stats_by_ip_test_input[0].addr_len,
         stats_by_ip_test_input[0].has_do,
         stats_by_ip_test_input[0].has_edns,
-        stats_by_ip_test_input[0].mini_qname);
+        !stats_by_ip_test_input[0].mini_qname);
 
     for (size_t i = 0; ret && i < nb_option_test_cases; i++) {
         if (!x.RegisterNewOption(option_test_cases[i])) {

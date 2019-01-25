@@ -325,13 +325,14 @@ IPAsKeyLRU * IPAsKeyLRU::CreateCopy()
 }
 
 
-StatsByIP::StatsByIP(uint8_t * addr, size_t addr_len, bool has_do, bool has_edns, bool mini_qname) :
+StatsByIP::StatsByIP(uint8_t * addr, size_t addr_len, bool has_do, bool has_edns, 
+    bool not_qname_mini) :
     HashNext(NULL),
     count(1),
     hash(0),
     nb_do((has_do)?1:0),
     nb_edns((has_edns)?1:0),
-    nb_mini_qname((mini_qname)?1:0),
+    nb_not_qname_mini((not_qname_mini) ? 1 : 0),
     query_seen(false),
     response_seen(false),
     option_mask(0)
@@ -379,7 +380,7 @@ StatsByIP * StatsByIP::CreateCopy()
         x->hash = hash;
         x->nb_do = nb_do;
         x->nb_edns = nb_edns;
-        x->nb_mini_qname = nb_mini_qname;
+        x->nb_not_qname_mini = nb_not_qname_mini;
         x->query_seen = query_seen;
         x->response_seen = response_seen;
         x->option_mask = option_mask;
@@ -393,7 +394,7 @@ void StatsByIP::Add(StatsByIP * key)
     count += key->count;
     nb_do += key->nb_do;
     nb_edns += key->nb_edns;
-    nb_mini_qname += key->nb_mini_qname;
+    nb_not_qname_mini += key->nb_not_qname_mini;
     query_seen |= key->query_seen;
     response_seen |= key->response_seen;
     option_mask |= key->option_mask;
@@ -411,13 +412,7 @@ bool StatsByIP::IsEdnsSupported()
 
 bool StatsByIP::IsQnameMinimized()
 {
-    uint32_t ref_count = count;
-
-    if (query_seen) {
-        ref_count--;
-    }
-
-    return(nb_mini_qname == ref_count);
+    return (nb_not_qname_mini == 0);
 }
 
 /* Options should be counted at most once per resolver. To

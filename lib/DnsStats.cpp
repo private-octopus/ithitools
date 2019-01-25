@@ -1372,6 +1372,9 @@ bool DnsStats::LoadPcapFile(char const * fileName)
     size_t nb_records_read = 0;
     size_t nb_udp_dns_frag = 0;
     size_t nb_udp_dns = 0;
+    size_t nb_tcp = 0;
+    size_t nb_tcp_syn = 0;
+    size_t nb_tcp_syn_ack = 0;
 
     if (!reader.Open(fileName, NULL))
     {
@@ -1395,6 +1398,16 @@ bool DnsStats::LoadPcapFile(char const * fileName)
                     SubmitPacket(reader.buffer + reader.tp_offset + 8,
                         reader.tp_length - 8, reader.ip_version, reader.buffer + reader.ip_offset);
                     nb_udp_dns++;
+                }
+            }
+            else if (reader.tp_version == 6) {
+                uint8_t flags = reader.buffer[reader.tp_offset + 13];
+                nb_tcp++;
+                if ((flags & 0x3F) == 0x12) {
+                    nb_tcp_syn_ack++;
+                }
+                else if ((flags & 0x3F) == 0x02) {
+                    nb_tcp_syn++;
                 }
             }
         }
@@ -2307,7 +2320,8 @@ void DnsStats::ExportDnssecUsageByTable(BinHash<DnssecPrefixEntry>* dnssecTable,
 
 void DnsStats::RegisterStatsByIp(uint8_t * dest_addr, size_t dest_addr_length)
 {
-    StatsByIP x(dest_addr, dest_addr_length, is_do_flag_set, is_using_edns, is_qname_minimized);
+    StatsByIP x(dest_addr, dest_addr_length, is_do_flag_set, is_using_edns,
+        !is_qname_minimized);
     StatsByIP * y = statsByIp.Retrieve(&x);
 
     x.response_seen = true;
