@@ -116,15 +116,15 @@ typedef struct st_stats_by_ip_test_out_t {
 } stats_by_ip_test_out_t;
 
 static const stats_by_ip_test_out_t stats_by_ip_test_output[] = {
-    { ip1, sizeof(ip1), 9, 0, 0, 9, false, false, false },
+    { ip1, sizeof(ip1), 9, 0, 0, 8, false, false, false },
     { ip2, sizeof(ip2), 7, 0, 0, 0, false, false, true },
-    { ip3, sizeof(ip3), 7, 0, 6, 7, false, true, false },
+    { ip3, sizeof(ip3), 7, 0, 6, 6, false, true, false },
     { ip4, sizeof(ip4), 5, 0, 5, 0, false, true, true },
-    { ip5, sizeof(ip5), 5, 4, 0, 5, true, false, false },
+    { ip5, sizeof(ip5), 5, 4, 0, 4, true, false, false },
     { ip6, sizeof(ip6), 3, 3, 0, 0, true, false, true },
-    { ip7, sizeof(ip7), 3, 2, 2, 3, true, true, false },
-    { ip8, sizeof(ip8), 1, 1, 1, 1, true, true, true },
-    { ip9, sizeof(ip9), 9, 4, 4, 5, true, true, false }
+    { ip7, sizeof(ip7), 3, 2, 2, 2, true, true, false },
+    { ip8, sizeof(ip8), 1, 1, 1, 0, true, true, true },
+    { ip9, sizeof(ip9), 9, 4, 4, 4, true, true, false }
 };
 
 
@@ -209,7 +209,7 @@ bool StatsByIpTest::DoTest()
             ret = false;
         }
         else if (y->nb_not_qname_mini != stats_by_ip_test_output[i].nb_not_mini_qname) {
-            TEST_LOG("Output case #%d, nb_mini_qname = %d instead of %d\n", (int)i,
+            TEST_LOG("Output case #%d, nb_not_mini_qname = %d instead of %d\n", (int)i,
                 y->nb_not_qname_mini, stats_by_ip_test_output[i].nb_not_mini_qname);
             ret = false;
         }
@@ -239,7 +239,7 @@ bool StatsByIpTest::DoTest()
 
 /* Given the small size of the bit mask used to check for
  * double registrations, collisions are possible. We simply verify
- * that theydo not happen between the most popular OPT Option codes */
+ * that they do not happen between the most popular OPT Option codes */
 
 static uint16_t option_test_cases[] = { 8, 5, 6, 7, 10, 3, 0, 65001, 4 };
 static const size_t nb_option_test_cases = sizeof(option_test_cases) / sizeof(uint16_t);

@@ -151,6 +151,9 @@ public:
     uint32_t nb_do;
     uint32_t nb_edns;
     uint32_t nb_not_qname_mini;
+    uint32_t nb_tcp_443;
+    uint32_t nb_tcp_583;
+
     bool query_seen;
     bool response_seen;
     uint64_t option_mask;

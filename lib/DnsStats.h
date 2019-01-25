@@ -268,6 +268,8 @@ public:
     void RegisterStatsByIp(uint8_t * dest_addr, size_t dest_addr_length);
     void RegisterOptionsByIp(uint8_t * source_addr, size_t source_addr_length);
 
+    void RegisterTcpSynByIp(uint8_t * source_addr, size_t source_addr_length, bool tcp_port_583, bool tcp_port_443);
+
     void ExportStatsByIp();
 
     static int GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,

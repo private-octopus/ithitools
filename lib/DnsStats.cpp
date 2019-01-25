@@ -2375,6 +2375,42 @@ void DnsStats::RegisterOptionsByIp(uint8_t * source_addr, size_t source_addr_len
     }
 }
 
+void DnsStats::RegisterTcpSynByIp(uint8_t * source_addr,
+    size_t source_addr_length, bool tcp_port_583, bool tcp_port_443)
+{
+    if ((tcp_port_583 && tcp_port_443) || (!tcp_port_583 && !tcp_port_443)) {
+        return;
+    }
+    StatsByIP x(source_addr, source_addr_length, false, false, false);
+    StatsByIP * y = statsByIp.Retrieve(&x);
+
+    if (y == NULL) {
+        if (statsByIp.GetCount() < max_stats_by_ip_count) {
+            bool stored = false;
+
+            if ((y = statsByIp.InsertOrAdd(&x, true, &stored)) != NULL) {
+                y->query_seen = true;
+            }
+        }
+    }
+    else {
+        if (!y->query_seen) {
+            y->count++;
+            y->query_seen = true;
+        }
+    }
+
+    if (y != NULL) {
+        if (tcp_port_443) {
+            y->nb_tcp_443++;
+        }
+
+        if (tcp_port_583) {
+            y->nb_tcp_583++;
+        }
+    }
+}
+
 void DnsStats::ExportStatsByIp()
 {
     StatsByIP *sbi;

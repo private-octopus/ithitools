@@ -333,6 +333,8 @@ StatsByIP::StatsByIP(uint8_t * addr, size_t addr_len, bool has_do, bool has_edns
     nb_do((has_do)?1:0),
     nb_edns((has_edns)?1:0),
     nb_not_qname_mini((not_qname_mini) ? 1 : 0),
+    nb_tcp_443(0),
+    nb_tcp_583(0),
     query_seen(false),
     response_seen(false),
     option_mask(0)
@@ -381,6 +383,8 @@ StatsByIP * StatsByIP::CreateCopy()
         x->nb_do = nb_do;
         x->nb_edns = nb_edns;
         x->nb_not_qname_mini = nb_not_qname_mini;
+        x->nb_tcp_443 = nb_tcp_443;
+        x->nb_tcp_583 = nb_tcp_583;
         x->query_seen = query_seen;
         x->response_seen = response_seen;
         x->option_mask = option_mask;
@@ -395,6 +399,8 @@ void StatsByIP::Add(StatsByIP * key)
     nb_do += key->nb_do;
     nb_edns += key->nb_edns;
     nb_not_qname_mini += key->nb_not_qname_mini;
+    nb_tcp_443 += key->nb_tcp_443;
+    nb_tcp_583 += key->nb_tcp_583;
     query_seen |= key->query_seen;
     response_seen |= key->response_seen;
     option_mask |= key->option_mask;
