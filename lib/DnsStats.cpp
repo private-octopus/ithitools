@@ -31,6 +31,7 @@
 
 DnsStats::DnsStats()
     :
+    is_capture_dns_only(true),
     is_capture_stopped(false),
     enable_frequent_address_filtering(false),
     frequent_address_max_count(128),
@@ -129,7 +130,9 @@ static char const * RegistryNameById[] = {
     "EDNS_CLIENT_USAGE",
     "QNAME_MINIMIZATION_USAGE",
     "EDNS_OPTIONS_USAGE",
-    "EDNS_OPTIONS_TOTAL_QUERIES"
+    "EDNS_OPTIONS_TOTAL_QUERIES",
+    "VOLUME_PER_PROTO",
+    "TCPSYN_PER_PROTO"
 };
 
 static uint32_t RegistryNameByIdNb = sizeof(RegistryNameById) / sizeof(char const*);
@@ -1375,6 +1378,10 @@ bool DnsStats::LoadPcapFile(char const * fileName)
     size_t nb_tcp = 0;
     size_t nb_tcp_syn = 0;
     size_t nb_tcp_syn_ack = 0;
+    uint64_t data_udp53 = 0;
+    uint64_t data_tcp53 = 0;
+    uint64_t data_tcp853 = 0;
+    uint64_t data_tcp443 = 0;
 
     if (!reader.Open(fileName, NULL))
     {
@@ -1389,6 +1396,8 @@ bool DnsStats::LoadPcapFile(char const * fileName)
             if (reader.tp_version == 17 &&
                 (reader.tp_port1 == 53 || reader.tp_port2 == 53))
             {
+                data_udp53 += reader.tp_length - 8;
+
                 if (reader.is_fragment)
                 {
                     nb_udp_dns_frag++;
@@ -1401,16 +1410,52 @@ bool DnsStats::LoadPcapFile(char const * fileName)
                 }
             }
             else if (reader.tp_version == 6) {
-                uint8_t flags = reader.buffer[reader.tp_offset + 13];
-                nb_tcp++;
-                if ((flags & 0x3F) == 0x12) {
-                    nb_tcp_syn_ack++;
+                /* Do simple statistics on TCP traffic */
+                size_t header_length32 = reader.buffer[reader.tp_offset + 12] >> 4;
+                size_t tcp_payload = reader.tp_length - 4 * header_length32;
+                bool is_port_853 = false;
+                bool is_port_443 = false;
+
+                if (reader.tp_port1 == 53 || reader.tp_port2 == 53) {
+                    data_tcp53 += tcp_payload;
                 }
-                else if ((flags & 0x3F) == 0x02) {
-                    nb_tcp_syn++;
+                else if (reader.tp_port1 == 853 || reader.tp_port2 == 853) {
+                    data_tcp853 += tcp_payload;
+                    is_port_853 = true;
+                    is_capture_dns_only = false;
+                }
+                else if (reader.tp_port1 == 443 || reader.tp_port2 == 443) {
+                    data_tcp443 += tcp_payload;
+                    is_port_443 = true;
+                    is_capture_dns_only = false;
+                }
+                else {
+                    is_capture_dns_only = false;
+                }
+                if (is_port_443 || is_port_853) {
+                    uint8_t flags = reader.buffer[reader.tp_offset + 13] & 0x3F;
+                    if (flags == 0x02) {
+                        uint8_t * addr;
+                        size_t addr_length;
+                        GetSourceAddress(reader.ip_version, reader.buffer + reader.ip_offset,
+                            &addr, &addr_length);
+                        RegisterTcpSynByIp(addr, addr_length, is_port_853, is_port_443);
+                    }
                 }
             }
+            else {
+                is_capture_dns_only = false;
+            }
         }
+    }
+
+    if (!is_capture_dns_only) {
+        /* Add the traffic load statistics to the summary, but only if the
+         * capture was not filtered to only catch DNS data */
+        SubmitRegistryNumberAndCount(REGISTRY_VOLUME_PER_PROTO, 0, data_udp53);
+        SubmitRegistryNumberAndCount(REGISTRY_VOLUME_PER_PROTO, 53, data_tcp53);
+        SubmitRegistryNumberAndCount(REGISTRY_VOLUME_PER_PROTO, 853, data_tcp853);
+        SubmitRegistryNumberAndCount(REGISTRY_VOLUME_PER_PROTO, 443, data_tcp443);
     }
 
     return ret;
@@ -2381,6 +2426,7 @@ void DnsStats::RegisterTcpSynByIp(uint8_t * source_addr,
     if ((tcp_port_583 && tcp_port_443) || (!tcp_port_583 && !tcp_port_443)) {
         return;
     }
+
     StatsByIP x(source_addr, source_addr_length, false, false, false);
     StatsByIP * y = statsByIp.Retrieve(&x);
 
@@ -2388,15 +2434,7 @@ void DnsStats::RegisterTcpSynByIp(uint8_t * source_addr,
         if (statsByIp.GetCount() < max_stats_by_ip_count) {
             bool stored = false;
 
-            if ((y = statsByIp.InsertOrAdd(&x, true, &stored)) != NULL) {
-                y->query_seen = true;
-            }
-        }
-    }
-    else {
-        if (!y->query_seen) {
-            y->count++;
-            y->query_seen = true;
+            y = statsByIp.InsertOrAdd(&x, true, &stored);
         }
     }
 
@@ -2421,7 +2459,8 @@ void DnsStats::ExportStatsByIp()
     uint32_t qname_minimizing_count = 0;
     uint32_t not_minimizing_count = 0;
     uint32_t total_queries = 0;
-
+    uint32_t issued_syn_583 = 0;
+    uint32_t issued_syn_443 = 0;
 
     for (uint32_t i = 0; i < statsByIp.GetSize(); i++)
     {
@@ -2470,6 +2509,13 @@ void DnsStats::ExportStatsByIp()
     SubmitRegistryNumberAndCount(REGISTRY_QNAME_MINIMIZATION_Usage, 1, qname_minimizing_count);
 
     SubmitRegistryNumberAndCount(REGISTRY_EDNS_OPT_USAGE_REF, 0, total_queries);
+
+    if (!is_capture_dns_only) {
+        /* Only add these counts if using PCAP directly, not DNSCAP */
+        SubmitRegistryNumberAndCount(REGISTRY_TCPSYN_PER_PROTO, 0, statsByIp.GetSize());
+        SubmitRegistryNumberAndCount(REGISTRY_TCPSYN_PER_PROTO, 583, issued_syn_583);
+        SubmitRegistryNumberAndCount(REGISTRY_TCPSYN_PER_PROTO, 443, issued_syn_443);
+    }
 
     statsByIp.Clear();
 }

@@ -86,6 +86,8 @@
 #define REGISTRY_QNAME_MINIMIZATION_Usage 44
 #define REGISTRY_EDNS_OPT_USAGE 45
 #define REGISTRY_EDNS_OPT_USAGE_REF 46
+#define REGISTRY_VOLUME_PER_PROTO 47
+#define REGISTRY_TCPSYN_PER_PROTO 48
 
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
@@ -234,6 +236,7 @@ public:
     bool IsCaptureStopped() { return is_capture_stopped; };
     void StopCapture() { is_capture_stopped = true; }
     
+    bool is_capture_dns_only;
     bool is_capture_stopped;
     bool enable_frequent_address_filtering;
     uint32_t frequent_address_max_count;
