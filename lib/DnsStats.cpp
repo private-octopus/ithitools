@@ -34,6 +34,7 @@ DnsStats::DnsStats()
     is_capture_dns_only(true),
     is_capture_stopped(false),
     enable_frequent_address_filtering(false),
+    target_number_dns_packets(0),
     frequent_address_max_count(128),
     max_tld_leakage_count(0x80),
     max_tld_leakage_table_count(0x8000),
@@ -1375,9 +1376,6 @@ bool DnsStats::LoadPcapFile(char const * fileName)
     size_t nb_records_read = 0;
     size_t nb_udp_dns_frag = 0;
     size_t nb_udp_dns = 0;
-    size_t nb_tcp = 0;
-    size_t nb_tcp_syn = 0;
-    size_t nb_tcp_syn_ack = 0;
     uint64_t data_udp53 = 0;
     uint64_t data_tcp53 = 0;
     uint64_t data_tcp853 = 0;
@@ -1407,6 +1405,12 @@ bool DnsStats::LoadPcapFile(char const * fileName)
                     SubmitPacket(reader.buffer + reader.tp_offset + 8,
                         reader.tp_length - 8, reader.ip_version, reader.buffer + reader.ip_offset);
                     nb_udp_dns++;
+
+                    if (target_number_dns_packets > 0 &&
+                        nb_udp_dns >= target_number_dns_packets) {
+                        /* Break when enough data captured */
+                        break;
+                    }
                 }
             }
             else if (reader.tp_version == 6) {

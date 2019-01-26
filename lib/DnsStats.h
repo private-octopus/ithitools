@@ -239,6 +239,7 @@ public:
     bool is_capture_dns_only;
     bool is_capture_stopped;
     bool enable_frequent_address_filtering;
+    uint32_t target_number_dns_packets;
     uint32_t frequent_address_max_count;
     uint32_t max_tld_leakage_count; 
     uint32_t max_tld_leakage_table_count;
