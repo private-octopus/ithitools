@@ -26,14 +26,15 @@ DATE_DASH=$(date -d $DATE_CURRENT +%Y-%m)
 PREVIOUS_DASH=$(date -d $DATE_PREVIOUS +%Y-%m)
 PREVIOUS_YEAR=$(date -d $DATE_PREVIOUS +%Y)
 PREVIOUS_MM=$(date -d $DATE_PREVIOUS +%m)
-
+FIRST_DAY=$(date -d "$DATE_CURRENT" +%Y-%m-01)
+DAY_AFTER_MONTH=$(date -d "$FIRST_DAY +1 months" +%Y-%m-01)
+LAST_DAY=$(date -d "$DAY_AFTER_MONTH -1 days" +%Y-%m-%d)
+LAST_LAST_DAY=$(date -d "$FIRST_DAY -1 days" +%Y-%m-%d)
 
 echo "This month selector: $DATE (or $DATE_DASH), Year: $YEAR, Month: $MM"
 echo "Previous month selector: $PREVIOUS_DATE (or $PREVIOUS_DASH), Year: $PREVIOUS_YEAR, Month: $PREVIOUS_MM"
 
-LAST_DAY=$(date -d "$(date -d "$DATE_CURRENT +1 months" +%Y-%m-01) -1 days" +%Y-%m-%d)
 echo "Last day of this month: $LAST_DAY"
-LAST_LAST_DAY=$(date -d "$(date -d $DATE_CURRENT +%Y-%m-01) -1 days" +%Y-%m-%d)
 echo "Last day of previous month: $LAST_LAST_DAY"
 
 >m8_$1_this_month.txt
