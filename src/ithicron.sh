@@ -26,14 +26,17 @@ DATE_DASH=$(date -d $DATE_CURRENT +%Y-%m)
 PREVIOUS_DASH=$(date -d $DATE_PREVIOUS +%Y-%m)
 PREVIOUS_YEAR=$(date -d $DATE_PREVIOUS +%Y)
 PREVIOUS_MM=$(date -d $DATE_PREVIOUS +%m)
-
-
+FIRST_DAY=$(date -d $YEAR-$MM-01 +%Y-%m-%d)
+DAY_AFTER_MONTH=$(date -d "$FIRST_DAY +1 months" +%Y-%m-01)
+LAST_DAY=$(date -d "$DAY_AFTER_MONTH -1 day" +%Y-%m-%d)
+LAST_LAST_DAY=$(date -d "$FIRST_DAY -1 day"  +%Y-%m-%d)
+echo "Current: $DATE_CURRENT"
+echo "Previous: $DATE_PREVIOUS"
+echo "First day: $FIRST_DAY"
+echo "Day after month: $DAY_AFTER_MONTH"
 echo "This month selector: $DATE (or $DATE_DASH), Year: $YEAR, Month: $MM"
 echo "Previous month selector: $PREVIOUS_DATE (or $PREVIOUS_DASH), Year: $PREVIOUS_YEAR, Month: $PREVIOUS_MM"
-
-LAST_DAY=$(date -d "$(date -d "$DATE_CURRENT +1 months" +%Y-%m-01) -1 days" +%Y-%m-%d)
 echo "Last day of this month: $LAST_DAY"
-LAST_LAST_DAY=$(date -d "$(date -d $DATE_CURRENT +%Y-%m-01) -1 days" +%Y-%m-%d)
 echo "Last day of previous month: $LAST_LAST_DAY"
 
 find /home/rarends/data/$DATE* | grep ".csv" > m3_this_month.txt
@@ -52,7 +55,7 @@ echo "Creating summary file in $M3F2"
 python ithitools/src/tlsaInput.py tlsa-data-$DATE_DASH.csv /home/viktor/data/tlsa-$DATE_DASH
 echo tlsa-data-$DATE_DASH.csv >> m46_this_month.txt
 find /home/matiasf/* | grep $DATE | grep ".csv" >> m46_this_month.txt
-find /home/uccgh/ithi-capture-v2/* | grep $DATE_DASH | grep ".csv" >> m46_this_month.txt
+find /home/uccgh/* | grep $DATE_DASH | grep ".csv" >> m46_this_month.txt
 find /home/nawala/data/* | grep $DATE_DASH | grep ".csv" >> m46_this_month.txt
 echo "Found $(wc -l m46_this_month.txt) recursive resolver reports for $DATE*"
 M46F1=/home/ubuntu/ithi/input/M46/M46-$LAST_DAY-summary.csv
