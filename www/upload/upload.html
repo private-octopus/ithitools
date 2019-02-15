@@ -1,0 +1,35 @@
+<html>
+
+
+<head>
+<title>ITHI File Upload</title>
+<link rel="stylesheet" type="text/css" href="../ithistyle.css">
+<script src="../ithinav.js"></script>
+<script src="../ithigraph.js"></script>  
+<script type="text/javascript">
+    function init() {
+        initnavL1(1);
+    }
+</script>
+</head>
+<body  onLoad="init()">
+
+
+<nav id="navMenu"></nav>
+
+<h1>ITHI File Upload</h1>
+
+<p>Please browse and select the file to upload, and then use the submit button to send it. <p>
+
+
+<form  enctype="multipart/form-data" action="../cgi-bin/upload.pl" method="post">
+
+
+<input id="fileupload" name="whois" type="file" />
+<br/>
+<input type="submit" value="submit" id="submit" />
+</form>
+
+</body>
+
+</html>
