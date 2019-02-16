@@ -31,8 +31,13 @@
 
 DnsStats::DnsStats()
     :
+    is_capture_dns_only(true),
     is_capture_stopped(false),
+    t_start_sec(0),
+    t_start_usec(0),
+    duration_usec(0),
     enable_frequent_address_filtering(false),
+    target_number_dns_packets(0),
     frequent_address_max_count(128),
     max_tld_leakage_count(0x80),
     max_tld_leakage_table_count(0x8000),
@@ -129,7 +134,10 @@ static char const * RegistryNameById[] = {
     "EDNS_CLIENT_USAGE",
     "QNAME_MINIMIZATION_USAGE",
     "EDNS_OPTIONS_USAGE",
-    "EDNS_OPTIONS_TOTAL_QUERIES"
+    "EDNS_OPTIONS_TOTAL_QUERIES",
+    "VOLUME_PER_PROTO",
+    "TCPSYN_PER_PROTO",
+    "CAPTURE_DURATION"
 };
 
 static uint32_t RegistryNameByIdNb = sizeof(RegistryNameById) / sizeof(char const*);
@@ -151,7 +159,7 @@ static char const * RegisteredTldName[] = {
     "BAREFOOT", "BARGAINS", "BASEBALL", "BASKETBALL", "BAUHAUS", "BAYERN", "BB", "BBC",
     "BBT", "BBVA", "BCG", "BCN", "BD", "BE", "BEATS", "BEAUTY", "BEER", "BENTLEY", "BERLIN",
     "BEST", "BESTBUY", "BET", "BF", "BG", "BH", "BHARTI", "BI", "BIBLE", "BID", "BIKE",
-    "BING", "BINGO", "BIO", "BIZ", "BJ", "BLACK", "BLACKFRIDAY", "BLANCO", "BLOCKBUSTER",
+    "BING", "BINGO", "BIO", "BIZ", "BJ", "BLACK", "BLACKFRIDAY", "BLOCKBUSTER",
     "BLOG", "BLOOMBERG", "BLUE", "BM", "BMS", "BMW", "BN", "BNL", "BNPPARIBAS", "BO", "BOATS",
     "BOEHRINGER", "BOFA", "BOM", "BOND", "BOO", "BOOK", "BOOKING", "BOSCH", "BOSTIK",
     "BOSTON", "BOT", "BOUTIQUE", "BOX", "BR", "BRADESCO", "BRIDGESTONE", "BROADWAY", "BROKER",
@@ -177,7 +185,7 @@ static char const * RegisteredTldName[] = {
     "DO", "DOCS", "DOCTOR", "DODGE", "DOG", "DOHA", "DOMAINS", "DOT", "DOWNLOAD", "DRIVE",
     "DTV", "DUBAI", "DUCK", "DUNLOP", "DUNS", "DUPONT", "DURBAN", "DVAG", "DVR", "DZ",
     "EARTH", "EAT", "EC", "ECO", "EDEKA", "EDU", "EDUCATION", "EE", "EG", "EMAIL", "EMERCK",
-    "ENERGY", "ENGINEER", "ENGINEERING", "ENTERPRISES", "EPOST", "EPSON", "EQUIPMENT", "ER",
+    "ENERGY", "ENGINEER", "ENGINEERING", "ENTERPRISES", "EPSON", "EQUIPMENT", "ER",
     "ERICSSON", "ERNI", "ES", "ESQ", "ESTATE", "ESURANCE", "ET", "ETISALAT", "EU",
     "EUROVISION", "EUS", "EVENTS", "EVERBANK", "EXCHANGE", "EXPERT", "EXPOSED", "EXPRESS",
     "EXTRASPACE", "FAGE", "FAIL", "FAIRWINDS", "FAITH", "FAMILY", "FAN", "FANS", "FARM",
@@ -258,7 +266,8 @@ static char const * RegisteredTldName[] = {
     "SI", "SILK", "SINA", "SINGLES", "SITE", "SJ", "SK", "SKI", "SKIN", "SKY", "SKYPE", "SL",
     "SLING", "SM", "SMART", "SMILE", "SN", "SNCF", "SO", "SOCCER", "SOCIAL", "SOFTBANK",
     "SOFTWARE", "SOHU", "SOLAR", "SOLUTIONS", "SONG", "SONY", "SOY", "SPACE", "SPORT",
-    "SPOT", "SPREADBETTING", "SR", "SRL", "SRT", "ST", "STADA", "STAPLES", "STAR", "STARHUB",
+    "SPOT", "SPREADBETTING", "SR", "SRL", "SRT", "SS", 
+    "ST", "STADA", "STAPLES", "STAR", "STARHUB",
     "STATEBANK", "STATEFARM", "STC", "STCGROUP", "STOCKHOLM", "STORAGE", "STORE",
     "STREAM", "STUDIO", "STUDY", "STYLE", "SU", "SUCKS", "SUPPLIES", "SUPPLY", "SUPPORT",
     "SURF", "SURGERY", "SUZUKI", "SV", "SWATCH", "SWIFTCOVER", "SWISS", "SX", "SY", "SYDNEY",
@@ -298,6 +307,7 @@ static char const * RegisteredTldName[] = {
     "XN--KCRX77D1X4A", "XN--KPRW13D", "XN--KPRY57D", "XN--KPU716F", "XN--KPUT3I",
     "XN--L1ACC", "XN--LGBBAT1AD8J", "XN--MGB9AWBF", "XN--MGBA3A3EJT", "XN--MGBA3A4F16A",
     "XN--MGBA7C0BBN0A", "XN--MGBAAKC7DVF", "XN--MGBAAM7A8H", "XN--MGBAB2BD",
+    "XN--MGBAH1A3HJKRD",
     "XN--MGBAI9AZGQP6J", "XN--MGBAYH7GPA", "XN--MGBB9FBPOB", "XN--MGBBH1A", "XN--MGBBH1A71E",
     "XN--MGBC0A9AZCG", "XN--MGBCA7DZDO", "XN--MGBERP4A5D4AR", "XN--MGBGU82A",
     "XN--MGBI4ECEXP", "XN--MGBPL2FH", "XN--MGBT3DHD", "XN--MGBTX2B", "XN--MGBX4CD0AB",
@@ -311,7 +321,7 @@ static char const * RegisteredTldName[] = {
     "XN--XKC2AL3HYE2A", "XN--XKC2DL3A5EE0H", "XN--Y9A3AQ", "XN--YFRO4I67O", "XN--YGBI2AMMX",
     "XN--ZFR164B", "XXX", "XYZ", "YACHTS", "YAHOO", "YAMAXUN", "YANDEX", "YE",
     "YODOBASHI", "YOGA", "YOKOHAMA", "YOU", "YOUTUBE", "YT", "YUN", "ZA", "ZAPPOS", "ZARA",
-    "ZERO", "ZIP", "ZIPPO", "ZM", "ZONE", "ZUERICH", "ZW",
+    "ZERO", "ZIP", "ZM", "ZONE", "ZUERICH", "ZW",
 
 };
 
@@ -641,7 +651,7 @@ void DnsStats::SubmitTLSARecord(uint8_t * content, uint32_t length)
     }
 }
 
-void DnsStats::SubmitRegistryNumberAndCount(uint32_t registry_id, uint32_t number, uint32_t count)
+void DnsStats::SubmitRegistryNumberAndCount(uint32_t registry_id, uint32_t number, uint64_t count)
 {
     DnsHashEntry key;
     bool stored = false;
@@ -660,7 +670,7 @@ void DnsStats::SubmitRegistryNumber(uint32_t registry_id, uint32_t number)
     SubmitRegistryNumberAndCount(registry_id, number, 1);
 }
 
-void DnsStats::SubmitRegistryStringAndCount(uint32_t registry_id, uint32_t length, uint8_t * value, uint32_t count)
+void DnsStats::SubmitRegistryStringAndCount(uint32_t registry_id, uint32_t length, uint8_t * value, uint64_t count)
 {
     DnsHashEntry key;
     bool stored = false;
@@ -1372,6 +1382,10 @@ bool DnsStats::LoadPcapFile(char const * fileName)
     size_t nb_records_read = 0;
     size_t nb_udp_dns_frag = 0;
     size_t nb_udp_dns = 0;
+    uint64_t data_udp53 = 0;
+    uint64_t data_tcp53 = 0;
+    uint64_t data_tcp853 = 0;
+    uint64_t data_tcp443 = 0;
 
     if (!reader.Open(fileName, NULL))
     {
@@ -1386,24 +1400,90 @@ bool DnsStats::LoadPcapFile(char const * fileName)
             if (reader.tp_version == 17 &&
                 (reader.tp_port1 == 53 || reader.tp_port2 == 53))
             {
+                data_udp53 += reader.tp_length - 8;
+
                 if (reader.is_fragment)
                 {
                     nb_udp_dns_frag++;
                 }
                 else
                 {
+                    my_bpftimeval ts;
+
+                    ts.tv_sec = reader.frame_header.ts_sec;
+                    ts.tv_usec = reader.frame_header.ts_usec;
                     SubmitPacket(reader.buffer + reader.tp_offset + 8,
-                        reader.tp_length - 8, reader.ip_version, reader.buffer + reader.ip_offset);
+                        reader.tp_length - 8, reader.ip_version, reader.buffer + reader.ip_offset, ts);
                     nb_udp_dns++;
+
+                    if (target_number_dns_packets > 0 &&
+                        nb_udp_dns >= target_number_dns_packets) {
+                        /* Break when enough data captured */
+                        break;
+                    }
                 }
+            }
+            else if (reader.tp_version == 6) {
+                /* Do simple statistics on TCP traffic */
+                size_t header_length32 = reader.buffer[reader.tp_offset + 12] >> 4;
+                size_t tcp_payload = reader.tp_length - 4 * header_length32;
+                bool is_port_853 = false;
+                bool is_port_443 = false;
+
+                if (reader.tp_port1 == 53 || reader.tp_port2 == 53) {
+                    data_tcp53 += tcp_payload;
+                }
+                else if (reader.tp_port1 == 853 || reader.tp_port2 == 853) {
+                    data_tcp853 += tcp_payload;
+                    is_port_853 = true;
+                    is_capture_dns_only = false;
+                }
+                else if (reader.tp_port1 == 443 || reader.tp_port2 == 443) {
+                    data_tcp443 += tcp_payload;
+                    is_port_443 = true;
+                    is_capture_dns_only = false;
+                }
+                else {
+                    is_capture_dns_only = false;
+                }
+                if (is_port_443 || is_port_853) {
+                    uint8_t flags = reader.buffer[reader.tp_offset + 13] & 0x3F;
+                    if (flags == 0x02) {
+                        uint8_t * addr;
+                        size_t addr_length;
+                        GetSourceAddress(reader.ip_version, reader.buffer + reader.ip_offset,
+                            &addr, &addr_length);
+                        RegisterTcpSynByIp(addr, addr_length, is_port_853, is_port_443);
+                    }
+                }
+            }
+            else {
+                is_capture_dns_only = false;
             }
         }
     }
 
+    if (!is_capture_dns_only) {
+        /* Add the traffic load statistics to the summary, but only if the
+         * capture was not filtered to only catch DNS data */
+        SubmitRegistryNumberAndCount(REGISTRY_VOLUME_PER_PROTO, 0, data_udp53);
+        SubmitRegistryNumberAndCount(REGISTRY_VOLUME_PER_PROTO, 53, data_tcp53);
+        SubmitRegistryNumberAndCount(REGISTRY_VOLUME_PER_PROTO, 853, data_tcp853);
+        SubmitRegistryNumberAndCount(REGISTRY_VOLUME_PER_PROTO, 443, data_tcp443);
+    }
+
+    /* Export the duration at the end of the file */
+    if (t_start_sec != 0 && t_start_usec != 0) {
+        SubmitRegistryNumberAndCount(REGISTRY_CAPTURE_DURATION, 0, duration_usec);
+        t_start_sec = 0;
+        t_start_usec = 0;
+        duration_usec = 0;
+    }
     return ret;
 }
 
-void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header)
+void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header,
+    my_bpftimeval ts)
 {
     uint8_t * source_addr;
     size_t source_addr_length;
@@ -1414,12 +1494,13 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
     GetDestAddress(ip_type, ip_header, &dest_addr, &dest_addr_length);
 
     SubmitPacket(packet, length, source_addr, source_addr_length,
-        dest_addr, dest_addr_length);
+        dest_addr, dest_addr_length, ts);
 }
 
 void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     uint8_t * source_addr, size_t source_addr_length,
-    uint8_t * dest_addr, size_t dest_addr_length)
+    uint8_t * dest_addr, size_t dest_addr_length,
+    my_bpftimeval ts)
 {
     bool is_response = false;
 
@@ -1440,6 +1521,26 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     uint32_t first_query_index = 0;
     uint32_t first_answer_index = 0;
     uint32_t first_ns_index = 0;
+
+    if (t_start_sec == 0 && t_start_usec == 0) {
+        t_start_sec = ts.tv_sec;
+        t_start_usec = ts.tv_usec;
+    }
+    else {
+        int32_t delta_usec = ts.tv_usec - t_start_usec;
+        int64_t delta_t = ts.tv_sec - t_start_sec;
+        delta_t *= 1000000;
+        delta_t += delta_usec;
+
+        if (delta_t < 0) {
+            t_start_sec = ts.tv_sec;
+            t_start_usec = ts.tv_usec;
+            duration_usec -= delta_t;
+        }
+        else if (delta_t > duration_usec) {
+            duration_usec = delta_t;
+        }
+    }
 
 
     error_flags = 0;
@@ -1761,6 +1862,11 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
 bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
 {
     DnsHashEntry *entry;
+
+    /* Export the duration if not already done */
+    if (t_start_sec != 0 && t_start_usec != 0) {
+        SubmitRegistryNumberAndCount(REGISTRY_CAPTURE_DURATION, 0, duration_usec);
+    }
 
     /* Get the ordered list of leaked domain into the main hash */
     ExportLeakedDomains();
@@ -2307,7 +2413,8 @@ void DnsStats::ExportDnssecUsageByTable(BinHash<DnssecPrefixEntry>* dnssecTable,
 
 void DnsStats::RegisterStatsByIp(uint8_t * dest_addr, size_t dest_addr_length)
 {
-    StatsByIP x(dest_addr, dest_addr_length, is_do_flag_set, is_using_edns, is_qname_minimized);
+    StatsByIP x(dest_addr, dest_addr_length, is_do_flag_set, is_using_edns,
+        !is_qname_minimized);
     StatsByIP * y = statsByIp.Retrieve(&x);
 
     x.response_seen = true;
@@ -2361,6 +2468,35 @@ void DnsStats::RegisterOptionsByIp(uint8_t * source_addr, size_t source_addr_len
     }
 }
 
+void DnsStats::RegisterTcpSynByIp(uint8_t * source_addr,
+    size_t source_addr_length, bool tcp_port_583, bool tcp_port_443)
+{
+    if ((tcp_port_583 && tcp_port_443) || (!tcp_port_583 && !tcp_port_443)) {
+        return;
+    }
+
+    StatsByIP x(source_addr, source_addr_length, false, false, false);
+    StatsByIP * y = statsByIp.Retrieve(&x);
+
+    if (y == NULL) {
+        if (statsByIp.GetCount() < max_stats_by_ip_count) {
+            bool stored = false;
+
+            y = statsByIp.InsertOrAdd(&x, true, &stored);
+        }
+    }
+
+    if (y != NULL) {
+        if (tcp_port_443) {
+            y->nb_tcp_443++;
+        }
+
+        if (tcp_port_583) {
+            y->nb_tcp_583++;
+        }
+    }
+}
+
 void DnsStats::ExportStatsByIp()
 {
     StatsByIP *sbi;
@@ -2371,7 +2507,8 @@ void DnsStats::ExportStatsByIp()
     uint32_t qname_minimizing_count = 0;
     uint32_t not_minimizing_count = 0;
     uint32_t total_queries = 0;
-
+    uint32_t issued_syn_583 = 0;
+    uint32_t issued_syn_443 = 0;
 
     for (uint32_t i = 0; i < statsByIp.GetSize(); i++)
     {
@@ -2421,6 +2558,13 @@ void DnsStats::ExportStatsByIp()
 
     SubmitRegistryNumberAndCount(REGISTRY_EDNS_OPT_USAGE_REF, 0, total_queries);
 
+    if (!is_capture_dns_only) {
+        /* Only add these counts if using PCAP directly, not DNSCAP */
+        SubmitRegistryNumberAndCount(REGISTRY_TCPSYN_PER_PROTO, 0, statsByIp.GetSize());
+        SubmitRegistryNumberAndCount(REGISTRY_TCPSYN_PER_PROTO, 583, issued_syn_583);
+        SubmitRegistryNumberAndCount(REGISTRY_TCPSYN_PER_PROTO, 443, issued_syn_443);
+    }
+
     statsByIp.Clear();
 }
 
@@ -2429,12 +2573,17 @@ DnssecPrefixEntry::DnssecPrefixEntry() :
     hash(0),
     prefix(NULL),
     prefix_len(0),
-    is_dnssec(false)
+    is_dnssec(false),
+    prefix_data(NULL)
 {
 }
 
 DnssecPrefixEntry::~DnssecPrefixEntry()
 {
+    if (prefix_data != NULL) {
+        delete[] prefix_data;
+        prefix_data = NULL;
+    }
 }
 
 bool DnssecPrefixEntry::IsSameKey(DnssecPrefixEntry * key)
@@ -2470,7 +2619,11 @@ DnssecPrefixEntry * DnssecPrefixEntry::CreateCopy()
         key->is_dnssec = is_dnssec;
         key->prefix_len = prefix_len;
         if (prefix_len > 0) {
-            key->prefix = new uint8_t[prefix_len];
+            if (key->prefix_data != NULL) {
+                delete[] key->prefix_data;
+            }
+            key->prefix_data = new uint8_t[prefix_len];
+            key->prefix = key->prefix_data;
 
             if (key->prefix == NULL) {
                 delete key;

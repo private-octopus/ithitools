@@ -65,12 +65,12 @@ ithimetrics::~ithimetrics() {
         ithi_folder = NULL;
     }
 
-    if (abuse_file_name_tlds == NULL) {
+    if (abuse_file_name_tlds != NULL) {
         free(abuse_file_name_tlds);
         abuse_file_name_tlds = NULL;
     }
 
-    if (abuse_file_name_registrars == NULL) {
+    if (abuse_file_name_registrars != NULL) {
         free(abuse_file_name_registrars);
         abuse_file_name_registrars = NULL;
     }

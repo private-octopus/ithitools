@@ -119,8 +119,11 @@ bool capture_fuzz::LoadPcapFile(char const * fileName)
                     if (FuzzPacket(reader.buffer + reader.tp_offset + 8,
                         reader.tp_length - 8)) {
                         try {
+                            my_bpftimeval ts;
+                            ts.tv_sec = reader.frame_header.ts_sec;
+                            ts.tv_usec = reader.frame_header.ts_usec;
                             stats->SubmitPacket(reader.buffer + reader.tp_offset + 8,
-                                reader.tp_length - 8, reader.ip_version, reader.buffer + reader.ip_offset);
+                                reader.tp_length - 8, reader.ip_version, reader.buffer + reader.ip_offset, ts);
                         }
                         catch (...) {
                             /* Fuzz fails if the process throws an exception! */

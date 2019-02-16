@@ -76,6 +76,7 @@ static int usage()
     fprintf(stderr, "  -t tld-file.txt    Text file containing a list of registered TLD, one per line.\n");
     fprintf(stderr, "  -u tld-file.txt    Text file containing special usage TLD (RFC6761).\n");
     fprintf(stderr, "  -n number          Number of strings in the list of leaking domains(M4).\n");
+    fprintf(stderr, "  -N number          Number of packets to read from this capture.\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Options used in summary mode:\n");
     fprintf(stderr, "  -o file.csv        output file containing the computed summary.\n");
@@ -180,7 +181,7 @@ int main(int argc, char ** argv)
 
     /* Get the parameters */
     int opt;
-    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:V:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:O:P:D:hfcsmpTvW?")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:V:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:O:P:D:N:hfcsmpTvW?")) != -1)
     {
         switch (opt)
         {
@@ -242,6 +243,21 @@ int main(int argc, char ** argv)
         case 'M':
             metric_file = optarg;
             break;
+        case 'N':
+        {
+            int nb_packets;
+
+            if ((nb_packets = atoi(optarg)) <= 0)
+            {
+                fprintf(stderr, "Invalid number of packets: %s\n", optarg);
+                exit_code = usage();
+            }
+            else
+            {
+                stats.target_number_dns_packets = (uint32_t)nb_packets;
+            }
+            break;
+        }
         case 'f':
             stats.enable_frequent_address_filtering = true;
             break;
