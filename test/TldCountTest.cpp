@@ -348,16 +348,16 @@ bool TldCountTest::DoTest()
 {
     LruHash<TldAsKey> tldStringUsage;
     BinHash<DnsHashEntry> hashTable;
-    int count_per_string[nbTargetNames+1];
-    const int initial_count = 0x10000;
+    uint64_t count_per_string[nbTargetNames+1];
+    const uint64_t initial_count = 0x10000;
     const uint32_t max_hash_size = 0x8000;
     const int max_delta_count = 0x80;
     const uint32_t max_tld_leakage_count = 0x80;
-    int current_count = initial_count;
-    int total_keys = 0;
-    int dropped_keys = 0;
-    int kept_keys = 0;
-    int expected_count = 0;
+    uint64_t current_count = initial_count;
+    uint64_t total_keys = 0;
+    uint64_t dropped_keys = 0;
+    uint64_t kept_keys = 0;
+    uint64_t expected_count = 0;
     uint64_t hashed_count = 0;
     uint64_t hashed_total = 0;
     bool ret = true;
@@ -381,7 +381,7 @@ bool TldCountTest::DoTest()
     total_keys *= 4;
 
     /* Simulate random arrivals */
-    rand_table = new size_t[total_keys];
+    rand_table = new size_t[(size_t)total_keys];
 
     if (rand_table == NULL) {
         ret = false;
@@ -396,7 +396,7 @@ bool TldCountTest::DoTest()
         }
 
         /* Random shuffle of the list to simulate random arrivals */
-        for (int r = total_keys - 1; r >= 1; r--) {
+        for (uint64_t r = total_keys - 1; r >= 1; r--) {
             int x = random_uniform((uint32_t)(r + 1));
 
             if (x != r) {
@@ -521,14 +521,14 @@ bool TldCountTest::DoTest()
 
         if (!ret) {
             TEST_LOG("Tld count test, kept_keys + dropped_keys: %d + %d = %d != total: %d\n",
-                kept_keys, dropped_keys, kept_keys + dropped_keys, total_keys);
+                (int)kept_keys, (int)dropped_keys, (int)kept_keys + (int)dropped_keys, (int)total_keys);
         } else {
-            int delta_count = expected_count - kept_keys;
+            int64_t delta_count = expected_count - kept_keys;
 
             ret = (delta_count <= max_delta_count) && (-delta_count <= max_delta_count);
             if (!ret) {
                 TEST_LOG("Tld count test, expected_count: %d >> kept_keys: %d\n",
-                    expected_count, kept_keys);
+                    (int)expected_count, (int)kept_keys);
             }
         }
 
