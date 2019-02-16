@@ -387,7 +387,7 @@ bool TldCountTest::DoTest()
         ret = false;
         TEST_LOG("Tld count test, cannot allocate rand_table[%d]\n", total_keys);
     } else {
-        int table_rank = 0;
+        uint64_t table_rank = 0;
         /* Build a list of ID with desired size and repetition */
         for (size_t i = 0; i <= nbTargetNames; i++) {
             for (uint64_t c = 0; c < count_per_string[i] && table_rank < total_keys; c++) {
