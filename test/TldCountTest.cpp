@@ -390,14 +390,14 @@ bool TldCountTest::DoTest()
         int table_rank = 0;
         /* Build a list of ID with desired size and repetition */
         for (size_t i = 0; i <= nbTargetNames; i++) {
-            for (int c = 0; c < count_per_string[i] && table_rank < total_keys; c++) {
+            for (uint64_t c = 0; c < count_per_string[i] && table_rank < total_keys; c++) {
                 rand_table[table_rank++] = i;
             }
         }
 
         /* Random shuffle of the list to simulate random arrivals */
         for (uint64_t r = total_keys - 1; r >= 1; r--) {
-            int x = random_uniform((uint32_t)(r + 1));
+            uint32_t x = random_uniform((uint32_t)(r + 1));
 
             if (x != r) {
                 size_t rtx = rand_table[x];
@@ -407,7 +407,7 @@ bool TldCountTest::DoTest()
         }
 
         /* Simulate insertion */
-        for (int i = 0; i < total_keys; i++)
+        for (uint64_t i = 0; i < total_keys; i++)
         {
             bool stored = false;
             char rand_name[RANDOM_TLD_LENGTH + 1];
@@ -434,9 +434,9 @@ bool TldCountTest::DoTest()
                 }
             }
             inserted = tldStringUsage.InsertOrAdd(&key, true, &stored);
-            if (inserted != NULL && rand_table[i] > 0 && (int)inserted->count > count_per_string[rand_table[i]]) {
+            if (inserted != NULL && rand_table[i] > 0 && inserted->count > count_per_string[rand_table[i]]) {
                 TEST_LOG("TLD %s, count %d instead of %d\n",
-                    TargetNames[rand_table[i] - 1], inserted->count, count_per_string[rand_table[i]]);
+                    TargetNames[rand_table[i] - 1], (int)inserted->count, (int)count_per_string[rand_table[i]]);
             }
         }
 
@@ -457,10 +457,10 @@ bool TldCountTest::DoTest()
                     int tld_index = GetTldIndex(tld_entry->tld, tld_entry->tld_len);
                     if (tld_index >= 0) {
                         if (((uint32_t)tld_index) < max_tld_leakage_count &&
-                            count_per_string[tld_index + 1] != (int)tld_entry->count) {
+                            count_per_string[tld_index + 1] != tld_entry->count) {
                             TEST_LOG("TLD %s, count %d instead of %d\n",
-                                TargetNames[tld_index], tld_entry->count, count_per_string[tld_index + 1]);
-                            if ((int)tld_entry->count > count_per_string[tld_index + 1]) {
+                                TargetNames[tld_index], (int)tld_entry->count, (int)count_per_string[tld_index + 1]);
+                            if (tld_entry->count > count_per_string[tld_index + 1]) {
                                 ret = false;
                             }
                         }
@@ -497,13 +497,13 @@ bool TldCountTest::DoTest()
                     if (tld_index < 0) {
                         if (lines[i]->count > 1) {
                             TEST_LOG("rank %d, random name, length %d, count %d\n",
-                                i, lines[i]->tld_len, lines[i]->count);
+                                (int)i, lines[i]->tld_len, (int)lines[i]->count);
                         }
                     } else {
-                        if (count_per_string[tld_index + 1] != (int)lines[i]->count) {
+                        if (count_per_string[tld_index + 1] != lines[i]->count) {
                             TEST_LOG("rank %d, %s, count %d instead of %d\n",
-                                i, TargetNames[tld_index], lines[i]->count, count_per_string[tld_index + 1]);
-                            if ((int)lines[i]->count > count_per_string[tld_index + 1]) {
+                                (int)i, TargetNames[tld_index], (int)lines[i]->count, (int)count_per_string[tld_index + 1]);
+                            if (lines[i]->count > count_per_string[tld_index + 1]) {
                                 ret = false;
                             }
                         }
