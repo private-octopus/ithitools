@@ -179,6 +179,8 @@ public:
     uint8_t * prefix;
     size_t prefix_len;
     bool is_dnssec;
+private:
+    uint8_t * prefix_data;
 };
 
 

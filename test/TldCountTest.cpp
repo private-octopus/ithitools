@@ -563,6 +563,8 @@ bool TldCountTest::DoTest()
                 ret = false;
             }
         }
+
+        delete[] rand_table;
     }
     return ret;
 }

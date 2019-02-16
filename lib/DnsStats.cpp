@@ -2573,12 +2573,17 @@ DnssecPrefixEntry::DnssecPrefixEntry() :
     hash(0),
     prefix(NULL),
     prefix_len(0),
-    is_dnssec(false)
+    is_dnssec(false),
+    prefix_data(NULL)
 {
 }
 
 DnssecPrefixEntry::~DnssecPrefixEntry()
 {
+    if (prefix_data != NULL) {
+        delete[] prefix_data;
+        prefix_data = NULL;
+    }
 }
 
 bool DnssecPrefixEntry::IsSameKey(DnssecPrefixEntry * key)
@@ -2614,7 +2619,11 @@ DnssecPrefixEntry * DnssecPrefixEntry::CreateCopy()
         key->is_dnssec = is_dnssec;
         key->prefix_len = prefix_len;
         if (prefix_len > 0) {
-            key->prefix = new uint8_t[prefix_len];
+            if (key->prefix_data != NULL) {
+                delete[] key->prefix_data;
+            }
+            key->prefix_data = new uint8_t[prefix_len];
+            key->prefix = key->prefix_data;
 
             if (key->prefix == NULL) {
                 delete key;
