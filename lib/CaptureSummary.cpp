@@ -211,7 +211,7 @@ bool CaptureSummary::Load(char const * file_name)
         /* TODO: check that the parsing is good */
 
         /* Notice the version number */
-        if (strcmp(line.registry_name, DnsStats::GetTableName((uint32_t)REGISTRY_ITHITOOLS_VERSION)) == 0) {
+        if (strcmp(line.registry_name, DnsStats::GetTableName(REGISTRY_ITHITOOLS_VERSION)) == 0) {
             capture_version = (int) line.count;
         } else {
             /* allocate data and add to vector */

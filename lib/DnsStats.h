@@ -31,6 +31,7 @@
 #include "HashBinGeneric.h"
 #include "CaptureSummary.h"
 #include "TldAsKey.h"
+#include "dnscap_common.h"
 
 #ifndef UNREFERENCED_PARAMETER
 #define UNREFERENCED_PARAMETER(x) (void)(x)
@@ -88,6 +89,7 @@
 #define REGISTRY_EDNS_OPT_USAGE_REF 46
 #define REGISTRY_VOLUME_PER_PROTO 47
 #define REGISTRY_TCPSYN_PER_PROTO 48
+#define REGISTRY_CAPTURE_DURATION 49
 
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
@@ -129,7 +131,7 @@ public:
 
     uint32_t hash;
     uint32_t registry_id;
-    uint32_t count;
+    uint64_t count;
     uint32_t key_type;
     uint32_t key_length;
     union {
@@ -227,7 +229,8 @@ public:
     /* For the plug in */
     void SubmitPacket(uint8_t * packet, uint32_t length,
         uint8_t * source_addr, size_t source_addr_length,
-        uint8_t * dest_addr, size_t dest_addr_length);
+        uint8_t * dest_addr, size_t dest_addr_length,
+        my_bpftimeval ts);
 
     /* For the command line tools */
     bool LoadPcapFiles(size_t nb_files, char const ** fileNames);
@@ -238,6 +241,9 @@ public:
     
     bool is_capture_dns_only;
     bool is_capture_stopped;
+    uint32_t t_start_sec;
+    uint32_t t_start_usec;
+    int64_t duration_usec;
     bool enable_frequent_address_filtering;
     uint32_t target_number_dns_packets;
     uint32_t frequent_address_max_count;
@@ -262,7 +268,7 @@ public:
     static bool IsValidTldSyntax(uint8_t * tld, size_t length);
     static bool IsRfc6761Tld(uint8_t * tld, size_t length);
     static void SetToUpperCase(uint8_t * domain, size_t length);
-   static char const * GetTableName(uint32_t tableId);
+    static char const * GetTableName(uint32_t tableId);
     const char * GetZonePrefix(const char * dnsName);
 
     void RegisterDnssecUsageByName(uint8_t * packet, uint32_t length, uint32_t name_start,
@@ -286,7 +292,8 @@ public:
     static void GetSourceAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
     static void GetDestAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
 
-    void SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header);
+    void SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header,
+        my_bpftimeval ts);
 private:
     bool LoadPcapFile(char const * fileName);
 
@@ -301,9 +308,9 @@ private:
     void SubmitDSRecord(uint8_t * content, uint32_t length);
     void SubmitTLSARecord(uint8_t * content, uint32_t length);
 
-    void SubmitRegistryNumberAndCount(uint32_t registry_id, uint32_t number, uint32_t count);
+    void SubmitRegistryNumberAndCount(uint32_t registry_id, uint32_t number, uint64_t count);
     void SubmitRegistryNumber(uint32_t registry_id, uint32_t number);
-    void SubmitRegistryStringAndCount(uint32_t registry_id, uint32_t length, uint8_t * value, uint32_t count);
+    void SubmitRegistryStringAndCount(uint32_t registry_id, uint32_t length, uint8_t * value, uint64_t count);
     void SubmitRegistryString(uint32_t registry_id, uint32_t length, uint8_t * value);
 
     int CheckForUnderline(uint8_t * packet, uint32_t length, uint32_t start);

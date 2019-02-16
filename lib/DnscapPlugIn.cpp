@@ -345,6 +345,6 @@ extern "C"
         }
 
         libithicap_stats->SubmitPacket((uint8_t *)payload, payloadlen,
-            source_addr, source_addr_length, dest_addr, dest_addr_length);
+            source_addr, source_addr_length, dest_addr, dest_addr_length, ts);
     }
 }

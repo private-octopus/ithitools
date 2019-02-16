@@ -33,6 +33,9 @@ DnsStats::DnsStats()
     :
     is_capture_dns_only(true),
     is_capture_stopped(false),
+    t_start_sec(0),
+    t_start_usec(0),
+    duration_usec(0),
     enable_frequent_address_filtering(false),
     target_number_dns_packets(0),
     frequent_address_max_count(128),
@@ -133,7 +136,8 @@ static char const * RegistryNameById[] = {
     "EDNS_OPTIONS_USAGE",
     "EDNS_OPTIONS_TOTAL_QUERIES",
     "VOLUME_PER_PROTO",
-    "TCPSYN_PER_PROTO"
+    "TCPSYN_PER_PROTO",
+    "CAPTURE_DURATION"
 };
 
 static uint32_t RegistryNameByIdNb = sizeof(RegistryNameById) / sizeof(char const*);
@@ -647,7 +651,7 @@ void DnsStats::SubmitTLSARecord(uint8_t * content, uint32_t length)
     }
 }
 
-void DnsStats::SubmitRegistryNumberAndCount(uint32_t registry_id, uint32_t number, uint32_t count)
+void DnsStats::SubmitRegistryNumberAndCount(uint32_t registry_id, uint32_t number, uint64_t count)
 {
     DnsHashEntry key;
     bool stored = false;
@@ -666,7 +670,7 @@ void DnsStats::SubmitRegistryNumber(uint32_t registry_id, uint32_t number)
     SubmitRegistryNumberAndCount(registry_id, number, 1);
 }
 
-void DnsStats::SubmitRegistryStringAndCount(uint32_t registry_id, uint32_t length, uint8_t * value, uint32_t count)
+void DnsStats::SubmitRegistryStringAndCount(uint32_t registry_id, uint32_t length, uint8_t * value, uint64_t count)
 {
     DnsHashEntry key;
     bool stored = false;
@@ -1404,8 +1408,12 @@ bool DnsStats::LoadPcapFile(char const * fileName)
                 }
                 else
                 {
+                    my_bpftimeval ts;
+
+                    ts.tv_sec = reader.frame_header.ts_sec;
+                    ts.tv_usec = reader.frame_header.ts_usec;
                     SubmitPacket(reader.buffer + reader.tp_offset + 8,
-                        reader.tp_length - 8, reader.ip_version, reader.buffer + reader.ip_offset);
+                        reader.tp_length - 8, reader.ip_version, reader.buffer + reader.ip_offset, ts);
                     nb_udp_dns++;
 
                     if (target_number_dns_packets > 0 &&
@@ -1464,10 +1472,18 @@ bool DnsStats::LoadPcapFile(char const * fileName)
         SubmitRegistryNumberAndCount(REGISTRY_VOLUME_PER_PROTO, 443, data_tcp443);
     }
 
+    /* Export the duration at the end of the file */
+    if (t_start_sec != 0 && t_start_usec != 0) {
+        SubmitRegistryNumberAndCount(REGISTRY_CAPTURE_DURATION, 0, duration_usec);
+        t_start_sec = 0;
+        t_start_usec = 0;
+        duration_usec = 0;
+    }
     return ret;
 }
 
-void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header)
+void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header,
+    my_bpftimeval ts)
 {
     uint8_t * source_addr;
     size_t source_addr_length;
@@ -1478,12 +1494,13 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
     GetDestAddress(ip_type, ip_header, &dest_addr, &dest_addr_length);
 
     SubmitPacket(packet, length, source_addr, source_addr_length,
-        dest_addr, dest_addr_length);
+        dest_addr, dest_addr_length, ts);
 }
 
 void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     uint8_t * source_addr, size_t source_addr_length,
-    uint8_t * dest_addr, size_t dest_addr_length)
+    uint8_t * dest_addr, size_t dest_addr_length,
+    my_bpftimeval ts)
 {
     bool is_response = false;
 
@@ -1504,6 +1521,26 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     uint32_t first_query_index = 0;
     uint32_t first_answer_index = 0;
     uint32_t first_ns_index = 0;
+
+    if (t_start_sec == 0 && t_start_usec == 0) {
+        t_start_sec = ts.tv_sec;
+        t_start_usec = ts.tv_usec;
+    }
+    else {
+        int32_t delta_usec = ts.tv_usec - t_start_usec;
+        int64_t delta_t = ts.tv_sec - t_start_sec;
+        delta_t *= 1000000;
+        delta_t += delta_usec;
+
+        if (delta_t < 0) {
+            t_start_sec = ts.tv_sec;
+            t_start_usec = ts.tv_usec;
+            duration_usec -= delta_t;
+        }
+        else if (delta_t > duration_usec) {
+            duration_usec = delta_t;
+        }
+    }
 
 
     error_flags = 0;
@@ -1825,6 +1862,11 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
 bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
 {
     DnsHashEntry *entry;
+
+    /* Export the duration if not already done */
+    if (t_start_sec != 0 && t_start_usec != 0) {
+        SubmitRegistryNumberAndCount(REGISTRY_CAPTURE_DURATION, 0, duration_usec);
+    }
 
     /* Get the ordered list of leaked domain into the main hash */
     ExportLeakedDomains();

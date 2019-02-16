@@ -358,8 +358,8 @@ bool TldCountTest::DoTest()
     int dropped_keys = 0;
     int kept_keys = 0;
     int expected_count = 0;
-    int hashed_count = 0;
-    int hashed_total = 0;
+    uint64_t hashed_count = 0;
+    uint64_t hashed_total = 0;
     bool ret = true;
     size_t * rand_table = NULL;
 
