@@ -1470,15 +1470,17 @@ bool DnsStats::LoadPcapFile(char const * fileName)
         SubmitRegistryNumberAndCount(REGISTRY_VOLUME_PER_PROTO, 53, data_tcp53);
         SubmitRegistryNumberAndCount(REGISTRY_VOLUME_PER_PROTO, 853, data_tcp853);
         SubmitRegistryNumberAndCount(REGISTRY_VOLUME_PER_PROTO, 443, data_tcp443);
+
+
+        /* Export the duration at the end of the file */
+        if (t_start_sec != 0 && t_start_usec != 0) {
+            SubmitRegistryNumberAndCount(REGISTRY_CAPTURE_DURATION, 0, duration_usec);
+            t_start_sec = 0;
+            t_start_usec = 0;
+            duration_usec = 0;
+        }
     }
 
-    /* Export the duration at the end of the file */
-    if (t_start_sec != 0 && t_start_usec != 0) {
-        SubmitRegistryNumberAndCount(REGISTRY_CAPTURE_DURATION, 0, duration_usec);
-        t_start_sec = 0;
-        t_start_usec = 0;
-        duration_usec = 0;
-    }
     return ret;
 }
 
