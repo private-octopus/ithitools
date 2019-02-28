@@ -36,6 +36,7 @@ DnsStats::DnsStats()
     t_start_sec(0),
     t_start_usec(0),
     duration_usec(0),
+    volume_53only(0),
     enable_frequent_address_filtering(false),
     target_number_dns_packets(0),
     frequent_address_max_count(128),
@@ -137,7 +138,9 @@ static char const * RegistryNameById[] = {
     "EDNS_OPTIONS_TOTAL_QUERIES",
     "VOLUME_PER_PROTO",
     "TCPSYN_PER_PROTO",
-    "CAPTURE_DURATION"
+    "CAPTURE_DURATION",
+    "VOLUME_53ONLY",
+    "CAPTURE_DURATION53"
 };
 
 static uint32_t RegistryNameByIdNb = sizeof(RegistryNameById) / sizeof(char const*);
@@ -145,7 +148,7 @@ static uint32_t RegistryNameByIdNb = sizeof(RegistryNameById) / sizeof(char cons
 static char const * RegisteredTldName[] = {
     "AAA", "AARP", "ABARTH", "ABB", "ABBOTT", "ABBVIE", "ABC", "ABLE", "ABOGADO",
     "ABUDHABI", "AC", "ACADEMY", "ACCENTURE", "ACCOUNTANT", "ACCOUNTANTS", "ACO",
-    "ACTIVE", "ACTOR", "AD", "ADAC", "ADS", "ADULT", "AE", "AEG", "AERO", "AETNA",
+    "ACTOR", "AD", "ADAC", "ADS", "ADULT", "AE", "AEG", "AERO", "AETNA",
     "AF", "AFAMILYCOMPANY", "AFL", "AFRICA", "AG", "AGAKHAN", "AGENCY", "AI",
     "AIG", "AIGO", "AIRBUS", "AIRFORCE", "AIRTEL", "AKDN", "AL", "ALFAROMEO",
     "ALIBABA", "ALIPAY", "ALLFINANZ", "ALLSTATE", "ALLY", "ALSACE", "ALSTOM", "AM",
@@ -1463,22 +1466,21 @@ bool DnsStats::LoadPcapFile(char const * fileName)
         }
     }
 
-    if (!is_capture_dns_only) {
+    if (!is_capture_dns_only && t_start_sec != 0 && t_start_usec != 0) {
         /* Add the traffic load statistics to the summary, but only if the
          * capture was not filtered to only catch DNS data */
         SubmitRegistryNumberAndCount(REGISTRY_VOLUME_PER_PROTO, 0, data_udp53);
         SubmitRegistryNumberAndCount(REGISTRY_VOLUME_PER_PROTO, 53, data_tcp53);
         SubmitRegistryNumberAndCount(REGISTRY_VOLUME_PER_PROTO, 853, data_tcp853);
         SubmitRegistryNumberAndCount(REGISTRY_VOLUME_PER_PROTO, 443, data_tcp443);
-    }
 
-    /* Export the duration at the end of the file */
-    if (t_start_sec != 0 && t_start_usec != 0) {
+
+        /* Export the duration at the end of the file */
         SubmitRegistryNumberAndCount(REGISTRY_CAPTURE_DURATION, 0, duration_usec);
-        t_start_sec = 0;
-        t_start_usec = 0;
-        duration_usec = 0;
     }
+    /* Account for TCP in the total port 53 traffic */
+    SubmitRegistryNumberAndCount(REGISTRY_VOLUME_53ONLY, 0, data_tcp53);
+
     return ret;
 }
 
@@ -1541,6 +1543,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
             duration_usec = delta_t;
         }
     }
+    volume_53only += length;
 
 
     error_flags = 0;
@@ -1865,7 +1868,8 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
 
     /* Export the duration if not already done */
     if (t_start_sec != 0 && t_start_usec != 0) {
-        SubmitRegistryNumberAndCount(REGISTRY_CAPTURE_DURATION, 0, duration_usec);
+        SubmitRegistryNumberAndCount(REGISTRY_VOLUME_53ONLY, 0, volume_53only);
+        SubmitRegistryNumberAndCount(REGISTRY_CAPTURE_DURATION53, 0, duration_usec);
     }
 
     /* Get the ordered list of leaked domain into the main hash */
@@ -2477,24 +2481,25 @@ void DnsStats::RegisterTcpSynByIp(uint8_t * source_addr,
 
     StatsByIP x(source_addr, source_addr_length, false, false, false);
     StatsByIP * y = statsByIp.Retrieve(&x);
+    if (tcp_port_443) {
+        x.nb_tcp_443++;
+    }
+
+    if (tcp_port_583) {
+        x.nb_tcp_583++;
+    }
 
     if (y == NULL) {
         if (statsByIp.GetCount() < max_stats_by_ip_count) {
             bool stored = false;
 
-            y = statsByIp.InsertOrAdd(&x, true, &stored);
+            (void)statsByIp.InsertOrAdd(&x, true, &stored);
         }
     }
-
-    if (y != NULL) {
-        if (tcp_port_443) {
-            y->nb_tcp_443++;
-        }
-
-        if (tcp_port_583) {
-            y->nb_tcp_583++;
-        }
+    else {
+        y->Add(&x);
     }
+
 }
 
 void DnsStats::ExportStatsByIp()
@@ -2541,6 +2546,14 @@ void DnsStats::ExportStatsByIp()
                 else {
                     not_minimizing_count++;
                 }
+            }
+
+            if (sbi->nb_tcp_443 > 0) {
+                issued_syn_443++;
+            }
+
+            if (sbi->nb_tcp_583 > 0) {
+                issued_syn_583++;
             }
 
             sbi = sbi->HashNext;
