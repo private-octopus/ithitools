@@ -90,6 +90,8 @@
 #define REGISTRY_VOLUME_PER_PROTO 47
 #define REGISTRY_TCPSYN_PER_PROTO 48
 #define REGISTRY_CAPTURE_DURATION 49
+#define REGISTRY_VOLUME_53ONLY 50
+#define REGISTRY_CAPTURE_DURATION53 51
 
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
@@ -246,6 +248,7 @@ public:
     uint32_t t_start_sec;
     uint32_t t_start_usec;
     int64_t duration_usec;
+    uint64_t volume_53only;
     bool enable_frequent_address_filtering;
     uint32_t target_number_dns_packets;
     uint32_t frequent_address_max_count;
