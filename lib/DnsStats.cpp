@@ -2493,7 +2493,7 @@ void DnsStats::RegisterTcpSynByIp(uint8_t * source_addr,
         if (statsByIp.GetCount() < max_stats_by_ip_count) {
             bool stored = false;
 
-            y = statsByIp.InsertOrAdd(&x, true, &stored);
+            (void)statsByIp.InsertOrAdd(&x, true, &stored);
         }
     }
     else {
