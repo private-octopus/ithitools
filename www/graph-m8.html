@@ -41,8 +41,9 @@
         fillValueAverageMinMax(pilot, M8Data.M81, format);
 
         var resolverMetricNames = ["M8.2", "M8.3", "M8.4"];
+        var metricHelpNames = ["about-m8.html", "about-m8.html", "about-m8.html"];
 
-        fillEdnsDoQname(resolverMetricNames, M8Data.M82, M8Data.M83, M8Data.M84, M8Data);
+        fillEdnsDoQname(resolverMetricNames, metricHelpNames, M8Data.M82, M8Data.M83, M8Data.M84, M8Data);
     }
 
 </script>
@@ -80,6 +81,7 @@
         <tr>
             <td>
                 M8.1: % NX Domain Queries at Authoritative
+                <a href="about-m8.html">(?)</a>
             </td>
             <td class="number" id="valM81">
                 -

@@ -54,6 +54,7 @@ frequently leaked to the root, and we consider the other names as "local". In th
 we tabulate all frequently leaked global names individually, but we group all local names
 under a single category, "local host names".
 </p>
+<h3 id="M45">M4.5, DNSSEC Usage by Stub resolvers</h3>
 <p>
 In addition to measuring name leakage, we also measure DNSSEC deployment with 1 metric:
 </p>
@@ -68,16 +69,6 @@ will not just contain queries sent by the clients, but also queries sent by the
 recursive resolver itself. However, the number of IP addresses used
 by clients vastly exceeds the number of addresses used by the resolver, and we
 can ignore this error.
-</p>
-<p>
-To compute the metric 4.6, we find the zone associated with queries using the
-open source <a href="https://github.com/publicsuffix/list">Public Suffix List</a> maintained
-on GitHub by the <a href="https://publicsuffix.org/">Public Suffix project</a>.
-We then look at the subset of queries in which the DO bit was set. If the response
-included a DNSSEC records such as DNSKEY, RRSIG, NSEC, NSEC3, or DS, we conclude
-that the corresponding zone is supporting DNSSEC. In constrast, if we find queries
-in which the DO bit is set but never receive any DNSSEC response, we assume
-that the zone is probably not supporting DNSSEC.
 </p>
 <p>
 The current values of the metrics is available <a href="graph-m4.html">here</a>.
