@@ -414,7 +414,7 @@ function fillMetricTableNew(tableName, tableId, dataSet, MData) {
     tableElem.innerHTML = tableText;
 }
 
-function fillEdnsDoQname(rowNames, vEdns, vDo, vQname, MData) {
+function fillEdnsDoQname(rowNames, helpNames, vEdns, vDo, vQname, MData) {
     var i = 0;
     var tableElem = document.getElementById("tableEdnsDoQname");
     var tableText = "<table  class=\"metrics\">";
@@ -443,7 +443,7 @@ function fillEdnsDoQname(rowNames, vEdns, vDo, vQname, MData) {
     vMin = getMinElementSkip0(vEdns1);
     vMax = getMaxElement(vEdns1);
 
-    tableText += "<tr><td>" + rowNames[0] + ".1</td><td>%resolvers using Extended DNS (EDNS) </td>";
+    tableText += "<tr><td>" + rowNames[0] + ".1 <a href=\"" + helpNames[0] + "\">(?)</a></td><td>%resolvers using Extended DNS (EDNS) </td>";
     tableText += "<td class=\"number\">" + current.toFixed(3) + "%</td>";
     tableText += "<td class=\"number\">" + average.toFixed(3) + "%</td>\n";
     tableText += "<td class=\"number\">" + vMin.toFixed(3) + "%</td>";
@@ -451,7 +451,7 @@ function fillEdnsDoQname(rowNames, vEdns, vDo, vQname, MData) {
 
     // Set the per option rows 
     if (vEdns2.length > 0) {
-        tableText += "<tr><td rowspan=" + vEdns2.length + ">" + rowNames[0] + ".2</td>";
+        tableText += "<tr><td rowspan=" + vEdns2.length + ">" + rowNames[0] + ".2 <a href=\"" + helpNames[0] + "\">(?)</a></td>";
 
         for (i = 0; i < vEdns2.length; i++) {
             var j = 0;
@@ -481,7 +481,7 @@ function fillEdnsDoQname(rowNames, vEdns, vDo, vQname, MData) {
     vMin = getMinElementSkip0(vDo);
     vMax = getMaxElement(vDo);
 
-    tableText += "<tr><td>" + rowNames[1] + "</td><td>%resolvers setting DNSSEC OK (DO) flag </td>";
+    tableText += "<tr><td>" + rowNames[1] + "<a href=\"" + helpNames[1] + "\">(?)</a></td><td>%resolvers setting DNSSEC OK (DO) flag </td>";
     tableText += "<td class=\"number\">" + current.toFixed(3) + "%</td>";
     tableText += "<td class=\"number\">" + average.toFixed(3) + "%</td>\n";
     tableText += "<td class=\"number\">" + vMin.toFixed(3) + "%</td>";
@@ -493,7 +493,7 @@ function fillEdnsDoQname(rowNames, vEdns, vDo, vQname, MData) {
     vMin = getMinElementSkip0(vQname);
     vMax = getMaxElement(vQname);
 
-    tableText += "<tr><td>" + rowNames[2] + "</td><td>%resolvers using QName minimization </td>";
+    tableText += "<tr><td>" + rowNames[2] + "<a href=\"" + helpNames[2] + "\">(?)</a></td><td>%resolvers using QName minimization </td>";
     tableText += "<td class=\"number\">" + current.toFixed(3) + "%</td>";
     tableText += "<td class=\"number\">" + average.toFixed(3) + "%</td>\n";
     tableText += "<td class=\"number\">" + vMin.toFixed(3) + "%</td>";

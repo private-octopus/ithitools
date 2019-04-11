@@ -103,8 +103,9 @@
 
         // Add the EDNs metrics, etc.
         var resolverMetricNames = ["M3.4", "M3.5", "M3.6"];
+        var metricHelpNames = ["about-m3.html#M3Res", "about-m3.html#M3Res", "about-m3.html#M3Res"];
 
-        fillEdnsDoQname(resolverMetricNames, M3Data.M34, M3Data.M35, M3Data.M36, M3Data);
+        fillEdnsDoQname(resolverMetricNames, metricHelpNames, M3Data.M34, M3Data.M35, M3Data.M36, M3Data);
     }
     
 </script>
@@ -155,6 +156,7 @@
             </td>
             <td>
                 M3.1 (% No Such Domain queries)
+                <a href="about-m3.html">(?)</a>
             </td>
             <td class="number" id="valM31">
                 -
@@ -175,6 +177,7 @@
             </td>
             <td>
                 M3.2 (% cacheable queries)
+                <a href="about-m3.html">(?)</a>
             </td>
             <td class="number" id="valM32">
                 -
@@ -195,6 +198,7 @@
             </td>
             <td>
                 Core (100% - M3.1 - M3.2)
+                <a href="about-m3.html">(?)</a>
             </td>
             <td class="number" id="valM3Zero">
                 -
@@ -248,6 +252,7 @@
             </td>
             <td>
                 <a href="#M331">M3.3.1 (% Queries to RFC 6761 reserved names)</a>
+                <a href="about-m3.html">(?)</a>
             </td>
             <td class="number" id="valM331">
                 <b>-</b>
@@ -268,6 +273,7 @@
             </td>
             <td>
                 <a href="#M332">M3.3.2 (% Queries to frequently leaked strings)</a>
+                <a href="about-m3.html">(?)</a>
             </td>
             <td class="number" id="valM332">
                 <b>-</b>
@@ -288,6 +294,7 @@
             </td>
             <td>
                 <a href="#M333">M3.3.3 (% Queries to frequently found name patterns)</a>
+                <a href="about-m3.html">(?)</a>
             </td>
             <td class="number" id="valM333">
                 <b>-</b>
@@ -329,7 +336,10 @@
         encountered as part of M3.3.1, M3.3.2, and M3.3.3.
     </p>
 
-    <h3 id="M331">Queries to RFC 6761 reserved names</h3>
+    <h3 id="M331">
+        Queries to RFC 6761 reserved names
+        <a href="about-m3.html">(?)</a>
+    </h3>
     <p>
         In the following table, the <em>current value</em> is the fraction of queries to the root
         directed at RFC 6761 names in the current month.
@@ -338,7 +348,10 @@
     </p>
     <div id="m331Table">Table M331 not found</div>
 
-    <h3 id="M332">Queries to frequently leaked strings</h3>
+    <h3 id="M332">
+        Queries to frequently leaked strings
+        <a href="about-m3.html">(?)</a>
+    </h3>
     <p>
         In the following table, the <em>current value</em> is the fraction of queries to the root
         directed at frequently used strings in the current month.
@@ -347,7 +360,10 @@
     </p>
     <div id="m332Table">Table M332 not found</div>
 
-    <h3 id="M333">Queries to frequently found name patterns</h3>
+    <h3 id="M333">
+        Queries to frequently found name patterns
+        <a href="about-m3.html">(?)</a>
+    </h3>
     <p>
         In the following table, the <em>current value</em> is the fraction of queries to the root
         following a specific name pattern in the current month.
@@ -360,7 +376,7 @@
 <p>
 Additional metrics characterize the options found in queries sent to the root, such as whether resolvers use extended DNS (M3.4.1),
 what EDNS options they use (M3.4.2), whether they set the DNSSEC OK bit in queries (M3.5), and whether they appear to
-enforce QName Minimization (M3.6):
+enforce QName Minimization (M3.6)
 </p>
 
 <div id="tableEdnsDoQname">
