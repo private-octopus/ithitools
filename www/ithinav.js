@@ -61,6 +61,7 @@ function initnavL1(level) {
         '<a href="' + levelString + 'about-m6.html">About M6</a>' +
         '<a href="' + levelString + 'about-m7.html">About M7</a>' +
         '<a href="' + levelString + 'about-m8.html">About M8</a>' +
+        '<a href="https://ithi.research.icann.org/cgi-bin/awstats.pl?config=ithi.research.icann.org">Analytics</a>' +
         '</div>' +
         '</div>' +
 
