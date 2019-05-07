@@ -33,7 +33,7 @@ class partner_summary:
                 json_file.write(",\n")
             m0= self.state[i]&1
             m1 = (self.state[i]>>1)&1
-            json_file.write("[" + self.key_list[i] + "," + str(m0) + "," +  str(m1) + "]")
+            json_file.write("[\"" + self.key_list[i] + "\"," + str(m0) + "," +  str(m1) + "]")
             i+=1
         json_file.write("]\n")
         json_file.write("}\n")
