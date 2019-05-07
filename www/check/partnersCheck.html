@@ -1,0 +1,74 @@
+<html>
+<head>
+<title>Parners Only Data</title>
+
+<link rel="stylesheet" type="text/css" href="../ithistyle.css">
+
+<script src="../ithinav.js"></script>
+<script src="../ithigraph.js"></script>
+    
+<script type="text/javascript">
+    var CheckData;
+
+    function init() {
+        initnavL1(1);
+        loadDoc();
+    }
+
+    function loadDoc() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                CheckData = JSON.parse(this.responseText);
+                draw_page();
+            }
+        };
+        xhttp.open("GET", "partnercheck.txt", true);
+        xhttp.send();
+    }
+
+    function draw_page() {
+        // Set the text values that depend on the current data
+        setDateElement(CheckData.date);
+
+        fillPartnerCheckTable("checkTable", CheckData.partners);
+    }
+
+    function fillPartnerCheckTable(tableId, dataSet) {
+        var i = 0;
+
+        var tableElem = document.getElementById(tableId);
+        var tableText = "<table><tr><th> Partner </th><th>This month</th><th>Previous month</th></tr>\n";
+
+        for (i = 0; i < dataSet.length; i++) {
+            var j = 0;
+            var lineSet = dataSet[i];
+
+            tableText += "<tr><td>" + lineSet[0] + "</td>";
+
+            for (j = 1; j < 3 && j < lineSet.length; j++) {
+                if (lineSet[j] != 0) {
+                    tableText += "<td> OK </td>";
+                } else {
+                    tableText += "<td> Missing </td>";
+                }
+            }
+            tableText += "</tr>\n";
+        }
+        tableText += "</table>\n";
+
+        tableElem.innerHTML = tableText;
+    }
+</script>
+</head>
+
+<body onLoad="init()">
+    <nav id="navMenu"></nav>
+
+    <h1>Status of parners</h1>
+
+    <h2 id="dateHeading"> - </h2>
+
+    <div id="checkTable">Partner status table not found</div>
+</body>
+</html>
