@@ -19,10 +19,13 @@ class partner_summary:
                 self.state[i] |= key
             i += 1;
 
-    def save_as_json(self, f_name):
+    def save_as_json(self, f_name, year, month):
         "Save the summary as a CSV file"
         json_file = open(f_name, "w")
         json_file.write("{\n")
+        json_file.write("date= \"" + str(year) + "-" + format(month, "02d") + "\",\n")
+        json_file.write("year= " + str(year) + ",\n")
+        json_file.write("month= " + str(month) + ",\n")
         json_file.write("partners = [\n")
         i = 0
         while (i < len(self.key_list)):
@@ -73,7 +76,6 @@ for (dirpath, dirnames, filenames) in walk(mypath):
 i = 0
 while (i < len(metric_dirs)):
     m_dir = ithi + "/" + metric_dirs[i]
-    print (m_dir)
     for (dirpath, dirnames,filenames) in walk(m_dir):
         for file_name in filenames :
             z = 0
@@ -88,4 +90,4 @@ while (i < len(metric_dirs)):
                     summary.check_file(file_name, 2)
     i+=1
 
-summary.save_as_json(sys.argv[3])
+summary.save_as_json(sys.argv[3], current.year, current.month)
