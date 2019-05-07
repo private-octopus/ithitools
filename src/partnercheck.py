@@ -24,7 +24,7 @@ class partner_summary:
         json_file = open(f_name, "w")
         json_file.write("{\n")
         json_file.write("date : \"" + str(year) + "-" + format(month, "02d") + "\",\n")
-        json_file.write("year : \"" + str(year) + ",\n")
+        json_file.write("year : " + str(year) + ",\n")
         json_file.write("month : " + str(month) + ",\n")
         json_file.write("partners : [\n")
         i = 0
