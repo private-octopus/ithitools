@@ -46,6 +46,7 @@ function initnavL1(level) {
         '<a href="' + levelString + 'twnic/graph-m8.html">M8: Authoritative Server Analysis for TWNIC</a>' +
         '<a href="' + levelString + 'twnic/graph-m6.html">M6: DNS Parameters at TWNIC</a>' +
         '<a href="' + levelString + 'upload/upload.html">Upload file to ITHI</a>' +
+        '<a href="' + levelString + 'check/partnersCheck.html">Check Partner Status</a>' +
         '</div>' +
         '</div>' +
 
