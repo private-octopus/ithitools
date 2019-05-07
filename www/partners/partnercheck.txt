@@ -1,8 +1,8 @@
 {
-date : "2019-05",
-year : 2019,
-month : 5,
-partners : [
+"date" : "2019-05",
+"year" : 2019,
+"month" : 5,
+"partners" : [
 ["M1",0,1],
 ["M2",0,0],
 ["m3",1,1],

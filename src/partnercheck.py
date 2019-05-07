@@ -23,10 +23,10 @@ class partner_summary:
         "Save the summary as a CSV file"
         json_file = open(f_name, "w")
         json_file.write("{\n")
-        json_file.write("date : \"" + str(year) + "-" + format(month, "02d") + "\",\n")
-        json_file.write("year : " + str(year) + ",\n")
-        json_file.write("month : " + str(month) + ",\n")
-        json_file.write("partners : [\n")
+        json_file.write("\"date\" : \"" + str(year) + "-" + format(month, "02d") + "\",\n")
+        json_file.write("\"year\" : " + str(year) + ",\n")
+        json_file.write("\"month\" : " + str(month) + ",\n")
+        json_file.write("\"partners\" : [\n")
         i = 0
         while (i < len(self.key_list)):
             if(i  > 0):
