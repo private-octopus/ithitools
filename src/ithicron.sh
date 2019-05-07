@@ -114,6 +114,6 @@ echo "Computing the pages of partners"
 ./ithitools/src/ithi-m8-partner.sh kaznic
 ./ithitools/src/ithi-m8-partner.sh twnic
 
-python ithitools/src/partnercheck.py /home/ubuntu /home/ubuntu/ithi /var/www/html/checks/partnercheck.txt
+python ithitools/src/partnercheck.py /home/ubuntu /home/ubuntu/ithi /var/www/html/check/partnercheck.txt
 
 
