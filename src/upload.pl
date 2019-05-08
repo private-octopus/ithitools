@@ -3,7 +3,7 @@ use CGI;
 $user = $ENV{"REMOTE_USER"};
 if ($user eq "whois") {
 $upload_dir = "/home/ubuntu/upload/m1/";
-} else if ($user eq "daar") {
+} elsif ($user eq "daar") {
 $upload_dir = "/home/ubuntu/upload/m2/";
 } else {
 $upload_dir = "/home/ubuntu/upload/tmp/";
@@ -28,7 +28,7 @@ print <<END_HTML;
 <TITLE>Thanks!</TITLE>
 </HEAD>
 <BODY>
-<P>Thanks for uploading $filename</P>
+<P>Thanks for uploading $filename to $upload_dir</P>
 </BODY>
 </HTML>
 END_HTML
