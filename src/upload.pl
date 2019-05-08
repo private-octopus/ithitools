@@ -3,6 +3,8 @@ use CGI;
 $user = $ENV{"REMOTE_USER"};
 if ($user eq "whois") {
 $upload_dir = "/home/ubuntu/upload/m1/";
+} else if ($user eq "daar") {
+$upload_dir = "/home/ubuntu/upload/m2/";
 } else {
 $upload_dir = "/home/ubuntu/upload/tmp/";
 }
