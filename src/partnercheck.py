@@ -8,8 +8,8 @@ from datetime import timedelta
 
 class partner_summary:
     def __init__(self):
-        self.key_list = ["M1", "M2", "m3", "nawala", "unlp", "uccgh", "kaznic", "twnic", "tlsa"]
-        self.state = [ 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.key_list = ["M1", "M2", "m3", "M5", "nawala", "unlp", "uccgh", "kaznic", "twnic", "tlsa"]
+        self.state = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
     def check_file(self, file_name, key):
         "check whether name in file matches partner and remember key"
@@ -51,8 +51,7 @@ before = datetime.date(previous.year, previous.month, 1) - timedelta(days=1)
 current_month = str(current.year) + "-" + format(current.month, "02d")
 previous_month = str(previous.year) + "-" + format(previous.month, "02d")
 before_month = str(before.year) + "-" + format(before.month, "02d")
-print(current_month)
-print(previous_month)
+
 tlsa1 = "tlsa-data-" + current_month + ".csv"
 tlsa2 = "tlsa-data-" + previous_month + ".csv"
 
@@ -89,5 +88,19 @@ while (i < len(metric_dirs)):
                 if (file_name.find(before_month) != -1):
                     summary.check_file(file_name, 2)
     i+=1
+
+m_dir = ithi + "/M5" 
+for (dirpath, dirnames,filenames) in walk(m_dir):
+    for file_name in filenames :
+        z = 0
+        try :
+            z = os.path.getsize(os.path.join(dirpath, file_name))
+        except(OSError, IOError):
+            z = 0
+        if (z > 0):
+            if(file_name.find(current_month) != -1):
+                summary.check_file(file_name, 1)
+            if (file_name.find(previous_month) != -1):
+                summary.check_file(file_name, 2)
 
 summary.save_as_json(sys.argv[3], current.year, current.month)
