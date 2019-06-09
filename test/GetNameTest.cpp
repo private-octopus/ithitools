@@ -193,40 +193,18 @@ void GetNameTest::SubmitPacket(uint8_t * packet, uint32_t length)
     arcount = (packet[10] << 8) | packet[11];
 
     if (gotTld) {
-#if 1
         char text[256];
         uint32_t flags;
-        size_t text_length;
+
         if (previous_offset != 0) {
-            text_length = DnsStats::NormalizeNamePart(packet[previous_offset],
+            (void) DnsStats::NormalizeNamePart(packet[previous_offset],
                 &packet[previous_offset + 1], (uint8_t *)text, sizeof(text), &flags);
             fprintf(test_out, "%s.", text);
         }
-        text_length = DnsStats::NormalizeNamePart(packet[tld_offset],
+        (void) DnsStats::NormalizeNamePart(packet[tld_offset],
             &packet[tld_offset + 1], (uint8_t *)text, sizeof(text), &flags);
         fprintf(test_out, "%s", text);
-#else
-        if (previous_offset != 0) {
-            for (uint8_t i = 1; i <= packet[previous_offset]; i++) {
-                uint8_t c = packet[previous_offset + i];
-                if (c > ' ' && c < 127) {
-                    fprintf(test_out, "%c", (char)c);
-                }
-                else {
-                    fprintf(test_out, "\\x%02x", c);
-                }
-            }
-        }
-        for (uint8_t i = 1; i <= packet[tld_offset]; i++) {
-            uint8_t c = packet[tld_offset + i];
-            if (c > ' ' && c < 127) {
-                fprintf(test_out, "%c", (char)c);
-            }
-            else {
-                fprintf(test_out, "\\x%02x", c);
-            }
-        }
-#endif
+
         fprintf(test_out, " %d\n", nb_name_parts);
     }
     else {
