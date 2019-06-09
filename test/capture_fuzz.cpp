@@ -154,7 +154,7 @@ bool capture_fuzz::FuzzPacket(uint8_t * packet, size_t packet_length)
     /* Reallocate the capture buffer */
     if (packet_length > buffer_size)
     {
-        int new_size = packet_length;
+        size_t new_size = packet_length;
         uint8_t * new_buf = new uint8_t[packet_length];
         if (new_buf == NULL)
         {

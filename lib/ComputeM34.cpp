@@ -303,6 +303,24 @@ bool ComputeM3::GetM33_2()
     return ret;
 }
 
+void ComputeM3::GetM33_3_pattern(int registry_id, char const * pattern_name)
+{
+    uint64_t nb = cs.GetCountByNumber(DnsStats::GetTableName(registry_id), 0);
+    if (nb > 0) {
+        metric34_line_t line;
+        size_t len = strlen(pattern_name);
+
+        if (len + 1 > sizeof(line.domain)) {
+            len = sizeof(line.domain) - 1;
+        }
+
+        memcpy(line.domain, pattern_name, len);
+        line.domain[len] = 0;
+        line.frequency = ((double)nb) / ((double)nb_rootqueries);
+        m33_3.push_back(line);
+    }
+}
+
 bool ComputeM3::GetM33_3()
 {
     bool ret = true;
@@ -348,6 +366,18 @@ bool ComputeM3::GetM33_3()
                 m33_3.push_back(line);
             }
         }
+
+        /* Add line for binary pattern if present */
+        GetM33_3_pattern(REGISTRY_DNS_LEAK_BINARY, "binary");
+
+        /* Add line for bad syntax pattern if present */
+        GetM33_3_pattern(REGISTRY_DNS_LEAK_SYNTAX, "bad_syntax");
+
+        /* Add line for bad syntax pattern if present */
+        GetM33_3_pattern(REGISTRY_DNS_LEAK_IPV4, "ipv4");
+
+        /* Add line for bad syntax pattern if present */
+        GetM33_3_pattern(REGISTRY_DNS_LEAK_NUMERIC, "numeric");
 
         std::sort(m33_3.begin(), m33_3.end(), metric34_line_is_bigger);
     }

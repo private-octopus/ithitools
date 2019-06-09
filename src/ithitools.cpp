@@ -77,6 +77,10 @@ static int usage()
     fprintf(stderr, "  -u tld-file.txt    Text file containing special usage TLD (RFC6761).\n");
     fprintf(stderr, "  -n number          Number of strings in the list of leaking domains(M4).\n");
     fprintf(stderr, "  -N number          Number of packets to read from this capture.\n");
+    fprintf(stderr, "  -A                 List all IP addresses and their usage in the report.\n");
+    fprintf(stderr, "  -E                 List all erroneous DNS names and their usage in the report.\n");
+    fprintf(stderr, "                     Options A and E are rather slow, and have privacy issues.\n");
+    fprintf(stderr, "                     No such traces enabled by default.\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "Options used in summary mode:\n");
     fprintf(stderr, "  -o file.csv        output file containing the computed summary.\n");
@@ -181,7 +185,7 @@ int main(int argc, char ** argv)
 
     /* Get the parameters */
     int opt;
-    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:V:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:O:P:D:N:hfcsmpTvW?")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:V:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:O:P:D:N:AEhfcsmpTvW?")) != -1)
     {
         switch (opt)
         {
@@ -260,6 +264,12 @@ int main(int argc, char ** argv)
         }
         case 'f':
             stats.enable_frequent_address_filtering = true;
+            break;
+        case 'A':
+            stats.enable_ip_address_report = true;
+            break;
+        case 'E':
+            stats.enable_erroneous_name_list = true;
             break;
         case 'S':
             /* Summarization from list of files implies summary mode */

@@ -92,6 +92,13 @@
 #define REGISTRY_CAPTURE_DURATION 49
 #define REGISTRY_VOLUME_53ONLY 50
 #define REGISTRY_CAPTURE_DURATION53 51
+#define REGISTRY_DNS_LEAK_BINARY 52
+#define REGISTRY_DNS_LEAK_SYNTAX 53
+#define REGISTRY_DNS_LEAK_IPV4 54
+#define REGISTRY_DNS_LEAK_NUMERIC 55
+#define REGISTRY_DNS_LEAK_2NDLEVEL 56
+#define REGISTRY_DNS_ADDRESS_LIST 57
+#define REGISTRY_DNS_ERRONEOUS_NAME_LIST 58
 
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
@@ -117,6 +124,18 @@ enum DnsStatsFlags
     dnsStateFlagCountUnderlinedNames = 8,
     dnsStateFlagCountPacketSizes = 16,
     dnsStateFlagListTldUsed = 32
+};
+
+enum DnsStatsLeakType
+{
+    dnsLeakNoLeak = 0,
+    dnsLeakBinary,
+    dnsLeakBadSyntax,
+    dnsLeakNumeric,
+    dnsLeakIpv4,
+    dnsLeakRfc6771,
+    dnsLeakSinglePart,
+    dnsLeakMultiPart
 };
 
 class DnsHashEntry {
@@ -185,7 +204,23 @@ private:
     uint8_t * prefix_data;
 };
 
+class DomainEntry {
+public:
+    DomainEntry();
+    ~DomainEntry();
 
+    bool IsSameKey(DomainEntry* key);
+    uint32_t Hash();
+    DomainEntry* CreateCopy();
+    void Add(DomainEntry* key);
+
+    DomainEntry * HashNext;
+
+    uint32_t hash;
+    uint32_t domain_length;
+    char * domain;
+    uint64_t count;
+};
 
 class TldAddressAsKey
 {
@@ -220,7 +255,8 @@ public:
     AddressFilter bannedAddresses;
     AddressUseTracker frequentAddresses;
 
-    LruHash<TldAsKey> tldLeakage;
+    LruHash<TldAsKey> tldLeakage; 
+    LruHash<TldAsKey> secondLdLeakage;
     BinHash<TldAddressAsKey> queryUsage;
 
     BinHash<TldAsKey> registeredTld;
@@ -250,6 +286,8 @@ public:
     int64_t duration_usec;
     uint64_t volume_53only;
     bool enable_frequent_address_filtering;
+    bool enable_ip_address_report;
+    bool enable_erroneous_name_list;
     uint32_t target_number_dns_packets;
     uint32_t frequent_address_max_count;
     uint32_t max_tld_leakage_count; 
@@ -273,6 +311,8 @@ public:
     static bool IsValidTldSyntax(uint8_t * tld, size_t length);
     static bool IsRfc6761Tld(uint8_t * tld, size_t length);
     static void SetToUpperCase(uint8_t * domain, size_t length);
+    static void TldCheck(uint8_t * domain, size_t length, bool * is_binary, bool * is_wrong_syntax, bool * is_numeric);
+
     static char const * GetTableName(uint32_t tableId);
     const char * GetZonePrefix(const char * dnsName);
 
@@ -287,10 +327,15 @@ public:
 
     void ExportStatsByIp();
 
+    static size_t NormalizeNamePart(uint32_t length, uint8_t * value, uint8_t * normalized, size_t normalized_max, uint32_t * flags);
+
     static int GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
         uint8_t * name, size_t name_max, size_t * name_length);
 
     static int CompareDnsName(uint8_t * packet, uint32_t length, uint32_t start1, uint32_t start2);
+
+    static bool IsIpv4Name(const uint8_t * name, size_t name_length);
+    static bool IsIpv4Tld(uint8_t * packet, uint32_t length, uint32_t start);
 
     static bool IsQNameMinimized(uint8_t * packet, uint32_t length, uint32_t nb_queries, int q_rclass, int q_rtype, uint32_t qr_index, uint32_t an_index, uint32_t ns_index);
 
@@ -299,6 +344,9 @@ public:
 
     void SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header,
         my_bpftimeval ts);
+
+    static bool GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t *offset, uint32_t * previous_offset, int * nb_name_parts);
+
 private:
     bool LoadPcapFile(char const * fileName);
 
@@ -320,20 +368,12 @@ private:
 
     int CheckForUnderline(uint8_t * packet, uint32_t length, uint32_t start);
 
-    bool GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t *offset);
-
-
-
-    static void NormalizeNamePart(uint32_t length, uint8_t * value, uint8_t * normalized, uint32_t * flags);
-
-
-
     bool IsNumericDomain(uint8_t * tld, uint32_t length);
 
-    void ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id, 
-        bool do_accounting, uint32_t max_leak_count);
+    void ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id, uint32_t max_leak_count);
     void ExportLeakedDomains();
     void ExportStringUsage();
+    void ExportSecondLeaked();
 
     void LoadRegisteredTLD_from_memory();
 

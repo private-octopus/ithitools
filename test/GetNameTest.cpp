@@ -59,6 +59,32 @@ GetNameTest::~GetNameTest()
     }
 }
 
+static uint8_t getNameTest1[] = { 7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0 };
+static uint8_t getNameTest2[] = { 9, 'e', 'x', 'a', 'm', 'p', 'l', 'e', '-', '2', 3, 'c', 'o', 'm', 0 };
+static uint8_t getNameTest3[] = { 9, 'e', 'x', 'a', 'm', 'p', 'l', 'e', '_', '3', 3, 'c', 'o', 'm', 0 };
+static uint8_t getNameTest4[] = { 9, 'e', 'x', 'a', 'm', 'p', 'l', 'e', ':', '4', 3, 'c', 'o', 'm', 0 };
+static uint8_t getNameTest5[] = { 9, 'e', 'x', 'a', 'm', 'p', 'l', 'e', '.', '5', 3, 'c', 'o', 'm', 0 };
+static uint8_t getNameTest6[] = { 9, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 0x7F, '6', 3, 'c', 'o', 'm', 0 };
+static uint8_t getNameTest7[] = { 9, 'e', 'x', 'a', 'm', 'p', 'l', 'e', ' ', '7', 3, 'c', 'o', 'm', 0 };
+static uint8_t getNameTest8[] = { 10, ' ', 'e', 'x', 'a', 'm', 'p', 'l', 'e', '-', '8', 3, 'c', 'o', 'm', 0 };
+static uint8_t getNameTest9[] = { 9, 'e', 'x', 'a', 'm', 'p', 'l', 'e', '-', '9', 3, 0x8c, 0xFF, 0x81, 0 };
+
+static struct st_getNameTestLine {
+    uint8_t * dns;
+    size_t dns_length;
+    char const * expected;
+} getNameTestData[] = {
+    { getNameTest1, sizeof(getNameTest1), "example.com" },
+    { getNameTest2, sizeof(getNameTest2), "example-2.com" },
+    { getNameTest3, sizeof(getNameTest3), "example_3.com" },
+    { getNameTest4, sizeof(getNameTest4), "example:4.com" },
+    { getNameTest5, sizeof(getNameTest5), "example\\0465.com" },
+    { getNameTest6, sizeof(getNameTest6), "example\\1276.com" },
+    { getNameTest7, sizeof(getNameTest7), "example 7.com" },
+    { getNameTest8, sizeof(getNameTest8), "\\032example-8.com" },
+    { getNameTest9, sizeof(getNameTest9), "example-9.\\140\\255\\129" }
+};
+
 bool GetNameTest::DoTest()
 {
     bool ret = true;
@@ -69,6 +95,23 @@ bool GetNameTest::DoTest()
     test_out = fopen(getname_test_debug, "w");
     ret = (test_out != NULL);
 #endif
+
+    for (size_t i = 0; ret && i < sizeof(getNameTestData) / sizeof(struct st_getNameTestLine); i++) {
+        char name_out[1024];
+        size_t name_length = 0;
+        size_t next = 0;
+
+        next = DnsStats::GetDnsName(getNameTestData[i].dns, (uint32_t)getNameTestData[i].dns_length, 0, (uint8_t *)name_out, sizeof(name_out), &name_length);
+
+        if (next != getNameTestData[i].dns_length) {
+            ret = false;
+        } else  if (strlen(getNameTestData[i].expected) != name_length) {
+            ret = false;
+        } else if (memcmp(getNameTestData[i].expected, name_out, name_length) != 0) {
+            ret = false;
+        }
+    }
+
 
     if (ret) {
         stats = new DnsStats();
@@ -139,11 +182,56 @@ void GetNameTest::SubmitPacket(uint8_t * packet, uint32_t length)
     uint32_t nscount = 0;
     uint32_t arcount = 0;
     uint32_t parse_index = 12;
+    uint32_t tld_offset = 0;
+    uint32_t previous_offset = 0;
+    int nb_name_parts = 0;
+    bool gotTld = DnsStats::GetTLD(packet, length, 12, &tld_offset, &previous_offset, &nb_name_parts);
 
     qdcount = (packet[4] << 8) | packet[5];
     ancount = (packet[6] << 8) | packet[7];
     nscount = (packet[8] << 8) | packet[9];
     arcount = (packet[10] << 8) | packet[11];
+
+    if (gotTld) {
+#if 1
+        char text[256];
+        uint32_t flags;
+        size_t text_length;
+        if (previous_offset != 0) {
+            text_length = DnsStats::NormalizeNamePart(packet[previous_offset],
+                &packet[previous_offset + 1], (uint8_t *)text, sizeof(text), &flags);
+            fprintf(test_out, "%s.", text);
+        }
+        text_length = DnsStats::NormalizeNamePart(packet[tld_offset],
+            &packet[tld_offset + 1], (uint8_t *)text, sizeof(text), &flags);
+        fprintf(test_out, "%s", text);
+#else
+        if (previous_offset != 0) {
+            for (uint8_t i = 1; i <= packet[previous_offset]; i++) {
+                uint8_t c = packet[previous_offset + i];
+                if (c > ' ' && c < 127) {
+                    fprintf(test_out, "%c", (char)c);
+                }
+                else {
+                    fprintf(test_out, "\\x%02x", c);
+                }
+            }
+        }
+        for (uint8_t i = 1; i <= packet[tld_offset]; i++) {
+            uint8_t c = packet[tld_offset + i];
+            if (c > ' ' && c < 127) {
+                fprintf(test_out, "%c", (char)c);
+            }
+            else {
+                fprintf(test_out, "\\x%02x", c);
+            }
+        }
+#endif
+        fprintf(test_out, " %d\n", nb_name_parts);
+    }
+    else {
+        fprintf(test_out, "??? %d\n", nb_name_parts);
+    }
 
     for (uint32_t i = 0; i < qdcount; i++)
     {
@@ -240,7 +328,7 @@ int GetNameTest::SubmitRecord(uint8_t * packet, uint32_t length, uint32_t start)
 
 int GetNameTest::SubmitName(uint8_t * packet, uint32_t length, uint32_t start)
 {
-    uint8_t name[256];
+    uint8_t name[1024];
     size_t name_len = 0;
     
     start = stats->GetDnsName(packet, length, start, name, sizeof(name), &name_len);
@@ -251,4 +339,60 @@ int GetNameTest::SubmitName(uint8_t * packet, uint32_t length, uint32_t start)
     }
 
     return start;
+}
+
+IsIpv4Test::IsIpv4Test()
+{
+}
+
+IsIpv4Test::~IsIpv4Test()
+{
+}
+
+static struct st_is_ipv4_test_data {
+    char const * name;
+    bool expected;
+} is_ipv4_test_data[] = {
+    { "0.0.0.0", true },
+    { "1.2.3.4", true },
+    { "11.12.13.14", true },
+    { "111.112.113.114", true },
+    { "255.255.255.255", true },
+    { "example.com.0.0.0.0", true },
+    { "example.com.1.2.3.4", true },
+    { "example.com.11.12.13.14", true },
+    { "example.com.111.112.113.114", true },
+    { "example.com.255.255.255.255", true },
+    { "a.0.0.0.0", true },
+    { "b.1.2.3.4", true },
+    { "c.11.12.13.14", true },
+    { "example-com.111.112.113.114", true },
+    { "example_com.255.255.255.255", true },
+    { "0.0.0", false },
+    { "0.0.0.-1", false },
+    { "1000.2.3.4", false },
+    { "13.14", false },
+    { "111.-112.113.114", false },
+    { "example.com.1000.2.3.4", false },
+    { "example.com.13.14", false },
+    { "example.com.111.-112.113.114", false },
+    { "example-com111.112.113.114", false },
+    { "example.com", false }
+};
+
+bool IsIpv4Test::DoTest()
+{
+    size_t nb_test = sizeof(is_ipv4_test_data) / sizeof(struct st_is_ipv4_test_data);
+    bool ret = true;
+
+    for (size_t i = 0; i < nb_test; i++) {
+        bool actual = DnsStats::IsIpv4Name((uint8_t *)is_ipv4_test_data[i].name, strlen(is_ipv4_test_data[i].name));
+
+        if (actual != is_ipv4_test_data[i].expected) {
+            ret = false;
+            break;
+        }
+    }
+
+    return ret;
 }

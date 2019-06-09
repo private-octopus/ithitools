@@ -1,4 +1,5 @@
 Packet #1
+tuanimg.com 3
 WS1.TUANIMG.COM
 COM
 COM
@@ -30,6 +31,7 @@ A.GTLD-SERVERS.NET
 B.GTLD-SERVERS.NET
 
 Packet #2
+vovosex.com 3
 NS1.VOVOSEX.COM
 COM
 COM
@@ -63,6 +65,7 @@ A.GTLD-SERVERS.NET
 B.GTLD-SERVERS.NET
 
 Packet #3
+ksmobile.net 3
 LMSV.KSMOBILE.NET
 NET
 NET
@@ -94,6 +97,7 @@ A.GTLD-SERVERS.NET
 B.GTLD-SERVERS.NET
 
 Packet #4
+wscdns.com 8
 P2.PLAY.VP.AUTOHOME.COM.CN.WSCDNS.COM
 COM
 COM
@@ -125,23 +129,29 @@ A.GTLD-SERVERS.NET
 B.GTLD-SERVERS.NET
 
 Packet #5
+dmz.ext 3
 ITRE-ZARRIF-L.DMZ.EXT
 
 Packet #6
+xvideos.com 3
 WWW.XVIDEOS.COM
 
 Packet #7
+execulink.com 3
 NS.EXECULINK.COM
 
 Packet #8
+post.ro 2
 POST.RO
 
 Packet #9
+mextquuujlmlje 1
 MEXTQUUUJLMLJE
 METLIFE
 METLIFE
 
 Packet #10
+com.cn 4
 WWW.DECATHLON.COM.CN
 CN
 CN
@@ -159,14 +169,17 @@ A.DNS.CN
 D.DNS.CN
 
 Packet #11
+kwit.local 5
 SSLWIDGET.CRITEO.COM.KWIT.LOCAL
 
 Packet #12
+dmz.ext 3
 ITRE-ZARRIF-L.DMZ.EXT
 EXPRESS
 EXPRESS
 
 Packet #13
+ourglb0.com 4
 YIDONG4G.XDWSCACHE.OURGLB0.COM
 COM
 COM
@@ -200,14 +213,19 @@ A.GTLD-SERVERS.NET
 B.GTLD-SERVERS.NET
 
 Packet #14
+co.in 4
 AGANO.SANYO.CO.IN
 
 Packet #15
+vovosex.com 3
 NS2.VOVOSEX.COM
 
 Packet #16
+_udp.\240\204A\001 4
+DR._DNS-SD._UDP.\240\204A\001
 
 Packet #17
+xvideos.com 3
 WWW.XVIDEOS.COM
 COM
 COM
@@ -238,29 +256,37 @@ M.GTLD-SERVERS.NET
 A.GTLD-SERVERS.NET
 
 Packet #18
+kwit.local 5
 SSLWIDGET.CRITEO.COM.KWIT.LOCAL
 LOANS
 LOANS
 
 Packet #19
+turnertalk.com 3
 ORIGIN-PM.TURNERTALK.COM
 
 Packet #20
+aurea.local 3
 TEAMCITY.AUREA.LOCAL
 
 Packet #21
+vrsqudsdc 1
 VRSQUDSDC
 
 Packet #22
+hjgkfvkvaw 1
 HJGKFVKVAW
 
 Packet #23
+vOJdVvY.HomeSTatiOn 2
 VOJDVVY.HOMESTATION
 
 Packet #24
+co.in 4
 AGANO.SANYO.CO.IN
 
 Packet #25
+post.ro 2
 POST.RO
 RO
 RO
@@ -281,6 +307,7 @@ SEC-DNS-A.ROTLD.RO
 SEC-DNS-B.ROTLD.RO
 
 Packet #26
+execulink.com 3
 NS.EXECULINK.COM
 COM
 COM
@@ -314,6 +341,7 @@ A.GTLD-SERVERS.NET
 B.GTLD-SERVERS.NET
 
 Packet #27
+vovosex.com 3
 NS2.VOVOSEX.COM
 COM
 COM
@@ -347,43 +375,57 @@ A.GTLD-SERVERS.NET
 B.GTLD-SERVERS.NET
 
 Packet #28
+aurea.local 3
 TEAMCITY.AUREA.LOCAL
 LOANS
 LOANS
 
 Packet #29
+gmdfylkznhxgbmf 1
 GMDFYLKZNHXGBMF
 
 Packet #30
+multai.io 2
 MULTAI.IO
 
 Packet #31
+_udp.\240\204A\001 4
+DR._DNS-SD._UDP.\240\204A\001
+ZW
+ZW
 
 Packet #32
+hjgkfvkvaw 1
 HJGKFVKVAW
 HIV
 HIV
 
 Packet #33
+vrsqudsdc 1
 VRSQUDSDC
 VOYAGE
 VOYAGE
 
 Packet #34
+vOJdVvY.HomeSTatiOn 2
 VOJDVVY.HOMESTATION
 HOMESENSE
 HOMESENSE
 
 Packet #35
+qyebexmxcxywyx 1
 QYEBEXMXCXYWYX
 
 Packet #36
+cn.localdomain 4
 WWW.MJHYC.CN.LOCALDOMAIN
 
 Packet #37
+4399sy.com 3
 S1001-HLQZ.4399SY.COM
 
 Packet #38
+turnertalk.com 3
 ORIGIN-PM.TURNERTALK.COM
 COM
 COM
@@ -417,12 +459,15 @@ A.GTLD-SERVERS.NET
 B.GTLD-SERVERS.NET
 
 Packet #39
+gmdfylkznhxgbmf 1
 GMDFYLKZNHXGBMF
 
 Packet #40
+RGa.iP 3
 HGYORLJKVW.RGA.IP
 
 Packet #41
+multai.io 2
 MULTAI.IO
 IO
 IO
@@ -449,35 +494,45 @@ NS-L1.IO
 NS-Y1.IO
 
 Packet #42
+qyebexmxcxywyx 1
 QYEBEXMXCXYWYX
 
 Packet #43
+yXFCnnn 1
 YXFCNNN
 
 Packet #44
+cn.localdomain 4
 WWW.MJHYC.CN.LOCALDOMAIN
 LOANS
 LOANS
 
 Packet #45
+bancoparis.cl 3
 NS.BANCOPARIS.CL
 
 Packet #46
+kbzmfnpjskren 1
 KBZMFNPJSKREN
 
 Packet #47
+LOVely.LoCAL 2
 LOVELY.LOCAL
 
 Packet #48
+RGa.iP 3
 HGYORLJKVW.RGA.IP
 
 Packet #49
+yXFCnnn 1
 YXFCNNN
 
 Packet #50
+hpecorp.net 3
 NS3.HPECORP.NET
 
 Packet #51
+4399sy.com 3
 S1001-HLQZ.4399SY.COM
 COM
 COM
@@ -511,6 +566,7 @@ A.GTLD-SERVERS.NET
 B.GTLD-SERVERS.NET
 
 Packet #52
+bancoparis.cl 3
 NS.BANCOPARIS.CL
 CL
 CL
@@ -533,39 +589,49 @@ CL-NS.ANYCAST.PCH.NET
 SNS-PB.ISC.ORG
 
 Packet #53
+ucvqqtuepngiv 1
 UCVQQTUEPNGIV
 
 Packet #54
+airbnb.com 3
 ORIGIN-IPA.AIRBNB.COM
 
 Packet #55
+LOVely.LoCAL 2
 LOVELY.LOCAL
 LOANS
 LOANS
 
 Packet #56
+gameloft.com 2
 GAMELOFT.COM
 
 Packet #57
+kbzmfnpjskren 1
 KBZMFNPJSKREN
 KAUFEN
 KAUFEN
 
 Packet #58
+hpecorp.net 3
 NS8.HPECORP.NET
 
 Packet #59
+ucvqqtuepngiv 1
 UCVQQTUEPNGIV
 UCONNECT
 UCONNECT
 
 Packet #60
+tvtyirwnht 1
 TVTYIRWNHT
 
 Packet #61
+hdwgckdtuczli 1
 HDWGCKDTUCZLI
 
 Packet #62
+hpecorp.net 3
 NS3.HPECORP.NET
 NET
 NET
@@ -599,8 +665,10 @@ A.GTLD-SERVERS.NET
 B.GTLD-SERVERS.NET
 
 Packet #63
+hpecorp.net 3
 NS1.HPECORP.NET
 
 Packet #64
+hpecorp.net 3
 NS4.HPECORP.NET
 

@@ -45,4 +45,13 @@ public:
     DnsStats * stats;
 };
 
+class IsIpv4Test : public ithi_test_class
+{
+public:
+    IsIpv4Test();
+    ~IsIpv4Test();
+
+    bool DoTest() override;
+};
+
 #endif /* GET_NAME_TEST_H */

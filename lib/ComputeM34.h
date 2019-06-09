@@ -66,6 +66,7 @@ private:
     bool GetM3_2();
     bool GetM33_1();
     bool GetM33_2();
+    void GetM33_3_pattern(int registry_id, char const * pattern_name);
     bool GetM33_3();
     bool GetM3_4();
     bool GetM3_5();
