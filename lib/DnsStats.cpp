@@ -1778,9 +1778,8 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                         if (enable_erroneous_name_list) {
                             uint8_t name[1024];
                             size_t name_len = 0;
-                            int start = 0;
 
-                            start = GetDnsName(packet, length, 12, name, sizeof(name), &name_len);
+                            (void) GetDnsName(packet, length, 12, name, sizeof(name), &name_len);
 
                             if (name_len > 0) {
                                 DnsStats::SetToUpperCase(name, name_len);
@@ -1902,7 +1901,6 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                     if (enable_ip_address_report) {
                         uint8_t name[512];
                         size_t name_len = 0;
-                        int start = 0;
 
                         if (dest_addr_length == 4) {
 #ifdef _WINDOWS
