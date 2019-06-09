@@ -58,6 +58,7 @@ private:
     std::vector<metric8_line_t> m3_4_2;
     double m3_5; /* DNS OK Option */
     double m3_6; /* FQDN Minimization */
+    std::vector<metric34_line_t> m3_7; /* Second level names */
     CaptureSummary cs;
 
     void GetM3_X(uint32_t table_id,
@@ -71,6 +72,7 @@ private:
     bool GetM3_4();
     bool GetM3_5();
     bool GetM3_6();
+    bool GetM3_7();
 };
 
 class ComputeM4 : public ComputeMetric

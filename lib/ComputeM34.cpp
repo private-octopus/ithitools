@@ -180,6 +180,8 @@ bool ComputeM3::Compute()
     ret &= GetM3_5();
     ret &= GetM3_6();
 
+    ret &= GetM3_7();
+
     return ret;
 }
 
@@ -229,6 +231,13 @@ bool ComputeM3::Write(FILE * F_out)
 
     if (ret) {
         ret = fprintf(F_out, "M3.6, , %6f,\n", m3_6) > 0;
+    }
+
+    if (ret) {
+        for (size_t i = 0; ret && i < m3_7.size(); i++)
+        {
+            ret = fprintf(F_out, "M3.7, %s, %6f,\n", m3_7[i].domain, m3_7[i].frequency) > 0;
+        }
     }
 
     return ret;
@@ -385,7 +394,6 @@ bool ComputeM3::GetM33_3()
     return ret;
 }
 
-
 bool ComputeM3::GetM3_4()
 {
     return ComputeM8::ComputeEdnsMetrics(&cs, &m3_4_1, &m3_4_2);
@@ -405,6 +413,15 @@ bool ComputeM3::GetM3_6()
     bool ret = true;
 
     m3_6 = scalar_metric_from_capture(&cs, REGISTRY_QNAME_MINIMIZATION_Usage);
+
+    return ret;
+}
+
+bool ComputeM3::GetM3_7()
+{
+    bool ret = true;
+
+    GetM3_X(REGISTRY_DNS_LEAK_2NDLEVEL, &m3_7, 0.001);
 
     return ret;
 }
