@@ -1287,8 +1287,7 @@ void DnsStats::ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id, ui
     /* Retain the N most interesting values */
     for (size_t i = 0; i < lines.size(); i++)
     {
-        if (export_count < max_leak_count && lines[i]->tld_len < 64 &&
-            !IsNumericDomain(lines[i]->tld, (uint32_t) lines[i]->tld_len))
+        if (export_count < max_leak_count && lines[i]->tld_len < 64)
         {
             SubmitRegistryStringAndCount(registry_id,
                 (uint32_t) lines[i]->tld_len, lines[i]->tld, lines[i]->count);
@@ -1966,6 +1965,8 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                     /* Keep a count */
                     SubmitRegistryNumber(REGISTRY_DNS_TLD_Usage_Count, 0);
 
+
+                    /* Analysis of domain leakage */
                     if (IsRfc6761Tld(packet + tld_offset + 1, packet[tld_offset]))
                     {
                         SubmitRegistryString(REGISTRY_DNS_RFC6761_Usage, packet[tld_offset], packet + tld_offset + 1);
@@ -1973,6 +1974,8 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                     else
                     {
                         bool stored = false;
+
+
 
                         if (tldStringUsage.GetCount() >= max_tld_string_usage_count)
                         {
@@ -1983,7 +1986,31 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                             }
                         }
 
-                        tldStringUsage.InsertOrAdd(&key, true, &stored);
+                        if (is_binary) {
+                            TldAsKey key2((uint8_t *)"-- BINARY --", 12);
+
+                            tldStringUsage.InsertOrAdd(&key2, true, &stored);
+                        }
+                        else if (is_bad_syntax) {
+                            TldAsKey key2((uint8_t *)"-- SYNTAX --", 12);
+
+                            tldStringUsage.InsertOrAdd(&key2, true, &stored);
+                        }
+                        else if (is_numeric) {
+                            if (IsIpv4Tld(packet, length, 12)) {
+                                TldAsKey key2((uint8_t *)"-- IPV4 --", 10);
+
+                                tldStringUsage.InsertOrAdd(&key2, true, &stored);
+                            }
+                            else {
+                                TldAsKey key2((uint8_t *)"-- NUMBER --", 12);
+
+                                tldStringUsage.InsertOrAdd(&key2, true, &stored);
+                            }
+                        }
+                        else {
+                            tldStringUsage.InsertOrAdd(&key, true, &stored);
+                        }
                     }
                 }
             }
