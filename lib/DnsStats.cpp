@@ -2250,7 +2250,6 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
                     else
                     {
                         should_escape = true;
-                        break;
                     }
 
                     if (should_escape) {
