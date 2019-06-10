@@ -48,6 +48,7 @@ enum test_list_enum {
     test_enum_TldCount,
     test_enum_DnsPrefix,
     test_enum_GetName,
+    test_enum_Ipv4Tld,
     test_enum_OdiPublish,
     test_enum_CmpName,
     test_enum_QNameMini,
@@ -114,6 +115,8 @@ char const * ithi_test_class::GetTestName(int number)
         return("DnsPrefix");
     case test_enum_GetName:
         return("GetName");
+    case test_enum_Ipv4Tld:
+        return("Ipv4Tld");
     case test_enum_OdiPublish:
         return("OdiPublish");
     case test_enum_CmpName:
@@ -213,6 +216,9 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_enum_GetName:
         test = new GetNameTest();
+        break;
+    case test_enum_Ipv4Tld:
+        test = new IsIpv4Test();
         break;
     case test_enum_OdiPublish:
         test = new OdiPublishTest();

@@ -217,6 +217,14 @@ namespace ithiunit
             Assert::AreEqual(ret, true);
         }
 
+        TEST_METHOD(Ipv4Tld)
+        {
+            IsIpv4Test test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
         TEST_METHOD(OdiPublish)
         {
             OdiPublishTest test;

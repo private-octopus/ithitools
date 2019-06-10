@@ -180,6 +180,8 @@ bool ComputeM3::Compute()
     ret &= GetM3_5();
     ret &= GetM3_6();
 
+    ret &= GetM3_7();
+
     return ret;
 }
 
@@ -229,6 +231,13 @@ bool ComputeM3::Write(FILE * F_out)
 
     if (ret) {
         ret = fprintf(F_out, "M3.6, , %6f,\n", m3_6) > 0;
+    }
+
+    if (ret) {
+        for (size_t i = 0; ret && i < m3_7.size(); i++)
+        {
+            ret = fprintf(F_out, "M3.7, %s, %6f,\n", m3_7[i].domain, m3_7[i].frequency) > 0;
+        }
     }
 
     return ret;
@@ -303,6 +312,24 @@ bool ComputeM3::GetM33_2()
     return ret;
 }
 
+void ComputeM3::GetM33_3_pattern(int registry_id, char const * pattern_name)
+{
+    uint64_t nb = cs.GetCountByNumber(DnsStats::GetTableName(registry_id), 0);
+    if (nb > 0) {
+        metric34_line_t line;
+        size_t len = strlen(pattern_name);
+
+        if (len + 1 > sizeof(line.domain)) {
+            len = sizeof(line.domain) - 1;
+        }
+
+        memcpy(line.domain, pattern_name, len);
+        line.domain[len] = 0;
+        line.frequency = ((double)nb) / ((double)nb_rootqueries);
+        m33_3.push_back(line);
+    }
+}
+
 bool ComputeM3::GetM33_3()
 {
     bool ret = true;
@@ -349,12 +376,23 @@ bool ComputeM3::GetM33_3()
             }
         }
 
+        /* Add line for binary pattern if present */
+        GetM33_3_pattern(REGISTRY_DNS_LEAK_BINARY, "binary");
+
+        /* Add line for bad syntax pattern if present */
+        GetM33_3_pattern(REGISTRY_DNS_LEAK_SYNTAX, "bad_syntax");
+
+        /* Add line for bad syntax pattern if present */
+        GetM33_3_pattern(REGISTRY_DNS_LEAK_IPV4, "ipv4");
+
+        /* Add line for bad syntax pattern if present */
+        GetM33_3_pattern(REGISTRY_DNS_LEAK_NUMERIC, "numeric");
+
         std::sort(m33_3.begin(), m33_3.end(), metric34_line_is_bigger);
     }
 
     return ret;
 }
-
 
 bool ComputeM3::GetM3_4()
 {
@@ -375,6 +413,15 @@ bool ComputeM3::GetM3_6()
     bool ret = true;
 
     m3_6 = scalar_metric_from_capture(&cs, REGISTRY_QNAME_MINIMIZATION_Usage);
+
+    return ret;
+}
+
+bool ComputeM3::GetM3_7()
+{
+    bool ret = true;
+
+    GetM3_X(REGISTRY_DNS_LEAK_2NDLEVEL, &m3_7, 0.001);
 
     return ret;
 }
