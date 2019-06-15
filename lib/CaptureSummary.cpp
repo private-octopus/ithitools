@@ -784,32 +784,34 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
         }
     }
 
-    /* Add the leaked length to the current counts */
-    for (size_t i = 0; i < summary.size(); i++)
-    {
-        if (strcmp(summary[i]->registry_name, leak_by_length_id) == 0 &&
-            summary[i]->key_number > 0 &&
-            summary[i]->key_number < 64)
+    if (ret) {
+        /* Add the leaked length to the current counts */
+        for (size_t i = 0; i < summary.size(); i++)
         {
-            summary[i]->count += skipped_tld_length[summary[i]->key_number];
-            skipped_tld_length[summary[i]->key_number] = 0;
+            if (strcmp(summary[i]->registry_name, leak_by_length_id) == 0 &&
+                summary[i]->key_number > 0 &&
+                summary[i]->key_number < 64)
+            {
+                summary[i]->count += skipped_tld_length[summary[i]->key_number];
+                skipped_tld_length[summary[i]->key_number] = 0;
+            }
         }
-    }
 
-    for (int i = 0; i < 64; i++)
-    {
-        if (skipped_tld_length[i] != 0)
+        for (int i = 0; i < 64; i++)
         {
-            CaptureLine length_pattern;
+            if (skipped_tld_length[i] != 0)
+            {
+                CaptureLine length_pattern;
 
-            length_pattern.count = skipped_tld_length[i];
-            length_pattern.key_type = 0;
-            length_pattern.key_number = i;
+                length_pattern.count = skipped_tld_length[i];
+                length_pattern.key_type = 0;
+                length_pattern.key_number = i;
 
-            memcpy(length_pattern.registry_name, leak_by_length_id, strlen(leak_by_length_id) + 1);
+                memcpy(length_pattern.registry_name, leak_by_length_id, strlen(leak_by_length_id) + 1);
 
-            AddLine(&length_pattern, true);
-            skipped_tld_length[i] = 0;
+                AddLine(&length_pattern, true);
+                skipped_tld_length[i] = 0;
+            }
         }
     }
 
