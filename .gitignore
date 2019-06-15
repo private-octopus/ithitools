@@ -33,3 +33,4 @@ x64
 /www/test-first0.html
 /www/test-first.html
 /www/graph-test.html
+*/__pycache__
