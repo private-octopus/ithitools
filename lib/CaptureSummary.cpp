@@ -33,7 +33,6 @@ static char const * frequently_leaked_tld[] = {
     "JPG",
     "LAN",
     "HTML",
-    "_0x434f4d22",
     "CORP",
     "LOCALDOMAIN",
     "BELKIN",
@@ -41,17 +40,13 @@ static char const * frequently_leaked_tld[] = {
     "INTRA",
     "HOMESTATION",
     "DOMAIN",
-    "_0x434f4d0a",
     "DLINKROUTER",
     "CPE",
     "LOC",
     "INTERNAL",
     "YU",
-    "SERVIDOR DE ALARME",
     "HTM",
     "UNIFI",
-    "_0x58494e20",
-    "_0x504c20",
     "TP",
     "SPEEDPORT_W_724V_09091602_00_006",
     "TOTOLINK",
@@ -61,17 +56,11 @@ static char const * frequently_leaked_tld[] = {
     "PRIV",
     "HOTSPOT300",
     "WORKGROUP",
-    "_0x52550a",
     "DOM",
-    "_0x4e45540a",
     "NUPROSM",
-    "_0x4e455420202020",
-    "DHCP HOST",
     "ASUS",
     "PHP",
-    "NET/INDEX_REPACK",
     "SYS",
-    "_0x302f3234a0",
     "DHCP",
     "SETUP",
     "INTRANET",
@@ -94,7 +83,6 @@ static char const * frequently_leaked_tld[] = {
     "AN",
     "TANKS",
     "X",
-    "_0x83",
     "ROOT",
     "PNG",
     "YABS",
@@ -107,11 +95,8 @@ static char const * frequently_leaked_tld[] = {
     "GOF",
     "C3T",
     "LCL",
-    "_0x36342f3236a0",
     "MAIL",
-    "_0x3132382f3236a0",
     "LD",
-    "_0x302f3231a0",
     "OLX",
     "OIWTECH",
     "INTERN",
@@ -119,8 +104,6 @@ static char const * frequently_leaked_tld[] = {
     "FFRGW",
     "WWW",
     "ALARMSERVER",
-    "YYY/LESWSSVV",
-    "_0x42590a",
     "SNECMA",
     "MYMAX",
     "NULL",
@@ -131,12 +114,10 @@ static char const * frequently_leaked_tld[] = {
     "DSLROUTER",
     "UAPROM",
     "INTRAXA",
-    "COM*",
     "GREATEK",
     "LVMH",
     "ZYXEL-USG",
     "AIS",
-    "(NONE)",
     "WNET",
     "UNIFIQUE",
     "HARAXIOFFICE",
@@ -151,12 +132,11 @@ static char const * frequently_leaked_tld[] = {
     "RBL",
     "AJ",
     "COTIA",
-    "_0x3735ca",
     "COM_",
-    "NET/BARMAN",
     "DA_FTP_SERVER",
     "REJECT_RHSBL_CLIENT",
-    "TVV"
+    "TVV",
+    "FACEBOOK"
 };
 
 CaptureSummary::CaptureSummary()
@@ -637,34 +617,15 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
         frequent_tld.reserve(16 * nb_summaries);
     }
 
-    if (frequentRootTld.GetCount() == 0)
-    {
-        /* Load the static values if nothing was programmed yet */
-        for (size_t i = 0; i < sizeof(frequently_leaked_tld) / sizeof(char const *); i++)
-        {
-            bool stored = false;
-            TldAsKey * tak = new
-                TldAsKey((uint8_t *)frequently_leaked_tld[i], strlen(frequently_leaked_tld[i]));
-
-            frequentRootTld.InsertOrAdd(tak, false, &stored);
-
-            if (!stored)
-            {
-                delete tak;
-            }
-        }
-    }
-
     for (size_t i = 0; ret && i < nb_summaries; i++) {
         for (size_t j = 0; j < cs[i]->Size(); j++) {
             if (strcmp(cs[i]->summary[j]->registry_name, frequent_tld_id) == 0)
             {
                 /* This is a TLD "frequently used" by a client. We will only consider it in the summary
                  * if it is part of the TLD frequently leaked to the root.
-                 */    
-                TldAsKey key((uint8_t *)cs[i]->summary[j]->key_value, strlen(cs[i]->summary[j]->key_value));
-                if (frequentRootTld.Retrieve(&key) != NULL)
-                {
+                 */  
+                if (DnsStats::IsFrequentLeakTld((uint8_t *)cs[i]->summary[j]->key_value,
+                    strlen(cs[i]->summary[j]->key_value))) {
                     complete.push_back(cs[i]->summary[j]);
                 }
                 else

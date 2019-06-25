@@ -71,8 +71,6 @@ public:
 
     void MultiplyByConstantForTest(unsigned int multiplier);
 
-    BinHash<TldAsKey> frequentRootTld;
-
     int capture_version;
 
 private:

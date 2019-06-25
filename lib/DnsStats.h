@@ -134,8 +134,11 @@ enum DnsStatsLeakType
     dnsLeakNumeric,
     dnsLeakIpv4,
     dnsLeakRfc6771,
+    dnsLeakFrequent,
     dnsLeakSinglePart,
-    dnsLeakMultiPart
+    dnsLeakMultiPart,
+    dnsLeakSinglePartDGA,
+    dnsLeakMultiPartDGA
 };
 
 class DnsHashEntry {
@@ -309,7 +312,10 @@ public:
     bool is_qname_minimized;
 
     static bool IsValidTldSyntax(uint8_t * tld, size_t length);
+    static bool IsInSortedList(const char ** list, size_t nb_list, uint8_t * tld, size_t length);
     static bool IsRfc6761Tld(uint8_t * tld, size_t length);
+    static bool IsFrequentLeakTld(uint8_t * tld, size_t length);
+    static bool IsProbablyDgaTld(uint8_t * tld, size_t length);
     static void SetToUpperCase(uint8_t * domain, size_t length);
     static void TldCheck(uint8_t * domain, size_t length, bool * is_binary, bool * is_wrong_syntax, bool * is_numeric);
 

@@ -334,10 +334,134 @@ static char const * RegisteredTldName[] = {
     "XN--ZFR164B", "XXX", "XYZ", "YACHTS", "YAHOO", "YAMAXUN", "YANDEX", "YE",
     "YODOBASHI", "YOGA", "YOKOHAMA", "YOU", "YOUTUBE", "YT", "YUN", "ZA", "ZAPPOS", "ZARA",
     "ZERO", "ZIP", "ZM", "ZONE", "ZUERICH", "ZW",
-
 };
 
 static uint32_t RegisteredTldNameNb = sizeof(RegisteredTldName) / sizeof(char const*);
+
+static char const * FrequentTldLeak[] = {
+    "AAAAAA",
+    "AIS",
+    "AJ",
+    "ALARMSERVER",
+    "AN",
+    "ASUS",
+    "BELKIN",
+    "BLINKAP",
+    "C3T",
+    "COM_",
+    "COMHTTP",
+    "CORP",
+    "COTIA",
+    "CPE",
+    "DA_FTP_SERVER",
+    "DANET",
+    "DAVOLINK",
+    "DEF",
+    "DHCP",
+    "DLINK",
+    "DLINKROUTER",
+    "DNS",
+    "DOM",
+    "DOMAIN",
+    "DS",
+    "DSLROUTER",
+    "F200",
+    "FACEBOOK",
+    "FCNAME",
+    "FFRGW",
+    "GATEWAY",
+    "GIF",
+    "GOF",
+    "GOTHAN",
+    "GREATEK",
+    "GRP",
+    "HARAXIOFFICE",
+    "HOME",
+    "HOMESTATION",
+    "HOTSPOT300",
+    "HTM",
+    "HTML",
+    "HTTP",
+    "INTENO",
+    "INTERN",
+    "INTERNAL",
+    "INTRA",
+    "INTRANET",
+    "INTRAXA",
+    "IPTIME",
+    "JPG",
+    "JS",
+    "KORNET",
+    "KROSSPRECISION",
+    "LAN",
+    "LCL",
+    "LD",
+    "LOC",
+    "LOCALDOMAIN",
+    "LVMH",
+    "MAIL",
+    "MAXPRINT",
+    "MINIHUB",
+    "MP3",
+    "MSHOME",
+    "MULTILASERAP",
+    "MYMAX",
+    "NETIS",
+    "NONE",
+    "NULL",
+    "NUPROSM",
+    "OIWTECH",
+    "OLX",
+    "PHP",
+    "PIXEL",
+    "PDF",
+    "PNG",
+    "PRI",
+    "PRIV",
+    "PRIVATE",
+    "PVT",
+    "RBL",
+    "REALTEK",
+    "REJECT_RHSBL_CLIENT",
+    "ROOT",
+    "ROUTER",
+    "SERVER",
+    "SETUP",
+    "SNECMA",
+    "SOCGEN",
+    "SOPRA",
+    "SPEEDPORT_W_724V_09091602_00_006",
+    "SYS",
+    "TANKS",
+    "TLD",
+    "TOTOLINK",
+    "TP",
+    "TVV",
+    "UAPROM",
+    "UFU",
+    "UNICORN",
+    "UNIFI",
+    "UNIFIQUE",
+    "VDS",
+    "WAG320N",
+    "WEIN",
+    "WIRELESSAP",
+    "WNET",
+    "WORKGROUP",
+    "WPAD",
+    "WWW",
+    "X",
+    "XML",
+    "XN--3D5443G",
+    "YABS",
+    "YU",
+    "ZYXEL-USG",
+    "_MSDCS",
+    "_TCP",
+    "_UDP"
+};
+
+static uint32_t FrequentTldLeakNb = sizeof(FrequentTldLeak) / sizeof(char const *);
 
 int DnsStats::SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start, bool is_response, int * qclass, int * qtype)
 {
@@ -1401,32 +1525,116 @@ bool DnsStats::IsValidTldSyntax(uint8_t * tld, size_t length)
     return ret;
 }
 
-bool DnsStats::IsRfc6761Tld(uint8_t * tld, size_t length)
+static int CompareToUpperCaseString(const uint8_t * tld, size_t length, const char * target)
 {
-    bool ret = false;
+    int ret = 0;
+    size_t j = 0;
+    uint8_t * x = (uint8_t *)target;
 
-    for (uint32_t i = 0; i < nb_rfc6771_tld; i++)
+    for (; j < length; j++)
     {
-        size_t j = 0;
-        uint8_t * x = (uint8_t *)rfc6761_tld[i];
-        bool match = true;
-
-        for (; j < length; j++)
+        if (x[j] == 0)
         {
-            if (x[j] == 0 || (x[j] != tld[j] && (x[j] - 'A' + 'a') != tld[j]))
-            {
-                match = false;
-                break;
-            }
+            ret = 1; /* Target string is longer, thus larger */
+            break;
         }
-
-        if (match && x[j] == 0 && j == length)
-        {
-            ret = true;
+        else if (x[j] != tld[j]) {
+            ret = (tld[j] < x[j]) ? -1 : 1;
             break;
         }
     }
+
+    if (ret == 0 && j == length && x[j] != 0)
+    {
+        ret = -1; /* Target string is shorter, thus lower */
+    }
+
     return ret;
+}
+
+bool DnsStats::IsInSortedList(const char ** list, size_t nb_list, uint8_t * tld, size_t length)
+{
+    bool is_found = false;
+    size_t i_low = 0;
+    size_t i_high = nb_list - 1;
+    int c;
+    uint8_t target[64];
+
+    if (length < sizeof(target)) {
+        for (size_t i = 0; i < length; i++) {
+            c = tld[i];
+            if (c >= 'a' && c <= 'z') {
+                c += 'A' - 'a';
+            }
+            target[i] = c;
+        }
+
+        c = CompareToUpperCaseString(target, length, list[i_low]);
+        if (c == 0) {
+            is_found = true;
+        }
+        else if (c < 0) {
+            is_found = false;
+        }
+        else {
+            c = CompareToUpperCaseString(target, length, list[i_high]);
+            if (c == 0) {
+                is_found = true;
+            }
+            else if (c > 0) {
+                is_found = false;
+            }
+            else {
+                while (i_low + 1 < i_high) {
+                    size_t i_mid = (i_low + i_high) / 2;
+                    c = CompareToUpperCaseString(target, length, list[i_mid]);
+                    if (c == 0) {
+                        is_found = true;
+                        break;
+                    }
+                    else if (c < 0) {
+                        i_high = i_mid;
+                    }
+                    else {
+                        i_low = i_mid;
+                    }
+                }
+            }
+        }
+    }
+    return is_found;
+}
+
+bool DnsStats::IsRfc6761Tld(uint8_t * tld, size_t length)
+{
+    return IsInSortedList(rfc6761_tld, nb_rfc6771_tld, tld, length);
+}
+
+
+bool DnsStats::IsFrequentLeakTld(uint8_t * tld, size_t length)
+{
+    return IsInSortedList(FrequentTldLeak, FrequentTldLeakNb, tld, length);
+}
+
+/* Try to assess whether a leaked domain looks like the product of DGA
+ * In theory, we should be able to check that the distribution of letters 
+ * and numbers "looks random", but in practice that's very hard, since
+ * actual domain names are often created from acronyms and abbreviations */
+
+bool DnsStats::IsProbablyDgaTld(uint8_t * tld, size_t length)
+{
+    bool is_dga = (length >= 7 && length <= 15);
+
+    if (is_dga) {
+        for (int i = 0; i < length; i++) {
+            int c = tld[i];
+            if ((c < 'a' || c > 'z') && (c < 'A' || c > 'Z')) {
+                is_dga = false;
+                break;
+            }
+        }
+    }
+    return is_dga;
 }
 
 void DnsStats::SetToUpperCase(uint8_t * domain, size_t length)
@@ -1816,8 +2024,15 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                             TldAsKey key(packet + tld_offset + 1, packet[tld_offset]);
                             bool stored = false;
                             (void)tldLeakage.InsertOrAdd(&key, true, &stored);
-
-                            x_type = (previous_offset == 0) ? dnsLeakSinglePart : dnsLeakMultiPart;
+                            if (IsFrequentLeakTld(packet + tld_offset + 1, packet[tld_offset])) {
+                                x_type = dnsLeakFrequent;
+                            }
+                            else if (IsProbablyDgaTld(packet + tld_offset + 1, packet[tld_offset])) {
+                                x_type = (previous_offset == 0) ? dnsLeakSinglePartDGA : dnsLeakMultiPartDGA;
+                            }
+                            else {
+                                x_type = (previous_offset == 0) ? dnsLeakSinglePart : dnsLeakMultiPart;
+                            }
 
                             /* TODO: If full enough, remove the LRU, and account for it in the patterns catalog */
                             if (tldLeakage.GetCount() > max_tld_leakage_table_count)
