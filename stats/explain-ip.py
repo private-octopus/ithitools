@@ -13,6 +13,8 @@ class ip_line:
         self.ip = 0
         self.total = 0
         self.ip_total = 0
+        self.tld_min_delay = -1
+        self.tld_avg_delay = -1
 
     def file_line(self, line):
         csv = line.split(",")
@@ -25,6 +27,14 @@ class ip_line:
                 self.ip = tokens[0]
             if (l > 1):
                 self.x_type = int(tokens[1])
+        elif (lcsv >= 4 and csv[0] == "ADDRESS_CACHE"):
+            tokens = csv[2].split("/")
+            l = len(tokens)
+            if (l > 0):
+                self.ip = tokens[0]
+            if (l > 2):
+                self.tld_min_delay = int(tokens[1])
+                self.tld_avg_delay = int(tokens[2])
 
     def to_string(self):
         l_str = str(self.ip_total)  + "," + self.ip + "," + str(self.total) + ","  + str(self.x_type)
@@ -45,6 +55,14 @@ class ip_line:
         elif (self.total < other.total):
             return -1
         elif (self.total > other.total):
+            return 1
+        elif (self.tld_min_delay < other.tld_min_delay):
+            return -1
+        elif (self.tld_min_delay > other.tld_min_delay):
+            return 1
+        elif (self.tld_avg_delay < other.tld_avg_delay):
+            return -1
+        elif (self.tld_avg_delay > other.tld_avg_delay):
             return 1
         elif (self.x_type < other.x_type):
             return -1
@@ -146,16 +164,30 @@ class IPFrequentList:
             if (len(column) >= 1):
                 ip_entry = IPFrequent()
                 if (ip_entry.load(column[0]) > 0):
-                    if (ip_list.find_target(ip_entry, 0) < 0):
+                    if (self.find_target(ip_entry, 0) < 0):
                         self.ip_list.append(ip_entry)
         csv_in.close()
+        self.ip_list.sort()
+
+    def loadList(self, listFile):
+        list_in = codecs.open(listFile, "r", "UTF-8")
+        self.ip_list = []
+        for line in list_in:
+            column=line.split(" ")
+            if (len(column) >= 1):
+                ip_entry = IPFrequent()
+                ip_entry.ip = column[0]
+                ip_entry.total = 1
+                self.ip_list.append(ip_entry)
+        list_in.close()
+        print("Sorting " + str(len(self.ip_list)) + " IP Addresses")
         self.ip_list.sort()
 
 # Main loop
 
 
-if len(sys.argv) != 5:
-    print("Usage: " + sys.argv[0] + " <input-file> <resolvers-by-ip.csv> <raw-output.csv> <table-output.csv>\n")
+if len(sys.argv) != 6:
+    print("Usage: " + sys.argv[0] + " <input-file> <resolvers-by-ip.csv> <list-file> <raw-output.csv> <table-output.csv>\n")
     exit(1)
 
 anonymize = 1
@@ -165,6 +197,13 @@ anom.set_key("ithi-privacy")
 ip_list = IPFrequentList()
 print("Opening: " + sys.argv[2])
 ip_list.load(sys.argv[2])
+print("Frequent list: " + str(len(ip_list.ip_list)) + " addresses.")
+
+long_list = IPFrequentList()
+print("Opening: " + sys.argv[3])
+long_list.loadList(sys.argv[3])
+
+print("Long list: " + str(len(long_list.ip_list)) + " addresses.")
 
 list = []
 file = codecs.open(sys.argv[1], "r", "UTF-8")
@@ -174,9 +213,10 @@ for line in file:
         line = line.rstrip()
         i_line = ip_line()
         i_line.file_line(line)
-        if (i_line.total > 0):
-            if (ip_list.find(i_line.ip, 0) < 0):
-                i_line.ip = anom.anonymizeAddress(i_line.ip)           
+        if (i_line.total > 0 or i_line.tld_min_delay >= 0):
+            if (ip_list.find(i_line.ip, 0) < 0 and
+                long_list.find(i_line.ip, 0) < 0):
+                i_line.ip = anom.anonymizeAddress(i_line.ip)
             list.append(i_line)
     except:
         e = sys.exc_info()[0]
@@ -187,10 +227,11 @@ file.close()
 
 list.sort()
 
-file_out = codecs.open(sys.argv[3], "w", "UTF-8")
+file_out = codecs.open(sys.argv[4], "w", "UTF-8")
 file_out.write("ip_total , ip , total , x_type,\n")
 for i_line in list:
-    file_out.write(i_line.to_string() + "\n")
+    if (i_line.tld_min_delay < 0):
+        file_out.write(i_line.to_string() + "\n")
 file_out.close()
 
 l = len(list)
@@ -200,8 +241,11 @@ nb_ip = 0
 total = 0
 
 while ( i < l):
-    total += list[i].total
-    nb_ip += list[i].total
+    if (list[i].tld_min_delay < 0):
+        total += list[i].total
+        nb_ip += list[i].total
+    elif (i < 100):
+        print("Delay+[" + list[i].ip + "] = " + str(list[i].tld_min_delay) + "," + str(list[i].tld_avg_delay))
     if ((i+1 >= l) or (list[i].ip != list[i+1].ip)):
         while (start_ip <= i):
             list[start_ip].ip_total = nb_ip
@@ -211,24 +255,39 @@ while ( i < l):
 
 list.sort(reverse=True)
 
-file_out = codecs.open(sys.argv[4], "w", "UTF-8")
-file_out.write("IP, frequent, total, good, binary, bad-syntax, ip, numeric, rfc6761, one-part, many-parts,\n");
+file_out = codecs.open(sys.argv[5], "w", "UTF-8")
+file_out.write("IP, frequent, seen, d-min, d-avg, total, good, binary, bad-syntax, ip, numeric, rfc6761, frequent-tld, one-part, many-parts, dga-1, dga-multi\n");
 i=0
 l=len(list)
-xt = [0, 0, 0, 0, 0, 0, 0, 0]
+nb_addresses = 0
+xt = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+tld_min_delay = 600000000
+tld_avg_delay = 600000000
 while ( i < l):
-    xt[list[i].x_type] = list[i].total
+    if (list[i].tld_min_delay < 0):
+        xt[list[i].x_type] = list[i].total
+    else:
+        if (i < 100):
+            print ("Delay++[" + list[i].ip + "] = " + str(list[i].tld_min_delay) + "," + str(list[i].tld_avg_delay));
+        tld_min_delay = list[i].tld_min_delay
+        tld_avg_delay = list[i].tld_avg_delay
     if ((i+1 >= l) or (list[i].ip != list[i+1].ip)):
         is_frequent = 0
+        is_seen = 0
         if (ip_list.find(list[i].ip, 0) >= 0):
             is_frequent = 1
-        file_out.write( list[i].ip + "," + str(is_frequent) + "," + str(list[i].ip_total) + ",")
+        if (long_list.find(list[i].ip, 0) >= 0):
+            is_seen = 1
+        file_out.write( list[i].ip + "," + str(is_frequent) + "," +  str(is_seen) + "," + 
+                      str(tld_min_delay) + "," + str(tld_avg_delay) + "," + str(list[i].ip_total) + ",")
         j = 0
-        while (j < 8):
+        while (j < len(xt)):
             file_out.write(str(xt[j]) + ",")
             xt[j] = 0
             j += 1
         file_out.write("\n")
+        nb_addresses += 1
     i += 1
 
 file_out.close();
+print("Processed " + str(nb_addresses) + " IP addresses.")

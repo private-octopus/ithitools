@@ -99,7 +99,10 @@
 #define REGISTRY_DNS_LEAK_2NDLEVEL 56
 #define REGISTRY_DNS_ADDRESS_LIST 57
 #define REGISTRY_DNS_ERRONEOUS_NAME_LIST 58
-
+#define REGISTRY_DNS_TLD_MIN_DELAY_IP 59
+#define REGISTRY_DNS_TLD_AVG_DELAY_IP 60
+#define REGISTRY_DNS_TLD_MIN_DELAY_LOAD 61
+#define REGISTRY_DNS_ADDRESS_DELAY 62
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
 #define DNS_REGISTRY_ERROR_RRCLASS (1<<1)
@@ -134,8 +137,11 @@ enum DnsStatsLeakType
     dnsLeakNumeric,
     dnsLeakIpv4,
     dnsLeakRfc6771,
+    dnsLeakFrequent,
     dnsLeakSinglePart,
-    dnsLeakMultiPart
+    dnsLeakMultiPart,
+    dnsLeakSinglePartDGA,
+    dnsLeakMultiPartDGA
 };
 
 class DnsHashEntry {
@@ -225,7 +231,7 @@ public:
 class TldAddressAsKey
 {
 public:
-    TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len);
+    TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len, my_bpftimeval ts);
     ~TldAddressAsKey();
 
     bool IsSameKey(TldAddressAsKey* key);
@@ -233,7 +239,9 @@ public:
     TldAddressAsKey* CreateCopy();
     void Add(TldAddressAsKey* key);
 
-    TldAddressAsKey * HashNext; 
+    TldAddressAsKey * HashNext;
+
+    static bool CompareByAddressAndTld(TldAddressAsKey * x, TldAddressAsKey * y);
 
     size_t addr_len;
     uint8_t addr[16];
@@ -241,6 +249,9 @@ public:
     uint8_t tld[65];
     uint32_t count;
     uint32_t hash;
+    my_bpftimeval ts;
+    my_bpftimeval ts_init;
+    int64_t tld_min_delay;
 };
 
 class DnsStats
@@ -309,7 +320,10 @@ public:
     bool is_qname_minimized;
 
     static bool IsValidTldSyntax(uint8_t * tld, size_t length);
+    static bool IsInSortedList(const char ** list, size_t nb_list, uint8_t * tld, size_t length);
     static bool IsRfc6761Tld(uint8_t * tld, size_t length);
+    static bool IsFrequentLeakTld(uint8_t * tld, size_t length);
+    static bool IsProbablyDgaTld(uint8_t * tld, size_t length);
     static void SetToUpperCase(uint8_t * domain, size_t length);
     static void TldCheck(uint8_t * domain, size_t length, bool * is_binary, bool * is_wrong_syntax, bool * is_numeric);
 
@@ -374,6 +388,7 @@ private:
     void ExportLeakedDomains();
     void ExportStringUsage();
     void ExportSecondLeaked();
+    void ExportQueryUsage();
 
     void LoadRegisteredTLD_from_memory();
 
