@@ -44,7 +44,7 @@ DnsStats::DnsStats()
     frequent_address_max_count(128),
     max_tld_leakage_count(0x80),
     max_tld_leakage_table_count(0x8000),
-    max_query_usage_count(0x8000),
+    max_query_usage_count(4000000),
     max_tld_string_usage_count(0x8000),
     max_tld_string_leakage_count(0x200),
     max_stats_by_ip_count(0x8000),
@@ -149,7 +149,11 @@ static char const * RegistryNameById[] = {
     "LeakedTLD_NUMERIC",
     "Leaked2ndLD",
     "ADDRESS_LIST",
-    "FULL_NAME_LIST"
+    "FULL_NAME_LIST",
+    "TLD_MIN_DELAY_IP",
+    "TLD_AVG_DELAY_IP",
+    "TLD_MIN_DELAY_LOAD",
+    "ADDRESS_DELAY"
 };
 
 static uint32_t RegistryNameByIdNb = sizeof(RegistryNameById) / sizeof(char const*);
@@ -2084,29 +2088,33 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                             }
                         }
                     }
-                    else if (rcode == DNS_RCODE_NOERROR)
+                    else if (rcode == DNS_RCODE_NOERROR && (ancount > 0 || nscount > 0))
                     {
                         /* Analysis of useless traffic to the root */
-                        TldAddressAsKey key(dest_addr, dest_addr_length, packet + tld_offset + 1, packet[tld_offset]);
+                        TldAddressAsKey key(dest_addr, dest_addr_length, packet + tld_offset + 1, packet[tld_offset], ts);
+                        TldAddressAsKey * present = queryUsage.Retrieve(&key);
 
-                        if (queryUsage.GetCount() >= max_query_usage_count)
-                        {
-                            /* Table is full. Just keep counting the transactions that are present */
-                            TldAddressAsKey * present = queryUsage.Retrieve(&key);
-                            if (present != NULL)
-                            {
-                                present->count++;
-                                SubmitRegistryNumber(REGISTRY_DNS_UsefulQueries, 0);
+                        if (present != NULL) {
+                            /* keep statistics about this address */
+                            present->count++;
+                            SubmitRegistryNumber(REGISTRY_DNS_UsefulQueries, 0);
+                            /* Compute the delay between this and the previous view, and update */
+                            int64_t delay = 1000000 * (ts.tv_sec - present->ts.tv_sec) + (ts.tv_usec - present->ts.tv_usec);
+
+                            if (present->tld_min_delay < 0 || present->tld_min_delay > delay) {
+                                present->tld_min_delay = delay;
                             }
-                        }
-                        else
-                        {
+                            present->ts.tv_sec = ts.tv_sec;
+                            present->ts.tv_usec = ts.tv_usec;
+                        } else if (queryUsage.GetCount() < max_query_usage_count) {
+                            /* If table is full, stick with just the transactions that are present */
                             bool stored = false;
                             (void)queryUsage.InsertOrAdd(&key, true, &stored);
 
-                            SubmitRegistryNumber(REGISTRY_DNS_UsefulQueries, (stored) ? 1 : 0);
+                            SubmitRegistryNumber(REGISTRY_DNS_UsefulQueries, 1);
                         }
 
+                        /* Analysis of traffic per TLD */
                         if (dnsstat_flags&dnsStateFlagCountTld)
                         {
                             SubmitRegistryString(REGISTRY_TLD_response, packet[tld_offset], packet + tld_offset + 1);
@@ -2377,6 +2385,151 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     } 
 }
 
+void DnsStats::ExportQueryUsage()
+{
+    /* Tabulate the entire set of query usage responses, and compute the minimum cache per address */
+
+    TldAddressAsKey *tld_address_entry;
+    std::vector<TldAddressAsKey *> lines(queryUsage.GetCount());
+    int vector_index = 0;
+    uint32_t export_count = 0;
+    const uint32_t cache_bucket[9] = { 1, 10, 30, 60, 120, 180, 240, 300, 600 };
+    uint64_t ip_per_bucket[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    uint64_t ip_per_bucket_d[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    uint64_t total_per_bucket[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+    for (uint32_t i = 0; i < queryUsage.GetSize(); i++)
+    {
+        tld_address_entry = queryUsage.GetEntry(i);
+
+        while (tld_address_entry != NULL)
+        {
+            lines[vector_index] = tld_address_entry;
+            vector_index++;
+            tld_address_entry = tld_address_entry->HashNext;
+        }
+    }
+
+    std::sort(lines.begin(), lines.end(), TldAddressAsKey::CompareByAddressAndTld);
+
+    /* Tabulate by address */
+    int64_t min_tld_delay = -1;
+    uint64_t count_per_ip = 0;
+    uint64_t tld_average_delay = 0;
+    uint64_t tld_sum_delay = 0;
+    uint64_t tld_nb_delay = 0;
+
+    for (uint32_t i = 0; i < lines.size(); i++) {
+        if (min_tld_delay < 0 ||
+            (lines[i]->tld_min_delay > 0 && lines[i]->tld_min_delay < min_tld_delay)) {
+            min_tld_delay = lines[i]->tld_min_delay;
+        }
+        count_per_ip += lines[i]->count;
+        if (lines[i]->count > 1) {
+            int64_t duration = (1000000ll * (lines[i]->ts.tv_sec - lines[i]->ts_init.tv_sec) +
+                lines[i]->ts.tv_usec - lines[i]->ts_init.tv_usec);
+            tld_sum_delay += duration;
+            tld_nb_delay += lines[i]->count - 1;
+        }
+
+        if (i + 1 >= lines.size() ||
+            lines[i]->addr_len != lines[i + 1]->addr_len ||
+            memcmp(lines[i]->addr, lines[i + 1]->addr, lines[i]->addr_len) != 0) {
+            /* Finished analyzing this IP address */
+            int i_bucket = 8;
+            int i_bucket_d = 8;
+
+            if (tld_nb_delay > 0) {
+                tld_average_delay = tld_sum_delay / tld_nb_delay;
+            }
+            else {
+                tld_average_delay = 600000000;
+            }
+            
+            for (i_bucket_d = 0; i_bucket_d < 8; i_bucket_d++) {
+                if (cache_bucket[i_bucket_d] * 1000000 > tld_average_delay) {
+                    break;
+                }
+            }
+
+            if (min_tld_delay > 0) {
+                for (i_bucket = 0; i_bucket < 8; i_bucket++) {
+                    if (cache_bucket[i_bucket] * 1000000 > min_tld_delay) {
+                        break;
+                    }
+                }
+            }
+            else if (min_tld_delay < 0) {
+                min_tld_delay = 600000000;
+            }
+            else
+            {
+                i_bucket = 0;
+            }
+            ip_per_bucket[i_bucket] += 1;
+            ip_per_bucket_d[i_bucket_d] += 1;
+            total_per_bucket[i_bucket] += count_per_ip;
+
+            /* Optional detailed data */
+            if (enable_ip_address_report) {
+                uint8_t name[512];
+                size_t name_len = 0;
+
+                if (lines[i]->addr_len == 4) {
+#ifdef _WINDOWS
+                    sprintf_s((char *)name, sizeof(name), "%d.%d.%d.%d/%d/%d",
+                        lines[i]->addr[0], lines[i]->addr[1], lines[i]->addr[2], lines[i]->addr[3],
+                        (int)min_tld_delay, (int)tld_average_delay);
+#else
+                    sprintf((char *)name, "%d.%d.%d.%d/%d/%d",
+                        lines[i]->addr[0], lines[i]->addr[1], lines[i]->addr[2], lines[i]->addr[3],
+                        (int)min_tld_delay, (int)tld_average_delay);
+#endif
+                }
+                else if (lines[i]->addr_len == 16) {
+#ifdef _WINDOWS
+                    sprintf_s((char *)name, sizeof(name),
+                        "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x/%d/%d",
+                        lines[i]->addr[0], lines[i]->addr[1], lines[i]->addr[2], lines[i]->addr[3],
+                        lines[i]->addr[4], lines[i]->addr[5], lines[i]->addr[6], lines[i]->addr[7],
+                        lines[i]->addr[8], lines[i]->addr[9], lines[i]->addr[10], lines[i]->addr[11],
+                        lines[i]->addr[12], lines[i]->addr[13], lines[i]->addr[14], lines[i]->addr[15],
+                        (int)min_tld_delay, (int)tld_average_delay);
+#else
+                    sprintf((char *)name,
+                        "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x/%d/%d",
+                        lines[i]->addr[0], lines[i]->addr[1], lines[i]->addr[2], lines[i]->addr[3],
+                        lines[i]->addr[4], lines[i]->addr[5], lines[i]->addr[6], lines[i]->addr[7],
+                        lines[i]->addr[8], lines[i]->addr[9], lines[i]->addr[10], lines[i]->addr[11],
+                        lines[i]->addr[12], lines[i]->addr[13], lines[i]->addr[14], lines[i]->addr[15],
+                        (int)min_tld_delay, (int)tld_average_delay);
+#endif
+                }
+                name_len = strlen((char *)name);
+
+                if (name_len > 0) {
+                    SubmitRegistryString(REGISTRY_DNS_ADDRESS_DELAY, (uint32_t)name_len, name);
+                }
+            }
+            /* Reset the counters */
+            min_tld_delay = -1;
+            tld_average_delay = 0;
+            count_per_ip = 0;
+            tld_sum_delay = 0;
+            tld_nb_delay = 0;
+        }
+    }
+
+    /* Add the counters per bucket */
+    for (int i_bucket = 0; i_bucket < 9; i_bucket++) {
+        SubmitRegistryNumberAndCount(REGISTRY_DNS_TLD_MIN_DELAY_IP, cache_bucket[i_bucket], ip_per_bucket[i_bucket]);
+        SubmitRegistryNumberAndCount(REGISTRY_DNS_TLD_AVG_DELAY_IP, cache_bucket[i_bucket], ip_per_bucket_d[i_bucket]);
+        SubmitRegistryNumberAndCount(REGISTRY_DNS_TLD_MIN_DELAY_LOAD, cache_bucket[i_bucket], total_per_bucket[i_bucket]);
+    }
+
+    queryUsage.Clear();
+}
+
 bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
 {
     DnsHashEntry *entry;
@@ -2397,6 +2550,8 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
     ExportStatsByIp();
     /* get the counts of DNSSEC usage per address and per zone */
     ExportDnssecUsage();
+    /* export the cache statistics */
+    ExportQueryUsage();
 
     /* Export the data */
     cs->Reserve(hashTable.GetCount()+1);
@@ -2578,11 +2733,12 @@ void TldAsKey::CanonicCopy(uint8_t * tldDest, size_t tldDestMax, size_t * tldDes
 }
 
 
-TldAddressAsKey::TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len)
+TldAddressAsKey::TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len, my_bpftimeval ts)
     :
     HashNext(NULL),
     count(1),
-    hash(0)
+    hash(0),
+    tld_min_delay(-1)
 {
     if (addr_len > 16)
     {
@@ -2591,6 +2747,12 @@ TldAddressAsKey::TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld,
 
     memcpy(this->addr, addr, addr_len);
     this->addr_len = addr_len;
+
+    this->ts.tv_sec = ts.tv_sec;
+    this->ts.tv_usec = ts.tv_usec;
+
+    this->ts_init.tv_sec = ts.tv_sec;
+    this->ts_init.tv_usec = ts.tv_usec;
 
     TldAsKey::CanonicCopy(this->tld, sizeof(this->tld) - 1, &this->tld_len, tld, tld_len);
 }
@@ -2631,11 +2793,14 @@ uint32_t TldAddressAsKey::Hash()
 
 TldAddressAsKey * TldAddressAsKey::CreateCopy()
 {
-    TldAddressAsKey* ret = new TldAddressAsKey(addr, addr_len, tld, tld_len);
+    TldAddressAsKey* ret = new TldAddressAsKey(addr, addr_len, tld, tld_len, ts);
 
     if (ret != NULL)
     {
         ret->count = count;
+        ret->tld_min_delay = tld_min_delay;
+        ret->ts_init.tv_sec = ts_init.tv_sec;
+        ret->ts_init.tv_usec = ts_init.tv_usec;
     }
 
     return ret;
@@ -2644,6 +2809,35 @@ TldAddressAsKey * TldAddressAsKey::CreateCopy()
 void TldAddressAsKey::Add(TldAddressAsKey * key)
 {
     this->count += key->count;
+}
+
+bool TldAddressAsKey::CompareByAddressAndTld(TldAddressAsKey * x, TldAddressAsKey * y)
+{
+    bool ret = x->addr_len > y->addr_len;
+
+    if (x->addr_len == y->addr_len)
+    {
+        int r = memcmp(x->addr, y->addr, x->addr_len);
+
+        if (r > 0) {
+            ret = true;
+        }
+        else if (r == 0) {
+            size_t tld_len = x->tld_len;
+            if (y->tld_len < x->tld_len) {
+                tld_len = y->tld_len;
+            }
+            r = memcmp(x->tld, y->tld, tld_len);
+            if (r > 0) {
+                ret = true;
+            }
+            else if (r == 0) {
+                ret = x->tld_len > y->tld_len;
+            }
+        }
+    }
+
+    return ret;
 }
 
 DnsHashEntry::DnsHashEntry()
