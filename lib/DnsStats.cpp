@@ -2414,7 +2414,7 @@ void DnsStats::ExportQueryUsage()
     /* Tabulate by address */
     int64_t min_tld_delay = -1;
     uint64_t count_per_ip = 0;
-    uint64_t tld_average_delay = 0;
+    uint64_t tld_average_delay;
     uint64_t tld_sum_delay = 0;
     uint64_t tld_nb_delay = 0;
 
@@ -2512,7 +2512,6 @@ void DnsStats::ExportQueryUsage()
             }
             /* Reset the counters */
             min_tld_delay = -1;
-            tld_average_delay = 0;
             count_per_ip = 0;
             tld_sum_delay = 0;
             tld_nb_delay = 0;
