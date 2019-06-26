@@ -1630,7 +1630,7 @@ bool DnsStats::IsProbablyDgaTld(uint8_t * tld, size_t length)
     bool is_dga = (length >= 7 && length <= 15);
 
     if (is_dga) {
-        for (int i = 0; i < length; i++) {
+        for (size_t i = 0; i < length; i++) {
             int c = tld[i];
             if ((c < 'a' || c > 'z') && (c < 'A' || c > 'Z')) {
                 is_dga = false;
@@ -2392,7 +2392,6 @@ void DnsStats::ExportQueryUsage()
     TldAddressAsKey *tld_address_entry;
     std::vector<TldAddressAsKey *> lines(queryUsage.GetCount());
     int vector_index = 0;
-    uint32_t export_count = 0;
     const uint32_t cache_bucket[9] = { 1, 10, 30, 60, 120, 180, 240, 300, 600 };
     uint64_t ip_per_bucket[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     uint64_t ip_per_bucket_d[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
