@@ -66,7 +66,7 @@ bool M2Data::TldIsSmaller(M2DataLine_t x, M2DataLine_t y)
 /*
  * IANA has reserved a set of registry IDs for special purpose. Data from these registries should
  * not be summed in the total number of abuse domains.
- * We add to this reserved list the registry #1797, "Stichting Registrar of Last Resort Foundation",
+ * We add to this reserved list the registrar #2482, "Stichting Registrar of Last Resort Foundation",
  * which is used to park malware domains while taking down botnets and the like.
  */
 
