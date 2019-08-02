@@ -143,7 +143,7 @@ def load_m3(file_name, metric_list):
     if (nb_queries > 0):
         for m in metric_list:
             if (m.name == "M3.1"):
-                m.add_instance(c0, nb_queries)
+                m.add_instance(c1, nb_queries)
             elif (m.name == "M3.3.2.HOME"):
                 c_tld = capture.find("LeakedTLD", 1, 0, "HOME")
                 m.add_instance(c_tld, nb_queries)
