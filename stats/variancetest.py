@@ -13,16 +13,16 @@ class metric_item:
         self.nb_measures = 0
         self.ratio_sum = 0.0
         self.ratio_s2 = 0.0
-        self.sum_x = 0
-        self.sum_x2 = 0
-        self.sum_y = 0
-        self.sum_y2 = 0
-        self.metric = 0
-        self.ratio = 0
-        self.v_ratio = 0
-        self.v_metric = 0
-        self.v_est = 0
-        self.v_est_2 = 0
+        self.sum_x = 0.0
+        self.sum_x2 = 0.0
+        self.sum_y = 0.0
+        self.sum_y2 = 0.0
+        self.metric = 0.0
+        self.ratio = 0.0
+        self.v_ratio = 0.0
+        self.v_metric = 0.0
+        self.v_est = 0.0
+        self.v_est_2 = 0.0
      
     def metric_line(self):
         s = self.name + ","
