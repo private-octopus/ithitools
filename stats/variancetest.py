@@ -58,7 +58,7 @@ class metric_item:
     def compute_variance(self):
         self.metric = self.sum_x/self.sum_y
         self.ratio = self.ratio_sum / self.nb_measures
-        self.v_ratio = self.ratio_s2 / self.nb_measures - self.ratio*self.ratio
+        self.v_ratio = (self.ratio_s2 / self.nb_measures) - self.ratio*self.ratio
         e_x = self.sum_x / self.nb_measures
         v_x = self.sum_x2 / self.nb_measures - e_x*e_x
         e_y = self.sum_y / self.nb_measures
