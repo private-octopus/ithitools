@@ -46,7 +46,9 @@ class metric_item:
         return s
 
     def add_instance(self, x, y):
-        ratio = x/y
+        ratio = 0.0
+        ratio += x
+        ratio /= y
         self.nb_measures += 1
         self.ratio_sum += ratio
         self.ratio_s2 += ratio*ratio
