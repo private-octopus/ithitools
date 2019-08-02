@@ -140,7 +140,7 @@ def load_m3(file_name, metric_list):
     c0 = capture.find("root-QR", 0, 0, "")
     c1 = capture.find("root-QR", 0, 3, "")
     nb_queries = c0 + c1
-    if (nb_queries > 0):
+    if (nb_queries > 250000):
         for m in metric_list:
             if (m.name == "M3.1"):
                 m.add_instance(c1, nb_queries)
