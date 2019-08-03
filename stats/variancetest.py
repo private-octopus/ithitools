@@ -133,26 +133,32 @@ class capture_file:
                 sum += c_line.count
         return sum
 
-def load_m3(file_name, metric_list):
+def load_m3(file_name, metric_list, sum_m3):
     capture = capture_file()
     if (capture.load(file_name) != 0):
         return -1
     c0 = capture.find("root-QR", 0, 0, "")
     c1 = capture.find("root-QR", 0, 3, "")
     nb_queries = c0 + c1
-    if (nb_queries > 250000):
-        for m in metric_list:
-            if (m.name == "M3.1"):
+    for m in metric_list:
+        if (m.name == "M3.1"):
+            if (nb_queries > 250000):
                 m.add_instance(c1, nb_queries)
-            elif (m.name == "M3.3.2.HOME"):
-                c_tld = capture.find("LeakedTLD", 1, 0, "HOME")
-                m.add_instance(c_tld, nb_queries)
-            elif (m.name == "M3.3.2.CORP"):
-                c_tld = capture.find("LeakedTLD", 1, 0, "CORP")
-                m.add_instance(c_tld, nb_queries)
-            elif (m.name == "M3.3.2.MAIL"):
-                c_tld = capture.find("LeakedTLD", 1, 0, "MAIL")
-                m.add_instance(c_tld, nb_queries)
+        elif (m.name == "M3.3.2.HOME"):
+            c_tld_home = capture.find("LeakedTLD", 1, 0, "HOME")
+            if (nb_queries > 250000):
+                m.add_instance(c_tld_home, nb_queries)
+        elif (m.name == "M3.3.2.CORP"):
+            c_tld_corp = capture.find("LeakedTLD", 1, 0, "CORP") 
+            if (nb_queries > 250000):
+                m.add_instance(c_tld_corp, nb_queries)
+        elif (m.name == "M3.3.2.MAIL"):
+            c_tld_mail = capture.find("LeakedTLD", 1, 0, "MAIL")
+            if (nb_queries > 250000):
+                m.add_instance(c_tld_mail, nb_queries)
+    sum_m3.write(file_name + "," + str(nb_queries) + "," + 
+                 str(c1) + "," + str(c_tld_home) + "," +
+                 str(c_tld_corp) + "," + str(c_tld_mail) + ",\n")
     return 0
 
 #self test functions
@@ -198,9 +204,9 @@ def capture_test(file_name, nb_lines):
         return -1
     return 0
 
-def m3_test(file_name, metric_list):
+def m3_test(file_name, metric_list, m3_test_sum):
     for x in [1, 2]:
-        if (load_m3(file_name, metric_list) != 0):
+        if (load_m3(file_name, metric_list, m3_test_sum) != 0):
             print("Error: Cannot load <" + file_name + ">\n") 
             return -1
         for m_line in metric_list:
@@ -233,26 +239,33 @@ if len(sys.argv) >= 4 and sys.argv[1] == "!":
         ret = capture_test(sys.argv[2], int(sys.argv[3]))
         if (ret == 0):
             print("Capture file test passes.\n")
-            ret = m3_test(sys.argv[2], metric_list)
+            m3_test_sum = codecs.open("test_sum_f3.csv", "w", "UTF-8")
+            ret = m3_test(sys.argv[2], metric_list, m3_test_sum)
             if (ret == 0):
                 print("M3 file test passes.\n")
                 metric_test()
+            m3_test_sum.close()
     
     exit(ret)
 
-if len(sys.argv) != 2:
+name_sum_f3 = "sum_f3.csv"
+if len(sys.argv) == 3:
+    name_sum_f3 = sys.argv[2]
+elif len(sys.argv) != 2:
     print("Usage: " + sys.argv[0] + " <file-with-list-of-captures>\n")
     exit(1)
 
 file_m3 = codecs.open(sys.argv[1], "r", "UTF-8")
+sum_m3 = codecs.open(name_sum_f3, "w", "UTF-8")
 
 for line in file_m3:
     try:
         line = line.strip()
-        load_m3(line, metric_list)
+        load_m3(line, metric_list, sum_m3)
     except:
         e = sys.exc_info()[0]
         print ( "Error" + str(e) + "\n")
+sum_m3.close()
 
 for m_line in metric_list:
     print(m_line.metric_line() + "\n")
