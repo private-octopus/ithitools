@@ -26,13 +26,22 @@ class m3name:
         file_name = parts[len(parts) - 1]
         name_parts = file_name.split("-")
         if (len(name_parts) <= 4):
+            print("Wrong syntax in " + file_name)
             return -1
-        self.m3_date = name_parts[0]
+        if (len(name_parts[0]) != 8):
+            print("Wrong date in " + file_name)
+            return -1
+        s_date = name_parts[0]
+        self.m3_date = s_date[0:4] + "/" + s_date[4:6] + "/" + s_date[6:8]
         time_parts = name_parts[1].split("_")
         if (len(time_parts) != 2):
             print("Wrong cc in " + file_name)
             return -1
-        self.m3_hour = time_parts[0]
+        if (len(time_parts[0]) != 6):
+            print("Wrong hour in " + file_name)
+            return -1
+        s_hour = time_parts[0]
+        self.m3_hour = s_hour[0:2] + ":" + s_hour[2:4] + ":" + s_hour[4:6]
         try:
             self.duration = int(time_parts[1],10)
         except:
@@ -56,8 +65,8 @@ def m3name_test():
         "/home/rarends/data/20190614/aa01-mx-mty.l.dns.icann.org/20190614-143947_300-aa01-mx-mty.l.dns.icann.org.csv",
         "/home/rarends/data/20190609/aa01-fr-par.l.dns.icann.org/20190609-144834_300-aa01-fr-par.l.dns.icann.org.csv",
         "20190609-144834_25-aa01-fr-par.l.dns.icann.org.csv"]
-    test_date = [ "20190609", "20190614", "20190609", "20190609" ]
-    test_hour = [ "132848", "143947", "144834", "144834"]
+    test_date = [ "2019/06/09", "2019/06/14", "2019/06/09", "2019/06/09" ]
+    test_hour = [ "13:28:48", "14:39:47", "14:48:34", "14:48:34"]
     test_duration = [ 300, 300, 300, 25] 
     test_country_code = [ "in", "mx", "fr", "fr" ]
     test_city_code = [ "bom", "mty", "par", "par" ]
@@ -69,11 +78,11 @@ def m3name_test():
         m3n = m3name()
         if m3n.parse_file_id(test_file[i]) != 0:
             print ("Cannot parse " + test_file[i])
-        if (test_date[i] != m3n.date):
-            print("Error, " + test_file[i] + ", date: " + m3n.date)
+        if (test_date[i] != m3n.m3_date):
+            print("Error, " + test_file[i] + ", date: " + m3n.m3_date)
             ret = -1
-        if (test_hour[i] != m3n.hour):
-            print("Error, " + test_file[i] + ", hour: " + m3n.hour)
+        if (test_hour[i] != m3n.m3_hour):
+            print("Error, " + test_file[i] + ", hour: " + m3n.m3_hour)
             ret = -1
         if (test_duration[i] != m3n.duration):
             print("Error, " + test_file[i] + ", duration: " + str(m3n.duration))

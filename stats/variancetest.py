@@ -135,6 +135,10 @@ class capture_file:
         return sum
 
 def load_m3(file_name, metric_list, sum_m3):
+    def percent_string(f):
+        p = f*100
+        return (str(p) + "%")
+
     capture = capture_file()
     if (capture.load(file_name) != 0):
         return -1
@@ -160,8 +164,8 @@ def load_m3(file_name, metric_list, sum_m3):
     m3n = m3name.m3name()
     country_code = "??"
     city_code = "???"
-    m3_date = "????????"
-    m3_hour = "??????"
+    m3_date = "????/??/??"
+    m3_hour = "??:??:??"
     duration = 0
     address_id = "????"
     if m3n.parse_file_id(file_name) == 0:
@@ -171,14 +175,33 @@ def load_m3(file_name, metric_list, sum_m3):
         m3_hour = m3n.m3_hour
         duration = m3n.duration
         address_id = m3n.address_id
+    m31 = 0.0
+    mHome = 0.0
+    mCorp = 0.0
+    mMail = 0.0
+    qps = 0
+    if nb_queries > 0:
+        m31 += c1
+        m31 /= nb_queries
+        mHome += c_tld_home
+        mHome /= nb_queries
+        mCorp += c_tld_corp
+        mCorp /= nb_queries
+        mMail += c_tld_mail
+        mMail /= nb_queries
+        if duration > 0:
+            qps = 0.0
+            qps += nb_queries
+            qps /= duration
 
     sum_m3.write(str(address_id) + "," +
                  country_code + "," + city_code + "," + 
                  m3_date + "," + m3_hour + "," +
-                 str(duration) + "," + str(nb_queries) + "," + 
-                 str(c1) + "," + str(c_tld_home) + "," +
-                 str(c_tld_corp) + "," + str(c_tld_mail) + "," +
-                 file_name + ",\n")
+                 str(duration) + "," + str(nb_queries) + "," + str(qps) + "," +
+                 str(c1) + "," + percent_string(m31) + "," +
+                 str(c_tld_home) + "," + percent_string(mHome) + "," +
+                 str(c_tld_corp) + "," + percent_string(mCorp) + "," +
+                 str(c_tld_mail) + "," + percent_string(mMail) + ",\n")
     return 0
 
 #self test functions
@@ -283,6 +306,15 @@ elif len(sys.argv) != 2:
 
 file_m3 = codecs.open(sys.argv[1], "r", "UTF-8")
 sum_m3 = codecs.open(name_sum_f3, "w", "UTF-8")
+
+sum_m3.write("address_id" + "," +
+                 "CC" + "," + "City" + "," + 
+                 "Date" + "," + "Hour" + "," +
+                 "Duration" + "," + "nb_queries" + "," + "Q/Sec" + "," +
+                 "Nb NX Domain" + "," + "%NX Domain" + "," +
+                 "Nb .Home" + "," + "% .Home" + "," +
+                 "Nb .Corp" + "," + "% .Corp" + "," +
+                 "Nb .Mail" + "," + "% .Mail" + ",\n")
 
 for line in file_m3:
     try:
