@@ -45,7 +45,7 @@ class m3name:
         if (len(name_parts[3]) != 2):
             print("Wrong city in " + file_name)
             return -1
-        if (len(city_parts[0]) != 4):
+        if (len(city_parts[0]) != 3):
             print("Wrong address id in " + file_name)
             return -1
         return 0
