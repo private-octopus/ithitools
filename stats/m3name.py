@@ -14,8 +14,8 @@ import sys
 # /home/rarends/data/20190609/aa01-in-bom.l.dns.icann.org/20190609-132848_300-aa01-in-bom.l.dns.icann.org.csv
 class m3name:
     def __init__(self):
-        self.date = ""
-        self.hour = ""
+        self.m3_date = ""
+        self.m3_hour = ""
         self.duration = 0
         self.country_code = ""
         self.city_code = ""
@@ -27,22 +27,26 @@ class m3name:
         name_parts = file_name.split("-")
         if (len(name_parts) <= 4):
             return -1
-        self.date = name_parts[0]
+        self.m3_date = name_parts[0]
         time_parts = name_parts[1].split("_")
         if (len(time_parts) != 2):
+            print("Wrong cc in " + file_name)
             return -1
-        self.hour = time_parts[0]
+        self.m3_hour = time_parts[0]
         try:
             self.duration = int(time_parts[1],10)
         except:
+            print("Wrong duration in " + file_name)
             return -1
         self.address_id = name_parts[2]
         self.country_code = name_parts[3]
         city_parts = name_parts[4].split(".")
         self.city_code = city_parts[0]
         if (len(name_parts[3]) != 2):
+            print("Wrong city in " + file_name)
             return -1
-        if (len(city_parts[0]) != 3):
+        if (len(city_parts[0]) != 4):
+            print("Wrong address id in " + file_name)
             return -1
         return 0
 
