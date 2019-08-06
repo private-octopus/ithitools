@@ -283,7 +283,7 @@ static char const * RegisteredTldName[] = {
     "SLING", "SM", "SMART", "SMILE", "SN", "SNCF", "SO", "SOCCER", "SOCIAL", "SOFTBANK",
     "SOFTWARE", "SOHU", "SOLAR", "SOLUTIONS", "SONG", "SONY", "SOY", "SPACE", "SPORT",
     "SPOT", "SPREADBETTING", "SR", "SRL", "SRT", "SS", 
-    "ST", "STADA", "STAPLES", "STAR", "STARHUB",
+    "ST", "STADA", "STAPLES", "STAR", 
     "STATEBANK", "STATEFARM", "STC", "STCGROUP", "STOCKHOLM", "STORAGE", "STORE",
     "STREAM", "STUDIO", "STUDY", "STYLE", "SU", "SUCKS", "SUPPLIES", "SUPPLY", "SUPPORT",
     "SURF", "SURGERY", "SUZUKI", "SV", "SWATCH", "SWIFTCOVER", "SWISS", "SX", "SY", "SYDNEY",
