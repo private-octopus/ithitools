@@ -6,6 +6,7 @@
 
 import codecs
 import sys
+import m3name
 
 class metric_item:
     def __init__(self, name):
@@ -155,10 +156,29 @@ def load_m3(file_name, metric_list, sum_m3):
         elif (m.name == "M3.3.2.MAIL"):
             c_tld_mail = capture.find("LeakedTLD", 1, 0, "MAIL")
             if (nb_queries > 250000):
-                m.add_instance(c_tld_mail, nb_queries)
-    sum_m3.write(file_name + "," + str(nb_queries) + "," + 
+                m.add_instance(c_tld_mail, nb_queries)      
+    m3n = m3name.m3name()
+    country_code = "??"
+    city_code = "???"
+    date = "????????"
+    hour = "??????"
+    duration = 0
+    address_id = "????"
+    if m3n.parse_file_id(test_file[i]) != 0:
+        country_code = m3n.country_code
+        city_code = m3n.city_code
+        date = m3n.date
+        hour = m3n.hour
+        duration = m3n.duration
+        address_id = m3n.address_id
+
+    sum_m3.write(str(address_id) + "," +
+                 country_code + "," + city_code + "," + 
+                 date + "," + hour + "," +
+                 str(duration) + "," + str(nb_queries) + "," + 
                  str(c1) + "," + str(c_tld_home) + "," +
-                 str(c_tld_corp) + "," + str(c_tld_mail) + ",\n")
+                 str(c_tld_corp) + "," + str(c_tld_mail) + "," +
+                 file_name + ",\n")
     return 0
 
 #self test functions
@@ -233,19 +253,25 @@ for item_name in metric_names:
 
 if len(sys.argv) >= 4 and sys.argv[1] == "!":
     # perform the self test.
-    ret = capture_line_test()
-    if (ret == 0):
-        print("Capture line test passes.\n")
-        ret = capture_test(sys.argv[2], int(sys.argv[3]))
+    ret = m3name.m3name_test()
+    if ret == 0:
+        print("m3name_test passes")
+    else:
+        print("m3name_test fails")
+    if ret == 0:
+        ret = capture_line_test()
         if (ret == 0):
-            print("Capture file test passes.\n")
-            m3_test_sum = codecs.open("test_sum_f3.csv", "w", "UTF-8")
-            ret = m3_test(sys.argv[2], metric_list, m3_test_sum)
+            print("Capture line test passes.\n")
+            ret = capture_test(sys.argv[2], int(sys.argv[3]))
             if (ret == 0):
-                print("M3 file test passes.\n")
-                metric_test()
-            m3_test_sum.close()
-    
+                print("Capture file test passes.\n")
+                m3_test_sum = codecs.open("test_sum_f3.csv", "w", "UTF-8")
+                ret = m3_test(sys.argv[2], metric_list, m3_test_sum)
+                if (ret == 0):
+                    print("M3 file test passes.\n")
+                    metric_test()
+                m3_test_sum.close()
+
     exit(ret)
 
 name_sum_f3 = "sum_f3.csv"
