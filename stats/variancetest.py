@@ -164,7 +164,7 @@ def load_m3(file_name, metric_list, sum_m3):
     m3_hour = "??????"
     duration = 0
     address_id = "????"
-    if m3n.parse_file_id(file_name) != 0:
+    if m3n.parse_file_id(file_name) == 0:
         country_code = m3n.country_code
         city_code = m3n.city_code
         m3_date = m3n.m3_date
