@@ -1979,13 +1979,13 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
             if (rootAddresses.IsInList(source_addr, source_addr_length))
             {
                 /* Perform statistics on root traffic */
-#ifdef PRIVACY_CONSCIOUS
                 SubmitRegistryNumber(REGISTRY_DNS_root_QR, rcode);
-#endif
 
                 if (gotTld)
                 {
+#ifdef PRIVACY_CONSCIOUS
                     DnsStatsLeakType x_type = dnsLeakNoLeak;
+#endif
 
                     if (rcode == DNS_RCODE_NXDOMAIN && packet[tld_offset] != 0)
                     {
