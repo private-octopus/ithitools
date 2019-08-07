@@ -129,6 +129,8 @@ enum DnsStatsFlags
     dnsStateFlagListTldUsed = 32
 };
 
+
+#ifdef PRIVACY_CONSCIOUS
 enum DnsStatsLeakType
 {
     dnsLeakNoLeak = 0,
@@ -143,6 +145,7 @@ enum DnsStatsLeakType
     dnsLeakSinglePartDGA,
     dnsLeakMultiPartDGA
 };
+#endif
 
 class DnsHashEntry {
 public:

@@ -1979,8 +1979,9 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
             if (rootAddresses.IsInList(source_addr, source_addr_length))
             {
                 /* Perform statistics on root traffic */
-
+#ifdef PRIVACY_CONSCIOUS
                 SubmitRegistryNumber(REGISTRY_DNS_root_QR, rcode);
+#endif
 
                 if (gotTld)
                 {
@@ -2005,26 +2006,36 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                         /* Analysis of domain leakage */
                         if (is_binary) {
                             SubmitRegistryNumber(REGISTRY_DNS_LEAK_BINARY, 0);
+#ifdef PRIVACY_CONSCIOUS
                             x_type = dnsLeakBinary;
+#endif
                         }
                         else if (is_bad_syntax) {
                             SubmitRegistryNumber(REGISTRY_DNS_LEAK_SYNTAX, 0);
+#ifdef PRIVACY_CONSCIOUS
                             x_type = dnsLeakBadSyntax;
+#endif
                         }
                         else if (is_numeric) {
                             if (IsIpv4Tld(packet, length, 12)) {
                                 SubmitRegistryNumber(REGISTRY_DNS_LEAK_IPV4, 0);
+#ifdef PRIVACY_CONSCIOUS
                                 x_type = dnsLeakIpv4;
+#endif
                             }
                             else {
                                 SubmitRegistryNumber(REGISTRY_DNS_LEAK_NUMERIC, 0);
+#ifdef PRIVACY_CONSCIOUS
                                 x_type = dnsLeakNumeric;
+#endif
                             }
                         }
                         else if (IsRfc6761Tld(packet + tld_offset + 1, packet[tld_offset]))
                         {
                             SubmitRegistryString(REGISTRY_DNS_RFC6761TLD, packet[tld_offset], packet + tld_offset + 1);
+#ifdef PRIVACY_CONSCIOUS
                             x_type = dnsLeakRfc6771;
+#endif
                         }
                         else
                         {
@@ -2032,6 +2043,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                             TldAsKey key(packet + tld_offset + 1, packet[tld_offset]);
                             bool stored = false;
                             (void)tldLeakage.InsertOrAdd(&key, true, &stored);
+#ifdef PRIVACY_CONSCIOUS
                             if (IsFrequentLeakTld(packet + tld_offset + 1, packet[tld_offset])) {
                                 x_type = dnsLeakFrequent;
                             }
@@ -2041,7 +2053,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                             else {
                                 x_type = (previous_offset == 0) ? dnsLeakSinglePart : dnsLeakMultiPart;
                             }
-
+#endif
                             /* TODO: If full enough, remove the LRU, and account for it in the patterns catalog */
                             if (tldLeakage.GetCount() > max_tld_leakage_table_count)
                             {
