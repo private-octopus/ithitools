@@ -2476,7 +2476,9 @@ void DnsStats::ExportQueryUsage()
                 }
             }
             else if (min_tld_delay < 0) {
+#ifdef PRIVACY_CONSCIOUS
                 min_tld_delay = 600000000;
+#endif
             }
             else
             {
