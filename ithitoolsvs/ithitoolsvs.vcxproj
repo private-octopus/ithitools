@@ -23,8 +23,8 @@
     <ProjectGuid>{8EBE8A68-3B93-4121-92D8-BB3E336139A6}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ithitools</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
     <ProjectName>ithitoolsvs</ProjectName>
+    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

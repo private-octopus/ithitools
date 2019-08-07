@@ -23,7 +23,7 @@
     <ProjectGuid>{13B71C40-E902-430A-86AE-6DF9FF5649E3}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>clitest</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

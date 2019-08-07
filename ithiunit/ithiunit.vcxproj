@@ -23,8 +23,8 @@
     <ProjectGuid>{E1ECEA66-5577-4C57-9B1D-1437DE43EA1F}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>ithiunit</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
     <ProjectSubType>NativeUnitTestProject</ProjectSubType>
+    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
