@@ -38,8 +38,10 @@ DnsStats::DnsStats()
     duration_usec(0),
     volume_53only(0),
     enable_frequent_address_filtering(false),
+#ifdef PRIVACY_CONSCIOUS
     enable_ip_address_report(false),
     enable_erroneous_name_list(false),
+#endif
     target_number_dns_packets(0),
     frequent_address_max_count(128),
     max_tld_leakage_count(0x80),
@@ -1986,6 +1988,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
 
                     if (rcode == DNS_RCODE_NXDOMAIN && packet[tld_offset] != 0)
                     {
+#ifdef PRIVACY_CONSCIOUS
                         /* Debug option, list all the erroneous addresses */
                         if (enable_erroneous_name_list) {
                             uint8_t name[1024];
@@ -1998,6 +2001,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                                 SubmitRegistryString(REGISTRY_DNS_ERRONEOUS_NAME_LIST, (uint32_t)name_len, name);
                             }
                         }
+#endif
                         /* Analysis of domain leakage */
                         if (is_binary) {
                             SubmitRegistryNumber(REGISTRY_DNS_LEAK_BINARY, 0);
@@ -2120,7 +2124,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                             SubmitRegistryString(REGISTRY_TLD_response, packet[tld_offset], packet + tld_offset + 1);
                         }
                     }
-
+#ifdef PRIVACY_CONSCIOUS
                     if (enable_ip_address_report) {
                         uint8_t name[512];
                         size_t name_len = 0;
@@ -2159,6 +2163,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                             SubmitRegistryString(REGISTRY_DNS_ADDRESS_LIST, (uint32_t)name_len, name);
                         }
                     }
+#endif
                 }
             }
             else if (gotTld)
@@ -2469,6 +2474,7 @@ void DnsStats::ExportQueryUsage()
             ip_per_bucket_d[i_bucket_d] += 1;
             total_per_bucket[i_bucket] += count_per_ip;
 
+#ifdef PRIVACY_CONSCIOUS
             /* Optional detailed data */
             if (enable_ip_address_report) {
                 uint8_t name[512];
@@ -2510,6 +2516,7 @@ void DnsStats::ExportQueryUsage()
                     SubmitRegistryString(REGISTRY_DNS_ADDRESS_DELAY, (uint32_t)name_len, name);
                 }
             }
+#endif
             /* Reset the counters */
             min_tld_delay = -1;
             count_per_ip = 0;

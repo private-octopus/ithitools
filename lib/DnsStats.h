@@ -297,8 +297,10 @@ public:
     int64_t duration_usec;
     uint64_t volume_53only;
     bool enable_frequent_address_filtering;
+#ifdef PRIVACY_CONSCIOUS
     bool enable_ip_address_report;
     bool enable_erroneous_name_list;
+#endif
     uint32_t target_number_dns_packets;
     uint32_t frequent_address_max_count;
     uint32_t max_tld_leakage_count; 
