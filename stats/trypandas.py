@@ -11,5 +11,14 @@ import numpy as np
 
 # load the CSV file
 
-df = pd.read_csv(argv[1])
-df
+df = pd.read_csv(sys.argv[1])
+
+print(df.index)
+
+print(df.dtypes)
+
+df_cc = df.sort_values(by='CC')
+print(df_cc.head())
+
+i = 0
+
