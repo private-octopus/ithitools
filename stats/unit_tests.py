@@ -42,12 +42,4 @@ if ret == 0:
         if (ret == 0):
             print("Capture file test passes.")
 
-if (ret == 0):
-    print("\nWALK")
-    file_list = []
-    mypath = ".."
-    ithiwalk(file_list,mypath)
-    for file in file_list:
-        print(file)
-
 exit(ret)

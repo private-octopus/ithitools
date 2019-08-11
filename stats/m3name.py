@@ -12,6 +12,7 @@ import sys
 
 # parse file names like
 # /home/rarends/data/20190609/aa01-in-bom.l.dns.icann.org/20190609-132848_300-aa01-in-bom.l.dns.icann.org.csv
+# or 20180512-105748_300-bah01.l.root-servers.org.csv
 class m3name:
     def __init__(self):
         self.m3_date = ""
@@ -25,7 +26,28 @@ class m3name:
         parts = file_id.split("/")
         file_name = parts[len(parts) - 1]
         name_parts = file_name.split("-")
-        if (len(name_parts) <= 4):
+        if (len(name_parts) >= 5):
+            self.address_id = name_parts[2]
+            self.country_code = name_parts[3]
+            city_parts = name_parts[4].split(".")
+            self.city_code = city_parts[0]
+            if (len(self.country_code) != 2):
+                print("Wrong Country Code in " + file_name)
+                return -1
+            if (len(self.city_code) != 3):
+                print("Wrong City Code id in " + file_name)
+                return -1
+        elif (len(name_parts) >= 3):
+            self.country_code = "??"
+            old_city_parts = name_parts[2].split(".")
+            if len(old_city_parts[0]) != 5:
+                print("Wrong Country Code in " + file_name)
+                return -1
+            else:
+                old_city = old_city_parts[0]
+                self.address_id = "aa" + old_city[3:5]
+                self.city_code = old_city[0:3]
+        else:
             print("Wrong syntax in " + file_name)
             return -1
         if (len(name_parts[0]) != 8):
@@ -47,16 +69,7 @@ class m3name:
         except:
             print("Wrong duration in " + file_name)
             return -1
-        self.address_id = name_parts[2]
-        self.country_code = name_parts[3]
-        city_parts = name_parts[4].split(".")
-        self.city_code = city_parts[0]
-        if (len(name_parts[3]) != 2):
-            print("Wrong city in " + file_name)
-            return -1
-        if (len(city_parts[0]) != 3):
-            print("Wrong address id in " + file_name)
-            return -1
+        
         return 0
 
 def m3name_test():
@@ -64,13 +77,14 @@ def m3name_test():
         "/home/rarends/data/20190609/aa01-in-bom.l.dns.icann.org/20190609-132848_300-aa01-in-bom.l.dns.icann.org.csv",
         "/home/rarends/data/20190614/aa01-mx-mty.l.dns.icann.org/20190614-143947_300-aa01-mx-mty.l.dns.icann.org.csv",
         "/home/rarends/data/20190609/aa01-fr-par.l.dns.icann.org/20190609-144834_300-aa01-fr-par.l.dns.icann.org.csv",
-        "20190609-144834_25-aa01-fr-par.l.dns.icann.org.csv"]
-    test_date = [ "2019/06/09", "2019/06/14", "2019/06/09", "2019/06/09" ]
-    test_hour = [ "13:28:48", "14:39:47", "14:48:34", "14:48:34"]
-    test_duration = [ 300, 300, 300, 25] 
-    test_country_code = [ "in", "mx", "fr", "fr" ]
-    test_city_code = [ "bom", "mty", "par", "par" ]
-    test_address_id = ["aa01", "aa01", "aa01", "aa01" ]
+        "20190609-144834_25-aa01-fr-par.l.dns.icann.org.csv",
+        "20180512-105748_300-bah01.l.root-servers.org.csv"]
+    test_date = [ "2019/06/09", "2019/06/14", "2019/06/09", "2019/06/09", "2018/05/12" ]
+    test_hour = [ "13:28:48", "14:39:47", "14:48:34", "14:48:34", "10:57:48"]
+    test_duration = [ 300, 300, 300, 25, 300] 
+    test_country_code = [ "in", "mx", "fr", "fr", "??" ]
+    test_city_code = [ "bom", "mty", "par", "par", "bah" ]
+    test_address_id = ["aa01", "aa01", "aa01", "aa01", "aa01" ]
 
     i = 0
     ret = 0
