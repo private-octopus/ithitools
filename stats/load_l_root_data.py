@@ -11,6 +11,7 @@ import os
 from os.path import isfile, join
 
 def ithiwalk(file_list, path):
+    print(path)
     for x in os.listdir(path):
         y = join(path, x)
         if isfile(y):
@@ -37,7 +38,7 @@ def load_m3(file_name, sum_m3):
         m3n.city_code + "," +
         m3n.m3_date + "," + 
         m3n.m3_hour + "," + 
-        str(duration) + "," 
+        str(m3n.duration) + "," 
         + str(nb_queries) + "," + 
         str(c1) + "," +
         str(c_tld_home) + "," + 
