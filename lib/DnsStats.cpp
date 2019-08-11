@@ -38,8 +38,10 @@ DnsStats::DnsStats()
     duration_usec(0),
     volume_53only(0),
     enable_frequent_address_filtering(false),
+#ifdef PRIVACY_CONSCIOUS
     enable_ip_address_report(false),
     enable_erroneous_name_list(false),
+#endif
     target_number_dns_packets(0),
     frequent_address_max_count(128),
     max_tld_leakage_count(0x80),
@@ -212,7 +214,7 @@ static char const * RegisteredTldName[] = {
     "FOREX", "FORSALE", "FORUM", "FOUNDATION", "FOX", "FR", "FREE", "FRESENIUS", "FRL",
     "FROGANS", "FRONTDOOR", "FRONTIER", "FTR", "FUJITSU", "FUJIXEROX", "FUN", "FUND",
     "FURNITURE", "FUTBOL", "FYI", "GA", "GAL", "GALLERY", "GALLO", "GALLUP", "GAME", "GAMES",
-    "GAP", "GARDEN", "GB", "GBIZ", "GD", "GDN", "GE", "GEA", "GENT", "GENTING", "GEORGE",
+    "GAP", "GARDEN", "GAY", "GB", "GBIZ", "GD", "GDN", "GE", "GEA", "GENT", "GENTING", "GEORGE",
     "GF", "GG", "GGEE", "GH", "GI", "GIFT", "GIFTS", "GIVES", "GIVING", "GL", "GLADE",
     "GLASS", "GLE", "GLOBAL", "GLOBO", "GM", "GMAIL", "GMBH", "GMO", "GMX", "GN", "GODADDY",
     "GOLD", "GOLDPOINT", "GOLF", "GOO", "GOODYEAR", "GOOG", "GOOGLE", "GOP",
@@ -1977,15 +1979,17 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
             if (rootAddresses.IsInList(source_addr, source_addr_length))
             {
                 /* Perform statistics on root traffic */
-
                 SubmitRegistryNumber(REGISTRY_DNS_root_QR, rcode);
 
                 if (gotTld)
                 {
+#ifdef PRIVACY_CONSCIOUS
                     DnsStatsLeakType x_type = dnsLeakNoLeak;
+#endif
 
                     if (rcode == DNS_RCODE_NXDOMAIN && packet[tld_offset] != 0)
                     {
+#ifdef PRIVACY_CONSCIOUS
                         /* Debug option, list all the erroneous addresses */
                         if (enable_erroneous_name_list) {
                             uint8_t name[1024];
@@ -1998,29 +2002,40 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                                 SubmitRegistryString(REGISTRY_DNS_ERRONEOUS_NAME_LIST, (uint32_t)name_len, name);
                             }
                         }
+#endif
                         /* Analysis of domain leakage */
                         if (is_binary) {
                             SubmitRegistryNumber(REGISTRY_DNS_LEAK_BINARY, 0);
+#ifdef PRIVACY_CONSCIOUS
                             x_type = dnsLeakBinary;
+#endif
                         }
                         else if (is_bad_syntax) {
                             SubmitRegistryNumber(REGISTRY_DNS_LEAK_SYNTAX, 0);
+#ifdef PRIVACY_CONSCIOUS
                             x_type = dnsLeakBadSyntax;
+#endif
                         }
                         else if (is_numeric) {
                             if (IsIpv4Tld(packet, length, 12)) {
                                 SubmitRegistryNumber(REGISTRY_DNS_LEAK_IPV4, 0);
+#ifdef PRIVACY_CONSCIOUS
                                 x_type = dnsLeakIpv4;
+#endif
                             }
                             else {
                                 SubmitRegistryNumber(REGISTRY_DNS_LEAK_NUMERIC, 0);
+#ifdef PRIVACY_CONSCIOUS
                                 x_type = dnsLeakNumeric;
+#endif
                             }
                         }
                         else if (IsRfc6761Tld(packet + tld_offset + 1, packet[tld_offset]))
                         {
                             SubmitRegistryString(REGISTRY_DNS_RFC6761TLD, packet[tld_offset], packet + tld_offset + 1);
+#ifdef PRIVACY_CONSCIOUS
                             x_type = dnsLeakRfc6771;
+#endif
                         }
                         else
                         {
@@ -2028,6 +2043,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                             TldAsKey key(packet + tld_offset + 1, packet[tld_offset]);
                             bool stored = false;
                             (void)tldLeakage.InsertOrAdd(&key, true, &stored);
+#ifdef PRIVACY_CONSCIOUS
                             if (IsFrequentLeakTld(packet + tld_offset + 1, packet[tld_offset])) {
                                 x_type = dnsLeakFrequent;
                             }
@@ -2037,7 +2053,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                             else {
                                 x_type = (previous_offset == 0) ? dnsLeakSinglePart : dnsLeakMultiPart;
                             }
-
+#endif
                             /* TODO: If full enough, remove the LRU, and account for it in the patterns catalog */
                             if (tldLeakage.GetCount() > max_tld_leakage_table_count)
                             {
@@ -2120,7 +2136,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                             SubmitRegistryString(REGISTRY_TLD_response, packet[tld_offset], packet + tld_offset + 1);
                         }
                     }
-
+#ifdef PRIVACY_CONSCIOUS
                     if (enable_ip_address_report) {
                         uint8_t name[512];
                         size_t name_len = 0;
@@ -2159,6 +2175,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                             SubmitRegistryString(REGISTRY_DNS_ADDRESS_LIST, (uint32_t)name_len, name);
                         }
                     }
+#endif
                 }
             }
             else if (gotTld)
@@ -2459,7 +2476,9 @@ void DnsStats::ExportQueryUsage()
                 }
             }
             else if (min_tld_delay < 0) {
+#ifdef PRIVACY_CONSCIOUS
                 min_tld_delay = 600000000;
+#endif
             }
             else
             {
@@ -2469,6 +2488,7 @@ void DnsStats::ExportQueryUsage()
             ip_per_bucket_d[i_bucket_d] += 1;
             total_per_bucket[i_bucket] += count_per_ip;
 
+#ifdef PRIVACY_CONSCIOUS
             /* Optional detailed data */
             if (enable_ip_address_report) {
                 uint8_t name[512];
@@ -2510,6 +2530,7 @@ void DnsStats::ExportQueryUsage()
                     SubmitRegistryString(REGISTRY_DNS_ADDRESS_DELAY, (uint32_t)name_len, name);
                 }
             }
+#endif
             /* Reset the counters */
             min_tld_delay = -1;
             count_per_ip = 0;
