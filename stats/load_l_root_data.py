@@ -9,7 +9,6 @@ import m3name
 import captures
 import os
 from os.path import isfile, join
-import glob
 
 def ithiwalk(file_list, path):
     for x in os.listdir(path):

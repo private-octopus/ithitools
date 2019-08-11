@@ -7,6 +7,18 @@ import codecs
 import sys
 import m3name
 import captures
+import os
+from os.path import isfile, join
+import glob
+
+def ithiwalk(file_list, path):
+    for x in os.listdir(path):
+        y = join(path, x)
+        if isfile(y):
+            file_list.append(y)
+        else:
+            ithiwalk(file_list, y)
+
 
 # By default, we expect to test with the file "data/tiny_capture.csv, which has 589 lines.
 if len(sys.argv) < 3:
@@ -29,5 +41,13 @@ if ret == 0:
         ret = captures.capture_test(sys.argv[1], int(sys.argv[2]))
         if (ret == 0):
             print("Capture file test passes.")
+
+if (ret == 0):
+    print("\nWALK")
+    file_list = []
+    mypath = ".."
+    ithiwalk(file_list,mypath)
+    for file in file_list:
+        print(file)
 
 exit(ret)
