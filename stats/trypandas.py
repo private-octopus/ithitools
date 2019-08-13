@@ -17,7 +17,7 @@ print(df.index)
 
 print(df.dtypes)
 
-df_cc = df.sort_values(by='CC')
+df_cc = df.sort_values(by="CC")
 print(df_cc.head())
 
 i = 0

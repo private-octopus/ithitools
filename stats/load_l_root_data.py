@@ -60,7 +60,7 @@ sum_m3.write("address_id" + "," +
                  "Nb NX Domain" + "," + 
                  "Nb .Home" + "," + 
                  "Nb .Corp" + "," + 
-                 "Nb .Mail" + "," + "\n")
+                 "Nb .Mail" + "\n")
 
 file_list = []
 ithiwalk(file_list,mypath)
