@@ -9,15 +9,22 @@ import codecs
 from enum import Enum
 import copy
 import traceback
+import datetime
 
 class projection(Enum):
     country = 1
     city = 2
+    country_day = 3
+    country_weekday = 4
+    country_hour = 5
 
 class m3summary_line():
     default_address_id = "aa00"
     default_date = "2020-01-01"
+    default_weekday = [
+        "2020-01-06", "2020-01-07", "2020-01-08", "2020-01-09", "2020-01-10", "2020-01-11", "2020-01-12"]
     default_hour = "00:00:00"
+    default_minute = ":00:00"
     default_city = "zzz"
 
     def __init__(self):
@@ -86,6 +93,30 @@ class m3summary_line():
             p.address_id = m3summary_line.default_address_id
             p.date = m3summary_line.default_date
             p.hour = m3summary_line.default_hour
+        elif p_enum == projection.country_day:
+            p.address_id = m3summary_line.default_address_id
+            p.city = m3summary_line.default_city
+            p.hour = m3summary_line.default_hour
+        elif p_enum == projection.country_weekday:
+            p.address_id = m3summary_line.default_address_id
+            p.city = m3summary_line.default_city
+            p.hour = m3summary_line.default_hour
+            try:
+                datepart = p.date.split("-")
+                dt = datetime.datetime(int(datepart[0]),int(datepart[1]),int(datepart[2]))
+                p.date = m3summary_line.default_weekday[dt.weekday()]
+            except:
+                print("Cannot set date: " + datepart[0] + "-" + datepart[1]+ "-" + datepart[2])
+                p.date = m3summary_line.default_weekday[0]
+        elif p_enum == projection.country_hour:
+            p.address_id = m3summary_line.default_address_id
+            p.city = m3summary_line.default_city
+            p.date = m3summary_line.default_date
+            hpart = p.hour.split(":")
+            if len(hpart) == 3:
+                p.hour = hpart[0] + m3summary_line.default_minute
+            else:
+                p.hour = m3summary_line.default_hour
         else:
             raise ValueError("Unsupported projection")
         return p
@@ -216,6 +247,14 @@ class m3summary_list:
 # self_test function
 
 def m3summary_line_test():
+    def test_projection(m3l, p_enum, p_ref):
+        r = 0
+        pcc = m3l.project(p_enum)
+        if pcc.to_string() != p_ref[i]:
+            print("p(" + str(p_enum) + ": " + pcc.to_string() + "\n    for: " + p_ref[i])
+            r = -1
+        return r
+
     test_cases = [
         "address_id,CC,City,Date,Hour,Duration,nb_queries,Nb_NX_Domain,Nb_Home,Nb_Corp,Nb_Mail",
         "aa01,br,sjk,2019-08-03,06:17:58,300,38,8,0,0,0",
@@ -228,13 +267,22 @@ def m3summary_line_test():
     test_nb_queries = [ 0, 38, 152625, 0, 0]
     proj_cases = [
         "aa01,br,sjk,2019-08-03,06:17:58,300,38,8,0,0,0",
-        "aa05,us,lax,2019-08-03,18:36:45,300,152625,102924,4619,1290,0"]
+        "aa05,us,lax,2019-08-05,18:36:45,300,152625,102924,4619,1290,0"]
     proj_country = [
         "aa00,br,zzz,2020-01-01,00:00:00,300,38,8,0,0,0",
         "aa00,us,zzz,2020-01-01,00:00:00,300,152625,102924,4619,1290,0"]
     proj_city = [
         "aa00,br,sjk,2020-01-01,00:00:00,300,38,8,0,0,0",
         "aa00,us,lax,2020-01-01,00:00:00,300,152625,102924,4619,1290,0"]
+    proj_country_day = [
+        "aa00,br,zzz,2019-08-03,00:00:00,300,38,8,0,0,0",
+        "aa00,us,zzz,2019-08-05,00:00:00,300,152625,102924,4619,1290,0"]
+    proj_country_weekday = [
+        "aa00,br,zzz,2020-01-11,00:00:00,300,38,8,0,0,0",
+        "aa00,us,zzz,2020-01-06,00:00:00,300,152625,102924,4619,1290,0"]
+    proj_country_hour = [
+        "aa00,br,zzz,2020-01-01,06:00:00,300,38,8,0,0,0",
+        "aa00,us,zzz,2020-01-01,18:00:00,300,152625,102924,4619,1290,0"]
 
     i = 0
     r = 0
@@ -264,14 +312,11 @@ def m3summary_line_test():
             print("Returned " + str(ret) + " for: " + proj_cases[i])
             r = -1
         else:
-            pcc = m3l.project(projection.country)
-            if pcc.to_string() != proj_country[i]:
-                print("p(cc)   : " + pcc.to_string() + "\n    for: " + proj_country[i])
-                r = -1
-            pcity = m3l.project(projection.city)
-            if pcity.to_string() != proj_city[i]:
-                print("p(city): " + pcity.to_string() + "\n    for: " + proj_city[i])
-                r = -1
+            r += test_projection(m3l, projection.country, proj_country)
+            r += test_projection(m3l, projection.city, proj_city)
+            r += test_projection(m3l, projection.country_day, proj_country_day)
+            r += test_projection(m3l, projection.country_weekday, proj_country_weekday)
+            r += test_projection(m3l, projection.country_hour, proj_country_hour)
         i += 1
 
     return r
