@@ -35,7 +35,7 @@ typedef struct _capture_line
     union
     {
         int key_number;
-        char key_value[64];
+        char key_value[128];
     };
     uint64_t count;
 } CaptureLine;

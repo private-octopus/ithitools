@@ -126,7 +126,9 @@ enum DnsStatsFlags
     dnsStateFlagCountQueryParms = 4,
     dnsStateFlagCountUnderlinedNames = 8,
     dnsStateFlagCountPacketSizes = 16,
-    dnsStateFlagListTldUsed = 32
+    dnsStateFlagListTldUsed = 32,
+    dbsStateFlagReportResolverIPAddress = 64,
+    dbsStateFlagListErroneousNames = 128
 };
 
 
@@ -300,10 +302,6 @@ public:
     int64_t duration_usec;
     uint64_t volume_53only;
     bool enable_frequent_address_filtering;
-#ifdef PRIVACY_CONSCIOUS
-    bool enable_ip_address_report;
-    bool enable_erroneous_name_list;
-#endif
     uint32_t target_number_dns_packets;
     uint32_t frequent_address_max_count;
     uint32_t max_tld_leakage_count; 
@@ -366,6 +364,7 @@ public:
 
     static bool GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t *offset, uint32_t * previous_offset, int * nb_name_parts);
 
+    static int64_t DeltaUsec(long tv_sec, long tv_usec, long tv_sec_start, long tv_usec_start);
 private:
     bool LoadPcapFile(char const * fileName);
 
