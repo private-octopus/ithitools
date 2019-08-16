@@ -38,10 +38,6 @@ DnsStats::DnsStats()
     duration_usec(0),
     volume_53only(0),
     enable_frequent_address_filtering(false),
-#ifdef PRIVACY_CONSCIOUS
-    enable_ip_address_report(false),
-    enable_erroneous_name_list(false),
-#endif
     target_number_dns_packets(0),
     frequent_address_max_count(128),
     max_tld_leakage_count(0x80),
@@ -53,7 +49,15 @@ DnsStats::DnsStats()
     dnsstat_flags(0),
     record_count(0),
     query_count(0),
-    response_count(0)
+    response_count(0),
+    error_flags(0),
+    dnssec_name_index(0),
+    is_do_flag_set(false),
+    is_using_edns(false),
+    edns_options(NULL),
+    edns_options_length(0),
+    is_qname_minimized(false)
+
 {
 }
 
@@ -1004,6 +1008,15 @@ bool DnsStats::GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_
     return ret;
 }
 
+int64_t DnsStats::DeltaUsec(long tv_sec, long tv_usec, long tv_sec_start, long tv_usec_start)
+{
+    int32_t delta_usec = tv_usec - tv_usec_start;
+    int32_t delta_sec = tv_sec - tv_sec_start;
+    int64_t delta_t = (int64_t)delta_sec * 1000000;
+    delta_t += delta_usec;
+    return delta_t;
+}
+
 int DnsStats::GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
     uint8_t * name, size_t name_max, size_t * name_length)
 {
@@ -1762,7 +1775,7 @@ bool DnsStats::LoadPcapFile(char const * fileName)
             if (reader.tp_version == 17 &&
                 (reader.tp_port1 == 53 || reader.tp_port2 == 53))
             {
-                data_udp53 += reader.tp_length - 8;
+                data_udp53 += (uint64_t)reader.tp_length - 8;
 
                 if (reader.is_fragment)
                 {
@@ -1888,10 +1901,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
         t_start_usec = ts.tv_usec;
     }
     else {
-        int32_t delta_usec = ts.tv_usec - t_start_usec;
-        int64_t delta_t = ts.tv_sec - t_start_sec;
-        delta_t *= 1000000;
-        delta_t += delta_usec;
+        int64_t delta_t = DeltaUsec(ts.tv_sec, ts.tv_usec, t_start_sec, t_start_usec);
 
         if (delta_t < 0) {
             t_start_sec = ts.tv_sec;
@@ -1991,7 +2001,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                     {
 #ifdef PRIVACY_CONSCIOUS
                         /* Debug option, list all the erroneous addresses */
-                        if (enable_erroneous_name_list) {
+                        if (dnsstat_flags&dbsStateFlagListErroneousNames) {
                             uint8_t name[1024];
                             size_t name_len = 0;
 
@@ -2115,7 +2125,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                             present->count++;
                             SubmitRegistryNumber(REGISTRY_DNS_UsefulQueries, 0);
                             /* Compute the delay between this and the previous view, and update */
-                            int64_t delay = 1000000 * (ts.tv_sec - present->ts.tv_sec) + (ts.tv_usec - present->ts.tv_usec);
+                            int64_t delay = DeltaUsec(ts.tv_sec, ts.tv_usec, present->ts.tv_sec, present->ts.tv_usec);
 
                             if (present->tld_min_delay < 0 || present->tld_min_delay > delay) {
                                 present->tld_min_delay = delay;
@@ -2137,7 +2147,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                         }
                     }
 #ifdef PRIVACY_CONSCIOUS
-                    if (enable_ip_address_report) {
+                    if (dnsstat_flags& dbsStateFlagReportResolverIPAddress) {
                         uint8_t name[512];
                         size_t name_len = 0;
 
@@ -2435,15 +2445,14 @@ void DnsStats::ExportQueryUsage()
     uint64_t tld_sum_delay = 0;
     uint64_t tld_nb_delay = 0;
 
-    for (uint32_t i = 0; i < lines.size(); i++) {
+    for (size_t i = 0; i < lines.size(); i++) {
         if (min_tld_delay < 0 ||
             (lines[i]->tld_min_delay > 0 && lines[i]->tld_min_delay < min_tld_delay)) {
             min_tld_delay = lines[i]->tld_min_delay;
         }
         count_per_ip += lines[i]->count;
         if (lines[i]->count > 1) {
-            int64_t duration = (1000000ll * (lines[i]->ts.tv_sec - lines[i]->ts_init.tv_sec) +
-                lines[i]->ts.tv_usec - lines[i]->ts_init.tv_usec);
+            int64_t duration = DeltaUsec(lines[i]->ts.tv_sec, lines[i]->ts.tv_usec, lines[i]->ts_init.tv_sec, lines[i]->ts_init.tv_usec);
             tld_sum_delay += duration;
             tld_nb_delay += lines[i]->count - 1;
         }
@@ -2463,14 +2472,14 @@ void DnsStats::ExportQueryUsage()
             }
             
             for (i_bucket_d = 0; i_bucket_d < 8; i_bucket_d++) {
-                if (cache_bucket[i_bucket_d] * 1000000 > tld_average_delay) {
+                if ((uint64_t)cache_bucket[i_bucket_d] * 1000000 > tld_average_delay) {
                     break;
                 }
             }
 
             if (min_tld_delay > 0) {
                 for (i_bucket = 0; i_bucket < 8; i_bucket++) {
-                    if (cache_bucket[i_bucket] * 1000000 > min_tld_delay) {
+                    if ((uint64_t)cache_bucket[i_bucket] * 1000000 > (uint64_t)min_tld_delay) {
                         break;
                     }
                 }
@@ -2490,9 +2499,11 @@ void DnsStats::ExportQueryUsage()
 
 #ifdef PRIVACY_CONSCIOUS
             /* Optional detailed data */
-            if (enable_ip_address_report) {
+            if (dnsstat_flags& dbsStateFlagReportResolverIPAddress) {
                 uint8_t name[512];
                 size_t name_len = 0;
+
+                name[0] = 0;
 
                 if (lines[i]->addr_len == 4) {
 #ifdef _WINDOWS
@@ -2552,6 +2563,7 @@ void DnsStats::ExportQueryUsage()
 bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
 {
     DnsHashEntry *entry;
+    CaptureLine line;
 
     /* Export the duration if not already done */
     if (t_start_sec != 0 && t_start_usec != 0) {
@@ -2573,7 +2585,7 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
     ExportQueryUsage();
 
     /* Export the data */
-    cs->Reserve(hashTable.GetCount()+1);
+    cs->Reserve((size_t)hashTable.GetCount()+1);
 
     /* Export the stored values */
     for (uint32_t i = 0; i < hashTable.GetSize(); i++)
@@ -2582,8 +2594,6 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
 
         while (entry != NULL)
         {
-            CaptureLine line;
-
             if (entry->registry_id < RegistryNameByIdNb)
             {
                 memcpy(line.registry_name, RegistryNameById[entry->registry_id],
@@ -2616,7 +2626,7 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
             }
             else
             {
-                char text[1024];
+                char text[128];
                 size_t text_length = 0;
                 bool previous_was_space = true; /* Cannot have space at beginning */
 
@@ -2657,8 +2667,14 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
                     }
                 }
 
-                memcpy(line.key_value, text, text_length);
-                line.key_value[text_length] = 0;
+                if (text_length < sizeof(line.key_value)) {
+                    memcpy(line.key_value, text, text_length);
+                    line.key_value[text_length] = 0;
+                }
+                else {
+                    text[text_length] = 0;
+                    fprintf(stderr, "Cannot copy key value: %s\n", text);
+                }
             }
             line.count = entry->count;
 
@@ -2869,6 +2885,7 @@ DnsHashEntry::DnsHashEntry()
     key_length(0),
     key_number(0)
 {
+    key_value[0] = 0;
 }
 
 DnsHashEntry::~DnsHashEntry()
@@ -3373,6 +3390,7 @@ void DnssecPrefixEntry::Add(DnssecPrefixEntry * key)
 
 DomainEntry::DomainEntry() 
     :
+    HashNext(NULL),
     hash(0),
     domain_length(0),
     domain (NULL),
@@ -3423,7 +3441,7 @@ DomainEntry * DomainEntry::CreateCopy()
                 delete[] key->domain;
             }
 
-            key->domain = new char[domain_length+1];
+            key->domain = new char[(size_t)domain_length+1];
 
             if (key->domain == NULL) {
                 delete key;

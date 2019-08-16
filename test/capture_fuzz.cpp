@@ -117,7 +117,7 @@ bool capture_fuzz::LoadPcapFile(char const * fileName)
                 else
                 {
                     if (FuzzPacket(reader.buffer + reader.tp_offset + 8,
-                        reader.tp_length - 8)) {
+                        (size_t)reader.tp_length - 8)) {
                         try {
                             my_bpftimeval ts;
                             ts.tv_sec = reader.frame_header.ts_sec;

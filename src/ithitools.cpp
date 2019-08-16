@@ -268,10 +268,10 @@ int main(int argc, char ** argv)
             break;
 #ifdef PRIVACY_CONSCIOUS
         case 'A':
-            stats.enable_ip_address_report = true;
+            stats.dnsstat_flags |= dbsStateFlagReportResolverIPAddress;
             break;
         case 'E':
-            stats.enable_erroneous_name_list = true;
+            stats.dnsstat_flags |= dbsStateFlagListErroneousNames;
             break;
 #endif
         case 'S':
@@ -280,6 +280,7 @@ int main(int argc, char ** argv)
             exit_code = check_execution_mode(ithi_mode_summary, &exec_mode);
             break;
         case 'T':
+            stats.dnsstat_flags |= dnsStateFlagCountTld;
             stats.dnsstat_flags |= dnsStateFlagListTldUsed;
             break;
         case 't':
@@ -422,7 +423,7 @@ int main(int argc, char ** argv)
         }
         else
         {
-            if (!stats.LoadPcapFiles(argc - optind, (char const **)(argv + optind)))
+            if (!stats.LoadPcapFiles((size_t)argc - optind, (char const **)(argv + optind)))
             {
                 fprintf(stderr, "Cannot process the input files.\n");
                 exit_code = -1;
@@ -452,7 +453,7 @@ int main(int argc, char ** argv)
             exit_code = usage();
         }  else {
             if (capture_summary_list == NULL) {
-                if (!cs.Merge(argc - optind, (char const **)(argv + optind)))
+                if (!cs.Merge((size_t)argc - optind, (char const **)(argv + optind)))
                 {
                     fprintf(stderr, "Cannot merge the input files.\n");
                     exit_code = -1;

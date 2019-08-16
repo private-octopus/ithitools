@@ -41,6 +41,8 @@ pcap_reader::pcap_reader()
     F_pcap(NULL),
     F_extract(NULL)
 {
+    memset(&header, 0, sizeof(header));
+    memset(&frame_header, 0, sizeof(frame_header));
 }
 
 
