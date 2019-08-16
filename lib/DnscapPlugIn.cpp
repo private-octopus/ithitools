@@ -62,8 +62,10 @@ static char const * libithicap_banned = NULL;
 static int libithicap_nb_names_in_m4 = -1;
 static bool libithicap_enable_filtering = false;
 static bool libithicap_enable_tld_list = false;
+#ifdef PRIVACY_CONSCIOUS
 static bool libithicap_enable_ip_address_report = false;
 static bool libithicap_enable_erroneous_name_list = false;
+#endif
 
 static DnsStats* libithicap_stats = NULL;
 static logerr_t* logerr = NULL;
