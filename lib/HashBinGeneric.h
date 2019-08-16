@@ -251,7 +251,8 @@ public:
     LruHash()
         :
         MostRecentlyUsed(NULL),
-        LeastRecentlyUsed(NULL)
+        LeastRecentlyUsed(NULL),
+        targetSize(0)
     {}
 
     ~LruHash()
@@ -324,10 +325,10 @@ public:
 
     KeyObj * MostRecentlyUsed;
     KeyObj * LeastRecentlyUsed;
+    uint32_t targetSize;
 
 private:
     BinHash<KeyObj> binHash;
-    uint32_t targetSize;
 
     void LruUnlink(KeyObj * key)
     {

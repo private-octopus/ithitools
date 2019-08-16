@@ -62,6 +62,9 @@ static char const * libithicap_banned = NULL;
 static int libithicap_nb_names_in_m4 = -1;
 static bool libithicap_enable_filtering = false;
 static bool libithicap_enable_tld_list = false;
+static bool libithicap_enable_ip_address_report = false;
+static bool libithicap_enable_erroneous_name_list = false;
+
 static DnsStats* libithicap_stats = NULL;
 static logerr_t* logerr = NULL;
 
@@ -91,6 +94,13 @@ extern "C"
         fprintf(stderr, "  -T                 Capture a list of TLD found in user queries.\n");
         fprintf(stderr, "  -t tld-file.txt    Text file containing a list of registered TLD, one per line.\n");
         fprintf(stderr, "  -u tld-file.txt	  Text file containing special usage TLD (RFC6761).\n");
+#ifdef PRIVACY_CONSCIOUS
+        fprintf(stderr, "  -A                 List all IP addresses and their usage in the report.\n");
+        fprintf(stderr, "  -C                 Collect traffic statistics per TLD.\n");
+        fprintf(stderr, "  -E                 List all erroneous DNS names and their usage in the report.\n");
+        fprintf(stderr, "                     Options A and E are rather slow, and have privacy issues.\n");
+        fprintf(stderr, "                     No such traces enabled by default.\n");
+#endif
     }
 
     /*
@@ -102,7 +112,7 @@ extern "C"
         int opt;
         int exit_code = 0;
 
-        while (exit_code == 0 && (opt = getopt(*argc, *argv, "o:r:a:x:n:t:u:hfT")) != -1)
+        while (exit_code == 0 && (opt = getopt(*argc, *argv, "o:r:a:x:n:t:u:hfACET")) != -1)
         {
             switch (opt)
             {
@@ -136,6 +146,15 @@ extern "C"
             case 'f':
                 libithicap_enable_filtering = true;
                 break;
+
+#ifdef PRIVACY_CONSCIOUS
+            case 'A':
+                libithicap_enable_ip_address_report = true;
+                break;
+            case 'E':
+                libithicap_enable_erroneous_name_list = true;
+                break;
+#endif
             case 'T':
                 libithicap_enable_tld_list = true;
                 break;
@@ -190,8 +209,23 @@ extern "C"
 
             if (libithicap_enable_tld_list)
             {
+                libithicap_stats->dnsstat_flags |= dnsStateFlagCountTld;
                 libithicap_stats->dnsstat_flags |= dnsStateFlagListTldUsed;
             }
+
+#ifdef PRIVACY_CONSCIOUS
+            if (libithicap_enable_ip_address_report)
+            {
+                libithicap_stats->dnsstat_flags |= dbsStateFlagReportResolverIPAddress;
+            }
+
+            if (libithicap_enable_erroneous_name_list)
+            {
+                libithicap_stats->dnsstat_flags |= dbsStateFlagListErroneousNames;
+            }
+#endif
+            static bool libithicap_enable_ip_address_report = false;
+            static bool libithicap_enable_erroneous_name_list = false;
         }
         return (libithicap_stats == NULL)?-1:0;
     }
