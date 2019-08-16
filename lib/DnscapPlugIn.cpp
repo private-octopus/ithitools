@@ -224,8 +224,6 @@ extern "C"
                 libithicap_stats->dnsstat_flags |= dbsStateFlagListErroneousNames;
             }
 #endif
-            static bool libithicap_enable_ip_address_report = false;
-            static bool libithicap_enable_erroneous_name_list = false;
         }
         return (libithicap_stats == NULL)?-1:0;
     }
