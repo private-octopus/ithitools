@@ -34,7 +34,8 @@ name_sum_f3 = "sum_f3.csv"
 if len(sys.argv) >= 3:
     name_sum_f3 = sys.argv[2]
 sum_m3 = codecs.open(name_sum_f3, "w", "UTF-8")
-sum_m3.write(m3summary.m3summary_line.title_line() + "\n")
+m3_title_sum = m3summary.m3summary_line()
+sum_m3.write(m3_title_sum.title_line() + "\n")
 
 file_list = []
 ithiwalk(file_list,mypath)
