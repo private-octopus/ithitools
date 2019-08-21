@@ -44,6 +44,11 @@ if ret == 0:
             print("Capture file test passes.")
 
 if ret == 0:
+    ret = m3summary.cc_to_iso3_test()
+    if (ret == 0):
+        print("CC to ISO3 test passes.")
+
+if ret == 0:
     ret = m3summary.m3summary_line_test()
     if (ret == 0):
         print("M3 summary line test passes.")

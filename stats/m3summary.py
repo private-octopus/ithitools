@@ -10,6 +10,284 @@ from enum import Enum
 import copy
 import traceback
 import datetime
+import m3name
+import captures
+
+country_list = [["Andorra","AD","AND"],
+["United Arab Emirates","AE","ARE"],
+["Afghanistan","AF","AFG"],
+["Antigua and Barbuda","AG","ATG"],
+["Anguilla","AI","AIA"],
+["Albania","AL","ALB"],
+["Armenia","AM","ARM"],
+["Netherlands Antilles","AN","ANT"],
+["Angola","AO","AGO"],
+["Antarctica","AQ","ATA"],
+["Argentina","AR","ARG"],
+["American Samoa","AS","ASM"],
+["Austria","AT","AUT"],
+["Australia","AU","AUS"],
+["Aruba","AW","ABW"],
+["Aland Islands","AX","ALA"],
+["Azerbaijan","AZ","AZE"],
+["Bosnia and Herzegovina","BA","BIH"],
+["Barbados","BB","BRB"],
+["Bangladesh","BD","BGD"],
+["Belgium","BE","BEL"],
+["Burkina Faso","BF","BFA"],
+["Bulgaria","BG","BGR"],
+["Bahrain","BH","BHR"],
+["Burundi","BI","BDI"],
+["Benin","BJ","BEN"],
+["Saint-Barthélemy","BL","BLM"],
+["Bermuda","BM","BMU"],
+["Brunei Darussalam","BN","BRN"],
+["Bolivia","BO","BOL"],
+["Brazil","BR","BRA"],
+["Bahamas","BS","BHS"],
+["Bhutan","BT","BTN"],
+["Bouvet Island","BV","BVT"],
+["Botswana","BW","BWA"],
+["Belarus","BY","BLR"],
+["Belize","BZ","BLZ"],
+["Canada","CA","CAN"],
+["Cocos (Keeling) Islands","CC","CCK"],
+["Congo, (Kinshasa)","CD","COD"],
+["Central African Republic","CF","CAF"],
+["Congo (Brazzaville)","CG","COG"],
+["Switzerland","CH","CHE"],
+["Côte d'Ivoire","CI","CIV"],
+["Cook Islands ","CK","COK"],
+["Chile","CL","CHL"],
+["Cameroon","CM","CMR"],
+["China","CN","CHN"],
+["Colombia","CO","COL"],
+["Costa Rica","CR","CRI"],
+["Cuba","CU","CUB"],
+["Cape Verde","CV","CPV"],
+["Christmas Island","CX","CXR"],
+["Cyprus","CY","CYP"],
+["Czech Republic","CZ","CZE"],
+["Germany","DE","DEU"],
+["Djibouti","DJ","DJI"],
+["Denmark","DK","DNK"],
+["Dominica","DM","DMA"],
+["Dominican Republic","DO","DOM"],
+["Algeria","DZ","DZA"],
+["Ecuador","EC","ECU"],
+["Estonia","EE","EST"],
+["Egypt","EG","EGY"],
+["Western Sahara","EH","ESH"],
+["Eritrea","ER","ERI"],
+["Spain","ES","ESP"],
+["Ethiopia","ET","ETH"],
+["Finland","FI","FIN"],
+["Fiji","FJ","FJI"],
+["Falkland Islands (Malvinas) ","FK","FLK"],
+["Micronesia, Federated States of","FM","FSM"],
+["Faroe Islands","FO","FRO"],
+["France","FR","FRA"],
+["Gabon","GA","GAB"],
+["United Kingdom","GB","GBR"],
+["Grenada","GD","GRD"],
+["Georgia","GE","GEO"],
+["French Guiana","GF","GUF"],
+["Guernsey","GG","GGY"],
+["Ghana","GH","GHA"],
+["Gibraltar ","GI","GIB"],
+["Greenland","GL","GRL"],
+["Gambia","GM","GMB"],
+["Guinea","GN","GIN"],
+["Guadeloupe","GP","GLP"],
+["Equatorial Guinea","GQ","GNQ"],
+["Greece","GR","GRC"],
+["South Georgia and the South Sandwich Islands","GS","SGS"],
+["Guatemala","GT","GTM"],
+["Guam","GU","GUM"],
+["Guinea-Bissau","GW","GNB"],
+["Guyana","GY","GUY"],
+["Hong Kong, SAR China","HK","HKG"],
+["Heard and Mcdonald Islands","HM","HMD"],
+["Honduras","HN","HND"],
+["Croatia","HR","HRV"],
+["Haiti","HT","HTI"],
+["Hungary","HU","HUN"],
+["Indonesia","ID","IDN"],
+["Ireland","IE","IRL"],
+["Israel","IL","ISR"],
+["Isle of Man ","IM","IMN"],
+["India","IN","IND"],
+["British Indian Ocean Territory","IO","IOT"],
+["Iraq","IQ","IRQ"],
+["Iran, Islamic Republic of","IR","IRN"],
+["Iceland","IS","ISL"],
+["Italy","IT","ITA"],
+["Jersey","JE","JEY"],
+["Jamaica","JM","JAM"],
+["Jordan","JO","JOR"],
+["Japan","JP","JPN"],
+["Kenya","KE","KEN"],
+["Kyrgyzstan","KG","KGZ"],
+["Cambodia","KH","KHM"],
+["Kiribati","KI","KIR"],
+["Comoros","KM","COM"],
+["Saint Kitts and Nevis","KN","KNA"],
+["Korea (North)","KP","PRK"],
+["Korea (South)","KR","KOR"],
+["Kuwait","KW","KWT"],
+["Cayman Islands ","KY","CYM"],
+["Kazakhstan","KZ","KAZ"],
+["Lao PDR","LA","LAO"],
+["Lebanon","LB","LBN"],
+["Saint Lucia","LC","LCA"],
+["Liechtenstein","LI","LIE"],
+["Sri Lanka","LK","LKA"],
+["Liberia","LR","LBR"],
+["Lesotho","LS","LSO"],
+["Lithuania","LT","LTU"],
+["Luxembourg","LU","LUX"],
+["Latvia","LV","LVA"],
+["Libya","LY","LBY"],
+["Morocco","MA","MAR"],
+["Monaco","MC","MCO"],
+["Moldova","MD","MDA"],
+["Montenegro","ME","MNE"],
+["Saint-Martin (French part)","MF","MAF"],
+["Madagascar","MG","MDG"],
+["Marshall Islands","MH","MHL"],
+["Macedonia, Republic of","MK","MKD"],
+["Mali","ML","MLI"],
+["Myanmar","MM","MMR"],
+["Mongolia","MN","MNG"],
+["Macao, SAR China","MO","MAC"],
+["Northern Mariana Islands","MP","MNP"],
+["Martinique","MQ","MTQ"],
+["Mauritania","MR","MRT"],
+["Montserrat","MS","MSR"],
+["Malta","MT","MLT"],
+["Mauritius","MU","MUS"],
+["Maldives","MV","MDV"],
+["Malawi","MW","MWI"],
+["Mexico","MX","MEX"],
+["Malaysia","MY","MYS"],
+["Mozambique","MZ","MOZ"],
+["Namibia","NA","NAM"],
+["New Caledonia","NC","NCL"],
+["Niger","NE","NER"],
+["Norfolk Island","NF","NFK"],
+["Nigeria","NG","NGA"],
+["Nicaragua","NI","NIC"],
+["Netherlands","NL","NLD"],
+["Norway","NO","NOR"],
+["Nepal","NP","NPL"],
+["Nauru","NR","NRU"],
+["Niue ","NU","NIU"],
+["New Zealand","NZ","NZL"],
+["Oman","OM","OMN"],
+["Panama","PA","PAN"],
+["Peru","PE","PER"],
+["French Polynesia","PF","PYF"],
+["Papua New Guinea","PG","PNG"],
+["Philippines","PH","PHL"],
+["Pakistan","PK","PAK"],
+["Poland","PL","POL"],
+["Saint Pierre and Miquelon ","PM","SPM"],
+["Pitcairn","PN","PCN"],
+["Puerto Rico","PR","PRI"],
+["Palestinian Territory","PS","PSE"],
+["Portugal","PT","PRT"],
+["Palau","PW","PLW"],
+["Paraguay","PY","PRY"],
+["Qatar","QA","QAT"],
+["Réunion","RE","REU"],
+["Romania","RO","ROU"],
+["Serbia","RS","SRB"],
+["Russian Federation","RU","RUS"],
+["Rwanda","RW","RWA"],
+["Saudi Arabia","SA","SAU"],
+["Solomon Islands","SB","SLB"],
+["Seychelles","SC","SYC"],
+["Sudan","SD","SDN"],
+["Sweden","SE","SWE"],
+["Singapore","SG","SGP"],
+["Saint Helena","SH","SHN"],
+["Slovenia","SI","SVN"],
+["Svalbard and Jan Mayen Islands ","SJ","SJM"],
+["Slovakia","SK","SVK"],
+["Sierra Leone","SL","SLE"],
+["San Marino","SM","SMR"],
+["Senegal","SN","SEN"],
+["Somalia","SO","SOM"],
+["Suriname","SR","SUR"],
+["South Sudan","SS","SSD"],
+["Sao Tome and Principe","ST","STP"],
+["El Salvador","SV","SLV"],
+["Syrian Arab Republic (Syria)","SY","SYR"],
+["Swaziland","SZ","SWZ"],
+["Turks and Caicos Islands ","TC","TCA"],
+["Chad","TD","TCD"],
+["French Southern Territories","TF","ATF"],
+["Togo","TG","TGO"],
+["Thailand","TH","THA"],
+["Tajikistan","TJ","TJK"],
+["Tokelau ","TK","TKL"],
+["Timor-Leste","TL","TLS"],
+["Turkmenistan","TM","TKM"],
+["Tunisia","TN","TUN"],
+["Tonga","TO","TON"],
+["Turkey","TR","TUR"],
+["Trinidad and Tobago","TT","TTO"],
+["Tuvalu","TV","TUV"],
+["Taiwan, Republic of China","TW","TWN"],
+["Tanzania, United Republic of","TZ","TZA"],
+["Ukraine","UA","UKR"],
+["Uganda","UG","UGA"],
+["US Minor Outlying Islands","UM","UMI"],
+["United States of America","US","USA"],
+["Uruguay","UY","URY"],
+["Uzbekistan","UZ","UZB"],
+["Holy See (Vatican City State)","VA","VAT"],
+["Saint Vincent and Grenadines","VC","VCT"],
+["Venezuela (Bolivarian Republic)","VE","VEN"],
+["British Virgin Islands","VG","VGB"],
+["Virgin Islands, US","VI","VIR"],
+["Viet Nam","VN","VNM"],
+["Vanuatu","VU","VUT"],
+["Wallis and Futuna Islands ","WF","WLF"],
+["Samoa","WS","WSM"],
+["Yemen","YE","YEM"],
+["Mayotte","YT","MYT"],
+["South Africa","ZA","ZAF"],
+["Zambia","ZM","ZMB"],
+["Zimbabwe","ZW","ZWE"]]
+
+def cc_to_index(ccx):
+    cc = ccx.upper()
+    low = 0
+    high = len(country_list) -1
+    if cc < country_list[low][1] or cc > country_list[high][1]:
+        return -1
+    elif cc == country_list[low][1]:
+        return low
+    elif cc == country_list[high][1]:
+        return high
+    else:
+       while low + 1 < high:
+           middle = int((low + high)/2)
+           if cc == country_list[middle][1]:
+               return middle
+           elif cc < country_list[middle][1]:
+               high = middle
+           else:
+               low = middle
+    return -1
+
+def cc_to_iso3(cc):
+    i = cc_to_index(cc)
+    if i < 0:
+        return "???"
+    else:
+        return country_list[i][2]
 
 class projection(Enum):
     country = 1
@@ -60,6 +338,28 @@ class m3summary_line():
             return -1
         return 0
 
+    def load_m3(self, file_name):
+        m3n = m3name.m3name()
+        if m3n.parse_file_id(file_name) != 0:
+            return -1
+        capture = captures.capture_file()
+        if capture.load(file_name) != 0:
+            return -1
+        self.address_id = m3n.address_id
+        self.cc = m3n.country_code
+        self.city = m3n.city_code
+        self.date = m3n.m3_date
+        self.hour = m3n.m3_hour
+        self.duration = m3n.duration
+        c0 = capture.find("root-QR", 0, 0, "")
+        c1 = capture.find("root-QR", 0, 3, "")
+        self.nb_queries = c0 + c1
+        self.nb_nx_domains = c1
+        self.nb_home = capture.find("LeakedTLD", 1, 0, "HOME")
+        self.nb_corp = capture.find("LeakedTLD", 1, 0, "CORP")
+        self.nb_mail = capture.find("LeakedTLD", 1, 0, "MAIL")
+        return 0
+
     def to_string(self):
         s = self.address_id + ","
         s += self.cc + ","
@@ -73,6 +373,10 @@ class m3summary_line():
         s += str(self.nb_corp) + ","
         s += str(self.nb_mail)
         return s;
+
+    def title_line():
+        s = "address,cc,city,date,hour,duration,queries,nx_domain,home,corp,mail"
+        return s
 
     def add(self, other):
         self.duration += other.duration
@@ -226,6 +530,19 @@ class m3summary_list:
             print("Cannot open <" + file_name + ">");
             return -1
 
+    def save_file(self, file_name):
+        try:
+            sum_file = codecs.open(file_name, "w", "UTF-8")
+            sum_file.write(m3summary_line.title_line() + "\n")
+            for summary in self.summary_list:
+                sum_file.write(summary.to_string() + "\n");
+            sum_file.close()
+            return 0
+        except Exception:
+            traceback.print_exc()
+            print("Cannot open <" + file_name + ">");
+            return -1
+
     def project(self, p_enum):
         raw_p = []
         for summary in self.summary_list:
@@ -245,6 +562,25 @@ class m3summary_list:
         return projected
 
 # self_test function
+
+def cc_to_iso3_test():
+    cc_test = ["aa", "ad", "ap", "gm", "om", "on", "zw", "zz"]
+    cc_index = [-1, 0, -1, 83, 170, -1, 246, -1]
+    cc_iso3 = ["???", "AND", "???", "GMB", "OMN", "???", "ZWE", "???"]
+
+    r = 0
+    i = 0
+    while i < len(cc_test):
+        x = cc_to_index(cc_test[i])
+        if x != cc_index[i]:
+            print("Found index " + str(x) + " for <" + cc_test[i] + "> instead of " + str(cc_index[i]))
+            r = -1
+        i3 = cc_to_iso3(cc_test[i])
+        if i3 != cc_iso3[i]:
+            print("Found iso3 " + i3 + " for <" + cc_test[i] + "> instead of " + cc_iso3[i])
+            r = -1
+        i += 1
+    return r
 
 def m3summary_line_test():
     def test_projection(m3l, p_enum, p_ref):

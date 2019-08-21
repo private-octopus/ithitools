@@ -62,13 +62,4 @@ fig = go.Figure(data=go.Choropleth(
     colorbar_title="Millions USD"
 ))
 
-fig.update_layout(
-    title_text='2011 US Agriculture Exports by State<br>(Hover for breakdown)',
-    geo = dict(
-        scope='usa',
-        projection=go.layout.geo.Projection(type = 'albers usa'),
-        showlakes=True, # lakes
-        lakecolor='rgb(255, 255, 255)'),
-)
-
 fig.show()
