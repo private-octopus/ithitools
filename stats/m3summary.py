@@ -296,6 +296,10 @@ class projection(Enum):
     country_weekday = 4
     country_hour = 5
 
+def summary_title_line():
+    s = "address,cc,city,date,hour,duration,queries,nx_domain,home,corp,mail"
+    return s
+
 class m3summary_line():
     default_address_id = "aa00"
     default_date = "2020-01-01"
@@ -373,10 +377,6 @@ class m3summary_line():
         s += str(self.nb_corp) + ","
         s += str(self.nb_mail)
         return s;
-
-    def title_line():
-        s = "address,cc,city,date,hour,duration,queries,nx_domain,home,corp,mail"
-        return s
 
     def add(self, other):
         self.duration += other.duration
