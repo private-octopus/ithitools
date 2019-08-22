@@ -43,6 +43,8 @@ for file in file_list:
     # If this is an M3 capture file, add it.
     if load_m3(file, sum_m3) == 0:
         nb_loaded += 1
+        if (nb_loaded%1000) == 0:
+            print(str(nb_loaded))
 sum_m3.close()
 
 print("Found " + str(len(file_list)) + " files, loaded " + str(nb_loaded) + " summaries.")

@@ -297,7 +297,8 @@ class projection(Enum):
     country_hour = 5
 
 def summary_title_line():
-    s = "address,cc,city,date,hour,duration,queries,nx_domain,home,corp,mail"
+    s = "address,cc,city,date,hour,duration,queries,useless,nx_domain,"
+    s += "local,localhost,rfc6761,home,lan,internal,ip,localdomain,corp,mail,dga" 
     return s
 
 class m3summary_line():
@@ -309,6 +310,7 @@ class m3summary_line():
     default_minute = ":00:00"
     default_city = "zzz"
 
+
     def __init__(self):
         self.address_id = ""
         self.cc = ""
@@ -317,15 +319,24 @@ class m3summary_line():
         self.hour = ""
         self.duration = 0
         self.nb_queries = 0
+        self.nb_useless = 0
         self.nb_nx_domains = 0
+        self.nb_local = 0
+        self.nb_localhost = 0
+        self.nb_rfc6761 = 0
         self.nb_home = 0
+        self.nb_lan = 0
+        self.nb_internal = 0
+        self.nb_ip = 0
+        self.nb_localdomain = 0
         self.nb_corp = 0
         self.nb_mail = 0
+        self.dga = 0
 
     def load(self, line):
         parts = line.split(",")
         try:
-            if len(parts) == 11 and parts[1] == "CC" and parts[2] == "City" and parts[3] == "Date":
+            if len(parts) == 20 and parts[1] == "cc" and parts[2] == "city" and parts[3] == "date":
                 return 1
             self.address_id = parts[0].strip()
             self.cc = parts[1].strip()
@@ -334,10 +345,19 @@ class m3summary_line():
             self.hour = parts[4].strip()
             self.duration = int(parts[5])
             self.nb_queries = int(parts[6])
-            self.nb_nx_domains = int(parts[7])
-            self.nb_home = int(parts[8])
-            self.nb_corp = int(parts[9])
-            self.nb_mail = int(parts[10])
+            self.nb_useless = int(parts[7])
+            self.nb_nx_domains = int(parts[8])
+            self.nb_local = int(parts[9])
+            self.nb_localhost = int(parts[10])
+            self.nb_rfc6761 = int(parts[11])
+            self.nb_home = int(parts[12])
+            self.nb_lan = int(parts[13])
+            self.nb_internal = int(parts[14])
+            self.nb_ip = int(parts[15])
+            self.nb_localdomain = int(parts[16])
+            self.nb_corp = int(parts[17])
+            self.nb_mail = int(parts[18])
+            self.dga = int(parts[19])
         except:
             return -1
         return 0
@@ -359,9 +379,25 @@ class m3summary_line():
         c1 = capture.find("root-QR", 0, 3, "")
         self.nb_queries = c0 + c1
         self.nb_nx_domains = c1
+        c2 = capture.find("UsefulQueries", 0, 0, "")
+        c3 = capture.find("UsefulQueries", 0, 1, "")
+        if c3 > 0:
+            m32 = float(c2)/float(c2+c3)
+            self.nb_useless = int(m32*float(c0))
+        self.nb_local = capture.find("RFC6761-TLD", 1, 0, "LOCAL")
+        self.nb_localhost = capture.find("RFC6761-TLD", 1, 0, "LOCALHOST")
+        self.nb_rfc6761 = capture.findtotal("RFC6761-TLD") - self.nb_local - self.nb_localhost
         self.nb_home = capture.find("LeakedTLD", 1, 0, "HOME")
+        self.nb_lan = capture.find("LeakedTLD", 1, 0, "LAN")
+        self.nb_internal = capture.find("LeakedTLD", 1, 0, "INTERNAL")
+        self.nb_ip = capture.find("LeakedTLD", 1, 0, "IP")
+        self.nb_localdomain = capture.find("LeakedTLD", 1, 0, "LOCALDOMAIN")
         self.nb_corp = capture.find("LeakedTLD", 1, 0, "CORP")
         self.nb_mail = capture.find("LeakedTLD", 1, 0, "MAIL")
+        self.dga = 0
+        for l in [7, 8, 9, 10, 11, 12, 13, 14, 15]:
+            self.dga += capture.find("LeakByLength", 0, l, "")
+            
         return 0
 
     def to_string(self):
@@ -372,10 +408,19 @@ class m3summary_line():
         s += self.hour + ","
         s += str(self.duration) + ","
         s += str(self.nb_queries) + ","
+        s += str(self.nb_useless) + ","
         s += str(self.nb_nx_domains) + ","
+        s += str(self.nb_local) + ","
+        s += str(self.nb_localhost) + ","
+        s += str(self.nb_rfc6761) + ","
         s += str(self.nb_home) + ","
+        s += str(self.nb_lan) + ","
+        s += str(self.nb_internal) + ","
+        s += str(self.nb_ip) + ","
+        s += str(self.nb_localdomain) + ","
         s += str(self.nb_corp) + ","
-        s += str(self.nb_mail)
+        s += str(self.nb_mail) + ","
+        s += str(self.dga) 
         return s;
 
     def add(self, other):
@@ -591,34 +636,35 @@ def m3summary_line_test():
             r = -1
         return r
 
+
     test_cases = [
-        "address_id,CC,City,Date,Hour,Duration,nb_queries,Nb_NX_Domain,Nb_Home,Nb_Corp,Nb_Mail",
-        "aa01,br,sjk,2019-08-03,06:17:58,300,38,8,0,0,0",
-        "aa05,us,lax,2019-08-03,18:36:45,300,152625,102924,4619,1290,0",
+        "address,cc,city,date,hour,duration,queries,useless,nx_domain,local,localhost,rfc6761,home,lan,internal,ip,localdomain,corp,mail,dga",
+        "aa01,br,sjk,2019-08-03,06:17:58,300,38,8,6,9,0,0,0,1,1,0,0,0,0,18",
+        "aa05,us,lax,2019-08-03,18:36:45,300,152625,40000,102924,3214,1234,567,4619,123,456,3456,789,1290,0,56789",
         "xxx, 1, 2, 3, 4, 5",
-        "aa05,us,lax,2019-08-03,18:36:45,300,NaN,102924,4619,1290,0",
+        "aa05,us,lax,2019-08-03,18:36:45,300,NaN,102924,4619,1290,0,0,0,0,0,0,0,0,0,0",
         ]
     test_return = [ 1, 0, 0, -1, -1]
     test_cc = [ "", "br", "us", "", ""]
     test_nb_queries = [ 0, 38, 152625, 0, 0]
     proj_cases = [
-        "aa01,br,sjk,2019-08-03,06:17:58,300,38,8,0,0,0",
-        "aa05,us,lax,2019-08-05,18:36:45,300,152625,102924,4619,1290,0"]
+        "aa01,br,sjk,2019-08-03,06:17:58,300,38,8,6,9,0,0,0,1,1,0,0,0,0,18",
+        "aa05,us,lax,2019-08-05,18:36:45,300,152625,40000,102924,3214,1234,567,4619,123,456,3456,789,1290,0,56789"]
     proj_country = [
-        "aa00,br,zzz,2020-01-01,00:00:00,300,38,8,0,0,0",
-        "aa00,us,zzz,2020-01-01,00:00:00,300,152625,102924,4619,1290,0"]
+        "aa00,br,zzz,2020-01-01,00:00:00,300,38,8,6,9,0,0,0,1,1,0,0,0,0,18",
+        "aa00,us,zzz,2020-01-01,00:00:00,300,152625,40000,102924,3214,1234,567,4619,123,456,3456,789,1290,0,56789"]
     proj_city = [
-        "aa00,br,sjk,2020-01-01,00:00:00,300,38,8,0,0,0",
-        "aa00,us,lax,2020-01-01,00:00:00,300,152625,102924,4619,1290,0"]
+        "aa00,br,sjk,2020-01-01,00:00:00,300,38,8,6,9,0,0,0,1,1,0,0,0,0,18",
+        "aa00,us,lax,2020-01-01,00:00:00,300,152625,40000,102924,3214,1234,567,4619,123,456,3456,789,1290,0,56789"]
     proj_country_day = [
-        "aa00,br,zzz,2019-08-03,00:00:00,300,38,8,0,0,0",
-        "aa00,us,zzz,2019-08-05,00:00:00,300,152625,102924,4619,1290,0"]
+        "aa00,br,zzz,2019-08-03,00:00:00,300,38,8,6,9,0,0,0,1,1,0,0,0,0,18",
+        "aa00,us,zzz,2019-08-05,00:00:00,300,152625,40000,102924,3214,1234,567,4619,123,456,3456,789,1290,0,56789"]
     proj_country_weekday = [
-        "aa00,br,zzz,2020-01-11,00:00:00,300,38,8,0,0,0",
-        "aa00,us,zzz,2020-01-06,00:00:00,300,152625,102924,4619,1290,0"]
+        "aa00,br,zzz,2020-01-11,00:00:00,300,38,8,6,9,0,0,0,1,1,0,0,0,0,18",
+        "aa00,us,zzz,2020-01-06,00:00:00,300,152625,40000,102924,3214,1234,567,4619,123,456,3456,789,1290,0,56789"]
     proj_country_hour = [
-        "aa00,br,zzz,2020-01-01,06:00:00,300,38,8,0,0,0",
-        "aa00,us,zzz,2020-01-01,18:00:00,300,152625,102924,4619,1290,0"]
+        "aa00,br,zzz,2020-01-01,06:00:00,300,38,8,6,9,0,0,0,1,1,0,0,0,0,18",
+        "aa00,us,zzz,2020-01-01,18:00:00,300,152625,40000,102924,3214,1234,567,4619,123,456,3456,789,1290,0,56789"]
 
     i = 0
     r = 0

@@ -83,6 +83,8 @@ class m3name:
 
     def parse_file_id(self, file_id):
         parts = file_id.split("/")
+        if len(parts) == 1:
+            parts = file_id.split("\\")
         file_name = parts[len(parts) - 1]
         name_parts = file_name.split("-")
         if (len(name_parts) >= 5):
@@ -110,7 +112,7 @@ class m3name:
             print("Wrong syntax in " + file_name)
             return -1
         if (len(name_parts[0]) != 8):
-            print("Wrong date in " + file_name)
+            print("Wrong date in " + file_name + " got: " + name_parts[0])
             return -1
         s_date = name_parts[0]
         self.m3_date = s_date[0:4] + "-" + s_date[4:6] + "-" + s_date[6:8]
