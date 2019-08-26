@@ -426,10 +426,19 @@ class m3summary_line():
     def add(self, other):
         self.duration += other.duration
         self.nb_queries += other.nb_queries
+        self.nb_useless += other.nb_useless
         self.nb_nx_domains += other.nb_nx_domains
-        self.nb_home += other.nb_home
-        self.nb_corp += other.nb_corp
-        self.nb_mail += other.nb_mail
+        self.nb_local += other.nb_local
+        self.nb_localhost  += other.nb_localhost
+        self.nb_rfc6761  += other.nb_rfc6761
+        self.nb_home  += other.nb_home
+        self.nb_lan  += other.nb_lan
+        self.nb_internal  += other.nb_internal
+        self.nb_ip  += other.nb_ip
+        self.nb_localdomain  += other.nb_localdomain
+        self.nb_corp  += other.nb_corp
+        self.nb_mail  += other.nb_mail
+        self.dga  += other.dga
 
     def project(self, p_enum):
         p = copy.deepcopy(self)
@@ -578,7 +587,7 @@ class m3summary_list:
     def save_file(self, file_name):
         try:
             sum_file = codecs.open(file_name, "w", "UTF-8")
-            sum_file.write(m3summary_line.title_line() + "\n")
+            sum_file.write(summary_title_line() + "\n")
             for summary in self.summary_list:
                 sum_file.write(summary.to_string() + "\n");
             sum_file.close()
