@@ -266,7 +266,7 @@ CborSkipTest::~CborSkipTest()
 }
 
 
-bool CborSkipTest::DoOneTest(uint8_t* in, size_t in_length, char const* expected)
+bool CborSkipTest::DoOneTest(uint8_t* in, size_t in_length)
 {
     bool ret = true;
     int err = 0;
@@ -295,7 +295,7 @@ bool CborSkipTest::DoTest()
     bool ret = true;
 
     for (size_t i = 0; i < nb_cbor_tests; i++) {
-        if (!DoOneTest(cbor_tests[i].in, cbor_tests[i].in_length, cbor_tests[i].expected)) {
+        if (!DoOneTest(cbor_tests[i].in, cbor_tests[i].in_length)) {
             TEST_LOG("CBOR skip test #%d fails\n", (int)i);
             ret = false;
         }

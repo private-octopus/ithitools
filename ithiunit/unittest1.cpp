@@ -42,6 +42,7 @@
 #include "StatsByIpTest.h"
 #include "capture_fuzz.h"
 #include "CborTest.h"
+#include "CdnsTest.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -275,6 +276,14 @@ namespace ithiunit
         TEST_METHOD(CborSkip)
         {
             CborSkipTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(Cdns)
+        {
+            CdnsTest test;
             bool ret = test.DoTest();
 
             Assert::AreEqual(ret, true);

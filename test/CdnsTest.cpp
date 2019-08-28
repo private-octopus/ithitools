@@ -24,8 +24,21 @@
 #include <stdio.h>
 #include <string.h>
 #include "cbor.h"
+#include "cdns.h"
 
 #include "CdnsTest.h"
+
+#ifdef _WINDOWS
+#ifndef _WINDOWS64
+static char const* cbor_in = "..\\data\\tiny-capture.cbor";
+#else
+static char const* cbor_in = "..\\..\\data\\tiny-capture.cbor";
+#endif
+#else
+static char const* cbor_in = "data/tiny-capture.cbor";
+#endif
+static char const* text_out = "tiny-capture-cbor.txt";
+
 
 CdnsTest::CdnsTest()
 {
@@ -37,6 +50,13 @@ CdnsTest::~CdnsTest()
 
 bool CdnsTest::DoTest()
 {
-    return false;
+    cdns cap_cbor;
+    bool ret = cap_cbor.open(cbor_in, 700000);
+
+    if (ret) {
+        ret = cap_cbor.dump(text_out);
+    }
+
+    return ret;
 }
 

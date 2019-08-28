@@ -54,12 +54,15 @@ bool cdns::open(char const* file_name, size_t buf_size)
 
     if (F == NULL && buf == NULL) {
         if (buf_size == 0) {
-            buf_size = 0x10000;
+            this->buf_size = 0x10000;
+        }
+        else {
+            this->buf_size = buf_size;
         }
 
-        F = ithi_file_open(file_name, "r");
+        F = ithi_file_open(file_name, "rb");
         if (F != NULL) {
-            buf = (uint8_t*)malloc(buf_size);
+            buf = new uint8_t[this->buf_size];
 
             if (buf != NULL) {
                 ret = load_buffer();
@@ -67,6 +70,30 @@ bool cdns::open(char const* file_name, size_t buf_size)
         }
     }
 
+    return ret;
+}
+
+bool cdns::dump(char const* file_out)
+{
+    FILE * F_out = ithi_file_open(file_out, "w");
+    size_t out_size = 10 * buf_size;
+    char* out_buf = new char[out_size];
+    bool ret = (F_out != NULL && out_buf != NULL);
+
+    if (ret) {
+        int err = 0;
+        char* p_out = out_buf;
+        uint8_t* last = cbor_to_text(buf, buf + buf_read, &p_out, out_buf + out_size, &err);
+
+        fwrite(out_buf, 1, p_out - out_buf, F_out);
+        fprintf(F_out, "\nProcessed=%d\nErr = %d\n", (int)(last - buf), err);
+    }
+    if (F_out != NULL){
+        fclose(F_out);
+    }
+    if (out_buf != NULL) {
+        delete[] out_buf;
+    }
     return ret;
 }
 

@@ -23,11 +23,14 @@
 
 class cdns
 {
+public:
     cdns();
 
     ~cdns();
 
     bool open(char const* file_name, size_t buf_size);
+
+    bool dump(char const* file_out);
 
 private:
     FILE* F;

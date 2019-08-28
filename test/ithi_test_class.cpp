@@ -26,6 +26,7 @@
 #include "StatsByIpTest.h"
 #include "capture_fuzz.h"
 #include "CborTest.h"
+#include "CdnsTest.h"
 
 enum test_list_enum {
     test_enum_hash = 0,
@@ -57,7 +58,8 @@ enum test_list_enum {
     test_enum_CaptureFuzz,
     test_enum_max_number,
     test_enum_cbor,
-    test_enum_cbor_skip
+    test_enum_cbor_skip,
+    test_enum_cdns
 };
 
 ithi_test_class::ithi_test_class()
@@ -134,6 +136,8 @@ char const * ithi_test_class::GetTestName(int number)
         return("cbor");
     case test_enum_cbor_skip:
         return("cborSkip");
+    case test_enum_cdns:
+        return("cdns");
     default:
         break;
     }
@@ -246,6 +250,9 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         test = new CborTest();
     case test_enum_cbor_skip:
         test = new CborSkipTest();
+        break;
+    case test_enum_cdns:
+        test = new CdnsTest();
         break;
     default:
         break;
