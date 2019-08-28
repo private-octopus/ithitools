@@ -293,8 +293,14 @@ uint8_t* cbor_float_to_text(uint8_t* in, uint8_t const* in_max, char** p_out, ch
     }
     else if (val == 24) {
         /* single value in following byte */
-        in = NULL;
-        *err = CBOR_MALFORMED_VALUE;
+		if (in < in_max){
+            in = NULL;
+            *err = CBOR_NOT_IMPLEMENTED;
+        }
+        else {
+            in = NULL;
+            *err = CBOR_MALFORMED_VALUE;
+        }
     }
     else {
         /* TODO: manage these  floating point types */
