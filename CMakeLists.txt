@@ -14,6 +14,7 @@ INCLUDE_DIRECTORIES(src lib test include)
 SET(ITHITOOLS_LIBRARY_FILES
    lib/AddressFilter.cpp
    lib/CaptureSummary.cpp
+   lib/cbor.c
    lib/DnsStats.cpp
    lib/ithimetrics.cpp
    lib/ithipublisher.cpp
@@ -33,7 +34,9 @@ SET(ITHITOOLS_LIBRARY_FILES
 )
 
 SET(ITHITOOLS_TEST_LIBRARY_FILES
-   test/CaptureTest.cpp 
+   test/CaptureTest.cpp
+   test/CborTest.cpp
+   test/CdnsTest.cpp
    test/DnsPrefixTest.cpp
    test/hashtest.cpp
    test/GetNameTest.cpp
@@ -80,6 +83,7 @@ ADD_EXECUTABLE(ithitools
 ADD_EXECUTABLE(ithitest
    src/ithitest.cpp 
    lib/AddressFilter.cpp
+   lib/cbor.c
    lib/CaptureSummary.cpp
    lib/DnsStats.cpp
    lib/ithimetrics.cpp
@@ -98,6 +102,8 @@ ADD_EXECUTABLE(ithitest
    lib/OdiPublisher.cpp
    lib/getopt.c
    test/CaptureTest.cpp
+   test/CborTest.cpp
+   test/CdnsTest.cpp
    test/DnsPrefixTest.cpp
    test/hashtest.cpp
    test/GetNameTest.cpp

@@ -135,9 +135,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\lib\cbor.c" />
+    <ClCompile Include="..\lib\cdns.cpp" />
     <ClCompile Include="..\test\CaptureTest.cpp" />
     <ClCompile Include="..\test\capture_fuzz.cpp" />
     <ClCompile Include="..\test\CborTest.cpp" />
+    <ClCompile Include="..\test\CdnsTest.cpp" />
     <ClCompile Include="..\test\CsvTest.cpp" />
     <ClCompile Include="..\test\DnsPrefixTest.cpp" />
     <ClCompile Include="..\test\GetNameTest.cpp" />
@@ -161,9 +163,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\cbor.h" />
+    <ClInclude Include="..\lib\cdns.h" />
     <ClInclude Include="..\test\CaptureTest.h" />
     <ClInclude Include="..\test\capture_fuzz.h" />
     <ClInclude Include="..\test\CborTest.h" />
+    <ClInclude Include="..\test\CdnsTest.h" />
     <ClInclude Include="..\test\CsvTest.h" />
     <ClInclude Include="..\test\DnsPrefixTest.h" />
     <ClInclude Include="..\test\GetNameTest.h" />
