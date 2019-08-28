@@ -40,7 +40,3 @@ bool CdnsTest::DoTest()
     return false;
 }
 
-bool CdnsTest::DoOneTest(uint8_t* in, size_t in_length, char const* expected)
-{
-    return false;
-}
