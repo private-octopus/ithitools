@@ -24,6 +24,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#ifndef _WINDOWS
+#include <errno.h>
+#endif
 #include "ithiutil.h"
 
 /* Safely open files in a portable way */

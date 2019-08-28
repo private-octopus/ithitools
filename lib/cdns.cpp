@@ -32,7 +32,8 @@ cdns::cdns():
     buf(NULL),
     buf_size(0),
     buf_read(0),
-    buf_parsed(0)
+    buf_parsed(0),
+    end_of_file(false)
 {
 }
 
@@ -49,19 +50,46 @@ cdns::~cdns()
 
 bool cdns::open(char const* file_name, size_t buf_size)
 {
-    bool ret = true;
+    bool ret = false;
 
-    if (F != NULL || buf != NULL) {
-        ret = false;
-    }
-    else {
+    if (F == NULL && buf == NULL) {
         if (buf_size == 0) {
             buf_size = 0x10000;
         }
 
         F = ithi_file_open(file_name, "r");
-        ret = (F != NULL);
+        if (F != NULL) {
+            buf = (uint8_t*)malloc(buf_size);
+
+            if (buf != NULL) {
+                ret = load_buffer();
+            }
+        }
     }
 
     return ret;
+}
+
+bool cdns::load_buffer()
+{
+    size_t byte_read = 0;
+
+    if (buf_parsed < buf_read) {
+        buf_read -= buf_parsed;
+        memmove(buf, buf + buf_parsed, buf_read);
+    }
+    else {
+        buf_read = 0;
+    }
+    buf_parsed = 0;
+
+    if (buf_read < buf_size && !end_of_file) {
+        size_t asked = buf_size - buf_read;
+        size_t n_bytes = fread(buf + buf_read, 1, asked, F);
+
+        end_of_file = (n_bytes < asked);
+        buf_read += n_bytes;
+    }
+
+    return (buf_read > 0);
 }

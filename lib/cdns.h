@@ -35,8 +35,9 @@ private:
     size_t buf_size;
     size_t buf_read;
     size_t buf_parsed;
+    bool end_of_file;
 
-
+    bool load_buffer();
 };
 
 #endif
