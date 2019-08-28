@@ -66,7 +66,8 @@ uint8_t* cbor_get_number(uint8_t* in, uint8_t const* in_max, int64_t* val)
 
 char* cbor_print_int(char* out, char const* out_max, int64_t val, int is_negative)
 {
-    int n_char;
+    int c[20];
+    int l = 0;
 
     if (is_negative) {
         if (out < out_max) {
@@ -74,18 +75,15 @@ char* cbor_print_int(char* out, char const* out_max, int64_t val, int is_negativ
         }
     }
 
-#ifdef _WINDOWS
-    n_char = sprintf_s(out, out_max - out, "%d", (int)val);
-    if (n_char < 0) {
-        /* Ignore errors for now */
-        n_char = 0;
-    }
-#else 
-    n_char = sprintf(out, "%d", (int)val);
-#endif
+    do {
+        c[l++] = val % 10;
+        val /= 10;
+    } while (val > 0);
 
-    if (out + n_char < out_max) {
-        out += n_char;
+    if (out + l < out_max) {
+        while (l > 0) {
+            *out++ = '0' + c[--l];
+        }
     }
 
     return out;
@@ -125,21 +123,18 @@ char* cbor_print_text_part(char* out, char const* out_max, uint8_t* in, int64_t 
     return out;
 }
 
+static int hex_to_char(int x)
+{
+    x &= 0x0F;
+    return ((x < 10) ? '0' + x : 'a' - 10 + x);
+}
+
 char* cbor_print_bytes_part(char* out, char const* out_max, uint8_t* in, int64_t val)
 {
-    int n_char;
-
     for (int64_t i = 0; i < val && out + 1 < out_max; i++) {
-#ifdef _WINDOWS
-        n_char = sprintf_s(out, out_max - out, "%02x", in[i]);
-        if (n_char < 0) {
-            /* Ignore errors for now */
-            n_char = 0;
-        }
-#else 
-        n_char = sprintf(out, "%02x", in[i]);
-#endif
-        out += n_char;
+        int c = in[i];
+        *out++ = hex_to_char(c >> 4);
+		*out++ = hex_to_char(c);
     }
 
     return out;

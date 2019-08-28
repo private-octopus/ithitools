@@ -52,6 +52,7 @@ extern "C" {
     uint8_t* cbor_to_text(uint8_t* in, uint8_t const* in_max, char** p_out, char const* out_max, int* err);
 
     uint8_t* cbor_skip(uint8_t* in, uint8_t const* in_max, int* err);
+
 #ifdef __cplusplus
 }
 #endif
