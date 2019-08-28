@@ -25,6 +25,7 @@
 #include "QNameTest.h"
 #include "StatsByIpTest.h"
 #include "capture_fuzz.h"
+#include "CborTest.h"
 
 enum test_list_enum {
     test_enum_hash = 0,
@@ -54,7 +55,9 @@ enum test_list_enum {
     test_enum_QNameMini,
     test_enum_StatsByIp,
     test_enum_CaptureFuzz,
-    test_enum_max_number
+    test_enum_max_number,
+    test_enum_cbor,
+    test_enum_cbor_skip
 };
 
 ithi_test_class::ithi_test_class()
@@ -127,6 +130,10 @@ char const * ithi_test_class::GetTestName(int number)
         return("StatsByIp");
     case test_enum_CaptureFuzz:
         return("CaptureFuzz");
+    case test_enum_cbor:
+        return("cbor");
+    case test_enum_cbor_skip:
+        return("cborSkip");
     default:
         break;
     }
@@ -234,6 +241,11 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_enum_CaptureFuzz:
         test = new capture_fuzz();
+        break;
+    case test_enum_cbor:
+        test = new CborTest();
+    case test_enum_cbor_skip:
+        test = new CborSkipTest();
         break;
     default:
         break;

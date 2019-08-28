@@ -264,10 +264,17 @@ namespace ithiunit
 
             Assert::AreEqual(ret, true);
         }
-
         TEST_METHOD(Cbor)
         {
             CborTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(CborSkip)
+        {
+            CborSkipTest test;
             bool ret = test.DoTest();
 
             Assert::AreEqual(ret, true);

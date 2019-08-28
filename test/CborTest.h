@@ -36,4 +36,15 @@ private:
     static bool DoOneTest(uint8_t* in, size_t in_length, char const* expected);
 };
 
+class CborSkipTest : public ithi_test_class
+{
+public:
+    CborSkipTest();
+    ~CborSkipTest();
+
+    bool DoTest() override;
+private:
+    static bool DoOneTest(uint8_t* in, size_t in_length, char const* expected);
+};
+
 #endif

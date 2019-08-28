@@ -134,6 +134,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\lib\cbor.c" />
     <ClCompile Include="..\test\CaptureTest.cpp" />
     <ClCompile Include="..\test\capture_fuzz.cpp" />
     <ClCompile Include="..\test\CborTest.cpp" />
@@ -159,6 +160,7 @@
     <ClCompile Include="..\test\TldCountTest.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\lib\cbor.h" />
     <ClInclude Include="..\test\CaptureTest.h" />
     <ClInclude Include="..\test\capture_fuzz.h" />
     <ClInclude Include="..\test\CborTest.h" />
