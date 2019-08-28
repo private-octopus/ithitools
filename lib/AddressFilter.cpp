@@ -73,6 +73,7 @@
 #endif
 
 #endif /* _WINDOWS or Linux*/
+#include "ithiutil.h"
 
 IPAsKey::IPAsKey(uint8_t * addr, size_t addr_len)
     :
@@ -140,17 +141,9 @@ AddressFilter::~AddressFilter()
 
 bool AddressFilter::SetList(char const * fname)
 {
-    bool ret;
-    FILE * F = NULL;
     char line[256];
-
-#ifdef _WINDOWS
-    errno_t err = fopen_s(&F, fname, "w");
-    ret = (err == 0 && F != NULL);
-#else
-    F = fopen(fname, "r");
-    ret = (F != NULL);
-#endif
+    FILE* F = ithi_file_open(fname, "w");
+    bool ret = (F != NULL);
 
     while (ret && fgets(line, sizeof(line), F) != NULL)
     {

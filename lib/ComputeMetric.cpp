@@ -19,6 +19,7 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include "ithiutil.h"
 #include "ComputeMetric.h"
 
 ComputeMetric::ComputeMetric()
@@ -50,14 +51,9 @@ bool ComputeMetric::Save(char const * out_file)
 {
     bool ret;
     FILE * F = NULL;
-
-#ifdef _WINDOWS
-    errno_t err = fopen_s(&F, out_file, "w");
-    ret = (err == 0 && F != NULL);
-#else
-    F = fopen(out_file, "w");
+    
+    F = ithi_file_open(out_file, "w");
     ret = (F != NULL);
-#endif
 
     if (ret)
     {

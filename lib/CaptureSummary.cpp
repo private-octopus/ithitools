@@ -26,6 +26,7 @@
 #include "CsvHelper.h"
 #include "DnsStats.h"
 #include "Version.h"
+#include "ithiutil.h"
 #include "CaptureSummary.h"
 
 CaptureSummary::CaptureSummary()
@@ -48,18 +49,10 @@ CaptureSummary::~CaptureSummary()
 
 bool CaptureSummary::Load(char const * file_name)
 {
-    FILE* F;
     CaptureLine line;
     char buffer[512];
-
-#ifdef _WINDOWS
-    errno_t err = fopen_s(&F, file_name, "r");
-    bool ret = (err == 0 && F != NULL);
-#else
-    bool ret;
-    F = fopen(file_name, "r");
-    ret = (F != NULL);
-#endif
+    FILE * F = ithi_file_open(file_name, "r");
+    bool ret = (F != NULL);
 
     while ( ret && fgets(buffer, sizeof(buffer), F))
     {
@@ -97,16 +90,8 @@ bool CaptureSummary::Load(char const * file_name)
 
 bool CaptureSummary::Save(char const * file_name)
 {
-    FILE* F;
-
-#ifdef _WINDOWS
-    errno_t err = fopen_s(&F, file_name, "w");
-    bool ret = (err == 0 && F != NULL);
-#else
-    bool ret;
-    F = fopen(file_name, "w");
-    ret = (F != NULL);
-#endif
+    FILE* F = ithi_file_open(file_name, "w");
+    bool ret = (F != NULL);
 
     if (ret) {
         /* TODO: write the version number */
@@ -327,14 +312,9 @@ bool CaptureSummary::Merge(char const * list_file_name)
     char buffer[512];
 
     /* Open the list file */
-#ifdef _WINDOWS
-    errno_t err = fopen_s(&F, list_file_name, "r");
-    bool ret = (err == 0 && F != NULL);
-#else
     bool ret;
-    F = fopen(list_file_name, "r");
+    F = ithi_file_open(list_file_name, "r");
     ret = (F != NULL);
-#endif
 
     /* Read each file name and add it to the list */
     while (ret && fgets(buffer, sizeof(buffer), F) != NULL) {

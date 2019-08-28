@@ -25,6 +25,7 @@
 #ifndef _WINDOWS
 #include <errno.h>
 #endif
+#include "ithiutil.h"
 #include "ithimetrics.h"
 #include "OdiPublisher.h"
 
@@ -120,27 +121,12 @@ bool OdiPublisher::CopyFile(const char * source_file_name, const char * dest_fil
 {
     bool ret = true;
     char line[512];
-    FILE * F_in = NULL;
     FILE * F_out = NULL;
-
-#ifdef _WINDOWS
-    errno_t err = fopen_s(&F_in, source_file_name, "r");
-    if (err == 0 && F_in != NULL) {
-        err = fopen_s(&F_out, dest_file_name, "w");
-        if (err != 0 || F_out == NULL) {
-            printf("Could not write file %s, err: %d\n", dest_file_name, err);
-            ret = false;
-        }
-    } else {
-        printf("Could not read file %s, err: %d\n", source_file_name, err);
-        ret = false;
-    }
-#else
-    F_in = fopen(source_file_name, "r");
+    FILE* F_in = ithi_file_open(source_file_name, "r");
 
     if (F_in != NULL)
     {
-        F_out = fopen(dest_file_name, "w");
+        F_out = ithi_file_open(dest_file_name, "w");
         if (F_out == NULL) {
             printf("Could not write file %s, err: %d\n", dest_file_name, errno);
             ret = false;
@@ -150,7 +136,6 @@ bool OdiPublisher::CopyFile(const char * source_file_name, const char * dest_fil
         printf("Could not read file %s, err: %d\n", source_file_name, errno);
         ret = false;
     }
-#endif
 
     while (ret) {
         size_t nb_read = fread(line, 1, sizeof(line), F_in);
@@ -197,25 +182,11 @@ bool OdiPublisher::CopyUpdateJsonFile(int metric_id, const char * dest_file_name
     }
 
     if (ret) {
-#ifdef _WINDOWS
-        errno_t err = fopen_s(&F_in, source_file_name, "r");
-        if (err == 0 && F_in != NULL) {
-            err = fopen_s(&F_out, dest_file_name, "w");
-            if (err != 0 || F_out == NULL) {
-                printf("Could not write file %s, err: %d\n", dest_file_name, err);
-                ret = false;
-            }
-        }
-        else {
-            printf("Could not read file %s, err: %d\n", source_file_name, err);
-            ret = false;
-        }
-#else
-        F_in = fopen(source_file_name, "r");
+        F_in = ithi_file_open(source_file_name, "r");
 
         if (F_in != NULL)
         {
-            F_out = fopen(dest_file_name, "w");
+            F_out = ithi_file_open(dest_file_name, "w");
             if (F_out == NULL) {
                 printf("Could not write file %s, err: %d\n", dest_file_name, errno);
                 ret = false;
@@ -225,7 +196,6 @@ bool OdiPublisher::CopyUpdateJsonFile(int metric_id, const char * dest_file_name
             printf("Could not read file %s, err: %d\n", source_file_name, errno);
             ret = false;
         }
-#endif
     }
 
     while (ret) {

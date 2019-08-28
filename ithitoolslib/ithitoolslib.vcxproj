@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClInclude Include="..\lib\AddressFilter.h" />
     <ClInclude Include="..\lib\CaptureSummary.h" />
+    <ClInclude Include="..\lib\cdns.h" />
     <ClInclude Include="..\lib\ComputeM34.h" />
     <ClInclude Include="..\lib\ComputeM6.h" />
     <ClInclude Include="..\lib\ComputeMetric.h" />
@@ -168,6 +169,7 @@
     <ClInclude Include="..\lib\HashBinGeneric.h" />
     <ClInclude Include="..\lib\ithimetrics.h" />
     <ClInclude Include="..\lib\ithipublisher.h" />
+    <ClInclude Include="..\lib\ithiutil.h" />
     <ClInclude Include="..\lib\ithi_getopt.h" />
     <ClInclude Include="..\lib\linktype.h" />
     <ClInclude Include="..\lib\M1Data.h" />
@@ -177,7 +179,6 @@
     <ClInclude Include="..\lib\OdiPublisher.h" />
     <ClInclude Include="..\lib\pcap_reader.h" />
     <ClInclude Include="..\lib\TldAsKey.h" />
-    <ClInclude Include="..\lib\UsefulTransaction.h" />
     <ClInclude Include="..\lib\Version.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -185,6 +186,7 @@
   <ItemGroup>
     <ClCompile Include="..\lib\AddressFilter.cpp" />
     <ClCompile Include="..\lib\CaptureSummary.cpp" />
+    <ClCompile Include="..\lib\cdns.cpp" />
     <ClCompile Include="..\lib\ComputeM34.cpp" />
     <ClCompile Include="..\lib\ComputeM6.cpp" />
     <ClCompile Include="..\lib\ComputeMetric.cpp" />
@@ -194,13 +196,13 @@
     <ClCompile Include="..\lib\getopt.c" />
     <ClCompile Include="..\lib\ithimetrics.cpp" />
     <ClCompile Include="..\lib\ithipublisher.cpp" />
+    <ClCompile Include="..\lib\ithiutil.cpp" />
     <ClCompile Include="..\lib\M1Data.cpp" />
     <ClCompile Include="..\lib\M2Data.cpp" />
     <ClCompile Include="..\lib\M7Getter.cpp" />
     <ClCompile Include="..\lib\NamePattern.cpp" />
     <ClCompile Include="..\lib\OdiPublisher.cpp" />
     <ClCompile Include="..\lib\pcap_reader.cpp" />
-    <ClCompile Include="..\lib\UsefulTransaction.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

@@ -19,49 +19,12 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <stdint.h>
-#include <stdlib.h>
+#ifndef ITHIUTIL_H
+#define ITHIUTIL_H
+
 #include <stdio.h>
-#include <string.h>
-#include "ithiutil.h"
-#include "cbor.h"
-#include "cdns.h"
 
-cdns::cdns():
-    F(NULL),
-    buf(NULL),
-    buf_size(0),
-    buf_read(0),
-    buf_parsed(0)
-{
-}
+FILE* ithi_file_open(char const* file_name, char const* flags);
 
-cdns::~cdns()
-{
-    if (F != NULL) {
-        fclose(F);
-    }
-    
-    if (buf != NULL) {
-        delete[] buf;
-    }
-}
+#endif
 
-bool cdns::open(char const* file_name, size_t buf_size)
-{
-    bool ret = true;
-
-    if (F != NULL || buf != NULL) {
-        ret = false;
-    }
-    else {
-        if (buf_size == 0) {
-            buf_size = 0x10000;
-        }
-
-        F = ithi_file_open(file_name, "r");
-        ret = (F != NULL);
-    }
-
-    return ret;
-}

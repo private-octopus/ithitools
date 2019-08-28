@@ -23,6 +23,20 @@
 
 class cdns
 {
+    cdns();
+
+    ~cdns();
+
+    bool open(char const* file_name, size_t buf_size);
+
+private:
+    FILE* F;
+    uint8_t* buf;
+    size_t buf_size;
+    size_t buf_read;
+    size_t buf_parsed;
+
+
 };
 
 #endif

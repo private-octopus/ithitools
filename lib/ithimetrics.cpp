@@ -34,6 +34,7 @@
 #include "CaptureSummary.h"
 #include "M7Getter.h"
 #include "M2Data.h"
+#include "ithiutil.h"
 #include "ithimetrics.h"
 
 ithimetrics::ithimetrics()
@@ -486,14 +487,10 @@ bool ithimetrics::Save(char const * file_name)
 
     ComputeMetric * cm[ITHI_NUMBER_OF_METRICS] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7, &cm8 };
     FILE* F;
-#ifdef _WINDOWS
-    errno_t err = fopen_s(&F, file_name, "w");
-    bool ret = (err == 0);
-#else
     bool ret;
-    F = fopen(file_name, "w");
+
+    F = ithi_file_open(file_name, "w");
     ret = (F != NULL);
-#endif
 
     for (int i = 0; ret && i < ITHI_NUMBER_OF_METRICS; i++)
     {

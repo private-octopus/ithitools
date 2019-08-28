@@ -19,49 +19,41 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+/* Simple set of utilities */
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
+#include <stdio.h>
 #include "ithiutil.h"
-#include "cbor.h"
-#include "cdns.h"
 
-cdns::cdns():
-    F(NULL),
-    buf(NULL),
-    buf_size(0),
-    buf_read(0),
-    buf_parsed(0)
+/* Safely open files in a portable way */
+FILE* ithi_file_open_ex(char const* file_name, char const* flags, int* last_err)
 {
-}
+    FILE* F;
 
-cdns::~cdns()
-{
-    if (F != NULL) {
-        fclose(F);
-    }
-    
-    if (buf != NULL) {
-        delete[] buf;
-    }
-}
-
-bool cdns::open(char const* file_name, size_t buf_size)
-{
-    bool ret = true;
-
-    if (F != NULL || buf != NULL) {
-        ret = false;
-    }
-    else {
-        if (buf_size == 0) {
-            buf_size = 0x10000;
+#ifdef _WINDOWS
+    errno_t err = fopen_s(&F, file_name, flags);
+    if (err != 0) {
+        if (last_err != NULL) {
+            *last_err = err;
         }
-
-        F = ithi_file_open(file_name, "r");
-        ret = (F != NULL);
+        if (F != NULL) {
+            fclose(F);
+            F = NULL;
+        }
     }
+#else
+    F = fopen(file_name, flags);
+    if (F == NULL && last_err != NULL) {
+        *last_err = errno;
+    }
+#endif
 
-    return ret;
+    return F;
 }
+
+FILE* ithi_file_open(char const* file_name, char const* flags)
+{
+    return ithi_file_open_ex(file_name, flags, NULL);
+}
+

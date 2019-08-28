@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include "CsvHelper.h"
 #include "M2Data.h"
+#include "ithiutil.h"
 
 #ifndef UNREFERENCED_PARAMETER
 #define UNREFERENCED_PARAMETER(x) (void)(x)
@@ -106,14 +107,9 @@ bool M2Data::Load(char const * monthly_csv_file_name)
         parse_file_name(monthly_csv_file_name);
     }
 
-#ifdef _WINDOWS
-    errno_t err = fopen_s(&F, monthly_csv_file_name, "r");
-    bool ret = (err == 0 && F != NULL);
-#else
     bool ret;
-    F = fopen(monthly_csv_file_name, "r");
+    F = ithi_file_open(monthly_csv_file_name, "r");
     ret = (F != NULL);
-#endif
 
     while (ret && fgets(buffer, sizeof(buffer), F))
     {
@@ -255,13 +251,8 @@ bool M2Data::Save()
 
     if (ret)
     {
-#ifdef _WINDOWS
-        errno_t err = fopen_s(&F, file_name, "w");
-        ret = (err == 0 && F != NULL);
-#else
-        F = fopen(file_name, "w");
+        F = ithi_file_open(file_name, "w");
         ret = (F != NULL);
-#endif
     }
 
     if (!ret)

@@ -28,6 +28,7 @@
 #endif
 #include <stdio.h>
 #include <string.h>
+#include "ithiutil.h"
 #include "ithimetrics.h"
 #include "MetricTest.h"
 
@@ -142,28 +143,16 @@ bool MetricTest::DoTest()
 
 bool MetricTest::compare_files(char const * fname1, char const * fname2)
 {
-    FILE* F1 = NULL;
     FILE* F2 = NULL;
-
-#ifdef _WINDOWS
-    errno_t err = fopen_s(&F1, fname1, "r");
-    bool ret = (err == 0);
+    FILE* F1 = ithi_file_open(fname1, "r");
+    bool ret = (F1 != NULL);
 
     if (ret)
     {
-        err = fopen_s(&F2, fname2, "r");
-        ret = (err == 0);
+        F2 = ithi_file_open(fname2, "r");
+        ret = (F2 != 0);
     }
-#else
-    bool ret;
-    F1 = fopen(fname1, "r");
-    ret = (F1 != NULL);
-    if (ret)
-    {
-        F2 = fopen(fname2, "r");
-        ret = (F2 != NULL);
-    }
-#endif
+
     if (F1 == NULL)
     {
         TEST_LOG("Cannot open %s.\n", fname1);
@@ -450,28 +439,15 @@ bool MetricCaptureFileTest::CreateDirectoryIfAbsent(char const * dir_name)
 
 bool MetricCaptureFileTest::CopyFileToDestination(char const * target_name, char const * source_name)
 {
-    FILE* F1 = NULL;
+    
     FILE* F2 = NULL;
+    FILE* F1 = ithi_file_open(source_name, "r");
+    bool ret = (F1 != NULL);
 
-#ifdef _WINDOWS
-    errno_t err = fopen_s(&F1, source_name, "r");
-    bool ret = (err == 0);
-
-    if (ret)
-    {
-        err = fopen_s(&F2, target_name, "w");
-        ret = (err == 0);
+    if (ret) {
+        F2 = ithi_file_open(target_name, "w");
+        ret != (F2 != NULL);
     }
-#else
-    bool ret;
-    F1 = fopen(source_name, "r");
-    ret = (F1 != NULL);
-    if (ret)
-    {
-        F2 = fopen(target_name, "w");
-        ret = (F2 != NULL);
-    }
-#endif
 
     if (ret && F1 != NULL && F2 != NULL)
     {

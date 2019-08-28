@@ -19,6 +19,7 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include "ithiutil.h"
 #include "CaptureSummary.h"
 #include "MergeTest.h"
 
@@ -91,13 +92,8 @@ bool MergeListTest::DoTest()
     CaptureSummary cs;
 
     /* create the capture list */
-#ifdef _WINDOWS
-    errno_t err = fopen_s(&F, capture_list_name, "w");
-    ret = (err == 0 && F != NULL);
-#else
-    F = fopen(capture_list_name, "w");
-    ret = (F != NULL);
-#endif
+    F = ithi_file_open(capture_list_name, "w");
+    ret &= (F != NULL);
 
     if (ret)
     {
