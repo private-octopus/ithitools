@@ -158,8 +158,6 @@ bool cdns::dump(char const* file_out)
 
 bool cdns::load_buffer()
 {
-    size_t byte_read = 0;
-
     if (buf_parsed < buf_read) {
         buf_read -= buf_parsed;
         memmove(buf, buf + buf_parsed, buf_read);
@@ -182,7 +180,6 @@ bool cdns::load_buffer()
 
 uint8_t* cdns::dump_preamble(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out)
 {
-    bool ret = true;
     char* p_out;
     int64_t val;
     int outer_type = CBOR_CLASS(*in);
@@ -194,7 +191,6 @@ uint8_t* cdns::dump_preamble(uint8_t* in, uint8_t* in_max, char* out_buf, char* 
         fprintf(F_out, "Error, cannot parse the first bytes of preamble, type %d.\n", outer_type);
         *err = CBOR_MALFORMED_VALUE;
         in = NULL;
-        ret = false;
     }
     else {
         int rank = 0;
@@ -224,13 +220,13 @@ uint8_t* cdns::dump_preamble(uint8_t* in, uint8_t* in_max, char* out_buf, char* 
                 int64_t inner_val;
 
                 in = cbor_get_number(in, in_max, &inner_val);
-                /*
+
                 if (inner_type != CBOR_T_UINT) {
                     fprintf(F_out, "                Unexpected type: %d(%d)\n", inner_type, (int)inner_val);
                     *err = CBOR_MALFORMED_VALUE;
                     in = NULL;
                 }
-                else */ {
+                else {
                     if (rank != 0) {
                         fprintf(F_out, ",\n");
                     }
@@ -245,6 +241,12 @@ uint8_t* cdns::dump_preamble(uint8_t* in, uint8_t* in_max, char* out_buf, char* 
                     }
                     else if (inner_val == 3) {
                         fprintf(F_out, "        --block-parameters\n");
+                    }
+                    else if (inner_val == 4) {
+                        fprintf(F_out, "        --generator-id\n"); /* V0.5 only? */
+                    }
+                    else if (inner_val == 5) {
+                        fprintf(F_out, "        --host-id\n"); /* v0.5 only? */
                     }
                     fprintf(F_out, "        %d, ", (int)inner_val);
                     if (inner_val == 3) {
@@ -270,7 +272,6 @@ uint8_t* cdns::dump_preamble(uint8_t* in, uint8_t* in_max, char* out_buf, char* 
 
 uint8_t* cdns::dump_block_parameters(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out)
 {
-    bool ret = true;
     char* p_out;
     int64_t val;
     int outer_type = CBOR_CLASS(*in);
@@ -282,7 +283,6 @@ uint8_t* cdns::dump_block_parameters(uint8_t* in, uint8_t* in_max, char* out_buf
         fprintf(F_out, "       Error, cannot parse the first bytes of block parameters, type %d.\n", outer_type);
         *err = CBOR_MALFORMED_VALUE;
         in = NULL;
-        ret = false;
     }
     else {
         int rank = 0;
@@ -322,7 +322,47 @@ uint8_t* cdns::dump_block_parameters(uint8_t* in, uint8_t* in_max, char* out_buf
                     }
                     rank++;
                     {
+                        /* Type definitions copies fro source code of compactor */
                         p_out = out_buf;
+                        if (inner_val == 0) {
+                            fprintf(F_out, "            --query-timeout\n");
+                        }
+                        else if (inner_val == 1) {
+                            fprintf(F_out, "            --skew-timeout\n");
+                        }
+                        else if (inner_val == 2) {
+                            fprintf(F_out, "            --snaplen\n");
+                        }
+                        else if (inner_val == 3) {
+                            fprintf(F_out, "            --promisc\n");
+                        }
+                        else if (inner_val == 4) {
+                            fprintf(F_out, "            --interfaces\n"); /* V0.5 only? */
+                        }
+                        else if (inner_val == 5) {
+                            fprintf(F_out, "            --server-addresses\n"); /* v0.5 only? */
+                        }
+                        else if (inner_val == 6) {
+                            fprintf(F_out, "            --vlan-ids\n"); /* v0.5 only? */
+                        }
+                        else if (inner_val == 7) {
+                            fprintf(F_out, "            --filter\n"); /* v0.5 only? */
+                        }
+                        else if (inner_val == 8) {
+                            fprintf(F_out, "            --query-options\n"); /* v0.5 only? */
+                        }
+                        else if (inner_val == 9) {
+                            fprintf(F_out, "            --response-options\n"); /* v0.5 only? */
+                        }
+                        else if (inner_val == 10) {
+                            fprintf(F_out, "            --accept-rr-types\n"); /* v0.5 only? */
+                        }
+                        else if (inner_val == 11) {
+                            fprintf(F_out, "            --ignore-rr-types\n"); /* v0.5 only? */
+                        }
+                        else if (inner_val == 12) {
+                            fprintf(F_out, "            --max-block-qr-items\n"); /* v0.5 only? */
+                        }
                         fprintf(F_out, "            %d,", (int)inner_val);
                         in = cbor_to_text(in, in_max, &p_out, out_max, err);
                         fwrite(out_buf, 1, p_out - out_buf, F_out);
@@ -340,10 +380,8 @@ uint8_t* cdns::dump_block_parameters(uint8_t* in, uint8_t* in_max, char* out_buf
     return in;
 }
 
-
 uint8_t* cdns::dump_block(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out)
 {
-    bool ret = true;
     char* p_out;
     int64_t val;
     int outer_type = CBOR_CLASS(*in);
@@ -355,12 +393,11 @@ uint8_t* cdns::dump_block(uint8_t* in, uint8_t* in_max, char* out_buf, char* out
         fprintf(F_out, "   Error, cannot parse the first bytes of block, type=%d.\n", outer_type);
         *err = CBOR_MALFORMED_VALUE;
         in = NULL;
-        ret = false;
     }
     else {
         int rank = 0;
 
-        fprintf(F_out, "  [\n");
+        fprintf(F_out, "    [\n");
         if (val == CBOR_END_OF_ARRAY) {
             is_undef = 1;
             val = 0xffffffff;
@@ -368,12 +405,12 @@ uint8_t* cdns::dump_block(uint8_t* in, uint8_t* in_max, char* out_buf, char* out
 
         while (val > 0 && in != NULL && in < in_max) {
             if (*in == 0xff) {
-                fprintf(F_out, "    --end of array");
+                fprintf(F_out, "        --end of array");
                 if (is_undef) {
                     in++;
                 }
                 else {
-                    fprintf(F_out, "Error, end of array mark unexpected.\n");
+                    fprintf(F_out, "        Error, end of array mark unexpected.\n");
                     *err = CBOR_MALFORMED_VALUE;
                     in = NULL;
                 }
@@ -389,7 +426,7 @@ uint8_t* cdns::dump_block(uint8_t* in, uint8_t* in_max, char* out_buf, char* out
                 else {
                     p_out = out_buf;
                     rank++;
-                    fprintf(F_out, "    -- Property %d:\n    ", rank);
+                    fprintf(F_out, "        -- Property %d:\n    ", rank);
                     in = cbor_to_text(in, in_max, &p_out, out_max, err);
                     fwrite(out_buf, 1, p_out - out_buf, F_out);
                     fprintf(F_out, "\n");
@@ -399,7 +436,7 @@ uint8_t* cdns::dump_block(uint8_t* in, uint8_t* in_max, char* out_buf, char* out
         }
 
         if (in != NULL) {
-            fprintf(F_out, "\n  ]\n");
+            fprintf(F_out, "\n    ]\n");
         }
 
     }
@@ -409,7 +446,6 @@ uint8_t* cdns::dump_block(uint8_t* in, uint8_t* in_max, char* out_buf, char* out
 
 uint8_t* cdns::dump_block_properties(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out)
 {
-    bool ret = true;
     char* p_out;
     int64_t val;
     int outer_type = CBOR_CLASS(*in);
@@ -421,11 +457,10 @@ uint8_t* cdns::dump_block_properties(uint8_t* in, uint8_t* in_max, char* out_buf
         fprintf(F_out, "   Error, cannot parse the first bytes of properties, type: %d.\n", outer_type);
         *err = CBOR_MALFORMED_VALUE;
         in = NULL;
-        ret = false;
     }
     else {
         int rank = 0;
-        fprintf(F_out, "    [\n");
+        fprintf(F_out, "        [\n");
         if (val == CBOR_END_OF_ARRAY) {
             is_undef = 1;
             val = 0xffffffff;
@@ -433,12 +468,12 @@ uint8_t* cdns::dump_block_properties(uint8_t* in, uint8_t* in_max, char* out_buf
 
         while (val > 0 && in != NULL && in < in_max ) {
             if (*in == 0xff) {
-                fprintf(F_out, "\n        --end of array");
+                fprintf(F_out, "\n            --end of array");
                 if (is_undef) {
                     in++;
                 }
                 else {
-                    fprintf(F_out, "    Error, end of array mark unexpected.\n");
+                    fprintf(F_out, "            Error, end of array mark unexpected.\n");
                     *err = CBOR_MALFORMED_VALUE;
                     in = NULL;
                 }
@@ -451,7 +486,7 @@ uint8_t* cdns::dump_block_properties(uint8_t* in, uint8_t* in_max, char* out_buf
 
                 in = cbor_get_number(in, in_max, &inner_val);
                 if (inner_type != CBOR_T_UINT) {
-                    fprintf(F_out, "        Unexpected type: %d(%d)\n", inner_type, (int)inner_val);
+                    fprintf(F_out, "            Unexpected type: %d(%d)\n", inner_type, (int)inner_val);
                     *err = CBOR_MALFORMED_VALUE;
                     in = NULL;
                 }
@@ -460,19 +495,19 @@ uint8_t* cdns::dump_block_properties(uint8_t* in, uint8_t* in_max, char* out_buf
                         fprintf(F_out, ",\n");
                     }
                     rank++;
-                    fprintf(F_out, "        %d, ", (int)inner_val);
+                    fprintf(F_out, "            %d, ", (int)inner_val);
                     if (inner_val == 2) {
                         in = dump_block_tables(in, in_max, out_buf, out_max, err, F_out);
                     }
                     else if (inner_val == 3) {
                         fprintf(F_out, "[\n");
-                        in = dump_list(in, in_max, out_buf, out_max, "            ", "queries", err, F_out);
-                        fprintf(F_out, "        ]");
+                        in = dump_queries(in, in_max, out_buf, out_max,  err, F_out);
+                        fprintf(F_out, "            ]");
                     }
                     else if (inner_val == 4) {
                         fprintf(F_out, "[\n");
-                        in = dump_list(in, in_max, out_buf, out_max, "            ", "address-event-counts", err, F_out);
-                        fprintf(F_out, "        ]");
+                        in = dump_list(in, in_max, out_buf, out_max, "                ", "address-event-counts", err, F_out);
+                        fprintf(F_out, "            ]");
                     }
                     else {
                         p_out = out_buf;
@@ -485,7 +520,7 @@ uint8_t* cdns::dump_block_properties(uint8_t* in, uint8_t* in_max, char* out_buf
         }
 
         if (in != NULL) {
-            fprintf(F_out, "\n    ]\n");
+            fprintf(F_out, "\n        ]\n");
         }
     }
 
@@ -494,7 +529,6 @@ uint8_t* cdns::dump_block_properties(uint8_t* in, uint8_t* in_max, char* out_buf
 
 uint8_t* cdns::dump_block_tables(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out)
 {
-    bool ret = true;
     char* p_out;
     int64_t val;
     int outer_type = CBOR_CLASS(*in);
@@ -502,15 +536,15 @@ uint8_t* cdns::dump_block_tables(uint8_t* in, uint8_t* in_max, char* out_buf, ch
 
     in = cbor_get_number(in, in_max, &val);
 
-    if (in == NULL) {
-        fprintf(F_out, "       Error, cannot parse the first bytes of block tables.\n");
+    if (in == NULL || outer_type != CBOR_T_MAP) {
+        fprintf(F_out, "       Error, cannot parse the first bytes of block tables, type = %d.\n",
+            outer_type);
         *err = CBOR_MALFORMED_VALUE;
         in = NULL;
-        ret = false;
     }
     else {
         int rank = 0;
-        fprintf(F_out, "  -- block tables type %d, val: %d\n            [\n", outer_type, (int)val);
+        fprintf(F_out, "[\n");
         if (val == CBOR_END_OF_ARRAY) {
             is_undef = 1;
             val = 0xffffffff;
@@ -553,7 +587,7 @@ uint8_t* cdns::dump_block_tables(uint8_t* in, uint8_t* in_max, char* out_buf, ch
                     }
                     else if (inner_val == 1) {
                         fprintf(F_out, "[\n");
-                        in = dump_list(in, in_max, out_buf, out_max, "                    ", "class-types", err, F_out);
+                        in = dump_class_types(in, in_max, out_buf, out_max, err, F_out);
                         fprintf(F_out, "                ]");
                     }
                     else if (inner_val == 2) {
@@ -563,7 +597,7 @@ uint8_t* cdns::dump_block_tables(uint8_t* in, uint8_t* in_max, char* out_buf, ch
                     }
                     else if (inner_val == 3) {
                         fprintf(F_out, "[\n");
-                        in = dump_list(in, in_max, out_buf, out_max, "                    ", "qr-sigs", err, F_out);
+                        in = dump_qr_sigs(in, in_max, out_buf, out_max, err, F_out);
                         fprintf(F_out, "                ]");
                     }
                     else if (inner_val == 4) {
@@ -604,11 +638,481 @@ uint8_t* cdns::dump_block_tables(uint8_t* in, uint8_t* in_max, char* out_buf, ch
     return in;
 }
 
+uint8_t* cdns::dump_queries(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out)
+{
+    int64_t val;
+    int outer_type = CBOR_CLASS(*in);
+    int is_undef = 0;
+
+    in = cbor_get_number(in, in_max, &val);
+
+    if (in == NULL || outer_type != CBOR_T_ARRAY) {
+        fprintf(F_out, "                Error, cannot parse the first bytes of queries, type= %d.\n",
+            outer_type);
+        *err = CBOR_MALFORMED_VALUE;
+        in = NULL;
+    }
+    else {
+        int rank = 0;
+        if (val == CBOR_END_OF_ARRAY) {
+            is_undef = 1;
+            val = 0xffffffff;
+        }
+
+        while (rank < val && in != NULL && in < in_max) {
+            if (*in == 0xff) {
+                fprintf(F_out, "                --end of array\n");
+                if (is_undef) {
+                    in++;
+                }
+                else {
+                    fprintf(F_out, "                Error, end of array mark unexpected.\n");
+                    *err = CBOR_MALFORMED_VALUE;
+                    in = NULL;
+                }
+            }
+            rank++;
+            if (rank <= 10) {
+                if (rank != 1) {
+                    fprintf(F_out, ",\n");
+                }
+                /* One item per line, only print the first 10 items */
+                in = dump_query(in, in_max, out_buf, out_max, err, F_out);
+            }
+            else {
+                in = cbor_skip(in, in_max, err);
+            }
+        }
+
+        if (in != NULL) {
+            if (rank > 10) {
+                fprintf(F_out, ",\n                ...\n");
+            }
+            fprintf(F_out, "                -- found %d queries\n", rank);
+        }
+    }
+
+    return in;
+}
+
+uint8_t* cdns::dump_query(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out)
+{
+    char* p_out;
+    int64_t val;
+    int outer_type = CBOR_CLASS(*in);
+    int is_undef = 0;
+
+    in = cbor_get_number(in, in_max, &val);
+
+    if (in == NULL || outer_type != CBOR_T_MAP) {
+        fprintf(F_out, "                Error, cannot parse the first bytes of query, type: %d.\n", outer_type);
+        *err = CBOR_MALFORMED_VALUE;
+        in = NULL;
+    }
+    else {
+        int rank = 0;
+        fprintf(F_out, "                [\n");
+        if (val == CBOR_END_OF_ARRAY) {
+            is_undef = 1;
+            val = 0xffffffff;
+        }
+
+        while (val > 0 && in != NULL && in < in_max) {
+            if (*in == 0xff) {
+                fprintf(F_out, "\n                    --end of array");
+                if (is_undef) {
+                    in++;
+                }
+                else {
+                    fprintf(F_out, "                    Error, end of array mark unexpected.\n");
+                    *err = CBOR_MALFORMED_VALUE;
+                    in = NULL;
+                }
+                break;
+            }
+            else {
+                /* There should be two elements for each map item */
+                int inner_type = CBOR_CLASS(*in);
+                int64_t inner_val;
+
+                in = cbor_get_number(in, in_max, &inner_val);
+                if (inner_type != CBOR_T_UINT) {
+                    fprintf(F_out, "                Unexpected type: %d(%d)\n", inner_type, (int)inner_val);
+                    *err = CBOR_MALFORMED_VALUE;
+                    in = NULL;
+                }
+                else {
+                    if (rank != 0) {
+                        fprintf(F_out, ",\n");
+                    }
+                    rank++;
+                    if (inner_val == 0) {
+                        fprintf(F_out, "                    --time_useconds,\n");
+                    } else if (inner_val == 1) {
+                        fprintf(F_out, "                    --time_pseconds,\n");
+                    }
+                    else if (inner_val == 2) {
+                        fprintf(F_out, "                    --client_address_index,\n");
+                    }
+                    else if (inner_val == 3) {
+                        fprintf(F_out, "                    --client_port,\n");
+                    }
+                    else if (inner_val == 4) {
+                        fprintf(F_out, "                    --transaction_id,\n");
+                    }
+                    else if (inner_val == 5) {
+                        fprintf(F_out, "                    --query_signature_index,\n");
+                    }
+                    else if (inner_val == 6) {
+                        fprintf(F_out, "                    --client_hoplimit,\n");
+                    }
+                    else if (inner_val == 7) {
+                        fprintf(F_out, "                    --delay_useconds,\n");
+                    }
+                    else if (inner_val == 8) {
+                        fprintf(F_out, "                    --delay_pseconds,\n");
+                    }
+                    else if (inner_val == 9) {
+                        fprintf(F_out, "                    --query_name_index,\n");
+                    }
+                    else if (inner_val == 10) {
+                        fprintf(F_out, "                    --query_size,\n");
+                    }
+                    else if (inner_val == 11) {
+                        fprintf(F_out, "                    --response_size,\n");
+                    }
+                    else if (inner_val == 12) {
+                        fprintf(F_out, "                    --query_extended,\n");
+                    }
+                    else if (inner_val == 13) {
+                        fprintf(F_out, "                    --response_extended,\n");
+                    }
+
+                    fprintf(F_out, "                    %d, ", (int)inner_val);
+                    p_out = out_buf;
+                    in = cbor_to_text(in, in_max, &p_out, out_max, err);
+                    fwrite(out_buf, 1, p_out - out_buf, F_out);
+                    val--;
+                }
+            }
+        }
+
+        if (in != NULL) {
+            fprintf(F_out, "\n                ]");
+        }
+    }
+
+    return in;
+}
+
+uint8_t* cdns::dump_class_types(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out)
+{
+    int64_t val;
+    int outer_type = CBOR_CLASS(*in);
+    int is_undef = 0;
+
+    in = cbor_get_number(in, in_max, &val);
+
+    if (in == NULL || outer_type != CBOR_T_ARRAY) {
+        fprintf(F_out, "                Error, cannot parse the first bytes of class-types, type= %d.\n",
+            outer_type);
+        *err = CBOR_MALFORMED_VALUE;
+        in = NULL;
+    }
+    else {
+        int rank = 0;
+        if (val == CBOR_END_OF_ARRAY) {
+            is_undef = 1;
+            val = 0xffffffff;
+        }
+
+        while (rank < val && in != NULL && in < in_max) {
+            if (*in == 0xff) {
+                fprintf(F_out, "                --end of array\n");
+                if (is_undef) {
+                    in++;
+                }
+                else {
+                    fprintf(F_out, "                Error, end of array mark unexpected.\n");
+                    *err = CBOR_MALFORMED_VALUE;
+                    in = NULL;
+                }
+            }
+            rank++;
+            if (rank <= 10) {
+                if (rank != 1) {
+                    fprintf(F_out, ",\n");
+                }
+                /* One item per line, only print the first 10 items */
+                in = dump_class_type(in, in_max, out_buf, out_max, err, F_out);
+            }
+            else {
+                in = cbor_skip(in, in_max, err);
+            }
+        }
+
+        if (in != NULL) {
+            if (rank > 10) {
+                fprintf(F_out, ",\n                    ...\n");
+            }
+            fprintf(F_out, "                    -- found %d class-types\n", rank);
+        }
+    }
+
+    return in;
+}
+
+uint8_t* cdns::dump_class_type(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out)
+{
+    char* p_out;
+    int64_t val;
+    int outer_type = CBOR_CLASS(*in);
+    int is_undef = 0;
+
+    in = cbor_get_number(in, in_max, &val);
+
+    if (in == NULL || outer_type != CBOR_T_MAP) {
+        fprintf(F_out, "                    Error, cannot parse the first bytes of class-type, type: %d.\n", outer_type);
+        *err = CBOR_MALFORMED_VALUE;
+        in = NULL;
+    }
+    else {
+        int rank = 0;
+        fprintf(F_out, "                    [\n");
+        if (val == CBOR_END_OF_ARRAY) {
+            is_undef = 1;
+            val = 0xffffffff;
+        }
+
+        while (val > 0 && in != NULL && in < in_max) {
+            if (*in == 0xff) {
+                fprintf(F_out, "\n                        --end of array");
+                if (is_undef) {
+                    in++;
+                }
+                else {
+                    fprintf(F_out, "                        Error, end of array mark unexpected.\n");
+                    *err = CBOR_MALFORMED_VALUE;
+                    in = NULL;
+                }
+                break;
+            }
+            else {
+                /* There should be two elements for each map item */
+                int inner_type = CBOR_CLASS(*in);
+                int64_t inner_val;
+
+                in = cbor_get_number(in, in_max, &inner_val);
+                if (inner_type != CBOR_T_UINT) {
+                    fprintf(F_out, "                    Unexpected type: %d(%d)\n", inner_type, (int)inner_val);
+                    *err = CBOR_MALFORMED_VALUE;
+                    in = NULL;
+                }
+                else {
+                    if (rank != 0) {
+                        fprintf(F_out, ",\n");
+                    }
+                    rank++;
+                    if (inner_val == 0) {
+                        fprintf(F_out, "                        --type-id,\n");
+                    }
+                    else if (inner_val == 1) {
+                        fprintf(F_out, "                        --class-id,\n");
+                    }
+
+                    fprintf(F_out, "                        %d, ", (int)inner_val);
+                    p_out = out_buf;
+                    in = cbor_to_text(in, in_max, &p_out, out_max, err);
+                    fwrite(out_buf, 1, p_out - out_buf, F_out);
+                    val--;
+                }
+            }
+        }
+
+        if (in != NULL) {
+            fprintf(F_out, "]");
+        }
+    }
+
+    return in;
+}
+
+uint8_t* cdns::dump_qr_sigs(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out)
+{
+    int64_t val;
+    int outer_type = CBOR_CLASS(*in);
+    int is_undef = 0;
+
+    in = cbor_get_number(in, in_max, &val);
+
+    if (in == NULL || outer_type != CBOR_T_ARRAY) {
+        fprintf(F_out, "                Error, cannot parse the first bytes of qr-sigs, type= %d.\n",
+            outer_type);
+        *err = CBOR_MALFORMED_VALUE;
+        in = NULL;
+    }
+    else {
+        int rank = 0;
+        if (val == CBOR_END_OF_ARRAY) {
+            is_undef = 1;
+            val = 0xffffffff;
+        }
+
+        while (rank < val && in != NULL && in < in_max) {
+            if (*in == 0xff) {
+                fprintf(F_out, "                --end of array\n");
+                if (is_undef) {
+                    in++;
+                }
+                else {
+                    fprintf(F_out, "                Error, end of array mark unexpected.\n");
+                    *err = CBOR_MALFORMED_VALUE;
+                    in = NULL;
+                }
+            }
+            rank++;
+            if (rank <= 10) {
+                if (rank != 1) {
+                    fprintf(F_out, ",\n");
+                }
+                /* One item per line, only print the first 10 items */
+                in = dump_qr_sig(in, in_max, out_buf, out_max, err, F_out);
+            }
+            else {
+                in = cbor_skip(in, in_max, err);
+            }
+        }
+
+        if (in != NULL) {
+            if (rank > 10) {
+                fprintf(F_out, ",\n                    ...\n");
+            }
+            fprintf(F_out, "                    -- found %d qr-sigs\n", rank);
+        }
+    }
+
+    return in;
+}
+
+uint8_t* cdns::dump_qr_sig(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out)
+{
+    char* p_out;
+    int64_t val;
+    int outer_type = CBOR_CLASS(*in);
+    int is_undef = 0;
+
+    in = cbor_get_number(in, in_max, &val);
+
+    if (in == NULL || outer_type != CBOR_T_MAP) {
+        fprintf(F_out, "                    Error, cannot parse the first bytes of qr-sig, type: %d.\n", outer_type);
+        *err = CBOR_MALFORMED_VALUE;
+        in = NULL;
+    }
+    else {
+        int rank = 0;
+        fprintf(F_out, "                    [\n");
+        if (val == CBOR_END_OF_ARRAY) {
+            is_undef = 1;
+            val = 0xffffffff;
+        }
+
+        while (val > 0 && in != NULL && in < in_max) {
+            if (*in == 0xff) {
+                fprintf(F_out, "\n                        --end of array");
+                if (is_undef) {
+                    in++;
+                }
+                else {
+                    fprintf(F_out, "                        Error, end of array mark unexpected.\n");
+                    *err = CBOR_MALFORMED_VALUE;
+                    in = NULL;
+                }
+                break;
+            }
+            else {
+                /* There should be two elements for each map item */
+                int inner_type = CBOR_CLASS(*in);
+                int64_t inner_val;
+
+                in = cbor_get_number(in, in_max, &inner_val);
+                if (inner_type != CBOR_T_UINT) {
+                    fprintf(F_out, "                    Unexpected type: %d(%d)\n", inner_type, (int)inner_val);
+                    *err = CBOR_MALFORMED_VALUE;
+                    in = NULL;
+                }
+                else {
+                    if (rank != 0) {
+                        fprintf(F_out, ",\n");
+                    }
+                    rank++;
+                    if (inner_val == 0) {
+                        fprintf(F_out, "                        --server_address_index,\n");
+                    }
+                    else if (inner_val == 1) {
+                        fprintf(F_out, "                        --server_port,\n");
+                    }
+                    else if (inner_val == 2) {
+                        fprintf(F_out, "                        --transport_flags,\n");
+                    }
+                    else if (inner_val == 3) {
+                        fprintf(F_out, "                        --qr_sig_flags,\n");
+                    }
+                    else if (inner_val == 4) {
+                        fprintf(F_out, "                        --query_opcode,\n");
+                    }
+                    else if (inner_val == 5) {
+                        fprintf(F_out, "                        --qr_dns_flags,\n");
+                    }
+                    else if (inner_val == 6) {
+                        fprintf(F_out, "                        --query_rcode,\n");
+                    }
+                    else if (inner_val == 7) {
+                        fprintf(F_out, "                        --query_classtype_index,\n");
+                    }
+                    else if (inner_val == 8) {
+                        fprintf(F_out, "                        --query_qd_count,\n");
+                    }
+                    else if (inner_val == 9) {
+                        fprintf(F_out, "                        --query_an_count,\n");
+                    }
+                    else if (inner_val == 10) {
+                        fprintf(F_out, "                        --query_ar_count,\n");
+                    }
+                    else if (inner_val == 11) {
+                        fprintf(F_out, "                        --query_ns_count,\n");
+                    }
+                    else if (inner_val == 12) {
+                        fprintf(F_out, "                        --edns_version,\n");
+                    }
+                    else if (inner_val == 13) {
+                        fprintf(F_out, "                        --udp_buf_size,\n");
+                    }
+                    else if (inner_val == 14) {
+                        fprintf(F_out, "                        --opt_rdata_index,\n");
+                    }
+                    else if (inner_val == 15) {
+                        fprintf(F_out, "                        --response_rcode,\n");
+                    }
+
+                    fprintf(F_out, "                        %d, ", (int)inner_val);
+                    p_out = out_buf;
+                    in = cbor_to_text(in, in_max, &p_out, out_max, err);
+                    fwrite(out_buf, 1, p_out - out_buf, F_out);
+                    val--;
+                }
+            }
+        }
+
+        if (in != NULL) {
+            fprintf(F_out, "]");
+        }
+    }
+
+    return in;
+}
 
 uint8_t* cdns::dump_list(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, char const * indent, char const * list_name, int* err, FILE* F_out)
 {
-
-    bool ret = true;
     char* p_out;
     int64_t val;
     int outer_type = CBOR_CLASS(*in);
@@ -617,14 +1121,13 @@ uint8_t* cdns::dump_list(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_
     in = cbor_get_number(in, in_max, &val);
 
     if (in == NULL) {
-        fprintf(F_out, "%sError, cannot parse the first bytes of %s.\n", indent, list_name);
+        fprintf(F_out, "%sError, cannot parse the first bytes of %s, type= %d.\n", 
+            indent, list_name, outer_type);
         *err = CBOR_MALFORMED_VALUE;
         in = NULL;
-        ret = false;
     }
     else {
         int rank = 0;
-        fprintf(F_out, "%s-- %s type %d, val: %d\n", indent, list_name, outer_type, (int)val);
         if (val == CBOR_END_OF_ARRAY) {
             is_undef = 1;
             val = 0xffffffff;
