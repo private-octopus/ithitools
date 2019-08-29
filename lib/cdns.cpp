@@ -670,6 +670,7 @@ uint8_t* cdns::dump_queries(uint8_t* in, uint8_t* in_max, char* out_buf, char* o
                     *err = CBOR_MALFORMED_VALUE;
                     in = NULL;
                 }
+                break;
             }
             rank++;
             if (rank <= 10) {
@@ -837,6 +838,7 @@ uint8_t* cdns::dump_class_types(uint8_t* in, uint8_t* in_max, char* out_buf, cha
                     *err = CBOR_MALFORMED_VALUE;
                     in = NULL;
                 }
+                break;
             }
             rank++;
             if (rank <= 10) {
@@ -969,6 +971,7 @@ uint8_t* cdns::dump_qr_sigs(uint8_t* in, uint8_t* in_max, char* out_buf, char* o
                     *err = CBOR_MALFORMED_VALUE;
                     in = NULL;
                 }
+                break;
             }
             rank++;
             if (rank <= 10) {
@@ -1144,6 +1147,7 @@ uint8_t* cdns::dump_list(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_
                     *err = CBOR_MALFORMED_VALUE;
                     in = NULL;
                 }
+                break;
             }
             rank++;
             if (rank <= 10) {
