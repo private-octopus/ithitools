@@ -2672,7 +2672,12 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
                     line.key_value[text_length] = 0;
                 }
                 else {
-                    text[text_length] = 0;
+                    if (text_length < sizeof(text)) {
+                        text[text_length] = 0;
+                    }
+                    else {
+                        text[sizeof(text) - 1] = 0;
+                    }
                     fprintf(stderr, "Cannot copy key value: %s\n", text);
                 }
             }

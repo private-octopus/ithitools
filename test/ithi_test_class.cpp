@@ -248,6 +248,7 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_enum_cbor:
         test = new CborTest();
+        break;
     case test_enum_cbor_skip:
         test = new CborSkipTest();
         break;
