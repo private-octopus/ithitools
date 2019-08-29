@@ -446,7 +446,7 @@ bool MetricCaptureFileTest::CopyFileToDestination(char const * target_name, char
 
     if (ret) {
         F2 = ithi_file_open(target_name, "w");
-        ret != (F2 != NULL);
+        ret &= (F2 != NULL);
     }
 
     if (ret && F1 != NULL && F2 != NULL)
