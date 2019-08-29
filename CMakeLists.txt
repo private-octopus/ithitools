@@ -15,6 +15,7 @@ SET(ITHITOOLS_LIBRARY_FILES
    lib/AddressFilter.cpp
    lib/CaptureSummary.cpp
    lib/cbor.c
+   lib/cdns.cpp
    lib/DnscapPlugIn.cpp
    lib/DnsStats.cpp
    lib/ithimetrics.cpp
@@ -63,6 +64,8 @@ ADD_EXECUTABLE(ithitools
    src/ithitools.cpp
    lib/AddressFilter.cpp
    lib/CaptureSummary.cpp
+   lib/cbor.c
+   lib/cdns.cpp
    lib/DnsStats.cpp
    lib/ithimetrics.cpp
    lib/ithipublisher.cpp
@@ -83,8 +86,9 @@ ADD_EXECUTABLE(ithitools
 ADD_EXECUTABLE(ithitest
    src/ithitest.cpp 
    lib/AddressFilter.cpp
-   lib/cbor.c
    lib/CaptureSummary.cpp
+   lib/cbor.c
+   lib/cdns.cpp
    lib/DnsStats.cpp
    lib/ithimetrics.cpp
    lib/ithipublisher.cpp
