@@ -58,9 +58,10 @@ uint8_t* cbor_parse_int(uint8_t* in, uint8_t const* in_max, int* v, int is_signe
 class cbor_bytes {
 public:
     cbor_bytes();
+    cbor_bytes(const cbor_bytes &other);
     ~cbor_bytes();
 
-    uint8_t* parse(uint8_t* in, uint8_t* in_max, int* err);
+    uint8_t* parse(uint8_t* in, uint8_t const* in_max, int* err);
 
     uint8_t* v;
     size_t l;
@@ -95,7 +96,7 @@ uint8_t* cbor_array_parse(uint8_t* in, uint8_t const* in_max, std::vector<InnerC
             is_undef = 1;
             val = 0xffffffff;
         }
-
+        
         while (rank < val && in != NULL && in < in_max) {
             if (*in == 0xff) {
                 if (is_undef) {
@@ -108,13 +109,9 @@ uint8_t* cbor_array_parse(uint8_t* in, uint8_t const* in_max, std::vector<InnerC
                 break;
             }
             else {
-                InnerClass vi;
-
-                in = cbor_object_parse(in, in_max, &vi, err);
-                if (in != NULL) {
-                    v->push_back(vi);
-                    rank++;
-                }
+                v->resize((size_t)rank + 1);
+                in = cbor_object_parse(in, in_max, &(*v)[rank], err);
+                rank++;
             }
         }
     }

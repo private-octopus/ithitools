@@ -709,6 +709,18 @@ cbor_bytes::cbor_bytes() :
 {
 }
 
+cbor_bytes::cbor_bytes(const cbor_bytes& other)
+{
+    l = other.l;
+    if (l > 0) {
+        v = new uint8_t[l];
+        memcpy(v, other.v, l);
+    }
+    else {
+        v = NULL;
+    }
+}
+
 cbor_bytes::~cbor_bytes()
 {
     if (v != NULL) {
@@ -719,8 +731,9 @@ cbor_bytes::~cbor_bytes()
     l = 0;
 }
 
-uint8_t* cbor_bytes::parse(uint8_t* in, uint8_t* in_max, int* err)
+uint8_t* cbor_bytes::parse(uint8_t* in, uint8_t const* in_max, int* err)
 {
+    uint8_t* first = in;
 
     if (v != NULL || l != 0 || in == NULL) {
         *err = CBOR_UNEXPECTED;
@@ -738,13 +751,14 @@ uint8_t* cbor_bytes::parse(uint8_t* in, uint8_t* in_max, int* err)
         }
         else  if (val == CBOR_END_OF_ARRAY) {
             /* Need to allocate enough bytes to hold the content. */
-            uint8_t* last = cbor_skip(in, in_max, err);
+            uint8_t* last = cbor_skip(first, in_max, err);
 
             if (last == NULL) {
                 in = NULL;
             }
             else {
-                v = new uint8_t[last - in];
+                size_t allocated = last - first;
+                v = new uint8_t[allocated];
 
                 if (v == NULL) {
                     in = NULL;

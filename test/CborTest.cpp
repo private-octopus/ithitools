@@ -347,13 +347,152 @@ bool CborTest::DoIntTest()
             }
             else for (size_t x = 0; x < nb_int_tests; x++) {
                 if (v[x] != int_tests[x].expected) {
-                    TEST_LOG("Decoded v[%d]=%d ints instead of %d\n", (int)x, v[x], (int)int_tests[x].expected);
+                    TEST_LOG("Decoded v[%d]=%d instead of %d\n", (int)x, v[x], (int)int_tests[x].expected);
                     ret = false;
                     break;
                 }
             }
             if (!ret) {
                 TEST_LOG("Array of int test %d fails\n", i);
+                break;
+            }
+        }
+    }
+
+    return ret;
+}
+
+static uint8_t bytes_test1[] = { 0x40 };
+static uint8_t bytes_test2[] = { 0x41, 0x80 };
+static uint8_t bytes_test3[] = { 0x42, 0x40, 0x01 };
+static uint8_t bytes_test4[] = { 0x5f, 0x40, 0x41, 0x80, 0x42, 0x40, 0x01, 0xff };
+static uint8_t bytes_expected2[] = { 0x80 };
+static uint8_t bytes_expected3[] = { 0x40, 0x01 };
+static uint8_t bytes_expected4[] = { 0x80, 0x40, 0x01 };
+
+
+typedef struct st_cbor_bytes_test_desc_t {
+    uint8_t* in;
+    size_t in_length;
+    uint8_t * expected;
+    size_t expected_length;
+} cbor_bytes_test_desc_t;
+
+static cbor_bytes_test_desc_t bytes_tests[] = {
+    {bytes_test1, sizeof(bytes_test1), NULL, 0},
+    {bytes_test2, sizeof(bytes_test2), bytes_expected2, sizeof(bytes_expected2)},
+    {bytes_test3, sizeof(bytes_test3), bytes_expected3, sizeof(bytes_expected3)},
+    {bytes_test4, sizeof(bytes_test4), bytes_expected4, sizeof(bytes_expected4)}
+};
+
+static size_t nb_bytes_tests = sizeof(bytes_tests) / sizeof(cbor_bytes_test_desc_t);
+
+bool CborTest::DoBytesTest()
+{
+    uint8_t buf[256];
+    size_t l = 0;
+    bool ret = true;
+    int err = 0;
+    uint8_t* last;
+
+    buf[0] = 0x9F;
+    l = 1;
+
+    for (size_t i = 0; ret && i < nb_bytes_tests; i++) {
+        cbor_bytes v;
+
+        if (l + bytes_tests[i].in_length < sizeof(buf)) {
+            memcpy(buf + l, bytes_tests[i].in, bytes_tests[i].in_length);
+            l += bytes_tests[i].in_length;
+        }
+
+        last = cbor_object_parse(bytes_tests[i].in,
+            bytes_tests[i].in + bytes_tests[i].in_length, &v, &err);
+
+        if (err != 0) {
+            TEST_LOG("Got error %d\n", err);
+            ret = false;
+        }
+        else if (last == NULL) {
+            TEST_LOG("Test returns NULL while error = %d\n", err);
+            ret = false;
+        }
+        else if (last != bytes_tests[i].in + bytes_tests[i].in_length) {
+            TEST_LOG("Decoded %d bytes instead of %d\n", (int)(last - bytes_tests[i].in),
+                bytes_tests[i].in_length);
+            ret = false;
+        }
+        else if (v.l != bytes_tests[i].expected_length) {
+            TEST_LOG("Decoded %d bytes instead of %d\n", v.l, bytes_tests[i].expected_length);
+            ret = false;
+        }
+        else if (v.l != 0 && memcmp(bytes_tests[i].expected, v.v, v.l) != 0) {
+            TEST_LOG("Decoded %d bytes do not match\n", v.l);
+            ret = false;
+        }
+        if (!ret) {
+            TEST_LOG("Bytes test %d fails\n", (int)i);
+        }
+    }
+
+    if (ret) {
+        for (int i = 0; i < 2; i++) {
+            std::vector<cbor_bytes> v;
+            size_t ll;
+
+            if (i == 0) {
+                ll = l + 1;
+                if (ll < sizeof(buf)) {
+                    buf[l] = 0xff;
+                }
+                else {
+                    TEST_LOG("cannot run bytes array test %d\n", i);
+                    ret = false;
+                    break;
+                }
+            }
+            else if (nb_int_tests < 0x1f) {
+                buf[0] = (uint8_t)(nb_bytes_tests | 0x80);
+                ll = l;
+            }
+            else {
+                TEST_LOG("cannot run bytes array test %d\n", i);
+                ret = false;
+                break;
+            }
+
+            uint8_t* last = cbor_array_parse<cbor_bytes>(buf, buf + ll, &v, &err);
+            if (err != 0) {
+                TEST_LOG("Got error %d\n", err);
+                ret = false;
+            }
+            else if (last == NULL) {
+                TEST_LOG("Test returns NULL while error = %d\n", err);
+                ret = false;
+            }
+            else if (last != buf + ll) {
+                TEST_LOG("Decoded %d bytes instead of %d\n", (int)(last - buf), ll);
+                ret = false;
+            }
+            else if (v.size() != nb_bytes_tests) {
+                TEST_LOG("Decoded %d byte fields instead of %d\n", v.size(), nb_bytes_tests);
+                ret = false;
+            }
+            else for (size_t x = 0; x < nb_int_tests; x++) {
+                if (v[x].l != bytes_tests[x].expected_length) {
+                    TEST_LOG("Decoded v[%d].l =%d ints instead of %d\n", (int)x, v[x].l, 
+                        (int)bytes_tests[x].expected_length);
+                    ret = false;
+                    break;
+                }
+                if (v[x].l != 0 && memcmp(bytes_tests[x].expected, v[x].v, v[x].l) != 0) {
+                    TEST_LOG("For v[%d], decoded %d bytes do not match\n", (int)x, v[x].l);
+                    ret = false;
+                    break;
+                }
+            }
+            if (!ret) {
+                TEST_LOG("Array of bytes test %d fails\n", i);
                 break;
             }
         }
@@ -377,11 +516,19 @@ bool CborTest::DoTest()
         TEST_LOG("All CBOR dump tests pass\n");
     }
 
-    ret = DoIntTest();
     if (ret) {
-        TEST_LOG("All int parse tests pass\n");
+        ret = DoIntTest();
+        if (ret) {
+            TEST_LOG("All int parse tests pass\n");
+        }
     }
 
+    if (ret) {
+        ret = DoBytesTest();
+        if (ret) {
+            TEST_LOG("All bytes parse tests pass\n");
+        }
+    }
     return ret;
 }
 
