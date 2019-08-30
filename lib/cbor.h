@@ -75,8 +75,13 @@ template <class ParsedClass> uint8_t* cbor_object_parse(uint8_t* in, uint8_t con
 
 uint8_t* cbor_object_parse(uint8_t* in, uint8_t const* in_max, int* v, int* err);
 
-
-
+/* cbor_array_parse:
+   Parse a CBOR input into an array of InnerType.
+   This construct assumes that the Inner Class is copy insertable, i.e. has copy constructor,
+   and that it can be parsed using cbor_objest_parse.
+   If the generic cbor_object_parse<InnerClass> does not work, the implementation
+   must supply a specific function, as in the integer example above.
+   */
 template <class InnerClass>
 uint8_t* cbor_array_parse(uint8_t* in, uint8_t const* in_max, std::vector<InnerClass> * v, int* err)
 {
@@ -119,6 +124,13 @@ uint8_t* cbor_array_parse(uint8_t* in, uint8_t const* in_max, std::vector<InnerC
     return in;
 }
 
+/* cbor_map_parse: 
+   Parse a CBOR input into a map element, in which each index is an integer.
+   This construct assumes that the InnerClass has a method:
+   uint8_t * parse_map_item(uint8_t *in, uint8_t const* in_max, int64_t index, int * err);
+   The method is called for each index that is present, and shall parse the
+   corresponding index.
+*/
 template <class InnerClass>
 uint8_t* cbor_map_parse(uint8_t* in, uint8_t const* in_max, InnerClass * v, int* err)
 {

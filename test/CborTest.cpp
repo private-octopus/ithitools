@@ -501,6 +501,188 @@ bool CborTest::DoBytesTest()
     return ret;
 }
 
+class cbor_map_test
+{
+public:
+    cbor_map_test():
+        a(0),
+        b(0),
+        c(0)
+    {}
+
+    cbor_map_test(int a, int b, int c) :
+        a(a),
+        b(b),
+        c(c)
+    {}
+
+    ~cbor_map_test()
+    {}
+
+    uint8_t * parse(uint8_t* in, uint8_t const* in_max, int* err)
+    {
+        return cbor_map_parse(in, in_max, this, err);
+    }
+
+    uint8_t* parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t index, int* err)
+    {
+        switch (index) {
+        case 0:
+            in = cbor_object_parse(in, in_max, &a, err);
+            break;
+        case 1:
+            in = cbor_object_parse(in, in_max, &b, err);
+            break;
+        case 2:
+            in = cbor_object_parse(in, in_max, &c, err);
+            break;
+        default:
+            in = NULL;
+            *err = CBOR_ILLEGAL_VALUE;
+            break;
+        }
+
+        return in;
+    }
+
+    int a;
+    int b;
+    int c;
+};
+
+static uint8_t map_test1[] = { 0xa1, 0x00, 0x05 };
+static uint8_t map_test2[] = { 0xa1, 0x01, 0x07 };
+static uint8_t map_test3[] = { 0xa2, 0x00, 0x03, 0x02, 0x09};
+static uint8_t map_test4[] = { 0xbf, 0x00, 0x01, 0x01, 0x02, 0x02, 0x03, 0xff };
+
+
+typedef struct st_cbor_map_test_desc_t {
+    uint8_t* in;
+    size_t in_length;
+    cbor_map_test expected;
+} cbor_map_test_desc_t;
+
+static cbor_map_test_desc_t map_tests[] = {
+    {map_test1, sizeof(map_test1), cbor_map_test(5,0,0)},
+    {map_test2, sizeof(map_test2), cbor_map_test(0,7,0)},
+    {map_test3, sizeof(map_test3), cbor_map_test(3,0,9)},
+    {map_test4, sizeof(map_test4), cbor_map_test(1,2,3)}
+};
+
+static size_t nb_map_tests = sizeof(map_tests) / sizeof(cbor_map_test_desc_t);
+
+bool CborTest::DoMapTest()
+{
+    uint8_t buf[256];
+    size_t l = 0;
+    bool ret = true;
+    int err = 0;
+    uint8_t* last;
+
+    buf[0] = 0x9F;
+    l = 1;
+
+    for (size_t i = 0; ret && i < nb_bytes_tests; i++) {
+        cbor_map_test v;
+
+        if (l + map_tests[i].in_length < sizeof(buf)) {
+            memcpy(buf + l, map_tests[i].in, map_tests[i].in_length);
+            l += map_tests[i].in_length;
+        }
+
+        last = cbor_object_parse(map_tests[i].in,
+            map_tests[i].in + map_tests[i].in_length, &v, &err);
+
+        if (err != 0) {
+            TEST_LOG("Got error %d\n", err);
+            ret = false;
+        }
+        else if (last == NULL) {
+            TEST_LOG("Test returns NULL while error = %d\n", err);
+            ret = false;
+        }
+        else if (last != map_tests[i].in + map_tests[i].in_length) {
+            TEST_LOG("Decoded %d bytes instead of %d\n", (int)(last - map_tests[i].in),
+                map_tests[i].in_length);
+            ret = false;
+        }
+        else if (v.a != map_tests[i].expected.a ||
+            v.b != map_tests[i].expected.b ||
+            v.c != map_tests[i].expected.c
+            ) {
+            TEST_LOG("Decoded (%d,%d,%d) instead of (%d,%d,%d)\n",
+                v.a, v.b, v.c, map_tests[i].expected.a, map_tests[i].expected.b, map_tests[i].expected.c);
+            ret = false;
+        }
+
+        if (!ret) {
+            TEST_LOG("Bytes test %d fails\n", (int)i);
+        }
+    }
+
+    if (ret) {
+        for (int i = 0; i < 2; i++) {
+            std::vector<cbor_map_test> v;
+            size_t ll;
+
+            if (i == 0) {
+                ll = l + 1;
+                if (ll < sizeof(buf)) {
+                    buf[l] = 0xff;
+                }
+                else {
+                    TEST_LOG("cannot run map array test %d\n", i);
+                    ret = false;
+                    break;
+                }
+            }
+            else if (nb_int_tests < 0x1f) {
+                buf[0] = (uint8_t)(nb_map_tests | 0x80);
+                ll = l;
+            }
+            else {
+                TEST_LOG("cannot run bytes array test %d\n", i);
+                ret = false;
+                break;
+            }
+
+            uint8_t* last = cbor_array_parse<cbor_map_test>(buf, buf + ll, &v, &err);
+            if (err != 0) {
+                TEST_LOG("Got error %d\n", err);
+                ret = false;
+            }
+            else if (last == NULL) {
+                TEST_LOG("Test returns NULL while error = %d\n", err);
+                ret = false;
+            }
+            else if (last != buf + ll) {
+                TEST_LOG("Decoded %d bytes instead of %d\n", (int)(last - buf), ll);
+                ret = false;
+            }
+            else if (v.size() != nb_bytes_tests) {
+                TEST_LOG("Decoded %d maps instead of %d\n", v.size(), nb_bytes_tests);
+                ret = false;
+            }
+            else for (size_t x = 0; x < nb_int_tests; x++) {
+                if (v[x].a != map_tests[x].expected.a ||
+                    v[x].b != map_tests[x].expected.b ||
+                    v[x].c != map_tests[x].expected.c
+                    ) {
+                    TEST_LOG("Decoded (%d,%d,%d) instead of (%d,%d,%d)\n",
+                        v[x].a, v[x].b, v[x].c, map_tests[x].expected.a, map_tests[x].expected.b, map_tests[x].expected.c);
+                    ret = false;
+                }
+            }
+            if (!ret) {
+                TEST_LOG("Array of map test %d fails\n", i);
+                break;
+            }
+        }
+    }
+
+    return ret;
+}
+
 bool CborTest::DoTest()
 {
     bool ret = true;
@@ -529,6 +711,14 @@ bool CborTest::DoTest()
             TEST_LOG("All bytes parse tests pass\n");
         }
     }
+
+    if (ret) {
+        ret = DoMapTest();
+        if (ret) {
+            TEST_LOG("All map parse tests pass\n");
+        }
+    }
+
     return ret;
 }
 

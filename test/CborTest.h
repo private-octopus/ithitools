@@ -36,6 +36,7 @@ private:
     bool DoOneDumpTest(uint8_t* in, size_t in_length, char const* expected);
     bool DoIntTest();
     bool DoBytesTest();
+    bool DoMapTest();
 };
 
 class CborSkipTest : public ithi_test_class
