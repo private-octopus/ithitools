@@ -14,7 +14,7 @@ INCLUDE_DIRECTORIES(src lib test include)
 SET(ITHITOOLS_LIBRARY_FILES
    lib/AddressFilter.cpp
    lib/CaptureSummary.cpp
-   lib/cbor.c
+   lib/cbor.cpp
    lib/cdns.cpp
    lib/DnscapPlugIn.cpp
    lib/DnsStats.cpp
@@ -64,7 +64,7 @@ ADD_EXECUTABLE(ithitools
    src/ithitools.cpp
    lib/AddressFilter.cpp
    lib/CaptureSummary.cpp
-   lib/cbor.c
+   lib/cbor.cpp
    lib/cdns.cpp
    lib/DnsStats.cpp
    lib/ithimetrics.cpp
@@ -87,7 +87,7 @@ ADD_EXECUTABLE(ithitest
    src/ithitest.cpp 
    lib/AddressFilter.cpp
    lib/CaptureSummary.cpp
-   lib/cbor.c
+   lib/cbor.cpp
    lib/cdns.cpp
    lib/DnsStats.cpp
    lib/ithimetrics.cpp
