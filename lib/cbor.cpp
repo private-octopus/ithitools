@@ -675,3 +675,134 @@ uint8_t* cbor_skip(uint8_t* in, uint8_t const* in_max, int* err)
 
     return in;
 }
+
+uint8_t* cbor_parse_int(uint8_t* in, uint8_t const* in_max, int* v, int is_signed, int* err)
+{
+    int64_t val;
+    int outer_type = CBOR_CLASS(*in);
+
+    in = cbor_get_number(in, in_max, &val);
+
+    if (val < 0) {
+        *err = CBOR_MALFORMED_VALUE;
+        in = NULL;
+    }
+    else if (outer_type == CBOR_T_UINT) {
+        *v = (int)val;
+    }
+    else if (outer_type == CBOR_T_NINT && is_signed) {
+        *v = -1 * (int)(val + 1);
+    }
+    else {
+        *err = CBOR_MALFORMED_VALUE;
+        in = NULL;
+    }
+
+    return in;
+}
+
+
+
+cbor_bytes::cbor_bytes() :
+    v(NULL),
+    l(0)
+{
+}
+
+cbor_bytes::~cbor_bytes()
+{
+    if (v != NULL) {
+        delete[] v;
+        v = NULL;
+    }
+
+    l = 0;
+}
+
+uint8_t* cbor_bytes::parse(uint8_t* in, uint8_t* in_max, int* err)
+{
+
+    if (v != NULL || l != 0 || in == NULL) {
+        *err = CBOR_UNEXPECTED;
+        in = NULL;
+    }
+    else {
+        int outer_type = CBOR_CLASS(*in);
+        int64_t val;
+
+        in = cbor_get_number(in, in_max, &val);
+
+        if (in == NULL || outer_type != CBOR_T_BYTES) {
+            *err = CBOR_MALFORMED_VALUE;
+            in = NULL;
+        }
+        else  if (val == CBOR_END_OF_ARRAY) {
+            /* Need to allocate enough bytes to hold the content. */
+            uint8_t* last = cbor_skip(in, in_max, err);
+
+            if (last == NULL) {
+                in = NULL;
+            }
+            else {
+                v = new uint8_t[last - in];
+
+                if (v == NULL) {
+                    in = NULL;
+                    *err = CBOR_MEMORY;
+                }
+            }
+
+            while (in < in_max && in != NULL) {
+                if (*in == 0xff) {
+                    in++;
+                    break;
+                }
+                else {
+                    int64_t val;
+                    int cbor_class = CBOR_CLASS(*in);
+
+                    in = cbor_get_number(in, in_max, &val);
+
+                    if (in == NULL) {
+                        *err = (int)val;
+                    }
+                    else if (val < 0 || in + val > in_max || cbor_class != CBOR_T_BYTES) {
+                        *err = CBOR_MALFORMED_VALUE;
+                        in = NULL;
+                    }
+                    else if (val > 0) {
+                        memcpy(v + l, in, (size_t)val);
+                        l += (size_t)val;
+                        in += val;
+                    }
+                }
+            }
+        }
+        else {
+            if (val < 0 || in + val > in_max) {
+                *err = CBOR_MALFORMED_VALUE;
+                in = NULL;
+            }
+            else if (val > 0) {
+                v = new uint8_t[(size_t)val];
+                if (v == NULL) {
+                    in = NULL;
+                    *err = CBOR_MEMORY;
+                }
+                else {
+                    memcpy(v, in, (size_t)val);
+                    l = (size_t)val;
+                    in += val;
+                }
+            }
+        }
+    }
+
+    return in;
+}
+
+uint8_t* cbor_object_parse(uint8_t* in, uint8_t const* in_max, int* v, int* err)
+{
+    in = cbor_parse_int(in, in_max, v, 0, err);
+    return in;
+}

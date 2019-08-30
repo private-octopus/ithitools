@@ -1174,3 +1174,48 @@ uint8_t* cdns::dump_list(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_
 
     return in;
 }
+
+cdnsBlock::cdnsBlock()
+{
+}
+
+cdnsBlock::~cdnsBlock()
+{
+}
+
+bool cdnsBlock::load(uint8_t* in, uint8_t* in_max, int* err, FILE* F_out)
+{
+    return false;
+}
+   
+cdns_class_id::cdns_class_id() :
+    rr_type(0),
+    rr_class(0)
+{
+}
+
+cdns_class_id::~cdns_class_id()
+{
+}
+
+uint8_t * cdns_class_id::parse(uint8_t* in, uint8_t* in_max, int* err)
+{
+    return cbor_map_parse(in, in_max, this, err);
+}
+
+uint8_t* cdns_class_id::parse_map_item(uint8_t* in, uint8_t const * in_max, int64_t val, int* err)
+{
+    switch (val) {
+    case 0:
+        in = cbor_parse_int(in, in_max, &rr_type, 0, err);
+        break;
+    case 1:
+        in = cbor_parse_int(in, in_max, &rr_class, 0, err);
+        break;
+    default:
+        in = NULL;
+        *err = CBOR_ILLEGAL_VALUE;
+        break;
+    }
+    return in;
+}

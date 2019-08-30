@@ -21,6 +21,35 @@
 #ifndef CDNS_H
 #define CDNS_H
 
+#include <vector>
+
+class cdns_class_id {
+public:
+    cdns_class_id();
+    ~cdns_class_id();
+
+    uint8_t * parse(uint8_t* in, uint8_t* in_max, int* err);
+
+    uint8_t* parse_map_item(uint8_t* in, uint8_t const * in_max, int64_t val, int* err);
+
+    int rr_type;
+    int rr_class;
+};
+
+class cdnsBlock
+{
+public:
+    cdnsBlock();
+
+    ~cdnsBlock();
+
+    bool load(uint8_t* in, uint8_t* in_max, int* err, FILE* F_out);
+
+private:
+    std::vector<cbor_bytes> addresses;
+    std::vector<cdns_class_id> class_ids;
+};
+
 class cdns
 {
 public:

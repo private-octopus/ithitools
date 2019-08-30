@@ -184,7 +184,6 @@ char const* cbor_test_out10 = "[\"Fun\",0,\"Amt\",-2]";
 uint8_t cbor_test11[] = { 0xbf, 0x63, 0x46, 0x75, 0x6e, 0xf5, 0x63, 0x41, 0x6d, 0x74, 0x21, 0xff };
 char const* cbor_test_out11 = "[\"Fun\",true,\"Amt\",-2]";
 
-
 typedef struct st_cbor_test_desc_t {
     uint8_t* in;
     size_t in_length;
@@ -207,7 +206,7 @@ static cbor_test_desc_t cbor_tests[] = {
 
 size_t nb_cbor_tests = sizeof(cbor_tests) / sizeof(cbor_test_desc_t);
 
-bool CborTest::DoOneTest(uint8_t* in, size_t in_length, char const* expected)
+bool CborTest::DoOneDumpTest(uint8_t* in, size_t in_length, char const* expected)
 {
     bool ret = true;
     char buf[1024];
@@ -239,19 +238,148 @@ bool CborTest::DoOneTest(uint8_t* in, size_t in_length, char const* expected)
     return ret;
 }
 
+static uint8_t int_test1[] = { 0x01 };
+static uint8_t int_test2[] = { 0x18, 0x80 };
+static uint8_t int_test3[] = { 0x19, 0x40, 0x01 };
+static uint8_t int_test4[] = { 0x1a, 0x20, 0x80, 0x08, 0x01 };
+
+typedef struct st_cbor_int_test_desc_t {
+    uint8_t* in;
+    size_t in_length;
+    int expected;
+} cbor_int_test_desc_t;
+
+static cbor_int_test_desc_t int_tests[] = {
+    {int_test1, sizeof(int_test1), 1},
+    {int_test2, sizeof(int_test2), 0x80},
+    {int_test3, sizeof(int_test3), 0x4001},
+    {int_test4, sizeof(int_test4), 0x20800801}
+};
+
+static size_t nb_int_tests = sizeof(int_tests) / sizeof(cbor_int_test_desc_t);
+
+bool CborTest::DoIntTest()
+{
+    uint8_t buf[256];
+    size_t l = 0;
+    bool ret = true;
+    int err = 0;
+    uint8_t* last;
+
+    buf[0] = 0x9F;
+    l = 1;
+
+    for (size_t i = 0; ret && i < nb_int_tests; i++) {
+        int v;
+
+        if (l + int_tests[i].in_length < sizeof(buf)) {
+            memcpy(buf + l, int_tests[i].in, int_tests[i].in_length);
+            l += int_tests[i].in_length;
+        }
+
+        last = cbor_object_parse(int_tests[i].in,
+            int_tests[i].in + int_tests[i].in_length, &v, &err);
+
+        if (err != 0) {
+            TEST_LOG("Got error %d\n", err);
+            ret = false;
+        }
+        else if (last == NULL) {
+            TEST_LOG("Test returns NULL while error = %d\n", err);
+            ret = false;
+        }
+        else if (last != int_tests[i].in + int_tests[i].in_length) {
+            TEST_LOG("Decoded %d bytes instead of %d\n", (int)(last - int_tests[i].in),
+                int_tests[i].in_length);
+            ret = false;
+        }
+        else if (v != int_tests[i].expected) {
+            TEST_LOG("Decoded %d instead of %d\n", v, int_tests[i].expected);
+            ret = false;
+        }
+        if (!ret) {
+            TEST_LOG("Int test %d fails\n", (int)i);
+        }
+    }
+
+    if (ret) {
+        for (int i = 0; i < 2; i++) {
+            std::vector<int> v;
+            size_t ll;
+
+            if (i == 0) {
+                ll = l + 1;
+                if (ll < sizeof(buf)) {
+                    buf[l] = 0xff;
+                }
+                else {
+                    TEST_LOG("cannot run int array test %d\n", i);
+                    ret = false;
+                    break;
+                }
+            }
+            else if (nb_int_tests < 0x1f) {
+                buf[0] = (uint8_t)(nb_int_tests | 0x80);
+                ll = l;
+            }
+            else {
+                TEST_LOG("cannot run int array test %d\n", i);
+                ret = false;
+                break;
+            }
+
+            uint8_t* last = cbor_array_parse<int>(buf, buf + ll, &v, &err);
+            if (err != 0) {
+                TEST_LOG("Got error %d\n", err);
+                ret = false;
+            }
+            else if (last == NULL) {
+                TEST_LOG("Test returns NULL while error = %d\n", err);
+                ret = false;
+            }
+            else if (last != buf + ll) {
+                TEST_LOG("Decoded %d bytes instead of %d\n", (int)(last - buf), ll);
+                ret = false;
+            }
+            else if (v.size() != nb_int_tests) {
+                TEST_LOG("Decoded %d ints instead of %d\n", v.size(), nb_int_tests);
+                ret = false;
+            }
+            else for (size_t x = 0; x < nb_int_tests; x++) {
+                if (v[x] != int_tests[x].expected) {
+                    TEST_LOG("Decoded v[%d]=%d ints instead of %d\n", (int)x, v[x], (int)int_tests[x].expected);
+                    ret = false;
+                    break;
+                }
+            }
+            if (!ret) {
+                TEST_LOG("Array of int test %d fails\n", i);
+                break;
+            }
+        }
+    }
+
+    return ret;
+}
+
 bool CborTest::DoTest()
 {
     bool ret = true;
 
     for (size_t i = 0; i < nb_cbor_tests; i++) {
-        if (!DoOneTest(cbor_tests[i].in, cbor_tests[i].in_length, cbor_tests[i].expected)) {
+        if (!DoOneDumpTest(cbor_tests[i].in, cbor_tests[i].in_length, cbor_tests[i].expected)) {
             TEST_LOG("CBOR test #%d fails\n", (int)i);
             ret = false;
         }
     }
 
     if (ret) {
-        TEST_LOG("All CBOR tests pass\n");
+        TEST_LOG("All CBOR dump tests pass\n");
+    }
+
+    ret = DoIntTest();
+    if (ret) {
+        TEST_LOG("All int parse tests pass\n");
     }
 
     return ret;

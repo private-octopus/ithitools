@@ -84,9 +84,6 @@
     <ClCompile Include="..\test\CborTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\cbor.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\test\CdnsTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -156,9 +153,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\test\CborTest.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\lib\cbor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\test\CdnsTest.h">

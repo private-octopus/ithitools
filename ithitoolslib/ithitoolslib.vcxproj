@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClInclude Include="..\lib\AddressFilter.h" />
     <ClInclude Include="..\lib\CaptureSummary.h" />
+    <ClInclude Include="..\lib\cbor.h" />
     <ClInclude Include="..\lib\cdns.h" />
     <ClInclude Include="..\lib\ComputeM34.h" />
     <ClInclude Include="..\lib\ComputeM6.h" />
@@ -186,6 +187,7 @@
   <ItemGroup>
     <ClCompile Include="..\lib\AddressFilter.cpp" />
     <ClCompile Include="..\lib\CaptureSummary.cpp" />
+    <ClCompile Include="..\lib\cbor.cpp" />
     <ClCompile Include="..\lib\cdns.cpp" />
     <ClCompile Include="..\lib\ComputeM34.cpp" />
     <ClCompile Include="..\lib\ComputeM6.cpp" />
