@@ -265,6 +265,7 @@ bool CborTest::DoIntTest()
     bool ret = true;
     int err = 0;
     uint8_t* last;
+    std::vector<int> v;
 
     buf[0] = 0x9F;
     l = 1;
@@ -304,8 +305,8 @@ bool CborTest::DoIntTest()
 
     if (ret) {
         for (int i = 0; i < 2; i++) {
-            std::vector<int> v;
             size_t ll;
+            v.resize(0);
 
             if (i == 0) {
                 ll = l + 1;
@@ -394,6 +395,7 @@ bool CborTest::DoBytesTest()
     bool ret = true;
     int err = 0;
     uint8_t* last;
+    std::vector<cbor_bytes> v;
 
     buf[0] = 0x9F;
     l = 1;
@@ -437,8 +439,9 @@ bool CborTest::DoBytesTest()
 
     if (ret) {
         for (int i = 0; i < 2; i++) {
-            std::vector<cbor_bytes> v;
             size_t ll;
+
+            v.resize(0);
 
             if (i == 0) {
                 ll = l + 1;
@@ -578,6 +581,7 @@ bool CborTest::DoMapTest()
     bool ret = true;
     int err = 0;
     uint8_t* last;
+    std::vector<cbor_map_test> v;
 
     buf[0] = 0x9F;
     l = 1;
@@ -622,8 +626,9 @@ bool CborTest::DoMapTest()
 
     if (ret) {
         for (int i = 0; i < 2; i++) {
-            std::vector<cbor_map_test> v;
             size_t ll;
+
+            v.resize(0);
 
             if (i == 0) {
                 ll = l + 1;

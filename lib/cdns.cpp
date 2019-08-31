@@ -1183,9 +1183,71 @@ cdnsBlock::~cdnsBlock()
 {
 }
 
-bool cdnsBlock::load(uint8_t* in, uint8_t* in_max, int* err, FILE* F_out)
+uint8_t * cdnsBlock::parse(uint8_t* in, uint8_t const* in_max, int* err)
 {
-    return false;
+    int64_t val;
+    int outer_type = CBOR_CLASS(*in);
+    int is_undef = 0;
+    int is_filled = 0;
+
+    in = cbor_get_number(in, in_max, &val);
+
+    if (in == NULL || outer_type != CBOR_T_ARRAY) {
+        *err = CBOR_MALFORMED_VALUE;
+        in = NULL;
+    }
+    else {
+        int rank = 0;
+
+        if (val == CBOR_END_OF_ARRAY) {
+            is_undef = 1;
+            val = 0xffffffff;
+        }
+
+        while (val > 0 && in != NULL && in < in_max) {
+            if (*in == 0xff) {
+                if (is_undef) {
+                    in++;
+                }
+                else {
+                    *err = CBOR_MALFORMED_VALUE;
+                    in = NULL;
+                }
+                break;
+            }
+            else {
+                int inner_type = CBOR_CLASS(*in);
+
+                if (inner_type == CBOR_T_MAP && is_filled == 0){
+                    /* Records are held in a map */
+                    in = cbor_map_parse(in, in_max, this, err);
+                    is_filled = 1;
+                }
+                else {
+                    /* TODO: error on inexpected? */
+                    in = cbor_skip(in, in_max, err);
+                }
+                val--;
+            }
+        }
+    }
+
+    return in;
+}
+
+uint8_t* cdnsBlock::parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t val, int* err)
+{
+    /* TODO: */
+    switch (val) {
+    case 0: /* Block preamble */
+    case 1: /* Block statistics */
+    case 2: /* Block Tables */
+    case 3: /* Block Queries */
+    case 4: /* Address event counts */
+    default:
+        in = cbor_skip(in, in_max, err);
+    }
+    return in;
 }
    
 cdns_class_id::cdns_class_id() :
@@ -1198,7 +1260,7 @@ cdns_class_id::~cdns_class_id()
 {
 }
 
-uint8_t * cdns_class_id::parse(uint8_t* in, uint8_t* in_max, int* err)
+uint8_t * cdns_class_id::parse(uint8_t* in, uint8_t const* in_max, int* err)
 {
     return cbor_map_parse(in, in_max, this, err);
 }
@@ -1218,4 +1280,353 @@ uint8_t* cdns_class_id::parse_map_item(uint8_t* in, uint8_t const * in_max, int6
         break;
     }
     return in;
+}
+
+cdnsBlockTables::cdnsBlockTables()
+{
+}
+
+cdnsBlockTables::~cdnsBlockTables()
+{
+}
+
+uint8_t* cdnsBlockTables::parse(uint8_t* in, uint8_t const* in_max, int* err)
+{
+    return cbor_map_parse(in, in_max, this, err);
+}
+
+uint8_t* cdnsBlockTables::parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t val, int* err)
+{
+    switch (val) {
+    case 0: // ip_address
+        in = cbor_array_parse(in, in_max, &addresses, err);
+        break;
+    case 1: // classtype
+        in = cbor_array_parse(in, in_max, &class_ids, err);
+        break;
+    case 2: // name_rdata
+        in = cbor_array_parse(in, in_max, &name_rdata, err);
+        break;
+    case 3: // query_signature
+        in = cbor_array_parse(in, in_max, &q_sigs, err);
+        break;
+    case 4: // question_list,
+        in = cbor_array_parse(in, in_max, &question_list, err);
+        break;
+    case 5: // question_rr,
+        in = cbor_array_parse(in, in_max, &qrr, err);
+        break;
+    case 6: // rr_list,
+        in = cbor_array_parse(in, in_max, &rr_list, err);
+        break;
+    case 7: // rr,
+        in = cbor_array_parse(in, in_max, &rrs, err);
+        break;
+    default:
+        in = cbor_skip(in, in_max, err);
+    }
+    return in;
+}
+
+cdns_query::cdns_query():
+    time_offset_usec(0),
+    client_address_index(-1),
+    client_port(0),
+    transaction_id(0),
+    query_signature_index(-1),
+    client_hoplimit(0),
+    delay_useconds(0),
+    query_name_index(-1),
+    query_size(0),
+    response_size(0)
+{
+}
+
+cdns_query::~cdns_query()
+{
+}
+
+uint8_t* cdns_query::parse(uint8_t* in, uint8_t const* in_max, int* err)
+{
+    return cbor_map_parse(in, in_max, this, err);
+}
+
+uint8_t* cdns_query::parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t val, int* err)
+{
+    switch (val) {
+    case 0: // time_useconds
+        in = cbor_parse_int(in, in_max, &time_offset_usec, 1, err);
+        break;
+    case 1: // time_pseconds
+    {
+        int64_t t = 0;
+        in = cbor_parse_int64(in, in_max, &t, 1, err);
+        if (in != NULL) {
+            t /= 1000000;
+            time_offset_usec = (int)t;
+        }
+        break;
+    }
+    case 2: // client_address_index
+        in = cbor_parse_int(in, in_max, &client_address_index, 0, err);
+        break;
+    case 3: // client_port,
+        in = cbor_parse_int(in, in_max, &client_port, 0, err);
+        break;
+    case 4: // transaction_id
+        in = cbor_parse_int(in, in_max, &transaction_id, 0, err);
+        break;
+    case 5: // query_signature_index
+        in = cbor_parse_int(in, in_max, &query_signature_index, 0, err);
+        break;
+    case 6: // client_hoplimit
+        in = cbor_parse_int(in, in_max, &client_hoplimit, 0, err);
+        break;
+    case 7: // delay_useconds
+        in = cbor_parse_int(in, in_max, &delay_useconds, 0, err);
+        break;
+    case 8: // delay_pseconds
+    {
+        int64_t t = 0;
+        in = cbor_parse_int64(in, in_max, &t, 0, err);
+        if (in != NULL) {
+            t /= 1000000;
+            delay_useconds = (int)t;
+        }
+        break;
+    }
+    case 9: // query_name_index
+        in = cbor_parse_int(in, in_max, &query_name_index, 0, err);
+        break;
+    case 10: // query_size
+        in = cbor_parse_int(in, in_max, &query_size, 0, err);
+        break;
+    case 11: // response_size
+        in = cbor_parse_int(in, in_max, &response_size, 0, err);
+        break;
+    case 12: // query_extended
+        in = q_extended.parse(in, in_max, err);
+        break;
+    case 13: // response_extended,\n");
+        in = r_extended.parse(in, in_max, err);
+        break;
+    default:
+        /* TODO: something */
+        in = cbor_skip(in, in_max, err);
+        break;
+    }
+
+    return in;
+}
+
+cdns_qr_extended::cdns_qr_extended():
+    question_index(-1),
+    answer_index(-1),
+    authority_index(-1),
+    additional_index(-1)
+{
+}
+
+cdns_qr_extended::~cdns_qr_extended()
+{
+}
+
+uint8_t* cdns_qr_extended::parse(uint8_t* in, uint8_t const* in_max, int* err)
+{
+    return cbor_map_parse(in, in_max, this, err);
+}
+
+uint8_t* cdns_qr_extended::parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t val, int* err)
+{
+    switch (val) {
+    case 0: // question_index
+        in = cbor_parse_int(in, in_max, &question_index, 0, err);
+        break;
+    case 1: // answer_index
+        in = cbor_parse_int(in, in_max, &answer_index, 0, err);
+        break;
+    case 2: // authority_index
+        in = cbor_parse_int(in, in_max, &authority_index, 0, err);
+        break;
+    case 3: // additional_index
+        in = cbor_parse_int(in, in_max, &additional_index, 0, err);
+        break;
+    default:
+        /* TODO: something */
+        in = cbor_skip(in, in_max, err);
+        break;
+    }
+    return in;
+}
+
+cdns_query_signature::cdns_query_signature():
+    server_address_index(-1),
+    server_port(0),
+    transport_flags(0),
+    qr_sig_flags(0),
+    query_opcode(0),
+    qr_dns_flags(0),
+    query_rcode(0),
+    query_classtype_index(-1),
+    query_qd_count(0),
+    query_an_count(0),
+    query_ar_count(0),
+    query_ns_count(0),
+    edns_version(0),
+    udp_buf_size(0),
+    opt_rdata_index(-1),
+    response_rcode(0)
+{
+}
+
+cdns_query_signature::~cdns_query_signature()
+{
+}
+
+uint8_t* cdns_query_signature::parse(uint8_t* in, uint8_t const* in_max, int* err)
+{
+    return cbor_map_parse(in, in_max, this, err);
+}
+
+uint8_t* cdns_query_signature::parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t val, int* err)
+{
+    switch (val) {
+    case 0: /*  server_address_index */
+        in = cbor_parse_int(in, in_max, &server_address_index, 0, err);
+        break;
+    case 1: /*  server_port */
+        in = cbor_parse_int(in, in_max, &server_port, 0, err);
+        break;
+    case 2: /*  transport_flags */
+        in = cbor_parse_int(in, in_max, &transport_flags, 0, err);
+        break;
+    case 3: /*  qr_sig_flags */
+        in = cbor_parse_int(in, in_max, &qr_sig_flags, 0, err);
+        break;
+    case 4: /*  query_opcode */
+        in = cbor_parse_int(in, in_max, &query_opcode, 0, err);
+        break;
+    case 5: /*  qr_dns_flags */
+        in = cbor_parse_int(in, in_max, &qr_dns_flags, 0, err);
+        break;
+    case 6: /*  query_rcode */
+        in = cbor_parse_int(in, in_max, &query_rcode, 0, err);
+        break;
+    case 7: /*  query_classtype_index */
+        in = cbor_parse_int(in, in_max, &query_classtype_index, 0, err);
+        break;
+    case 8: /*  query_qd_count */
+        in = cbor_parse_int(in, in_max, &query_qd_count, 0, err);
+        break;
+    case 9: /*  query_an_count */
+        in = cbor_parse_int(in, in_max, &query_an_count, 0, err);
+        break;
+    case 10: /*  query_ar_count */
+        in = cbor_parse_int(in, in_max, &query_ar_count, 0, err);
+        break;
+    case 11: /*  query_ns_count */
+        in = cbor_parse_int(in, in_max, &query_ns_count, 0, err);
+        break;
+    case 12: /*  edns_version */
+        in = cbor_parse_int(in, in_max, &edns_version, 0, err);
+        break;
+    case 13: /*  udp_buf_size */
+        in = cbor_parse_int(in, in_max, &udp_buf_size, 0, err);
+        break;
+    case 14: /*  opt_rdata_index */
+        in = cbor_parse_int(in, in_max, &opt_rdata_index, 0, err);
+        break;
+    case 15: /*  response_rcode */
+        in = cbor_parse_int(in, in_max, &response_rcode, 0, err);
+        break;
+    default:
+        in = cbor_skip(in, in_max, err);
+        break;
+    }
+    return in;
+}
+
+cdns_question::cdns_question():
+    name_index(-1),
+    classtype_index(-1)
+{
+}
+
+cdns_question::~cdns_question()
+{
+}
+
+uint8_t* cdns_question::parse(uint8_t* in, uint8_t const* in_max, int* err)
+{
+    return cbor_map_parse(in, in_max, this, err);
+}
+
+uint8_t* cdns_question::parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t val, int* err)
+{
+    switch (val) {
+    case 0: // name_index
+        in = cbor_parse_int(in, in_max, &name_index, 0, err);
+        break;
+    case 1: // classtype_index
+        in = cbor_parse_int(in, in_max, &classtype_index, 0, err);
+        break;
+    default:
+        /* TODO: something */
+        in = cbor_skip(in, in_max, err);
+        break;
+    }
+    return in;
+}
+
+cdns_rr_field::cdns_rr_field() :
+    name_index(-1),
+    classtype_index(-1),
+    ttl(0),
+    rdata_index(-1)
+{
+}
+
+cdns_rr_field::~cdns_rr_field()
+{
+}
+
+uint8_t* cdns_rr_field::parse(uint8_t* in, uint8_t const* in_max, int* err)
+{
+    return cbor_map_parse(in, in_max, this, err);
+}
+
+uint8_t* cdns_rr_field::parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t val, int* err)
+{
+    switch (val) {
+    case 0: // name_index
+        in = cbor_parse_int(in, in_max, &name_index, 0, err);
+        break;
+    case 1: // classtype_index
+        in = cbor_parse_int(in, in_max, &classtype_index, 0, err);
+        break;
+    case 2: // ttl
+        in = cbor_parse_int(in, in_max, &ttl, 0, err);
+        break;
+    case 3: // rdata_index
+        in = cbor_parse_int(in, in_max, &rdata_index, 0, err);
+        break;
+    default:
+        /* TODO: something */
+        in = cbor_skip(in, in_max, err);
+        break;
+    }
+    return in;
+}
+
+cdns_rr_list::cdns_rr_list()
+{
+}
+
+cdns_rr_list::~cdns_rr_list()
+{
+}
+
+uint8_t* cdns_rr_list::parse(uint8_t* in, uint8_t const* in_max, int* err)
+{
+    return cbor_array_parse(in, in_max, &rr_index, err);
 }

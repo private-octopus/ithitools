@@ -429,7 +429,7 @@ bool ithipublisher::GetCurrent(char const * metric_name, char const * key_value,
     std::vector<double> val;
     bool ret = GetVector(metric_name, key_value, &val);
 
-    *current = val[(size_t)nb_months - 1];
+    *current = val[((size_t)nb_months) - 1];
 
     return ret;
 }
@@ -451,7 +451,7 @@ bool ithipublisher::GetAverageAndCurrent(char const * metric_name, char const * 
             {
                 sum += val[i];
             }
-            *average = sum / (double)(nb_months - 1);
+            *average = sum / (double)(((size_t)nb_months) - 1);
         }
 
         *current = val[(size_t)nb_months - 1];
@@ -490,7 +490,7 @@ bool ithipublisher::GetNameList(char const * metric_name, std::vector<MetricName
         {
             if (nb_months > 1)
             {
-                current_name.average = sum / (nb_months - 1);
+                current_name.average = sum / (((size_t)nb_months) - 1);
             }
             name_list->push_back(current_name);
             current_name.name = line_list[line_index]->key_value;
@@ -516,7 +516,7 @@ bool ithipublisher::GetNameList(char const * metric_name, std::vector<MetricName
     {
         if (nb_months > 1)
         {
-            current_name.average = sum / (nb_months - 1);
+            current_name.average = sum / (((size_t)nb_months) - 1);
         }
         name_list->push_back(current_name);
     }

@@ -678,6 +678,17 @@ uint8_t* cbor_skip(uint8_t* in, uint8_t const* in_max, int* err)
 
 uint8_t* cbor_parse_int(uint8_t* in, uint8_t const* in_max, int* v, int is_signed, int* err)
 {
+    int64_t val = 0;
+
+    in = cbor_parse_int64(in, in_max, &val, is_signed, err);
+
+    *v = (int)val;
+
+    return in;
+}
+
+uint8_t* cbor_parse_int64(uint8_t* in, uint8_t const* in_max, int64_t* v, int is_signed, int* err)
+{
     int64_t val;
     int outer_type = CBOR_CLASS(*in);
 
@@ -688,10 +699,10 @@ uint8_t* cbor_parse_int(uint8_t* in, uint8_t const* in_max, int* v, int is_signe
         in = NULL;
     }
     else if (outer_type == CBOR_T_UINT) {
-        *v = (int)val;
+        *v = val;
     }
     else if (outer_type == CBOR_T_NINT && is_signed) {
-        *v = -1 * (int)(val + 1);
+        *v = -1 * (val + 1);
     }
     else {
         *err = CBOR_MALFORMED_VALUE;

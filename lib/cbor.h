@@ -54,6 +54,7 @@ uint8_t* cbor_to_text(uint8_t* in, uint8_t const* in_max, char** p_out, char con
 uint8_t* cbor_skip(uint8_t* in, uint8_t const* in_max, int* err);
 
 uint8_t* cbor_parse_int(uint8_t* in, uint8_t const* in_max, int* v, int is_signed, int* err);
+uint8_t* cbor_parse_int64(uint8_t* in, uint8_t const* in_max, int64_t* v, int is_signed, int* err);
 
 class cbor_bytes {
 public:
