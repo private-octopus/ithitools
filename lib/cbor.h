@@ -41,6 +41,9 @@
 #define CBOR_UNEXPECTED -5
 #define CBOR_MEMORY -6
 
+#define CBOR_END_MARK 0xff
+
+
 uint8_t* cbor_get_number(uint8_t* in, uint8_t const* in_max, int64_t* val);
 char* cbor_print_int(char* out, char const* out_max, int64_t val, int is_negative);
 char* cbor_print_text_part(char* out, char const* out_max, uint8_t* in, int64_t val);

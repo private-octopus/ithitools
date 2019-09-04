@@ -40,15 +40,15 @@ static char const* cbor_in = "data/tiny-capture.cbor";
 static char const* text_out = "tiny-capture-cbor.txt";
 
 
-CdnsTest::CdnsTest()
+CdnsDumpTest::CdnsDumpTest()
 {
 }
 
-CdnsTest::~CdnsTest()
+CdnsDumpTest::~CdnsDumpTest()
 {
 }
 
-bool CdnsTest::DoTest()
+bool CdnsDumpTest::DoTest()
 {
     cdns cap_cbor;
     bool ret = cap_cbor.open(cbor_in, 700000);
@@ -60,3 +60,38 @@ bool CdnsTest::DoTest()
     return ret;
 }
 
+
+CdnsTest::CdnsTest()
+{
+}
+
+CdnsTest::~CdnsTest()
+{
+}
+
+bool CdnsTest::DoTest()
+{
+    cdns cap_cbor;
+    int err;
+    int nb_calls = 0;
+    bool ret = cap_cbor.open(cbor_in, 700000);
+
+    if (!ret) {
+        TEST_LOG("Could not open file: %s\n", cbor_in);
+    }
+    else {
+        while (ret) {
+            nb_calls++;
+            ret = cap_cbor.open_block(&err);
+        }
+
+        if (!ret && err == CBOR_END_OF_ARRAY && nb_calls > 1) {
+            ret = true;
+        }
+        else {
+            TEST_LOG("Open blocks returns err: %d after %d calls\n", err, nb_calls);
+        }
+    }
+
+    return ret;
+}

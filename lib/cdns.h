@@ -23,6 +23,49 @@
 
 #include <vector>
 
+class cdns_block_preamble
+{
+public:
+    cdns_block_preamble();
+    ~cdns_block_preamble();
+
+    uint8_t* parse(uint8_t* in, uint8_t const* in_max, int* err);
+
+    uint8_t* parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t val, int* err);
+
+    void clear();
+
+    long earliest_time_sec;
+    long earliest_time_usec;
+    bool is_filled;
+};
+
+class cdns_block_statistics
+{
+public:
+    cdns_block_statistics();
+    ~cdns_block_statistics();
+
+    uint8_t* parse(uint8_t* in, uint8_t const* in_max, int* err);
+
+    uint8_t* parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t val, int* err);
+
+    void clear();
+
+    int total_packets;
+    int total_pairs;
+    int unmatched_queries;
+    int unmatched_responses;
+    int completely_malformed_packets;
+    int partially_malformed_packets;
+    int compactor_non_dns_packets;
+    int compactor_out_of_order_packets;
+    int compactor_missing_pairs;
+    int compactor_missing_packets;
+    int compactor_missing_non_dns;
+    bool is_filled;
+};
+
 class cdns_qr_extended {
 public:
     cdns_qr_extended();
@@ -59,6 +102,21 @@ public:
     int response_size;
     cdns_qr_extended q_extended;
     cdns_qr_extended r_extended;
+};
+
+class cdns_address_event_count {
+public:
+    cdns_address_event_count();
+    ~cdns_address_event_count();
+
+    uint8_t* parse(uint8_t* in, uint8_t const* in_max, int* err);
+
+    uint8_t* parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t val, int* err);
+
+    int ae_type;
+    int ae_code;
+    int ae_address_index;
+    int ae_count;
 };
 
 
@@ -152,6 +210,8 @@ public:
 
     uint8_t* parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t val, int* err);
 
+    void clear();
+
     std::vector<cbor_bytes> addresses;
     std::vector<cdns_class_id> class_ids;
     std::vector<cbor_bytes> name_rdata;
@@ -160,10 +220,8 @@ public:
     std::vector<cdns_rr_field> qrr;
     std::vector<cdns_rr_list> rr_list;
     std::vector<cdns_rr_field> rrs;
+    bool is_filled;
 };
-
-
-
 
 class cdnsBlock
 {
@@ -176,9 +234,15 @@ public:
 
     uint8_t* parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t val, int* err);
 
+    void clear();
+
+    cdns_block_preamble preamble;
+    cdns_block_statistics statistics;
     cdnsBlockTables tables;
     std::vector<cdns_query> queries;
+    std::vector<cdns_address_event_count> address_events;
 
+    int is_filled;
 };
 
 class cdns
@@ -192,6 +256,8 @@ public:
 
     bool dump(char const* file_out);
 
+    bool open_block(int* err);
+
 private:
     FILE* F;
     uint8_t* buf;
@@ -199,8 +265,19 @@ private:
     size_t buf_read;
     size_t buf_parsed;
     bool end_of_file;
+    bool preamble_parsed;
+    bool file_head_undef;
+    bool block_list_undef;
+    int64_t nb_blocks_present;
+    int64_t nb_blocks_read;
+
+    cdnsBlock block; /* Current block */
 
     bool load_buffer();
+    bool read_preamble(int* err); /* Leaves nb_read pointing to the beginning of the 1st block */
+
+
+
     uint8_t* dump_preamble(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out);
     uint8_t* dump_block_parameters(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out);
     uint8_t* dump_block(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out);

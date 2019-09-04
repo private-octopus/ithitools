@@ -147,7 +147,7 @@ uint8_t* cbor_text_to_text(uint8_t* in, uint8_t const* in_max, char** p_out, cha
         *out++ = '"';
         if (val == CBOR_END_OF_ARRAY) {
             while (in < in_max && in != NULL) {
-                if (*in == 0xff) {
+                if (*in == CBOR_END_MARK) {
                     in++;
                     break;
                 }
@@ -198,7 +198,7 @@ uint8_t* cbor_bytes_to_text(uint8_t* in, uint8_t const* in_max, char** p_out, ch
 
         if (val == CBOR_END_OF_ARRAY) {
             while (in < in_max && in != NULL) {
-                if (*in == 0xff) {
+                if (*in == CBOR_END_MARK) {
                     in++;
                     break;
                 }
@@ -410,7 +410,7 @@ uint8_t* cbor_array_to_text(uint8_t* in, uint8_t const* in_max, char** p_out, ch
             *err = CBOR_MALFORMED_VALUE;
             in = NULL;
         }
-        else if (*in == 0xFF) {
+        else if (*in == CBOR_END_MARK) {
             if (is_undef) {
                 in++;
                 break;
@@ -458,7 +458,7 @@ uint8_t* cbor_text_skip(uint8_t* in, uint8_t const* in_max, int64_t val, int* er
 {
     if (val == CBOR_END_OF_ARRAY) {
         while (in < in_max && in != NULL) {
-            if (*in == 0xff) {
+            if (*in == CBOR_END_MARK) {
                 in++;
                 break;
             }
@@ -497,7 +497,7 @@ uint8_t* cbor_bytes_skip(uint8_t* in, uint8_t const* in_max, int64_t val, int* e
 {
     if (val == CBOR_END_OF_ARRAY) {
         while (in < in_max && in != NULL) {
-            if (*in == 0xff) {
+            if (*in == CBOR_END_MARK) {
                 in++;
                 break;
             }
@@ -576,7 +576,7 @@ uint8_t* cbor_array_skip(uint8_t* in, uint8_t const* in_max, int64_t val, int is
             *err = CBOR_MALFORMED_VALUE;
             in = NULL;
         }
-        else if (*in == 0xFF) {
+        else if (*in == CBOR_END_MARK) {
             if (is_undef) {
                 in++;
                 break;
@@ -778,7 +778,7 @@ uint8_t* cbor_bytes::parse(uint8_t* in, uint8_t const* in_max, int* err)
             }
 
             while (in < in_max && in != NULL) {
-                if (*in == 0xff) {
+                if (*in == CBOR_END_MARK) {
                     in++;
                     break;
                 }

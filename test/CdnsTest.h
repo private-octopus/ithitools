@@ -33,4 +33,15 @@ public:
     bool DoTest() override;
 };
 
+
+
+class CdnsDumpTest : public ithi_test_class
+{
+public:
+    CdnsDumpTest();
+    ~CdnsDumpTest();
+
+    bool DoTest() override;
+};
+
 #endif

@@ -33,7 +33,12 @@ cdns::cdns():
     buf_size(0),
     buf_read(0),
     buf_parsed(0),
-    end_of_file(false)
+    end_of_file(false),
+    preamble_parsed(false),
+    file_head_undef(false),
+    block_list_undef(false),
+    nb_blocks_present(0),
+    nb_blocks_read(0)
 {
 }
 
@@ -156,6 +161,54 @@ bool cdns::dump(char const* file_out)
     return ret;
 }
 
+bool cdns::open_block(int* err)
+{
+    bool ret = true;
+
+    *err = 0;
+    if (!preamble_parsed) {
+        ret = read_preamble(err);
+    }
+
+    if (ret && nb_blocks_read >= nb_blocks_present) {
+        *err = CBOR_END_OF_ARRAY;
+        ret = false;
+    }
+
+    /* TODO: if not enough data for next block, move and read */
+
+    if (ret){
+        uint8_t* in = buf + buf_parsed;
+        uint8_t* in_max = buf + buf_read;
+
+        if (*in == CBOR_END_MARK) {
+            in++;
+            buf_parsed = in - buf;
+            if (block_list_undef) {
+                nb_blocks_present = nb_blocks_read;
+                *err = CBOR_END_OF_ARRAY;
+            }
+            else {
+                *err = CBOR_MALFORMED_VALUE;
+            }
+            ret = false;
+        }
+        else {
+            in = block.parse(in, in_max, err);
+
+            if (in != NULL) {
+                nb_blocks_read++;
+                buf_parsed = in - buf;
+            }
+            else {
+                ret = false;
+            }
+        }
+    }
+
+    return ret;
+}
+
 bool cdns::load_buffer()
 {
     if (buf_parsed < buf_read) {
@@ -176,6 +229,86 @@ bool cdns::load_buffer()
     }
 
     return (buf_read > 0);
+}
+
+bool cdns::read_preamble(int * err)
+{
+    bool ret = true;
+    int64_t val;
+    uint8_t * in = buf;
+    uint8_t * in_max = in + buf_read;
+    int outer_type = CBOR_CLASS(*in);
+    in = cbor_get_number(in, in_max, &val);
+
+    if (preamble_parsed) {
+        return true;
+    }
+
+    if (in == NULL || outer_type != CBOR_T_ARRAY) {
+        *err = CBOR_MALFORMED_VALUE;
+        in = NULL;
+        ret = false;
+    }
+    else {
+        int rank = 0;
+
+        if (val == CBOR_END_OF_ARRAY) {
+            file_head_undef = 1;
+            val = 0xffffffff;
+        }
+        else if (val < 3) {
+            *err = CBOR_MALFORMED_VALUE;
+            in = NULL;
+            ret = false;
+        }
+
+        if (ret) {
+            if (in != NULL && in < in_max && *in != 0xff) {
+                /* Skip file type -- to do, check for value == CDNS */
+                in = cbor_skip(in, in_max, err);
+                val--;
+            }
+
+            if (in != NULL && in < in_max && *in != 0xff) {
+                /* Skip preamble -- to do, parse and store values  */
+                in = cbor_skip(in, in_max, err);
+                val--;
+            }
+
+            if (in != NULL && in < in_max && *in != 0xff) {
+                int64_t nb_blocks;
+                int blocks_type = CBOR_CLASS(*in);
+                int is_undef = 0;
+                in = cbor_get_number(in, in_max, &nb_blocks);
+
+                if (in == NULL || blocks_type != CBOR_T_ARRAY) {
+                    *err = CBOR_MALFORMED_VALUE;
+                    in = NULL;
+                    ret = false;
+                }
+                else {
+                    if (nb_blocks == CBOR_END_OF_ARRAY) {
+                        block_list_undef = 1;
+                        nb_blocks_present = 0xffffffff;
+                    }
+                    else {
+                        nb_blocks_present = val;
+                    }
+                    buf_parsed = in - buf;
+                }
+            }
+        }
+    }
+
+    preamble_parsed = true;
+
+    if (in == NULL || !ret) {
+        buf_parsed = buf_read;
+        nb_blocks_present = 0;
+        ret = false;
+    }
+
+    return ret;
 }
 
 uint8_t* cdns::dump_preamble(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out)
@@ -1175,7 +1308,8 @@ uint8_t* cdns::dump_list(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_
     return in;
 }
 
-cdnsBlock::cdnsBlock()
+cdnsBlock::cdnsBlock():
+    is_filled(false)
 {
 }
 
@@ -1185,69 +1319,49 @@ cdnsBlock::~cdnsBlock()
 
 uint8_t * cdnsBlock::parse(uint8_t* in, uint8_t const* in_max, int* err)
 {
-    int64_t val;
-    int outer_type = CBOR_CLASS(*in);
-    int is_undef = 0;
-    int is_filled = 0;
-
-    in = cbor_get_number(in, in_max, &val);
-
-    if (in == NULL || outer_type != CBOR_T_ARRAY) {
-        *err = CBOR_MALFORMED_VALUE;
-        in = NULL;
-    }
-    else {
-        int rank = 0;
-
-        if (val == CBOR_END_OF_ARRAY) {
-            is_undef = 1;
-            val = 0xffffffff;
-        }
-
-        while (val > 0 && in != NULL && in < in_max) {
-            if (*in == 0xff) {
-                if (is_undef) {
-                    in++;
-                }
-                else {
-                    *err = CBOR_MALFORMED_VALUE;
-                    in = NULL;
-                }
-                break;
-            }
-            else {
-                int inner_type = CBOR_CLASS(*in);
-
-                if (inner_type == CBOR_T_MAP && is_filled == 0){
-                    /* Records are held in a map */
-                    in = cbor_map_parse(in, in_max, this, err);
-                    is_filled = 1;
-                }
-                else {
-                    /* TODO: error on inexpected? */
-                    in = cbor_skip(in, in_max, err);
-                }
-                val--;
-            }
-        }
-    }
+    /* Records are held in a map */
+    clear();
+    is_filled = 1;
+    in = cbor_map_parse(in, in_max, this, err);
 
     return in;
 }
 
 uint8_t* cdnsBlock::parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t val, int* err)
 {
-    /* TODO: */
     switch (val) {
     case 0: /* Block preamble */
+        in = preamble.parse(in, in_max, err);
+        break;
     case 1: /* Block statistics */
+        in = statistics.parse(in, in_max, err);
+        break;
     case 2: /* Block Tables */
+        in = tables.parse(in, in_max, err);
+        break;
     case 3: /* Block Queries */
+        in = cbor_array_parse(in, in_max, &queries, err);
+        break;
     case 4: /* Address event counts */
+        in = cbor_array_parse(in, in_max, &address_events, err);
+        break;
     default:
         in = cbor_skip(in, in_max, err);
+        break;
     }
     return in;
+}
+
+void cdnsBlock::clear()
+{
+    if (is_filled) {
+        preamble.clear();
+        statistics.clear();
+        tables.clear();
+        queries.clear();
+        address_events.clear();
+        is_filled = false;
+    }
 }
    
 cdns_class_id::cdns_class_id() :
@@ -1282,7 +1396,8 @@ uint8_t* cdns_class_id::parse_map_item(uint8_t* in, uint8_t const * in_max, int6
     return in;
 }
 
-cdnsBlockTables::cdnsBlockTables()
+cdnsBlockTables::cdnsBlockTables():
+    is_filled(false)
 {
 }
 
@@ -1292,6 +1407,10 @@ cdnsBlockTables::~cdnsBlockTables()
 
 uint8_t* cdnsBlockTables::parse(uint8_t* in, uint8_t const* in_max, int* err)
 {
+    if (is_filled) {
+        clear();
+    }
+    is_filled = true;
     return cbor_map_parse(in, in_max, this, err);
 }
 
@@ -1326,6 +1445,19 @@ uint8_t* cdnsBlockTables::parse_map_item(uint8_t* in, uint8_t const* in_max, int
         in = cbor_skip(in, in_max, err);
     }
     return in;
+}
+
+void cdnsBlockTables::clear()
+{
+    addresses.clear();
+    class_ids.clear();
+    name_rdata.clear();
+    q_sigs.clear();
+    question_list.clear();
+    qrr.clear();
+    rr_list.clear();
+    rrs.clear();
+    is_filled = false;
 }
 
 cdns_query::cdns_query():
@@ -1629,4 +1761,193 @@ cdns_rr_list::~cdns_rr_list()
 uint8_t* cdns_rr_list::parse(uint8_t* in, uint8_t const* in_max, int* err)
 {
     return cbor_array_parse(in, in_max, &rr_index, err);
+}
+
+cdns_block_statistics::cdns_block_statistics() :
+    total_packets(0),
+    total_pairs(0),
+    unmatched_queries(0),
+    unmatched_responses(0),
+    completely_malformed_packets(0),
+    partially_malformed_packets(0),
+    compactor_non_dns_packets(0),
+    compactor_out_of_order_packets(0),
+    compactor_missing_pairs(0),
+    compactor_missing_packets(0),
+    compactor_missing_non_dns(0),
+    is_filled(false)
+{
+}
+
+cdns_block_statistics::~cdns_block_statistics()
+{
+}
+
+uint8_t* cdns_block_statistics::parse(uint8_t* in, uint8_t const* in_max, int* err)
+{
+    clear();
+    is_filled = true;
+    return cbor_map_parse(in, in_max, this, err);
+}
+
+uint8_t* cdns_block_statistics::parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t val, int* err)
+{
+
+    switch (val) {
+    case 0: // total_packets
+        in = cbor_parse_int(in, in_max, &total_packets, 0, err);
+        break;
+    case 1: // total_pairs,
+        in = cbor_parse_int(in, in_max, &total_pairs, 0, err);
+        break;
+    case 2: // unmatched_queries,
+        in = cbor_parse_int(in, in_max, &unmatched_queries, 0, err);
+        break;
+    case 3: // unmatched_responses,
+        in = cbor_parse_int(in, in_max, &unmatched_responses, 0, err);
+        break;
+    case 4: // completely_malformed_packets,
+        in = cbor_parse_int(in, in_max, &completely_malformed_packets, 0, err);
+        break;
+    case 5: // partially_malformed_packets,
+        in = cbor_parse_int(in, in_max, &partially_malformed_packets, 0, err);
+        break;
+    case 6: // compactor_non_dns_packets,
+        in = cbor_parse_int(in, in_max, &compactor_non_dns_packets, 0, err);
+        break;
+    case 7: // compactor_out_of_order_packets,
+        in = cbor_parse_int(in, in_max, &compactor_out_of_order_packets, 0, err);
+        break;
+    case 8: // compactor_missing_pairs,
+        in = cbor_parse_int(in, in_max, &compactor_missing_pairs, 0, err);
+        break;
+    case 9: // compactor_missing_packets,
+        in = cbor_parse_int(in, in_max, &compactor_missing_packets, 0, err);
+        break;
+    case 10: // compactor_missing_non_dns
+        in = cbor_parse_int(in, in_max, &compactor_missing_non_dns, 0, err);
+        break;
+    default:
+        in = cbor_skip(in, in_max, err);
+    }
+
+    return in;
+}
+
+void cdns_block_statistics::clear()
+{
+    if (is_filled) {
+        total_packets = 0;
+        total_pairs = 0;
+        unmatched_queries = 0;
+        unmatched_responses = 0;
+        completely_malformed_packets = 0;
+        partially_malformed_packets = 0;
+        compactor_non_dns_packets = 0;
+        compactor_out_of_order_packets = 0;
+        compactor_missing_pairs = 0;
+        compactor_missing_packets = 0;
+        compactor_missing_non_dns = 0;
+        is_filled = 0;
+    }
+}
+
+cdns_block_preamble::cdns_block_preamble():
+    earliest_time_sec(0), 
+    earliest_time_usec(0),
+    is_filled(false)
+{
+}
+
+cdns_block_preamble::~cdns_block_preamble()
+{
+}
+
+uint8_t* cdns_block_preamble::parse(uint8_t* in, uint8_t const* in_max, int* err)
+{
+    clear();
+
+    in = cbor_map_parse(in, in_max, this, err);
+
+    if (!is_filled) {
+        *err = CBOR_MALFORMED_VALUE;
+        in = NULL;
+    }
+    return(in);
+}
+
+uint8_t* cdns_block_preamble::parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t val, int* err)
+{
+    switch (val) {
+    case 1: // total_packets
+    {
+        std::vector<int> t;
+        in = cbor_array_parse(in, in_max, &t, err);
+
+        if (in != NULL) {
+            if (t.size() == 2) {
+                earliest_time_sec = t[0];
+                earliest_time_usec = t[1];
+                is_filled = true;
+            }
+            else {
+                *err = CBOR_MALFORMED_VALUE;
+                in = NULL;
+            }
+        }
+
+        break;
+    }
+    default:
+        in = cbor_skip(in, in_max, err);
+        break;
+    }
+
+    return in;
+}
+
+void cdns_block_preamble::clear()
+{
+    earliest_time_sec = 0;
+    earliest_time_usec = 0;
+    is_filled = false;
+}
+
+cdns_address_event_count::cdns_address_event_count():
+    ae_type(0),
+    ae_code(0),
+    ae_address_index(0),
+    ae_count(0)
+{
+}
+
+cdns_address_event_count::~cdns_address_event_count()
+{
+}
+
+uint8_t* cdns_address_event_count::parse(uint8_t* in, uint8_t const* in_max, int* err)
+{
+    return cbor_map_parse(in, in_max, this, err);
+}
+
+uint8_t* cdns_address_event_count::parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t val, int* err)
+{
+    switch (val) {
+    case 0: // ae_type
+        in = cbor_parse_int(in, in_max, &ae_type, 1, err);
+        break;
+    case 1: // ae_code,
+        in = cbor_parse_int(in, in_max, &ae_code, 1, err);
+        break;
+    case 2: // ae_address_index,
+        in = cbor_parse_int(in, in_max, &ae_address_index, 1, err);
+        break;
+    case 3: // ae_count
+        in = cbor_parse_int(in, in_max, &ae_count, 1, err);
+        break;
+    default:
+        in = cbor_skip(in, in_max, err);
+    }
+
+    return in;
 }
