@@ -32,6 +32,7 @@
 #include "CaptureSummary.h"
 #include "TldAsKey.h"
 #include "dnscap_common.h"
+#include "cdns.h"
 
 #ifndef UNREFERENCED_PARAMETER
 #define UNREFERENCED_PARAMETER(x) (void)(x)
@@ -361,7 +362,24 @@ public:
 
     void SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header,
         my_bpftimeval ts);
-
+#if 0
+    void SubmitCborPacket(cdns* cdns_ctx, size_t packet_id);
+    void SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig);
+    void SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* r_sig);
+    void SubmitCborPacketCommon(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig);
+#endif
+    void NameLeaksAnalysis(
+        uint8_t* server_addr,
+        size_t server_addr_length,
+        uint8_t* client_addr,
+        size_t client_addr_length,
+        int rcode,
+        uint8_t* packet,
+        uint32_t packet_length,
+        uint32_t name_offset,
+        my_bpftimeval ts,
+        bool is_not_empty_response
+    );
     static bool GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t *offset, uint32_t * previous_offset, int * nb_name_parts);
 
     static int64_t DeltaUsec(long tv_sec, long tv_usec, long tv_sec_start, long tv_usec_start);

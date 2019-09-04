@@ -1674,7 +1674,7 @@ void DnsStats::TldCheck(uint8_t * domain, size_t length, bool * is_binary, bool 
 {
     *is_binary = false;
     *is_wrong_syntax = false;
-    *is_numeric = true;
+    *is_numeric = (length > 0);
 
     for (size_t i = 0; i < length; i++)
     {
@@ -1969,300 +1969,10 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
 
         SubmitRegistryNumber(REGISTRY_DNS_OpCodes, opcode);
 
-        if (is_response && opcode == DNS_OPCODE_QUERY)
-        {
+        if (is_response && opcode == DNS_OPCODE_QUERY) {
 
-            uint32_t tld_offset = 0;
-            int nb_name_parts = 0;
-            uint32_t previous_offset = 0;
-            bool gotTld = GetTLD(packet, length, 12, &tld_offset, &previous_offset, &nb_name_parts);
-            bool is_binary = false;
-            bool is_bad_syntax = false;
-            bool is_numeric = false;
-
-            if (gotTld) {
-                /* Verify that the TLD is valid, so as to exclude random traffic that would drown the stats */
-                TldCheck(packet + tld_offset + 1, packet[tld_offset], &is_binary, &is_bad_syntax, &is_numeric);
-                SetToUpperCase(packet + tld_offset + 1, packet[tld_offset]);
-            }
-
-            if (rootAddresses.IsInList(source_addr, source_addr_length))
-            {
-                /* Perform statistics on root traffic */
-                SubmitRegistryNumber(REGISTRY_DNS_root_QR, rcode);
-
-                if (gotTld)
-                {
-#ifdef PRIVACY_CONSCIOUS
-                    DnsStatsLeakType x_type = dnsLeakNoLeak;
-#endif
-
-                    if (rcode == DNS_RCODE_NXDOMAIN && packet[tld_offset] != 0)
-                    {
-#ifdef PRIVACY_CONSCIOUS
-                        /* Debug option, list all the erroneous addresses */
-                        if (dnsstat_flags&dbsStateFlagListErroneousNames) {
-                            uint8_t name[1024];
-                            size_t name_len = 0;
-
-                            (void) GetDnsName(packet, length, 12, name, sizeof(name), &name_len);
-
-                            if (name_len > 0) {
-                                DnsStats::SetToUpperCase(name, name_len);
-                                SubmitRegistryString(REGISTRY_DNS_ERRONEOUS_NAME_LIST, (uint32_t)name_len, name);
-                            }
-                        }
-#endif
-                        /* Analysis of domain leakage */
-                        if (is_binary) {
-                            SubmitRegistryNumber(REGISTRY_DNS_LEAK_BINARY, 0);
-#ifdef PRIVACY_CONSCIOUS
-                            x_type = dnsLeakBinary;
-#endif
-                        }
-                        else if (is_bad_syntax) {
-                            SubmitRegistryNumber(REGISTRY_DNS_LEAK_SYNTAX, 0);
-#ifdef PRIVACY_CONSCIOUS
-                            x_type = dnsLeakBadSyntax;
-#endif
-                        }
-                        else if (is_numeric) {
-                            if (IsIpv4Tld(packet, length, 12)) {
-                                SubmitRegistryNumber(REGISTRY_DNS_LEAK_IPV4, 0);
-#ifdef PRIVACY_CONSCIOUS
-                                x_type = dnsLeakIpv4;
-#endif
-                            }
-                            else {
-                                SubmitRegistryNumber(REGISTRY_DNS_LEAK_NUMERIC, 0);
-#ifdef PRIVACY_CONSCIOUS
-                                x_type = dnsLeakNumeric;
-#endif
-                            }
-                        }
-                        else if (IsRfc6761Tld(packet + tld_offset + 1, packet[tld_offset]))
-                        {
-                            SubmitRegistryString(REGISTRY_DNS_RFC6761TLD, packet[tld_offset], packet + tld_offset + 1);
-#ifdef PRIVACY_CONSCIOUS
-                            x_type = dnsLeakRfc6771;
-#endif
-                        }
-                        else
-                        {
-                            /* Insert in leakage table */
-                            TldAsKey key(packet + tld_offset + 1, packet[tld_offset]);
-                            bool stored = false;
-                            (void)tldLeakage.InsertOrAdd(&key, true, &stored);
-#ifdef PRIVACY_CONSCIOUS
-                            if (IsFrequentLeakTld(packet + tld_offset + 1, packet[tld_offset])) {
-                                x_type = dnsLeakFrequent;
-                            }
-                            else if (IsProbablyDgaTld(packet + tld_offset + 1, packet[tld_offset])) {
-                                x_type = (previous_offset == 0) ? dnsLeakSinglePartDGA : dnsLeakMultiPartDGA;
-                            }
-                            else {
-                                x_type = (previous_offset == 0) ? dnsLeakSinglePart : dnsLeakMultiPart;
-                            }
-#endif
-                            /* TODO: If full enough, remove the LRU, and account for it in the patterns catalog */
-                            if (tldLeakage.GetCount() > max_tld_leakage_table_count)
-                            {
-                                TldAsKey * removed = tldLeakage.RemoveLRU();
-                                if (removed != NULL)
-                                {
-                                    /* Add count of leaks by length -- should replace by pattern match later */
-                                    SubmitRegistryNumber(REGISTRY_DNS_LeakByLength, (uint32_t) removed->tld_len);
-
-                                    delete removed;
-                                }
-                            }
-
-                            /* Insert the 2nd level name part */
-                            uint8_t * key2_name;
-                            uint8_t key2_length;
-                            uint8_t should_keep = false;
-
-                            if (previous_offset == 0) {
-                                key2_name = (uint8_t *)"-- NONE --";
-                                key2_length = 10;
-                                should_keep = true;
-                            }
-                            else {
-                                key2_name = packet + previous_offset + 1;
-                                key2_length = packet[previous_offset];
-                                if (IsNumericDomain(key2_name, key2_length)) {
-                                    key2_name = (uint8_t *)"-- NUMBER --";
-                                    key2_length = 12;
-                                    should_keep = true;
-                                }
-                            }
-                            TldAsKey key2(key2_name, key2_length);
-                            (void)secondLdLeakage.InsertOrAdd(&key2, true, &stored);
-
-                            /* TODO: If full enough, remove the LRU, and account for it in the -- OTHERS -- entry */
-                            if (!should_keep &&
-                                secondLdLeakage.GetCount() > max_tld_leakage_table_count)
-                            {
-                                TldAsKey * removed = secondLdLeakage.RemoveLRU();
-                                if (removed != NULL)
-                                {
-                                    TldAsKey key3((uint8_t *)"-- OTHERS --", 12);
-                                    key3.count = removed->count;
-                                    (void)secondLdLeakage.InsertOrAdd(&key3, true, &stored);
-                                    delete removed;
-                                }
-                            }
-                        }
-                    }
-                    else if (rcode == DNS_RCODE_NOERROR && (ancount > 0 || nscount > 0))
-                    {
-                        /* Analysis of useless traffic to the root */
-                        TldAddressAsKey key(dest_addr, dest_addr_length, packet + tld_offset + 1, packet[tld_offset], ts);
-                        TldAddressAsKey * present = queryUsage.Retrieve(&key);
-
-                        if (present != NULL) {
-                            /* keep statistics about this address */
-                            present->count++;
-                            SubmitRegistryNumber(REGISTRY_DNS_UsefulQueries, 0);
-                            /* Compute the delay between this and the previous view, and update */
-                            int64_t delay = DeltaUsec(ts.tv_sec, ts.tv_usec, present->ts.tv_sec, present->ts.tv_usec);
-
-                            if (present->tld_min_delay < 0 || present->tld_min_delay > delay) {
-                                present->tld_min_delay = delay;
-                            }
-                            present->ts.tv_sec = ts.tv_sec;
-                            present->ts.tv_usec = ts.tv_usec;
-                        } else if (queryUsage.GetCount() < max_query_usage_count) {
-                            /* If table is full, stick with just the transactions that are present */
-                            bool stored = false;
-                            (void)queryUsage.InsertOrAdd(&key, true, &stored);
-
-                            SubmitRegistryNumber(REGISTRY_DNS_UsefulQueries, 1);
-                        }
-
-                        /* Analysis of traffic per TLD */
-                        if (dnsstat_flags&dnsStateFlagCountTld)
-                        {
-                            SubmitRegistryString(REGISTRY_TLD_response, packet[tld_offset], packet + tld_offset + 1);
-                        }
-                    }
-#ifdef PRIVACY_CONSCIOUS
-                    if (dnsstat_flags& dbsStateFlagReportResolverIPAddress) {
-                        uint8_t name[512];
-                        size_t name_len = 0;
-
-                        if (dest_addr_length == 4) {
-#ifdef _WINDOWS
-                            sprintf_s((char *)name, sizeof(name), "%d.%d.%d.%d/%d",
-                                dest_addr[0], dest_addr[1], dest_addr[2], dest_addr[3], (int)x_type);
-#else
-                            sprintf((char *)name, "%d.%d.%d.%d/%d",
-                                dest_addr[0], dest_addr[1], dest_addr[2], dest_addr[3], (int)x_type);
-#endif
-                        }
-                        else if (dest_addr_length == 16) {
-#ifdef _WINDOWS
-                            sprintf_s((char *)name, sizeof(name), 
-                                "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x/%d",
-                                dest_addr[0], dest_addr[1], dest_addr[2], dest_addr[3], 
-                                dest_addr[4], dest_addr[5], dest_addr[6], dest_addr[7],
-                                dest_addr[8], dest_addr[9], dest_addr[10], dest_addr[11],
-                                dest_addr[12], dest_addr[13], dest_addr[14], dest_addr[15],
-                                (int)x_type);
-#else
-                            sprintf((char *)name,
-                                "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x/%d",
-                                dest_addr[0], dest_addr[1], dest_addr[2], dest_addr[3],
-                                dest_addr[4], dest_addr[5], dest_addr[6], dest_addr[7],
-                                dest_addr[8], dest_addr[9], dest_addr[10], dest_addr[11],
-                                dest_addr[12], dest_addr[13], dest_addr[14], dest_addr[15],
-                                (int)x_type);
-#endif
-                        }
-                        name_len = strlen((char *)name);
-
-                        if (name_len > 0) {
-                            SubmitRegistryString(REGISTRY_DNS_ADDRESS_LIST, (uint32_t)name_len, name);
-                        }
-                    }
-#endif
-                }
-            }
-            else if (gotTld)
-            {
-                /* Perform statistics on user traffic */
-                TldAsKey key(packet + tld_offset + 1, packet[tld_offset]);
-
-                /* Check whether this TLD is in the registered list */
-                if (registeredTld.GetCount() == 0)
-                {
-                    LoadRegisteredTLD_from_memory();
-                }
-
-                if (registeredTld.Retrieve(&key) != NULL)
-                {
-                    /* This is a registered TLD */
-                    SubmitRegistryNumber(REGISTRY_DNS_TLD_Usage_Count, 1);
-                    if ((dnsstat_flags&dnsStateFlagListTldUsed) != 0)
-                    {
-                        SubmitRegistryString(REGISTRY_DNS_Tld_Usage, packet[tld_offset], packet + tld_offset + 1);
-                    }
-                }
-                else
-                {
-                    /* Keep a count */
-                    SubmitRegistryNumber(REGISTRY_DNS_TLD_Usage_Count, 0);
-
-
-                    /* Analysis of domain leakage */
-                    if (IsRfc6761Tld(packet + tld_offset + 1, packet[tld_offset]))
-                    {
-                        SubmitRegistryString(REGISTRY_DNS_RFC6761_Usage, packet[tld_offset], packet + tld_offset + 1);
-                    }
-                    else
-                    {
-                        bool stored = false;
-
-
-
-                        if (tldStringUsage.GetCount() >= max_tld_string_usage_count)
-                        {
-                            TldAsKey * removed = tldStringUsage.RemoveLRU();
-                            if (removed != NULL)
-                            {
-                                delete removed;
-                            }
-                        }
-
-                        if (is_binary) {
-                            TldAsKey key2((uint8_t *)"-- BINARY --", 12);
-
-                            tldStringUsage.InsertOrAdd(&key2, true, &stored);
-                        }
-                        else if (is_bad_syntax) {
-                            TldAsKey key2((uint8_t *)"-- SYNTAX --", 12);
-
-                            tldStringUsage.InsertOrAdd(&key2, true, &stored);
-                        }
-                        else if (is_numeric) {
-                            if (IsIpv4Tld(packet, length, 12)) {
-                                TldAsKey key2((uint8_t *)"-- IPV4 --", 10);
-
-                                tldStringUsage.InsertOrAdd(&key2, true, &stored);
-                            }
-                            else {
-                                TldAsKey key2((uint8_t *)"-- NUMBER --", 12);
-
-                                tldStringUsage.InsertOrAdd(&key2, true, &stored);
-                            }
-                        }
-                        else {
-                            tldStringUsage.InsertOrAdd(&key, true, &stored);
-                        }
-                    }
-                }
-            }
-
+            NameLeaksAnalysis(source_addr, source_addr_length, dest_addr, dest_addr_length,
+                rcode, packet, length, 12, ts, ancount > 0 || nscount > 0);
         }
 
         for (uint32_t i = 0; i < 7; i++)
@@ -2410,6 +2120,590 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
             }
         }
     } 
+}
+#if 0
+void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
+{
+    bool is_response = false;
+
+    bool has_header = true;
+    uint32_t flags = 0;
+    uint32_t opcode = 0;
+    uint32_t rcode = 0;
+    uint32_t e_rcode = 0;
+    uint32_t qdcount = 0;
+    uint32_t ancount = 0;
+    uint32_t nscount = 0;
+    uint32_t arcount = 0;
+    uint32_t parse_index = 0;
+    uint32_t e_length = 512;
+    bool unfiltered = false;
+    int query_rclass = 0;
+    int query_rtype = 0;
+    uint32_t first_query_index = 0;
+    uint32_t first_answer_index = 0;
+    uint32_t first_ns_index = 0;
+    cdns_query* query = &cdns_ctx->block.queries[packet_id];
+    cdns_query_signature* q_sig = &cdns_ctx->block.tables.q_sigs[query->query_signature_index];
+    cdns_query_signature* r_sig = &cdns_ctx->block.tables.q_sigs[query->query_signature_index];
+
+    if (t_start_sec == 0 && t_start_usec == 0) {
+        t_start_sec = cdns_ctx->block.preamble.earliest_time_sec;
+        t_start_usec = cdns_ctx->block.preamble.earliest_time_usec;
+    }
+
+    if (query->time_offset_usec > duration_usec) {
+        duration_usec = query->time_offset_usec;
+    }
+
+    volume_53only += query->query_size;
+    volume_53only += query->response_size;
+
+
+    error_flags = 0;
+    is_do_flag_set = false;
+    is_using_edns = false;
+    edns_options = NULL;
+    edns_options_length = 0;
+    is_qname_minimized = false;
+    dnssec_name_index = 0;
+
+    if (rootAddresses.GetCount() == 0)
+    {
+        rootAddresses.SetList(DefaultRootAddresses, sizeof(DefaultRootAddresses) / sizeof(char const*));
+    }
+
+    unfiltered = CheckAddress(cdns_ctx->block.tables.addresses[query->client_address_index].v,
+        cdns_ctx->block.tables.addresses[query->client_address_index].l);
+
+    if (unfiltered)
+    {
+        if (query->response_size > 0)
+        {
+            response_count++;
+        }
+
+        if (query->query_size > 0)
+        {
+            query_count++;
+        }
+    }
+}
+
+void DnsStats::SubmitCborPacketCommon(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig)
+{
+    uint32_t flags = q_sig->qr_dns_flags;
+
+    SubmitRegistryNumber(REGISTRY_DNS_OpCodes, q_sig->query_opcode);
+
+    for (uint32_t i = 0; i < 7; i++)
+    {
+        if ((flags & (1 << i)) != 0)
+        {
+            SubmitRegistryNumber(REGISTRY_DNS_Header_Flags, i);
+        }
+    }
+
+    for (uint32_t i = 0; i < ancount; i++)
+    {
+        if (parse_index >= length)
+        {
+            error_flags |= DNS_REGISTRY_ERROR_FORMAT;
+        }
+        else
+        {
+            parse_index = SubmitRecord(packet, length, parse_index, NULL, NULL, is_response);
+        }
+    }
+
+    first_ns_index = parse_index;
+
+    for (uint32_t i = 0; i < nscount; i++)
+    {
+        if (parse_index >= length)
+        {
+            error_flags |= DNS_REGISTRY_ERROR_FORMAT;
+        }
+        else
+        {
+            parse_index = SubmitRecord(packet, length, parse_index, NULL, NULL, is_response);
+        }
+    }
+
+    for (uint32_t i = 0; i < arcount; i++)
+    {
+        if (parse_index >= length)
+        {
+            error_flags |= DNS_REGISTRY_ERROR_FORMAT;
+        }
+        else
+        {
+            parse_index = SubmitRecord(packet, length, parse_index, &e_rcode, &e_length, is_response);
+        }
+    }
+
+    if (has_header)
+    {
+        rcode |= (e_rcode << 4);
+        SubmitRegistryNumber(REGISTRY_DNS_RCODES, rcode);
+    }
+
+    if (has_header && (dnsstat_flags & dnsStateFlagCountPacketSizes) != 0)
+    {
+        if (is_response)
+        {
+            SubmitRegistryNumber(REGISTRY_DNS_Response_Size, length);
+            if ((flags & (1 << 5)) != 0)
+            {
+                SubmitRegistryNumber(REGISTRY_DNS_TC_length, e_length);
+            }
+        }
+        else
+        {
+            SubmitRegistryNumber(REGISTRY_DNS_Query_Size, length);
+            SubmitRegistryNumber(REGISTRY_EDNS_Packet_Size, e_length);
+        }
+    }
+
+    SubmitRegistryNumber(REGISTRY_DNS_error_flag, error_flags);
+}
+  
+void DnsStats::SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig)
+{
+    SubmitCborPacketCommon(cdns_ctx, query, q_sig);
+
+    if (has_header && opcode == DNS_OPCODE_QUERY &&
+        rcode == DNS_RCODE_NOERROR && error_flags == 0)
+    {
+        uint32_t tld_offset = 0;
+        int nb_name_parts = 0;
+        uint32_t previous_offset = 0;
+        bool gotTld = GetTLD(packet, length, 12, &tld_offset, &previous_offset, &nb_name_parts);
+
+        if (gotTld)
+        {
+            bool is_binary = false;
+            bool is_bad_syntax = false;
+            bool is_numeric = false;
+
+            /* Verify that the TLD is valid, so as to exclude random traffic that would drown the stats */
+            TldCheck(packet + tld_offset + 1, packet[tld_offset], &is_binary, &is_bad_syntax, &is_numeric);
+
+            if (!is_binary && !is_bad_syntax) {
+                SetToUpperCase(packet + tld_offset + 1, packet[tld_offset]);
+                TldAsKey key(packet + tld_offset + 1, packet[tld_offset]);
+
+                if (registeredTld.GetCount() == 0)
+                {
+                    LoadRegisteredTLD_from_memory();
+                }
+
+                if (registeredTld.Retrieve(&key) != NULL)
+                {
+                    /* This is a registered TLD
+                     * Use the list of source addresses as a filter to
+                     * check the incoming EDNS options */
+                    RegisterOptionsByIp(source_addr, source_addr_length);
+                }
+            }
+        }
+    }
+}
+
+void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* r_sig)
+{
+    uint32_t rcode = r_sig->response_rcode;
+
+    uint32_t server_addr_length = cdns_ctx->block.tables.addresses[r_sig->server_address_index].l;
+    uint8_t* server_addr = cdns_ctx->block.tables.addresses[r_sig->server_address_index].v;
+    uint32_t dest_addr_length = cdns_ctx->block.tables.addresses[query->client_address_index].l;
+    uint8_t* dest_addr = cdns_ctx->block.tables.addresses[query->client_address_index].v;
+    uint8_t* q_name = cdns_ctx->block.tables.addresses[query->query_name_index].v;
+    uint32_t q_name_length = (uint32_t)cdns_ctx->block.tables.addresses[query->query_name_index].l;
+    my_bpftimeval ts;
+
+
+    ts.tv_sec = query->delay_useconds / 1000000;
+    ts.tv_usec = query->delay_useconds % 1000000;
+
+
+    SubmitCborPacketCommon(cdns_ctx, query, r_sig);
+
+    if (r_sig->query_opcode == DNS_OPCODE_QUERY)
+    {
+        NameLeaksAnalysis(server_addr, server_addr_length, dest_addr, dest_addr_length,
+            r_sig->response_rcode, q_name, q_name_length, 0, ts, (r_sig->query_an_count > 0 || r_sig->query_ns_count > 0));
+    }
+
+    if (has_header && opcode == DNS_OPCODE_QUERY &&
+        rcode == DNS_RCODE_NOERROR && error_flags == 0)
+    {
+        /* Do not perform client statistic on root traffic, but do it
+        * for all other sources of traffic */
+        if (is_response) {
+            /* if (!rootAddresses.IsInList(source_addr, source_addr_length)) */ {
+                is_qname_minimized = IsQNameMinimized(packet, length, qdcount, query_rclass, query_rtype,
+                    first_query_index, first_answer_index, first_ns_index);
+                RegisterStatsByIp(dest_addr, dest_addr_length);
+
+                if (is_do_flag_set) {
+                    if (dnssec_name_index == 0) {
+                        RegisterDnssecUsageByName(packet, length, 12, false);
+                    }
+                    else {
+                        RegisterDnssecUsageByName(packet, length, dnssec_name_index, true);
+                    }
+                }
+            }
+        }
+        else {
+            uint32_t tld_offset = 0;
+            int nb_name_parts = 0;
+            uint32_t previous_offset = 0;
+            bool gotTld = GetTLD(packet, length, 12, &tld_offset, &previous_offset, &nb_name_parts);
+
+            if (gotTld)
+            {
+                bool is_binary = false;
+                bool is_bad_syntax = false;
+                bool is_numeric = false;
+
+                /* Verify that the TLD is valid, so as to exclude random traffic that would drown the stats */
+                TldCheck(packet + tld_offset + 1, packet[tld_offset], &is_binary, &is_bad_syntax, &is_numeric);
+
+                if (!is_binary && !is_bad_syntax) {
+                    SetToUpperCase(packet + tld_offset + 1, packet[tld_offset]);
+                    TldAsKey key(packet + tld_offset + 1, packet[tld_offset]);
+
+                    if (registeredTld.GetCount() == 0)
+                    {
+                        LoadRegisteredTLD_from_memory();
+                    }
+
+                    if (registeredTld.Retrieve(&key) != NULL)
+                    {
+                        /* This is a registered TLD
+                         * Use the list of source addresses as a filter to
+                         * check the incoming EDNS options */
+                        RegisterOptionsByIp(source_addr, source_addr_length);
+                    }
+                }
+            }
+        }
+    }
+}
+#endif
+
+void DnsStats::NameLeaksAnalysis(
+    uint8_t * server_addr, 
+    size_t server_addr_length,
+    uint8_t* client_addr,
+    size_t client_addr_length,
+    int rcode,
+    uint8_t * packet,
+    uint32_t packet_length,
+    uint32_t name_offset,
+    my_bpftimeval ts,
+    bool is_not_empty_response
+    )
+{
+
+    uint32_t tld_offset = 0;
+    int nb_name_parts = 0;
+    uint32_t previous_offset = 0;
+    bool gotTld = GetTLD(packet, packet_length, name_offset, &tld_offset, &previous_offset, &nb_name_parts);
+    uint8_t* tld = packet + tld_offset + 1;
+    uint32_t tld_length = *(packet + tld_offset);
+    bool is_binary = false;
+    bool is_bad_syntax = false;
+    bool is_numeric = false;
+
+
+    if (gotTld) {
+        DnsStats::SetToUpperCase(tld, tld_length);
+        /* Verify that the TLD is valid, so as to exclude random traffic that would drown the stats */
+        TldCheck(tld, tld_length, &is_binary, &is_bad_syntax, &is_numeric);
+    }
+
+    if (rootAddresses.IsInList(server_addr, server_addr_length))
+    {
+        /* Perform statistics on root traffic */
+        SubmitRegistryNumber(REGISTRY_DNS_root_QR, rcode);
+
+        if (gotTld)
+        {
+#ifdef PRIVACY_CONSCIOUS
+            DnsStatsLeakType x_type = dnsLeakNoLeak;
+#endif
+
+            if (rcode == DNS_RCODE_NXDOMAIN)
+            {
+#ifdef PRIVACY_CONSCIOUS
+                /* Debug option, list all the erroneous addresses */
+                if (dnsstat_flags & dbsStateFlagListErroneousNames) {
+                    uint8_t name[1024];
+                    size_t name_len = 0;
+
+                    (void)GetDnsName(packet, packet_length, name_offset, name, sizeof(name), &name_len);
+
+                    if (name_len > 0) {
+                        DnsStats::SetToUpperCase(name, name_len);
+                        SubmitRegistryString(REGISTRY_DNS_ERRONEOUS_NAME_LIST, (uint32_t)name_len, name);
+                    }
+                }
+#endif
+                /* Analysis of domain leakage */
+                if (is_binary) {
+                    SubmitRegistryNumber(REGISTRY_DNS_LEAK_BINARY, 0);
+#ifdef PRIVACY_CONSCIOUS
+                    x_type = dnsLeakBinary;
+#endif
+                }
+                else if (is_bad_syntax) {
+                    SubmitRegistryNumber(REGISTRY_DNS_LEAK_SYNTAX, 0);
+#ifdef PRIVACY_CONSCIOUS
+                    x_type = dnsLeakBadSyntax;
+#endif
+                }
+                else if (is_numeric) {
+                    if (IsIpv4Tld(packet, packet_length, name_offset)) {
+                        SubmitRegistryNumber(REGISTRY_DNS_LEAK_IPV4, 0);
+#ifdef PRIVACY_CONSCIOUS
+                        x_type = dnsLeakIpv4;
+#endif
+                    }
+                    else {
+                        SubmitRegistryNumber(REGISTRY_DNS_LEAK_NUMERIC, 0);
+#ifdef PRIVACY_CONSCIOUS
+                        x_type = dnsLeakNumeric;
+#endif
+                    }
+                }
+                else if (IsRfc6761Tld(tld, tld_length))
+                {
+                    SubmitRegistryString(REGISTRY_DNS_RFC6761TLD, tld_length, tld);
+#ifdef PRIVACY_CONSCIOUS
+                    x_type = dnsLeakRfc6771;
+#endif
+                }
+                else
+                {
+                    /* Insert in leakage table */
+                    TldAsKey key(tld, tld_length);
+                    bool stored = false;
+                    (void)tldLeakage.InsertOrAdd(&key, true, &stored);
+#ifdef PRIVACY_CONSCIOUS
+                    if (IsFrequentLeakTld(tld, tld_length)) {
+                        x_type = dnsLeakFrequent;
+                    }
+                    else if (IsProbablyDgaTld(tld, tld_length)) {
+                        x_type = (previous_offset == 0) ? dnsLeakSinglePartDGA : dnsLeakMultiPartDGA;
+                    }
+                    else {
+                        x_type = (previous_offset == 0) ? dnsLeakSinglePart : dnsLeakMultiPart;
+                    }
+#endif
+                    /* TODO: If full enough, remove the LRU, and account for it in the patterns catalog */
+                    if (tldLeakage.GetCount() > max_tld_leakage_table_count)
+                    {
+                        TldAsKey* removed = tldLeakage.RemoveLRU();
+                        if (removed != NULL)
+                        {
+                            /* Add count of leaks by length -- should replace by pattern match later */
+                            SubmitRegistryNumber(REGISTRY_DNS_LeakByLength, (uint32_t)removed->tld_len);
+
+                            delete removed;
+                        }
+                    }
+
+                    /* Insert the 2nd level name part */
+                    uint8_t* key2_name;
+                    uint8_t key2_length;
+                    uint8_t should_keep = false;
+
+                    if (previous_offset == 0) {
+                        key2_name = (uint8_t*)"-- NONE --";
+                        key2_length = 10;
+                        should_keep = true;
+                    }
+                    else {
+                        key2_name = packet + previous_offset + 1;
+                        key2_length = packet[previous_offset];
+                        if (IsNumericDomain(key2_name, key2_length)) {
+                            key2_name = (uint8_t*)"-- NUMBER --";
+                            key2_length = 12;
+                            should_keep = true;
+                        }
+                    }
+                    TldAsKey key2(key2_name, key2_length);
+                    (void)secondLdLeakage.InsertOrAdd(&key2, true, &stored);
+
+                    /* TODO: If full enough, remove the LRU, and account for it in the -- OTHERS -- entry */
+                    if (!should_keep &&
+                        secondLdLeakage.GetCount() > max_tld_leakage_table_count)
+                    {
+                        TldAsKey* removed = secondLdLeakage.RemoveLRU();
+                        if (removed != NULL)
+                        {
+                            TldAsKey key3((uint8_t*)"-- OTHERS --", 12);
+                            key3.count = removed->count;
+                            (void)secondLdLeakage.InsertOrAdd(&key3, true, &stored);
+                            delete removed;
+                        }
+                    }
+                }
+            }
+            else if (rcode == DNS_RCODE_NOERROR && is_not_empty_response)
+            {
+                /* Analysis of useless traffic to the root */
+                TldAddressAsKey key(client_addr, client_addr_length, tld, tld_length, ts);
+                TldAddressAsKey* present = queryUsage.Retrieve(&key);
+
+                if (present != NULL) {
+                    /* keep statistics about this address */
+                    present->count++;
+                    SubmitRegistryNumber(REGISTRY_DNS_UsefulQueries, 0);
+                    /* Compute the delay between this and the previous view, and update */
+                    int64_t delay = DeltaUsec(ts.tv_sec, ts.tv_usec, present->ts.tv_sec, present->ts.tv_usec);
+
+                    if (present->tld_min_delay < 0 || present->tld_min_delay > delay) {
+                        present->tld_min_delay = delay;
+                    }
+                    present->ts.tv_sec = ts.tv_sec;
+                    present->ts.tv_usec = ts.tv_usec;
+                }
+                else if (queryUsage.GetCount() < max_query_usage_count) {
+                    /* If table is full, stick with just the transactions that are present */
+                    bool stored = false;
+                    (void)queryUsage.InsertOrAdd(&key, true, &stored);
+
+                    SubmitRegistryNumber(REGISTRY_DNS_UsefulQueries, 1);
+                }
+
+                /* Analysis of traffic per TLD */
+                if (dnsstat_flags & dnsStateFlagCountTld)
+                {
+                    SubmitRegistryString(REGISTRY_TLD_response, tld_length, tld);
+                }
+            }
+#ifdef PRIVACY_CONSCIOUS
+            if (dnsstat_flags & dbsStateFlagReportResolverIPAddress) {
+                uint8_t name[512];
+                size_t name_len = 0;
+
+                if (client_addr_length == 4) {
+#ifdef _WINDOWS
+                    sprintf_s((char*)name, sizeof(name), "%d.%d.%d.%d/%d",
+                        client_addr[0], client_addr[1], client_addr[2], client_addr[3], (int)x_type);
+#else
+                    sprintf((char*)name, "%d.%d.%d.%d/%d",
+                        client_addr[0], client_addr[1], client_addr[2], client_addr[3], (int)x_type);
+#endif
+                }
+                else if (client_addr_length == 16) {
+#ifdef _WINDOWS
+                    sprintf_s((char*)name, sizeof(name),
+                        "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x/%d",
+                        client_addr[0], client_addr[1], client_addr[2], client_addr[3],
+                        client_addr[4], client_addr[5], client_addr[6], client_addr[7],
+                        client_addr[8], client_addr[9], client_addr[10], client_addr[11],
+                        client_addr[12], client_addr[13], client_addr[14], client_addr[15],
+                        (int)x_type);
+#else
+                    sprintf((char*)name,
+                        "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x/%d",
+                        client_addr[0], client_addr[1], client_addr[2], client_addr[3],
+                        client_addr[4], client_addr[5], client_addr[6], client_addr[7],
+                        client_addr[8], client_addr[9], client_addr[10], client_addr[11],
+                        client_addr[12], client_addr[13], client_addr[14], client_addr[15],
+                        (int)x_type);
+#endif
+                }
+                else {
+                    name[0] = 0;
+                }
+
+                name_len = strlen((char*)name);
+
+                if (name_len > 0) {
+                    SubmitRegistryString(REGISTRY_DNS_ADDRESS_LIST, (uint32_t)name_len, name);
+                }
+            }
+#endif
+        }
+    }
+    else if (gotTld)
+    {
+        /* Perform statistics on user traffic */
+        TldAsKey key(tld, tld_length);
+
+        /* Check whether this TLD is in the registered list */
+        if (registeredTld.GetCount() == 0)
+        {
+            LoadRegisteredTLD_from_memory();
+        }
+
+        if (tld_length == 0 || registeredTld.Retrieve(&key) != NULL)
+        {
+            /* This is a registered TLD, or the root */
+            SubmitRegistryNumber(REGISTRY_DNS_TLD_Usage_Count, 1);
+            if ((dnsstat_flags & dnsStateFlagListTldUsed) != 0)
+            {
+                SubmitRegistryString(REGISTRY_DNS_Tld_Usage, tld_length, tld);
+            }
+        }
+        else
+        {
+            /* Keep a count */
+            SubmitRegistryNumber(REGISTRY_DNS_TLD_Usage_Count, 0);
+
+
+            /* Analysis of domain leakage */
+            if (IsRfc6761Tld(tld, tld_length))
+            {
+                SubmitRegistryString(REGISTRY_DNS_RFC6761_Usage, tld_length, tld);
+            }
+            else
+            {
+                bool stored = false;
+
+                if (tldStringUsage.GetCount() >= max_tld_string_usage_count)
+                {
+                    TldAsKey* removed = tldStringUsage.RemoveLRU();
+                    if (removed != NULL)
+                    {
+                        delete removed;
+                    }
+                }
+
+                if (is_binary) {
+                    TldAsKey key2((uint8_t*)"-- BINARY --", 12);
+
+                    tldStringUsage.InsertOrAdd(&key2, true, &stored);
+                }
+                else if (is_bad_syntax) {
+                    TldAsKey key2((uint8_t*)"-- SYNTAX --", 12);
+
+                    tldStringUsage.InsertOrAdd(&key2, true, &stored);
+                }
+                else if (is_numeric) {
+                    if (IsIpv4Tld(packet, packet_length, name_offset)) {
+                        TldAsKey key2((uint8_t*)"-- IPV4 --", 10);
+
+                        tldStringUsage.InsertOrAdd(&key2, true, &stored);
+                    }
+                    else {
+                        TldAsKey key2((uint8_t*)"-- NUMBER --", 12);
+
+                        tldStringUsage.InsertOrAdd(&key2, true, &stored);
+                    }
+                }
+                else {
+                    tldStringUsage.InsertOrAdd(&key, true, &stored);
+                }
+            }
+        }
+    }
 }
 
 void DnsStats::ExportQueryUsage()

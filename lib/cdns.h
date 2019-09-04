@@ -22,6 +22,7 @@
 #define CDNS_H
 
 #include <vector>
+#include "cbor.h"
 
 class cdns_block_preamble
 {
@@ -258,6 +259,8 @@ public:
 
     bool open_block(int* err);
 
+    cdnsBlock block; /* Current block */
+
 private:
     FILE* F;
     uint8_t* buf;
@@ -270,8 +273,6 @@ private:
     bool block_list_undef;
     int64_t nb_blocks_present;
     int64_t nb_blocks_read;
-
-    cdnsBlock block; /* Current block */
 
     bool load_buffer();
     bool read_preamble(int* err); /* Leaves nb_read pointing to the beginning of the 1st block */
