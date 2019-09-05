@@ -374,7 +374,9 @@ public:
 #endif
     void SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig,
         cdns_qr_extended* ext, bool is_response);
-
+    void SubmitPcapRecords(uint8_t* packet, uint32_t length, uint32_t parse_index,
+        bool is_response, bool has_header, uint32_t rcode, uint32_t flags,
+        uint32_t qdcount, uint32_t ancount, uint32_t nscount, uint32_t arcount);
 
     static bool GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t *offset, uint32_t * previous_offset, int * nb_name_parts);
 

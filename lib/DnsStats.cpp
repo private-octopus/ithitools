@@ -1916,19 +1916,12 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     uint32_t flags = 0;
     uint32_t opcode = 0;
     uint32_t rcode = 0;
-    uint32_t e_rcode = 0;
     uint32_t qdcount = 0;
     uint32_t ancount = 0;
     uint32_t nscount = 0;
     uint32_t arcount = 0;
     uint32_t parse_index = 0;
-    uint32_t e_length = 512;
     bool unfiltered = false;
-    int query_rclass = 0;
-    int query_rtype = 0;
-    uint32_t first_query_index = 0;
-    uint32_t first_answer_index = 0;
-    uint32_t first_ns_index = 0;
 
     if (t_start_sec == 0 && t_start_usec == 0) {
         t_start_sec = ts.tv_sec;
@@ -2009,114 +2002,33 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                 rcode, packet, length, 12, ts, ancount > 0 || nscount > 0);
         }
 
-        
-
         parse_index = 12;
-    }
 
-    first_query_index = parse_index;
+        SubmitPcapRecords(packet, length, parse_index, is_response, has_header, rcode, flags,
+            qdcount, ancount, nscount, arcount);
 
-    for (uint32_t i = 0; i < qdcount; i++)
-    {
-        if (parse_index >= length)
+        if (has_header && opcode == DNS_OPCODE_QUERY &&
+            rcode == DNS_RCODE_NOERROR && error_flags == 0)
         {
-            error_flags |= DNS_REGISTRY_ERROR_FORMAT;
-        }
-        else
-        {
-            parse_index = SubmitQuery(packet, length, parse_index, is_response, &query_rclass, &query_rtype);
-        }
-    }
+            if (is_response) {
+                RegisterStatsByIp(dest_addr, dest_addr_length);
 
-    first_answer_index = parse_index;
-
-    for (uint32_t i = 0; i < ancount; i++)
-    {
-        if (parse_index >= length)
-        {
-            error_flags |= DNS_REGISTRY_ERROR_FORMAT;
-        }
-        else
-        {
-            parse_index = SubmitRecord(packet, length, parse_index, NULL, NULL, is_response);
-        }
-    }
-
-    first_ns_index = parse_index;
-
-    for (uint32_t i = 0; i < nscount; i++)
-    {
-        if (parse_index >= length)
-        {
-            error_flags |= DNS_REGISTRY_ERROR_FORMAT;
-        }
-        else
-        {
-            parse_index = SubmitRecord(packet, length, parse_index, NULL, NULL, is_response);
-        }
-    }
-
-    for (uint32_t i = 0; i < arcount; i++)
-    {
-        if (parse_index >= length)
-        {
-            error_flags |= DNS_REGISTRY_ERROR_FORMAT;
-        }
-        else
-        {
-            parse_index = SubmitRecord(packet, length, parse_index, &e_rcode, &e_length, is_response);
-        }
-    }
-
-    if (has_header)
-    {
-        rcode |= (e_rcode << 4);
-        SubmitRegistryNumber(REGISTRY_DNS_RCODES, rcode);
-    }
-
-    if (has_header && (dnsstat_flags&dnsStateFlagCountPacketSizes) != 0)
-    {
-        if (is_response)
-        {
-            SubmitRegistryNumber(REGISTRY_DNS_Response_Size, length);
-            if ((flags & (1 << 5)) != 0)
-            {
-                SubmitRegistryNumber(REGISTRY_DNS_TC_length, e_length);
+                if (is_do_flag_set) {
+                    if (dnssec_name_index == 0) {
+                        RegisterDnssecUsageByName(packet, length, 12, false);
+                    }
+                    else {
+                        RegisterDnssecUsageByName(packet, length, dnssec_name_index, true);
+                    }
+                }
             }
-        }
-        else
-        {
-            SubmitRegistryNumber(REGISTRY_DNS_Query_Size, length);
-            SubmitRegistryNumber(REGISTRY_EDNS_Packet_Size, e_length);
+            else {
+                SubmitQueryExtensions(packet, length, 12, source_addr, source_addr_length);
+            }
         }
     }
 
     SubmitRegistryNumber(REGISTRY_DNS_error_flag, error_flags);
-
-    if (has_header && opcode == DNS_OPCODE_QUERY &&
-        rcode == DNS_RCODE_NOERROR && error_flags == 0 )
-    {
-        if (is_response) {
-            is_qname_minimized = IsQNameMinimized(
-                qdcount, query_rclass, query_rtype,
-                packet, length, first_query_index, 
-                packet, length, (first_answer_index == 0)?first_ns_index: first_answer_index);
-
-            RegisterStatsByIp(dest_addr, dest_addr_length);
-
-            if (is_do_flag_set) {
-                if (dnssec_name_index == 0) {
-                    RegisterDnssecUsageByName(packet, length, 12, false);
-                }
-                else {
-                    RegisterDnssecUsageByName(packet, length, dnssec_name_index, true);
-                }
-            }
-        }
-        else {
-            SubmitQueryExtensions(packet, length, 12, source_addr, source_addr_length);
-        }
-    } 
 }
 
 void DnsStats::SubmitQueryExtensions(
@@ -2317,18 +2229,14 @@ void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_
         /* Do not perform client statistic on root traffic, but do it
         * for all other sources of traffic */
         if (is_response) {
-            /* if (!rootAddresses.IsInList(source_addr, source_addr_length)) */ {
-                is_qname_minimized = IsQNameMinimized(packet, length, qdcount, query_rclass, query_rtype,
-                    first_query_index, first_answer_index, first_ns_index);
-                RegisterStatsByIp(dest_addr, dest_addr_length);
+            RegisterStatsByIp(dest_addr, dest_addr_length);
 
-                if (is_do_flag_set) {
-                    if (dnssec_name_index == 0) {
-                        RegisterDnssecUsageByName(packet, length, 12, false);
-                    }
-                    else {
-                        RegisterDnssecUsageByName(packet, length, dnssec_name_index, true);
-                    }
+            if (is_do_flag_set) {
+                if (dnssec_name_index == 0) {
+                    RegisterDnssecUsageByName(packet, length, 12, false);
+                }
+                else {
+                    RegisterDnssecUsageByName(packet, length, dnssec_name_index, true);
                 }
             }
         }
@@ -2342,6 +2250,7 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
     uint32_t rcode = (is_response) ? q_sig->response_rcode : q_sig->query_rcode;
     uint32_t e_rcode = 0;
     uint32_t e_length = 512;
+    int first_rname_index = -1;
 
     /* assume just one query per q_sig, which is true in practice */
     SubmitQueryContent(cdns_ctx->block.tables.class_ids[q_sig->query_classtype_index].rr_type,
@@ -2367,6 +2276,9 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
                         cdns_ctx->block.tables.addresses[rr->name_index].v,
                         (uint32_t)cdns_ctx->block.tables.addresses[rr->name_index].l,
                         0, (i == 3) ? &e_rcode : NULL, (i == 3) ? &e_length : NULL, is_response);
+                    if (first_rname_index < 0 && i < 3) {
+                        first_rname_index = rr->name_index;
+                    }
                 }
             }
         }
@@ -2379,11 +2291,9 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
             NULL, 0, 0, &e_rcode, &e_length, is_response);
     }
 
-    if (1)
-    {
-        rcode |= (e_rcode << 4);
-        SubmitRegistryNumber(REGISTRY_DNS_RCODES, rcode);
-    }
+    
+    rcode |= (e_rcode << 4);
+    SubmitRegistryNumber(REGISTRY_DNS_RCODES, rcode);
 
     if ((dnsstat_flags & dnsStateFlagCountPacketSizes) != 0)
     {
@@ -2400,6 +2310,114 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
             SubmitRegistryNumber(REGISTRY_DNS_Query_Size, query->query_size);
             SubmitRegistryNumber(REGISTRY_EDNS_Packet_Size, e_length);
         }
+    }
+
+    if (is_response && first_rname_index >= 0) {
+        is_qname_minimized = IsQNameMinimized(
+            1, 
+            cdns_ctx->block.tables.class_ids[q_sig->query_classtype_index].rr_class,
+            cdns_ctx->block.tables.class_ids[q_sig->query_classtype_index].rr_type,
+            cdns_ctx->block.tables.addresses[query->query_name_index].v,
+            (uint32_t)cdns_ctx->block.tables.addresses[query->query_name_index].l, 0,
+            cdns_ctx->block.tables.addresses[first_rname_index].v,
+            (uint32_t)cdns_ctx->block.tables.addresses[first_rname_index].l, 0);
+    }
+}
+
+void DnsStats::SubmitPcapRecords(uint8_t * packet, uint32_t length, uint32_t parse_index,
+    bool is_response, bool has_header, uint32_t rcode, uint32_t flags,
+    uint32_t qdcount, uint32_t ancount, uint32_t nscount, uint32_t arcount)
+{
+    int query_rclass = 0;
+    int query_rtype = 0;
+    uint32_t e_rcode = 0;
+    uint32_t e_length = 512;
+    uint32_t first_query_index = 0;
+    uint32_t first_answer_index = 0;
+    uint32_t first_ns_index = 0;
+
+    first_query_index = parse_index;
+
+    for (uint32_t i = 0; i < qdcount; i++)
+    {
+        if (parse_index >= length)
+        {
+            error_flags |= DNS_REGISTRY_ERROR_FORMAT;
+        }
+        else
+        {
+            parse_index = SubmitQuery(packet, length, parse_index, is_response, &query_rclass, &query_rtype);
+        }
+    }
+
+    first_answer_index = parse_index;
+
+    for (uint32_t i = 0; i < ancount; i++)
+    {
+        if (parse_index >= length)
+        {
+            error_flags |= DNS_REGISTRY_ERROR_FORMAT;
+        }
+        else
+        {
+            parse_index = SubmitRecord(packet, length, parse_index, NULL, NULL, is_response);
+        }
+    }
+
+    first_ns_index = parse_index;
+
+    for (uint32_t i = 0; i < nscount; i++)
+    {
+        if (parse_index >= length)
+        {
+            error_flags |= DNS_REGISTRY_ERROR_FORMAT;
+        }
+        else
+        {
+            parse_index = SubmitRecord(packet, length, parse_index, NULL, NULL, is_response);
+        }
+    }
+
+    for (uint32_t i = 0; i < arcount; i++)
+    {
+        if (parse_index >= length)
+        {
+            error_flags |= DNS_REGISTRY_ERROR_FORMAT;
+        }
+        else
+        {
+            parse_index = SubmitRecord(packet, length, parse_index, &e_rcode, &e_length, is_response);
+        }
+    }
+
+    if (has_header)
+    {
+        rcode |= (e_rcode << 4);
+        SubmitRegistryNumber(REGISTRY_DNS_RCODES, rcode);
+    }
+
+    if (has_header && (dnsstat_flags & dnsStateFlagCountPacketSizes) != 0)
+    {
+        if (is_response)
+        {
+            SubmitRegistryNumber(REGISTRY_DNS_Response_Size, length);
+            if ((flags & (1 << 5)) != 0)
+            {
+                SubmitRegistryNumber(REGISTRY_DNS_TC_length, e_length);
+            }
+        }
+        else
+        {
+            SubmitRegistryNumber(REGISTRY_DNS_Query_Size, length);
+            SubmitRegistryNumber(REGISTRY_EDNS_Packet_Size, e_length);
+        }
+    }
+
+    if (has_header && is_response) {
+        is_qname_minimized = IsQNameMinimized(
+            qdcount, query_rclass, query_rtype,
+            packet, length, first_query_index,
+            packet, length, (first_answer_index == 0) ? first_ns_index : first_answer_index);
     }
 }
 
