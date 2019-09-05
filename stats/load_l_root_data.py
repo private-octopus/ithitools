@@ -7,6 +7,7 @@ import codecs
 import sys
 import m3name
 import captures
+import m3summary
 import os
 from os.path import isfile, join
 
@@ -20,30 +21,10 @@ def ithiwalk(file_list, path):
             ithiwalk(file_list, y)
 
 def load_m3(file_name, sum_m3):
-    m3n = m3name.m3name()
-    if m3n.parse_file_id(file_name) != 0:
+    m3sl = m3summary.m3summary_line()
+    if m3sl.load_m3(file_name) != 0:
         return -1
-    capture = captures.capture_file()
-    if capture.load(file_name) != 0:
-        return -1
-    c0 = capture.find("root-QR", 0, 0, "")
-    c1 = capture.find("root-QR", 0, 3, "")
-    nb_queries = c0 + c1
-    c_tld_home = capture.find("LeakedTLD", 1, 0, "HOME")
-    c_tld_corp = capture.find("LeakedTLD", 1, 0, "CORP") 
-    c_tld_mail = capture.find("LeakedTLD", 1, 0, "MAIL")
-    sum_m3.write(
-        m3n.address_id + "," +
-        m3n.country_code + "," +
-        m3n.city_code + "," +
-        m3n.m3_date + "," + 
-        m3n.m3_hour + "," + 
-        str(m3n.duration) + "," 
-        + str(nb_queries) + "," + 
-        str(c1) + "," +
-        str(c_tld_home) + "," + 
-        str(c_tld_corp) + "," +
-        str(c_tld_mail) +  "\n")
+    sum_m3.write(m3sl.to_string() +  "\n")
     return 0
 
 # By default, we expect to test with the file "data/tiny_capture.csv, which has 589 lines.
@@ -53,14 +34,7 @@ name_sum_f3 = "sum_f3.csv"
 if len(sys.argv) >= 3:
     name_sum_f3 = sys.argv[2]
 sum_m3 = codecs.open(name_sum_f3, "w", "UTF-8")
-sum_m3.write("address_id" + "," +
-                 "CC" + "," + "City" + "," + 
-                 "Date" + "," + "Hour" + "," +
-                 "Duration" + "," + "nb_queries" + "," + 
-                 "Nb NX Domain" + "," + 
-                 "Nb .Home" + "," + 
-                 "Nb .Corp" + "," + 
-                 "Nb .Mail" + "," + "\n")
+sum_m3.write(m3summary.summary_title_line() + "\n")
 
 file_list = []
 ithiwalk(file_list,mypath)
@@ -69,6 +43,8 @@ for file in file_list:
     # If this is an M3 capture file, add it.
     if load_m3(file, sum_m3) == 0:
         nb_loaded += 1
+        if (nb_loaded%1000) == 0:
+            print(str(nb_loaded))
 sum_m3.close()
 
 print("Found " + str(len(file_list)) + " files, loaded " + str(nb_loaded) + " summaries.")
