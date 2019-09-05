@@ -365,13 +365,12 @@ public:
 
     void SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header,
         my_bpftimeval ts);
-#if 0
+
     void SubmitCborPacket(cdns* cdns_ctx, size_t packet_id);
     void SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig);
     void SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* r_sig);
-    void SubmitCborPacketCommon(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig,
-        bool is_response);
-#endif
+
+    /* Parallel construction for parsing CBOR and PCAP records. */
     void SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig,
         cdns_qr_extended* ext, bool is_response);
     void SubmitPcapRecords(uint8_t* packet, uint32_t length, uint32_t parse_index,

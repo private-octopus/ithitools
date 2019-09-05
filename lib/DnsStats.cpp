@@ -1941,7 +1941,6 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     }
     volume_53only += length;
 
-
     error_flags = 0;
     is_do_flag_set = false;
     is_using_edns = false;
@@ -2068,28 +2067,10 @@ void DnsStats::SubmitQueryExtensions(
         }
     }
 }
-#if 0
+
 void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
 {
-    bool is_response = false;
-
-    bool has_header = true;
-    uint32_t flags = 0;
-    uint32_t opcode = 0;
-    uint32_t rcode = 0;
-    uint32_t e_rcode = 0;
-    uint32_t qdcount = 0;
-    uint32_t ancount = 0;
-    uint32_t nscount = 0;
-    uint32_t arcount = 0;
-    uint32_t parse_index = 0;
-    uint32_t e_length = 512;
     bool unfiltered = false;
-    int query_rclass = 0;
-    int query_rtype = 0;
-    uint32_t first_query_index = 0;
-    uint32_t first_answer_index = 0;
-    uint32_t first_ns_index = 0;
     cdns_query* query = &cdns_ctx->block.queries[packet_id];
     cdns_query_signature* q_sig = &cdns_ctx->block.tables.q_sigs[query->query_signature_index];
     cdns_query_signature* r_sig = &cdns_ctx->block.tables.q_sigs[query->query_signature_index];
@@ -2106,15 +2087,6 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
     volume_53only += query->query_size;
     volume_53only += query->response_size;
 
-
-    error_flags = 0;
-    is_do_flag_set = false;
-    is_using_edns = false;
-    edns_options = NULL;
-    edns_options_length = 0;
-    is_qname_minimized = false;
-    dnssec_name_index = 0;
-
     if (rootAddresses.GetCount() == 0)
     {
         rootAddresses.SetList(DefaultRootAddresses, sizeof(DefaultRootAddresses) / sizeof(char const*));
@@ -2125,124 +2097,98 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
 
     if (unfiltered)
     {
-        if (query->response_size > 0)
-        {
-            response_count++;
-        }
-
         if (query->query_size > 0)
         {
             query_count++;
+            SubmitCborPacketQuery(cdns_ctx, query, q_sig);
         }
-    }
-}
 
-void DnsStats::SubmitCborPacketCommon(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig,
-    bool is_response)
-{
-    uint32_t flags = q_sig->qr_dns_flags;
-
-    SubmitRegistryNumber(REGISTRY_DNS_OpCodes, q_sig->query_opcode);
-
-    for (uint32_t i = 0; i < 7; i++)
-    {
-        if ((flags & (1 << i)) != 0)
+        if (query->response_size > 0)
         {
-            SubmitRegistryNumber(REGISTRY_DNS_Header_Flags, i);
+            response_count++;
+            SubmitCborPacketResponse(cdns_ctx, query, r_sig);
         }
     }
-
-
-
 }
   
 void DnsStats::SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig)
 {
-    SubmitCborPacketCommon(cdns_ctx, query, q_sig);
+    error_flags = 0;
+    is_do_flag_set = false;
+    is_using_edns = false;
+    edns_options = NULL;
+    edns_options_length = 0;
+    is_qname_minimized = false;
+    dnssec_name_index = 0;
 
-    if (has_header && opcode == DNS_OPCODE_QUERY &&
-        rcode == DNS_RCODE_NOERROR && error_flags == 0)
+    SubmitOpcodeAndFlags(q_sig->query_opcode, q_sig->qr_dns_flags);
+
+    SubmitCborRecords(cdns_ctx, query, q_sig, &query->q_extended, false);
+
+    /* Check that all work is done here.. */
+    if (q_sig->query_opcode == DNS_OPCODE_QUERY &&
+        q_sig->query_rcode == DNS_RCODE_NOERROR &&
+        error_flags == 0)
     {
-        uint32_t tld_offset = 0;
-        int nb_name_parts = 0;
-        uint32_t previous_offset = 0;
-        bool gotTld = GetTLD(packet, length, 12, &tld_offset, &previous_offset, &nb_name_parts);
-
-        if (gotTld)
-        {
-            bool is_binary = false;
-            bool is_bad_syntax = false;
-            bool is_numeric = false;
-
-            /* Verify that the TLD is valid, so as to exclude random traffic that would drown the stats */
-            TldCheck(packet + tld_offset + 1, packet[tld_offset], &is_binary, &is_bad_syntax, &is_numeric);
-
-            if (!is_binary && !is_bad_syntax) {
-                SetToUpperCase(packet + tld_offset + 1, packet[tld_offset]);
-                TldAsKey key(packet + tld_offset + 1, packet[tld_offset]);
-
-                if (registeredTld.GetCount() == 0)
-                {
-                    LoadRegisteredTLD_from_memory();
-                }
-
-                if (registeredTld.Retrieve(&key) != NULL)
-                {
-                    /* This is a registered TLD
-                     * Use the list of source addresses as a filter to
-                     * check the incoming EDNS options */
-                    RegisterOptionsByIp(source_addr, source_addr_length);
-                }
-            }
-        }
+        /* This works because parsing of OPT records sets the proper values for OPT fields */
+        SubmitQueryExtensions(cdns_ctx->block.tables.addresses[query->query_name_index].v, 
+            (uint32_t)cdns_ctx->block.tables.addresses[query->query_name_index].l, 0, 
+            cdns_ctx->block.tables.addresses[query->client_address_index].v,
+            cdns_ctx->block.tables.addresses[query->client_address_index].l);
     }
 }
 
 void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* r_sig)
 {
     uint32_t rcode = r_sig->response_rcode;
-
-    uint32_t server_addr_length = cdns_ctx->block.tables.addresses[r_sig->server_address_index].l;
+    uint32_t server_addr_length = (uint32_t)cdns_ctx->block.tables.addresses[r_sig->server_address_index].l;
     uint8_t* server_addr = cdns_ctx->block.tables.addresses[r_sig->server_address_index].v;
-    uint32_t dest_addr_length = cdns_ctx->block.tables.addresses[query->client_address_index].l;
-    uint8_t* dest_addr = cdns_ctx->block.tables.addresses[query->client_address_index].v;
+    uint32_t client_addr_length = (uint32_t)cdns_ctx->block.tables.addresses[query->client_address_index].l;
+    uint8_t* client_addr = cdns_ctx->block.tables.addresses[query->client_address_index].v;
     uint8_t* q_name = cdns_ctx->block.tables.addresses[query->query_name_index].v;
     uint32_t q_name_length = (uint32_t)cdns_ctx->block.tables.addresses[query->query_name_index].l;
     my_bpftimeval ts;
+    int r_delay = query->delay_useconds + query->time_offset_usec;
 
+    ts.tv_sec = r_delay / 1000000;
+    ts.tv_usec = r_delay % 1000000;
 
-    ts.tv_sec = query->delay_useconds / 1000000;
-    ts.tv_usec = query->delay_useconds % 1000000;
+    error_flags = 0;
+    is_do_flag_set = false;
+    is_using_edns = false;
+    edns_options = NULL;
+    edns_options_length = 0;
+    is_qname_minimized = false;
+    dnssec_name_index = 0;
 
-
-    SubmitCborPacketCommon(cdns_ctx, query, r_sig);
+    SubmitOpcodeAndFlags(r_sig->query_opcode, r_sig->qr_dns_flags);
 
     if (r_sig->query_opcode == DNS_OPCODE_QUERY)
     {
-        NameLeaksAnalysis(server_addr, server_addr_length, dest_addr, dest_addr_length,
+        NameLeaksAnalysis(server_addr, server_addr_length, client_addr, client_addr_length,
             r_sig->response_rcode, q_name, q_name_length, 0, ts, (r_sig->query_an_count > 0 || r_sig->query_ns_count > 0));
     }
 
-    if (has_header && opcode == DNS_OPCODE_QUERY &&
+    SubmitCborRecords(cdns_ctx, query, r_sig, &query->r_extended, true);
+
+    if (r_sig->query_opcode == DNS_OPCODE_QUERY &&
         rcode == DNS_RCODE_NOERROR && error_flags == 0)
     {
-        /* Do not perform client statistic on root traffic, but do it
-        * for all other sources of traffic */
-        if (is_response) {
-            RegisterStatsByIp(dest_addr, dest_addr_length);
+        RegisterStatsByIp(client_addr, client_addr_length);
 
-            if (is_do_flag_set) {
-                if (dnssec_name_index == 0) {
-                    RegisterDnssecUsageByName(packet, length, 12, false);
-                }
-                else {
-                    RegisterDnssecUsageByName(packet, length, dnssec_name_index, true);
-                }
+        if (is_do_flag_set) {
+            if (dnssec_name_index == 0) {
+                RegisterDnssecUsageByName(q_name, q_name_length, 0, false);
+            }
+            else {
+                /* TODO: verify that this the proper name */
+                RegisterDnssecUsageByName(q_name, q_name_length, 0, true);
             }
         }
     }
+
+    SubmitRegistryNumber(REGISTRY_DNS_error_flag, error_flags);
 }
-#endif
 
 void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig,
     cdns_qr_extended * ext, bool is_response)
