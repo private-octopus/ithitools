@@ -351,12 +351,15 @@ public:
         uint8_t * name, size_t name_max, size_t * name_length);
 
     static int CompareDnsName(uint8_t * packet, uint32_t length, uint32_t start1, uint32_t start2);
+    static int Compare2DnsNames(uint8_t* packet1, uint32_t length1, uint32_t start1, 
+        uint8_t* packet2, uint32_t length2, uint32_t start2);
 
     static bool IsIpv4Name(const uint8_t * name, size_t name_length);
     static bool IsIpv4Tld(uint8_t * packet, uint32_t length, uint32_t start);
 
-    static bool IsQNameMinimized(uint8_t * packet, uint32_t length, uint32_t nb_queries, int q_rclass, int q_rtype, uint32_t qr_index, uint32_t an_index, uint32_t ns_index);
-
+    static bool IsQNameMinimized(uint32_t nb_queries, int q_rclass, int q_rtype,
+        uint8_t* packet1, uint32_t length1, uint32_t qr_name_offset,
+        uint8_t* packet2, uint32_t length2, uint32_t rr_name_offset);
     static void GetSourceAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
     static void GetDestAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
 
@@ -366,20 +369,13 @@ public:
     void SubmitCborPacket(cdns* cdns_ctx, size_t packet_id);
     void SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig);
     void SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* r_sig);
-    void SubmitCborPacketCommon(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig);
+    void SubmitCborPacketCommon(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig,
+        bool is_response);
 #endif
-    void NameLeaksAnalysis(
-        uint8_t* server_addr,
-        size_t server_addr_length,
-        uint8_t* client_addr,
-        size_t client_addr_length,
-        int rcode,
-        uint8_t* packet,
-        uint32_t packet_length,
-        uint32_t name_offset,
-        my_bpftimeval ts,
-        bool is_not_empty_response
-    );
+    void SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig,
+        cdns_qr_extended* ext, bool is_response);
+
+
     static bool GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t *offset, uint32_t * previous_offset, int * nb_name_parts);
 
     static int64_t DeltaUsec(long tv_sec, long tv_usec, long tv_sec_start, long tv_usec_start);
@@ -387,8 +383,20 @@ private:
     bool LoadPcapFile(char const * fileName);
 
     int SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start, bool is_response, int * qclass, int * qtype);
+    void SubmitQueryContent(int rrtype, int rrclass,
+        uint8_t* packet, uint32_t packet_length, uint32_t name_offset);
+    void SubmitQueryExtensions(
+        uint8_t* packet, uint32_t length, uint32_t name_offset,
+        uint8_t* client_addr, size_t client_addr_length);
+
     int SubmitRecord(uint8_t * packet, uint32_t length, uint32_t start, 
         uint32_t * e_rcode, uint32_t * e_length, bool is_response);
+    void SubmitRecordContent(int rrtype, int rrclass, int ttl, int ldata,
+        uint8_t* data, uint8_t* packet, uint32_t packet_length, uint32_t name_offset,
+        uint32_t* e_rcode, uint32_t* e_length, bool is_response);
+
+    void SubmitOpcodeAndFlags(uint32_t opcode, uint32_t flags);
+
     int SubmitName(uint8_t * packet, uint32_t length, uint32_t start, bool should_tabulate);
 
     void SubmitOPTRecord(uint32_t flags, uint8_t * content, uint32_t length, uint32_t * e_rcode);
@@ -401,6 +409,21 @@ private:
     void SubmitRegistryNumber(uint32_t registry_id, uint32_t number);
     void SubmitRegistryStringAndCount(uint32_t registry_id, uint32_t length, uint8_t * value, uint64_t count);
     void SubmitRegistryString(uint32_t registry_id, uint32_t length, uint8_t * value);
+
+    void NameLeaksAnalysis(
+        uint8_t* server_addr,
+        size_t server_addr_length,
+        uint8_t* client_addr,
+        size_t client_addr_length,
+        int rcode,
+        uint8_t* packet,
+        uint32_t packet_length,
+        uint32_t name_offset,
+        my_bpftimeval ts,
+        bool is_not_empty_response
+    );
+
+
 
     int CheckForUnderline(uint8_t * packet, uint32_t length, uint32_t start);
 

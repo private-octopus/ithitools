@@ -493,20 +493,7 @@ int DnsStats::SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start, boo
         *qclass = rrclass;
         *qtype = rrtype;
 
-        if (dnsstat_flags&dnsStateFlagCountQueryParms)
-        {
-            SubmitRegistryNumber(REGISTRY_DNS_Q_CLASSES, rrclass);
-            SubmitRegistryNumber(REGISTRY_DNS_Q_RRType, rrtype);
-        }
-
-        if (dnsstat_flags&dnsStateFlagCountUnderlinedNames)
-        {
-            if (rrtype == DnsRtype_TXT)
-            {
-                SubmitRegistryString(REGISTRY_DNS_txt_underline, 3, (uint8_t *) "TXT");
-                CheckForUnderline(packet, length, name_start);
-            }
-        }
+        SubmitQueryContent(rrtype, rrclass, packet, length, name_start);
     }
     else
     {
@@ -517,8 +504,27 @@ int DnsStats::SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start, boo
     return start;
 }
 
-int DnsStats::SubmitRecord(uint8_t * packet, uint32_t length, uint32_t start, 
-    uint32_t * e_rcode, uint32_t * e_length, bool is_response)
+void DnsStats::SubmitQueryContent(int rrtype, int rrclass, 
+    uint8_t* packet, uint32_t packet_length, uint32_t name_offset)
+{
+    if (dnsstat_flags & dnsStateFlagCountQueryParms)
+    {
+        SubmitRegistryNumber(REGISTRY_DNS_Q_CLASSES, rrclass);
+        SubmitRegistryNumber(REGISTRY_DNS_Q_RRType, rrtype);
+    }
+
+    if (dnsstat_flags & dnsStateFlagCountUnderlinedNames)
+    {
+        if (rrtype == DnsRtype_TXT)
+        {
+            SubmitRegistryString(REGISTRY_DNS_txt_underline, 3, (uint8_t*) "TXT");
+            CheckForUnderline(packet, packet_length, name_offset);
+        }
+    }
+}
+
+int DnsStats::SubmitRecord(uint8_t* packet, uint32_t length, uint32_t start,
+    uint32_t* e_rcode, uint32_t* e_length, bool is_response)
 {
     int rrtype = 0;
     int rrclass = 0;
@@ -551,78 +557,98 @@ int DnsStats::SubmitRecord(uint8_t * packet, uint32_t length, uint32_t start,
         }
         else
         {
-            if (ldata > 0 || rrtype == DnsRtype_OPT)
-            {
-                /* only record rrtypes and rrclass if valid response */
-                if (rrtype != DnsRtype_OPT)
-                {
-                    if (is_response)
-                    {
-                        SubmitRegistryNumber(REGISTRY_DNS_CLASSES, rrclass);
-                    }
-                    else if (dnsstat_flags&dnsStateFlagCountQueryParms)
-                    {
-                        SubmitRegistryNumber(REGISTRY_DNS_Q_CLASSES, rrclass);
-                    }
-                }
-                else
-                {
-                    /* document the extended length */
-                    if (e_length != NULL)
-                    {
-                        *e_length = rrclass;
-                    }
-                }
-
-                if (is_response)
-                {
-                    SubmitRegistryNumber(REGISTRY_DNS_RRType, rrtype);
-                }
-                else if (dnsstat_flags&dnsStateFlagCountQueryParms)
-                {
-                    SubmitRegistryNumber(REGISTRY_DNS_Q_RRType, rrtype);
-                }
-
-                /* For records of type RRSIG, NSEC, NSEC3, DNSKEY, DS,
-                 * mark the domain as supporting DNSSEC */
-                if (dnssec_name_index == 0 && (
-                    rrtype == DnsRtype_DNSKEY ||
-                    rrtype == DnsRtype_RRSIG ||
-                    rrtype == DnsRtype_NSEC ||
-                    rrtype == DnsRtype_NSEC3 || 
-                    rrtype == DnsRtype_DS)) {
-                    dnssec_name_index = name_start;
-                }
-             
-                /* Further parsing for OPT, DNSKEY, RRSIG, DS,
-                 * and maybe also AFSDB, NSEC3, DHCID, RSYNC types */
-                switch (rrtype)
-                {
-                case (int)DnsRtype_OPT:
-                    SubmitOPTRecord(ttl, &packet[start + 10], ldata, e_rcode);
-                    break;
-                case (int)DnsRtype_DNSKEY:
-                    SubmitKeyRecord(&packet[start + 10], ldata);
-                    break;
-                case (int)DnsRtype_RRSIG:
-                    SubmitRRSIGRecord(&packet[start + 10], ldata);
-                    break;
-                case (int)DnsRtype_DS:
-                    SubmitDSRecord(&packet[start + 10], ldata);
-                    break;
-                case (int)DnsRtype_TLSA:
-                    SubmitTLSARecord(&packet[start + 10], ldata);
-                    break;
-                default:
-                    break;
-                }
-            }
-
+            SubmitRecordContent(rrtype, rrclass, ttl, ldata, packet + start + 10,
+                packet, length, name_start, e_rcode, e_length, is_response);
             start += ldata + 10;
         }
     }
 
     return start;
+}
+
+void DnsStats::SubmitRecordContent(int rrtype, int rrclass, int ttl, int ldata,
+    uint8_t * data, uint8_t* packet, uint32_t packet_length, uint32_t name_offset,
+    uint32_t* e_rcode, uint32_t* e_length, bool is_response)
+{
+    if (ldata > 0 || rrtype == DnsRtype_OPT)
+    {
+        /* only record rrtypes and rrclass if valid response */
+        if (rrtype != DnsRtype_OPT)
+        {
+            if (is_response)
+            {
+                SubmitRegistryNumber(REGISTRY_DNS_CLASSES, rrclass);
+            }
+            else if (dnsstat_flags & dnsStateFlagCountQueryParms)
+            {
+                SubmitRegistryNumber(REGISTRY_DNS_Q_CLASSES, rrclass);
+            }
+        }
+        else
+        {
+            /* document the extended length */
+            if (e_length != NULL)
+            {
+                *e_length = rrclass;
+            }
+        }
+
+        if (is_response)
+        {
+            SubmitRegistryNumber(REGISTRY_DNS_RRType, rrtype);
+        }
+        else if (dnsstat_flags & dnsStateFlagCountQueryParms)
+        {
+            SubmitRegistryNumber(REGISTRY_DNS_Q_RRType, rrtype);
+        }
+
+        /* For records of type RRSIG, NSEC, NSEC3, DNSKEY, DS,
+         * mark the domain as supporting DNSSEC */
+        if (dnssec_name_index == 0 && (
+            rrtype == DnsRtype_DNSKEY ||
+            rrtype == DnsRtype_RRSIG ||
+            rrtype == DnsRtype_NSEC ||
+            rrtype == DnsRtype_NSEC3 ||
+            rrtype == DnsRtype_DS)) {
+            dnssec_name_index = name_offset;
+        }
+
+        /* Further parsing for OPT, DNSKEY, RRSIG, DS,
+         * and maybe also AFSDB, NSEC3, DHCID, RSYNC types */
+        switch (rrtype)
+        {
+        case (int)DnsRtype_OPT:
+            SubmitOPTRecord(ttl, data, ldata, e_rcode);
+            break;
+        case (int)DnsRtype_DNSKEY:
+            SubmitKeyRecord(data, ldata);
+            break;
+        case (int)DnsRtype_RRSIG:
+            SubmitRRSIGRecord(data, ldata);
+            break;
+        case (int)DnsRtype_DS:
+            SubmitDSRecord(data, ldata);
+            break;
+        case (int)DnsRtype_TLSA:
+            SubmitTLSARecord(data, ldata);
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+void DnsStats::SubmitOpcodeAndFlags(uint32_t opcode, uint32_t flags)
+{
+    SubmitRegistryNumber(REGISTRY_DNS_OpCodes, opcode);
+
+    for (uint32_t i = 0; i < 7; i++)
+    {
+        if ((flags & (1 << i)) != 0)
+        {
+            SubmitRegistryNumber(REGISTRY_DNS_Header_Flags, i);
+        }
+    }
 }
 
 int DnsStats::SubmitName(uint8_t * packet, uint32_t length, uint32_t start, bool should_tabulate)
@@ -1106,32 +1132,38 @@ int DnsStats::GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
 
 int DnsStats::CompareDnsName(uint8_t * packet, uint32_t length, uint32_t start1, uint32_t start2)
 {
+    return Compare2DnsNames(packet, length, start1, packet, length, start2);
+}
+
+int DnsStats::Compare2DnsNames(uint8_t* packet1, uint32_t length1, uint32_t start1, uint8_t* packet2, uint32_t length2, uint32_t start2)
+
+{
     bool ret = false;
 
-    while (start1 < length && start2 < length) {
+    while (start1 < length1 && start2 < length2) {
         if (start1 == start2) {
             ret = true;
             break;
         } 
-        else if ((packet[start1] & 0xC0) == 0xC0)
+        else if ((packet1[start1] & 0xC0) == 0xC0)
         {
-            start1 = ((packet[start1] & 63) << 8) + packet[start1 + 1];
+            start1 = ((packet1[start1] & 63) << 8) + packet1[start1 + 1];
         }
-        else if ((packet[start2] & 0xC0) == 0xC0)
+        else if ((packet2[start2] & 0xC0) == 0xC0)
         {
-            start2 = ((packet[start2] & 63) << 8) + packet[start2 + 1];
+            start2 = ((packet2[start2] & 63) << 8) + packet2[start2 + 1];
         }
-        else if (packet[start1] > 0x3f || packet[start2] > 0x3f)
+        else if (packet1[start1] > 0x3f || packet2[start2] > 0x3f)
         {
             break;
         }
-        else if (packet[start1] != packet[start2])
+        else if (packet1[start1] != packet2[start2])
         {
             break;
         }
         else
         {
-            uint32_t l = packet[start1];
+            uint32_t l = packet1[start1];
             start1++;
             start2++;
 
@@ -1140,7 +1172,7 @@ int DnsStats::CompareDnsName(uint8_t * packet, uint32_t length, uint32_t start1,
                 ret = true;
                 break;
             }
-            else if (start1 + l > length || start2 + l >= length)
+            else if (start1 + l > length1 || start2 + l >= length2)
             {
                 break;
             }
@@ -1148,8 +1180,8 @@ int DnsStats::CompareDnsName(uint8_t * packet, uint32_t length, uint32_t start1,
             {
                 bool cmp = true;
                 for (uint32_t i = 0; cmp && i < l; i++) {
-                    uint8_t c1 = packet[start1 + i];
-                    uint8_t c2 = packet[start2 + i];
+                    uint8_t c1 = packet1[start1 + i];
+                    uint8_t c2 = packet1[start2 + i];
 
                     cmp = (c1 == c2 || (c1 >= 'a' && c1 <= 'z' && (c1 + 'A' - 'a') == c2) || (c1 >= 'A' && c1 <= 'Z' && (c1 + 'a' - 'A') == c2));
                 }
@@ -1226,14 +1258,16 @@ bool DnsStats::IsIpv4Tld(uint8_t * packet, uint32_t length, uint32_t start)
 * if the name in the first response or NS record is identical to the name in the query
 */
 
-bool DnsStats::IsQNameMinimized(uint8_t * packet, uint32_t length, uint32_t nb_queries, int q_rclass, int q_rtype, uint32_t qr_index, uint32_t an_index, uint32_t ns_index)
+bool DnsStats::IsQNameMinimized(
+    uint32_t nb_queries, int q_rclass, int q_rtype,
+    uint8_t * packet1, uint32_t length1, uint32_t qr_name_offset,
+    uint8_t* packet2, uint32_t length2, uint32_t rr_name_offset)
 {
     bool ret = false;
-    uint32_t first_index = (an_index == 0) ? ns_index : an_index;
 
-    if (nb_queries == 1 && qr_index != 0 && first_index != 0 && q_rclass == DnsRClass_IN &&
+    if (nb_queries == 1 && q_rclass == DnsRClass_IN &&
         (q_rtype == DnsRtype_A || q_rtype == DnsRtype_NS)) {
-        ret = CompareDnsName(packet, length, qr_index, first_index);
+        ret = Compare2DnsNames(packet1, length1, qr_name_offset, packet2, length2, rr_name_offset);
     }
 
     return ret;
@@ -1967,7 +2001,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
         nscount = (packet[8] << 8) | packet[9];
         arcount = (packet[10] << 8) | packet[11];
 
-        SubmitRegistryNumber(REGISTRY_DNS_OpCodes, opcode);
+        SubmitOpcodeAndFlags(opcode, flags);
 
         if (is_response && opcode == DNS_OPCODE_QUERY) {
 
@@ -1975,13 +2009,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                 rcode, packet, length, 12, ts, ancount > 0 || nscount > 0);
         }
 
-        for (uint32_t i = 0; i < 7; i++)
-        {
-            if ((flags & (1 << i)) != 0)
-            {
-                SubmitRegistryNumber(REGISTRY_DNS_Header_Flags, i);
-            }
-        }
+        
 
         parse_index = 12;
     }
@@ -2068,58 +2096,65 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     if (has_header && opcode == DNS_OPCODE_QUERY &&
         rcode == DNS_RCODE_NOERROR && error_flags == 0 )
     {
-        /* Do not perform client statistic on root traffic, but do it
-        * for all other sources of traffic */
         if (is_response) {
-            /* if (!rootAddresses.IsInList(source_addr, source_addr_length)) */ {
-                is_qname_minimized = IsQNameMinimized(packet, length, qdcount, query_rclass, query_rtype,
-                    first_query_index, first_answer_index, first_ns_index);
-                RegisterStatsByIp(dest_addr, dest_addr_length);
+            is_qname_minimized = IsQNameMinimized(
+                qdcount, query_rclass, query_rtype,
+                packet, length, first_query_index, 
+                packet, length, (first_answer_index == 0)?first_ns_index: first_answer_index);
 
-                if (is_do_flag_set) {
-                    if (dnssec_name_index == 0) {
-                        RegisterDnssecUsageByName(packet, length, 12, false);
-                    }
-                    else {
-                        RegisterDnssecUsageByName(packet, length, dnssec_name_index, true);
-                    }
+            RegisterStatsByIp(dest_addr, dest_addr_length);
+
+            if (is_do_flag_set) {
+                if (dnssec_name_index == 0) {
+                    RegisterDnssecUsageByName(packet, length, 12, false);
                 }
-            }
-        } else {
-            uint32_t tld_offset = 0;
-            int nb_name_parts = 0;
-            uint32_t previous_offset = 0;
-            bool gotTld = GetTLD(packet, length, 12, &tld_offset, &previous_offset, &nb_name_parts);
-
-            if (gotTld)
-            {
-                bool is_binary = false;
-                bool is_bad_syntax = false;
-                bool is_numeric = false;
-
-                /* Verify that the TLD is valid, so as to exclude random traffic that would drown the stats */
-                TldCheck(packet + tld_offset + 1, packet[tld_offset], &is_binary, &is_bad_syntax, &is_numeric);
-
-                if (!is_binary && !is_bad_syntax) {
-                    SetToUpperCase(packet + tld_offset + 1, packet[tld_offset]);
-                    TldAsKey key(packet + tld_offset + 1, packet[tld_offset]);
-
-                    if (registeredTld.GetCount() == 0)
-                    {
-                        LoadRegisteredTLD_from_memory();
-                    }
-
-                    if (registeredTld.Retrieve(&key) != NULL)
-                    {
-                        /* This is a registered TLD
-                         * Use the list of source addresses as a filter to
-                         * check the incoming EDNS options */
-                        RegisterOptionsByIp(source_addr, source_addr_length);
-                    }
+                else {
+                    RegisterDnssecUsageByName(packet, length, dnssec_name_index, true);
                 }
             }
         }
+        else {
+            SubmitQueryExtensions(packet, length, 12, source_addr, source_addr_length);
+        }
     } 
+}
+
+void DnsStats::SubmitQueryExtensions(
+    uint8_t* packet, uint32_t length, uint32_t name_offset,
+    uint8_t* client_addr, size_t client_addr_length)
+{
+    uint32_t tld_offset = 0;
+    int nb_name_parts = 0;
+    uint32_t previous_offset = 0;
+    bool gotTld = GetTLD(packet, length, name_offset, &tld_offset, &previous_offset, &nb_name_parts);
+
+    if (gotTld)
+    {
+        bool is_binary = false;
+        bool is_bad_syntax = false;
+        bool is_numeric = false;
+
+        /* Verify that the TLD is valid, so as to exclude random traffic that would drown the stats */
+        TldCheck(packet + tld_offset + 1, packet[tld_offset], &is_binary, &is_bad_syntax, &is_numeric);
+
+        if (!is_binary && !is_bad_syntax) {
+            SetToUpperCase(packet + tld_offset + 1, packet[tld_offset]);
+            TldAsKey key(packet + tld_offset + 1, packet[tld_offset]);
+
+            if (registeredTld.GetCount() == 0)
+            {
+                LoadRegisteredTLD_from_memory();
+            }
+
+            if (registeredTld.Retrieve(&key) != NULL)
+            {
+                /* This is a registered TLD
+                 * Use the list of source addresses as a filter to
+                 * check the incoming EDNS options */
+                RegisterOptionsByIp(client_addr, client_addr_length);
+            }
+        }
+    }
 }
 #if 0
 void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
@@ -2190,7 +2225,8 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
     }
 }
 
-void DnsStats::SubmitCborPacketCommon(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig)
+void DnsStats::SubmitCborPacketCommon(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig,
+    bool is_response)
 {
     uint32_t flags = q_sig->qr_dns_flags;
 
@@ -2204,68 +2240,8 @@ void DnsStats::SubmitCborPacketCommon(cdns* cdns_ctx, cdns_query* query, cdns_qu
         }
     }
 
-    for (uint32_t i = 0; i < ancount; i++)
-    {
-        if (parse_index >= length)
-        {
-            error_flags |= DNS_REGISTRY_ERROR_FORMAT;
-        }
-        else
-        {
-            parse_index = SubmitRecord(packet, length, parse_index, NULL, NULL, is_response);
-        }
-    }
 
-    first_ns_index = parse_index;
 
-    for (uint32_t i = 0; i < nscount; i++)
-    {
-        if (parse_index >= length)
-        {
-            error_flags |= DNS_REGISTRY_ERROR_FORMAT;
-        }
-        else
-        {
-            parse_index = SubmitRecord(packet, length, parse_index, NULL, NULL, is_response);
-        }
-    }
-
-    for (uint32_t i = 0; i < arcount; i++)
-    {
-        if (parse_index >= length)
-        {
-            error_flags |= DNS_REGISTRY_ERROR_FORMAT;
-        }
-        else
-        {
-            parse_index = SubmitRecord(packet, length, parse_index, &e_rcode, &e_length, is_response);
-        }
-    }
-
-    if (has_header)
-    {
-        rcode |= (e_rcode << 4);
-        SubmitRegistryNumber(REGISTRY_DNS_RCODES, rcode);
-    }
-
-    if (has_header && (dnsstat_flags & dnsStateFlagCountPacketSizes) != 0)
-    {
-        if (is_response)
-        {
-            SubmitRegistryNumber(REGISTRY_DNS_Response_Size, length);
-            if ((flags & (1 << 5)) != 0)
-            {
-                SubmitRegistryNumber(REGISTRY_DNS_TC_length, e_length);
-            }
-        }
-        else
-        {
-            SubmitRegistryNumber(REGISTRY_DNS_Query_Size, length);
-            SubmitRegistryNumber(REGISTRY_EDNS_Packet_Size, e_length);
-        }
-    }
-
-    SubmitRegistryNumber(REGISTRY_DNS_error_flag, error_flags);
 }
   
 void DnsStats::SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig)
@@ -2356,43 +2332,76 @@ void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_
                 }
             }
         }
-        else {
-            uint32_t tld_offset = 0;
-            int nb_name_parts = 0;
-            uint32_t previous_offset = 0;
-            bool gotTld = GetTLD(packet, length, 12, &tld_offset, &previous_offset, &nb_name_parts);
+    }
+}
+#endif
 
-            if (gotTld)
-            {
-                bool is_binary = false;
-                bool is_bad_syntax = false;
-                bool is_numeric = false;
+void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig,
+    cdns_qr_extended * ext, bool is_response)
+{
+    uint32_t rcode = (is_response) ? q_sig->response_rcode : q_sig->query_rcode;
+    uint32_t e_rcode = 0;
+    uint32_t e_length = 512;
 
-                /* Verify that the TLD is valid, so as to exclude random traffic that would drown the stats */
-                TldCheck(packet + tld_offset + 1, packet[tld_offset], &is_binary, &is_bad_syntax, &is_numeric);
+    /* assume just one query per q_sig, which is true in practice */
+    SubmitQueryContent(cdns_ctx->block.tables.class_ids[q_sig->query_classtype_index].rr_type,
+        cdns_ctx->block.tables.class_ids[q_sig->query_classtype_index].rr_class,
+        cdns_ctx->block.tables.addresses[query->query_name_index].v,
+        (uint32_t)cdns_ctx->block.tables.addresses[query->query_name_index].l, 0);
 
-                if (!is_binary && !is_bad_syntax) {
-                    SetToUpperCase(packet + tld_offset + 1, packet[tld_offset]);
-                    TldAsKey key(packet + tld_offset + 1, packet[tld_offset]);
+    if (ext->is_filled) {
+        int x_i[4] = { ext->question_index, ext->answer_index, ext->authority_index, ext->additional_index };
 
-                    if (registeredTld.GetCount() == 0)
-                    {
-                        LoadRegisteredTLD_from_memory();
-                    }
+        for (int i = 1; i < 4; i++) {
+            if (x_i[i] >= 0) {
+                cdns_rr_list* list = &cdns_ctx->block.tables.rr_list[x_i[i]];
 
-                    if (registeredTld.Retrieve(&key) != NULL)
-                    {
-                        /* This is a registered TLD
-                         * Use the list of source addresses as a filter to
-                         * check the incoming EDNS options */
-                        RegisterOptionsByIp(source_addr, source_addr_length);
-                    }
+                for (size_t j = 0; j < list->rr_index.size(); j++) {
+                    cdns_rr_field * rr = &cdns_ctx->block.tables.rrs[list->rr_index[j]];
+                    SubmitRecordContent(
+                        cdns_ctx->block.tables.class_ids[rr->classtype_index].rr_type,
+                        cdns_ctx->block.tables.class_ids[rr->classtype_index].rr_class,
+                        rr->ttl,
+                        (uint32_t)cdns_ctx->block.tables.addresses[rr->rdata_index].l,
+                        cdns_ctx->block.tables.addresses[rr->rdata_index].v,
+                        cdns_ctx->block.tables.addresses[rr->name_index].v,
+                        (uint32_t)cdns_ctx->block.tables.addresses[rr->name_index].l,
+                        0, (i == 3) ? &e_rcode : NULL, (i == 3) ? &e_length : NULL, is_response);
                 }
             }
         }
     }
+
+    if (q_sig->opt_rdata_index >= 0) {
+        SubmitRecordContent(DnsRtype_OPT, DnsRClass_IN, q_sig->udp_buf_size,
+            (uint32_t)cdns_ctx->block.tables.addresses[q_sig->opt_rdata_index].l,
+            cdns_ctx->block.tables.addresses[q_sig->opt_rdata_index].v,
+            NULL, 0, 0, &e_rcode, &e_length, is_response);
+    }
+
+    if (1)
+    {
+        rcode |= (e_rcode << 4);
+        SubmitRegistryNumber(REGISTRY_DNS_RCODES, rcode);
+    }
+
+    if ((dnsstat_flags & dnsStateFlagCountPacketSizes) != 0)
+    {
+        if (is_response)
+        {
+            SubmitRegistryNumber(REGISTRY_DNS_Response_Size, query->response_size);
+            if ((q_sig->qr_dns_flags & (1 << 5)) != 0)
+            {
+                SubmitRegistryNumber(REGISTRY_DNS_TC_length, e_length);
+            }
+        }
+        else
+        {
+            SubmitRegistryNumber(REGISTRY_DNS_Query_Size, query->query_size);
+            SubmitRegistryNumber(REGISTRY_EDNS_Packet_Size, e_length);
+        }
+    }
 }
-#endif
 
 void DnsStats::NameLeaksAnalysis(
     uint8_t * server_addr, 
@@ -3467,6 +3476,8 @@ void DnsStats::RegisterStatsByIp(uint8_t * dest_addr, size_t dest_addr_length)
     }
 }
 
+/* This call assumes that is_using_edns and edns_options are set to
+ * correct value when parsing the records */
 void DnsStats::RegisterOptionsByIp(uint8_t * source_addr, size_t source_addr_length)
 {
     StatsByIP x(source_addr, source_addr_length, false, false, false);

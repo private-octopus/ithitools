@@ -176,10 +176,11 @@ bool QNameTest::DoTest()
     bool ret = true;
 
     for (size_t i = 0; i < nb_qname_test_cases; i++) {
-        bool x = DnsStats::IsQNameMinimized(qname_test_case[i].packet,
-            (uint32_t)qname_test_case[i].length, qname_test_case[i].nb_queries,
-            qname_test_case[i].q_class, qname_test_case[i].q_type,            
-            qname_test_case[i].qr_start, qname_test_case[i].an_start, qname_test_case[i].ns_start);
+        bool x = DnsStats::IsQNameMinimized(
+            qname_test_case[i].nb_queries, qname_test_case[i].q_class, qname_test_case[i].q_type,
+            qname_test_case[i].packet, (uint32_t)qname_test_case[i].length, qname_test_case[i].qr_start,
+            qname_test_case[i].packet, (uint32_t)qname_test_case[i].length, 
+            (qname_test_case[i].an_start ==0)?qname_test_case[i].ns_start: qname_test_case[i].an_start);
 
         if (x != qname_test_case[i].is_minimized) {
             TEST_LOG("Is QName case %d fails, returns %s instead of %s\n", (int)i,

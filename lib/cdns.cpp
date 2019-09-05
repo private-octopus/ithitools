@@ -1555,7 +1555,8 @@ cdns_qr_extended::cdns_qr_extended():
     question_index(-1),
     answer_index(-1),
     authority_index(-1),
-    additional_index(-1)
+    additional_index(-1),
+    is_filled(false)
 {
 }
 
@@ -1565,6 +1566,11 @@ cdns_qr_extended::~cdns_qr_extended()
 
 uint8_t* cdns_qr_extended::parse(uint8_t* in, uint8_t const* in_max, int* err)
 {
+    if (is_filled) {
+        clear();
+    }
+    is_filled = true;
+
     return cbor_map_parse(in, in_max, this, err);
 }
 
@@ -1589,6 +1595,15 @@ uint8_t* cdns_qr_extended::parse_map_item(uint8_t* in, uint8_t const* in_max, in
         break;
     }
     return in;
+}
+
+void cdns_qr_extended::clear()
+{
+    question_index = -1;
+    answer_index = -1;
+    authority_index = -1;
+    additional_index = -1;
+    is_filled = false;
 }
 
 cdns_query_signature::cdns_query_signature():

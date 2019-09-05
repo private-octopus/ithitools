@@ -76,10 +76,13 @@ public:
 
     uint8_t* parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t val, int* err);
 
+    void clear();
+
     int question_index;
     int answer_index;
     int authority_index;
     int additional_index;
+    bool is_filled;
 };
 
 class cdns_query {
