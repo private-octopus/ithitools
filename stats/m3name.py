@@ -83,6 +83,8 @@ class m3name:
 
     def parse_file_id(self, file_id):
         parts = file_id.split("/")
+        if len(parts) == 1:
+            parts = file_id.split("\\")
         file_name = parts[len(parts) - 1]
         name_parts = file_name.split("-")
         if (len(name_parts) >= 5):
@@ -110,10 +112,10 @@ class m3name:
             print("Wrong syntax in " + file_name)
             return -1
         if (len(name_parts[0]) != 8):
-            print("Wrong date in " + file_name)
+            print("Wrong date in " + file_name + " got: " + name_parts[0])
             return -1
         s_date = name_parts[0]
-        self.m3_date = s_date[0:4] + "/" + s_date[4:6] + "/" + s_date[6:8]
+        self.m3_date = s_date[0:4] + "-" + s_date[4:6] + "-" + s_date[6:8]
         time_parts = name_parts[1].split("_")
         if (len(time_parts) != 2):
             print("Wrong cc in " + file_name)
@@ -164,7 +166,7 @@ def m3name_test():
         "/home/rarends/data/20190609/aa01-fr-par.l.dns.icann.org/20190609-144834_300-aa01-fr-par.l.dns.icann.org.csv",
         "20190609-144834_25-aa01-fr-par.l.dns.icann.org.csv",
         "20180512-105748_300-bah01.l.root-servers.org.csv"]
-    test_date = [ "2019/06/09", "2019/06/14", "2019/06/09", "2019/06/09", "2018/05/12" ]
+    test_date = [ "2019-06-09", "2019-06-14", "2019-06-09", "2019-06-09", "2018-05-12" ]
     test_hour = [ "13:28:48", "14:39:47", "14:48:34", "14:48:34", "10:57:48"]
     test_duration = [ 300, 300, 300, 25, 300] 
     test_country_code = [ "in", "mx", "fr", "fr", "bh" ]
