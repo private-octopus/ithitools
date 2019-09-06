@@ -52,12 +52,14 @@ DnsStats::DnsStats()
     response_count(0),
     error_flags(0),
     dnssec_name_index(0),
+    dnssec_packet(NULL),
+    dnssec_packet_length(0),
     is_do_flag_set(false),
     is_using_edns(false),
     edns_options(NULL),
     edns_options_length(0),
-    is_qname_minimized(false)
-
+    is_qname_minimized(false),
+    dnssec_flag_do_count(0)
 {
 }
 
@@ -604,13 +606,17 @@ void DnsStats::SubmitRecordContent(int rrtype, int rrclass, int ttl, int ldata,
 
         /* For records of type RRSIG, NSEC, NSEC3, DNSKEY, DS,
          * mark the domain as supporting DNSSEC */
-        if (dnssec_name_index == 0 && (
+        if (
             rrtype == DnsRtype_DNSKEY ||
             rrtype == DnsRtype_RRSIG ||
             rrtype == DnsRtype_NSEC ||
             rrtype == DnsRtype_NSEC3 ||
-            rrtype == DnsRtype_DS)) {
-            dnssec_name_index = name_offset;
+            rrtype == DnsRtype_DS){
+            if (dnssec_packet == NULL) {
+                dnssec_name_index = name_offset;
+                dnssec_packet = packet;
+                dnssec_packet_length = packet_length;
+            }
         }
 
         /* Further parsing for OPT, DNSKEY, RRSIG, DS,
@@ -738,6 +744,9 @@ void DnsStats::SubmitOPTRecord(uint32_t flags, uint8_t * content, uint32_t lengt
 
     /* Register whether the DO bit was set */
     is_do_flag_set = (flags & (1<<15)) != 0;
+    if (is_do_flag_set) {
+        dnssec_flag_do_count++;
+    }
 
     /* Add flags to registration */
     for (int i = 0; i < 16; i++)
@@ -1969,6 +1978,8 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     edns_options_length = 0;
     is_qname_minimized = false;
     dnssec_name_index = 0;
+    dnssec_packet = NULL;
+    dnssec_packet_length = 0;
 
     if (rootAddresses.GetCount() == 0)
     {
@@ -2034,11 +2045,11 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
                 RegisterStatsByIp(dest_addr, dest_addr_length);
 
                 if (is_do_flag_set) {
-                    if (dnssec_name_index == 0) {
+                    if (dnssec_packet == NULL) {
                         RegisterDnssecUsageByName(packet, length, 12, false);
                     }
                     else {
-                        RegisterDnssecUsageByName(packet, length, dnssec_name_index, true);
+                        RegisterDnssecUsageByName(dnssec_packet, dnssec_packet_length, dnssec_name_index, true);
                     }
                 }
             }
@@ -2093,8 +2104,17 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
 {
     bool unfiltered = false;
     cdns_query* query = &cdns_ctx->block.queries[packet_id];
-    cdns_query_signature* q_sig = &cdns_ctx->block.tables.q_sigs[query->query_signature_index -1];
-    cdns_query_signature* r_sig = &cdns_ctx->block.tables.q_sigs[query->query_signature_index -1];
+    cdns_query_signature* q_sig = NULL; 
+    cdns_query_signature* r_sig = NULL;
+    size_t c_address_id = (size_t)query->client_address_index - CNDS_INDEX_OFFSET;
+
+    if (query->query_signature_index > CNDS_INDEX_OFFSET) {
+        q_sig = &cdns_ctx->block.tables.q_sigs[(size_t)query->query_signature_index - CNDS_INDEX_OFFSET];
+    }
+
+    if (query->query_signature_index > CNDS_INDEX_OFFSET) {
+        r_sig = &cdns_ctx->block.tables.q_sigs[(size_t)query->query_signature_index - CNDS_INDEX_OFFSET];
+    }
 
     if (t_start_sec == 0 && t_start_usec == 0) {
         t_start_sec = cdns_ctx->block.preamble.earliest_time_sec;
@@ -2113,18 +2133,18 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
         rootAddresses.SetList(DefaultRootAddresses, sizeof(DefaultRootAddresses) / sizeof(char const*));
     }
 
-    unfiltered = CheckAddress(cdns_ctx->block.tables.addresses[query->client_address_index-1].v,
-        cdns_ctx->block.tables.addresses[query->client_address_index-1].l);
+    unfiltered = CheckAddress(cdns_ctx->block.tables.addresses[c_address_id].v,
+        cdns_ctx->block.tables.addresses[c_address_id].l);
 
     if (unfiltered)
     {
-        if (query->query_size > 0)
+        if (query->query_size > 0 && q_sig != NULL)
         {
             query_count++;
             SubmitCborPacketQuery(cdns_ctx, query, q_sig);
         }
 
-        if (query->response_size > 0)
+        if (query->response_size > 0 && r_sig != NULL)
         {
             response_count++;
             SubmitCborPacketResponse(cdns_ctx, query, r_sig);
@@ -2141,8 +2161,10 @@ void DnsStats::SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_que
     edns_options_length = 0;
     is_qname_minimized = false;
     dnssec_name_index = 0;
+    dnssec_packet = NULL;
+    dnssec_packet_length = 0;
 
-    SubmitOpcodeAndFlags(q_sig->query_opcode, q_sig->qr_dns_flags);
+    SubmitOpcodeAndFlags(q_sig->query_opcode, cdns::get_dns_flags(q_sig->qr_dns_flags,false));
 
     SubmitCborRecords(cdns_ctx, query, q_sig, &query->q_extended, false);
 
@@ -2153,8 +2175,10 @@ void DnsStats::SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_que
         error_flags == 0)
     {
         /* This works because parsing of OPT records sets the proper values for OPT fields */
-        uint32_t name_len = (uint32_t)cdns_ctx->block.tables.name_rdata[query->query_name_index-1].l;
-        uint8_t* name = cdns_ctx->block.tables.name_rdata[query->query_name_index-1].v;
+        size_t nid = (size_t)query->query_name_index - CNDS_INDEX_OFFSET;
+        size_t addrid = (size_t)query->client_address_index - CNDS_INDEX_OFFSET;
+        uint32_t name_len = (uint32_t)cdns_ctx->block.tables.name_rdata[nid].l;
+        uint8_t* name = cdns_ctx->block.tables.name_rdata[nid].v;
         uint8_t null_name[] = { 0,0 };
         if (name_len == 0) {
             name = null_name;
@@ -2162,18 +2186,20 @@ void DnsStats::SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_que
         }
 
         SubmitQueryExtensions(name, name_len, 0,
-            cdns_ctx->block.tables.addresses[query->client_address_index-1].v,
-            cdns_ctx->block.tables.addresses[query->client_address_index-1].l);
+            cdns_ctx->block.tables.addresses[addrid].v,
+            cdns_ctx->block.tables.addresses[addrid].l);
     }
 }
 
 void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* r_sig)
 {
     uint32_t rcode = r_sig->response_rcode;
-    uint32_t server_addr_length = (uint32_t)cdns_ctx->block.tables.addresses[r_sig->server_address_index-1].l;
-    uint8_t* server_addr = cdns_ctx->block.tables.addresses[r_sig->server_address_index-1].v;
-    uint32_t client_addr_length = (uint32_t)cdns_ctx->block.tables.addresses[query->client_address_index-1].l;
-    uint8_t* client_addr = cdns_ctx->block.tables.addresses[query->client_address_index-1].v;
+    size_t s_addrid = (size_t)r_sig->server_address_index - CNDS_INDEX_OFFSET;
+    size_t c_addrid = (size_t)query->client_address_index - CNDS_INDEX_OFFSET;
+    uint32_t server_addr_length = (uint32_t)cdns_ctx->block.tables.addresses[s_addrid].l;
+    uint8_t* server_addr = cdns_ctx->block.tables.addresses[s_addrid].v;
+    uint32_t client_addr_length = (uint32_t)cdns_ctx->block.tables.addresses[c_addrid].l;
+    uint8_t* client_addr = cdns_ctx->block.tables.addresses[c_addrid].v;
     uint8_t null_name[] = { 0, 0 };
     my_bpftimeval ts;
     int r_delay = query->delay_useconds + query->time_offset_usec;
@@ -2188,13 +2214,16 @@ void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_
     edns_options_length = 0;
     is_qname_minimized = false;
     dnssec_name_index = 0;
+    dnssec_packet = NULL;
+    dnssec_packet_length = 0;
 
 
-    SubmitOpcodeAndFlags(r_sig->query_opcode, r_sig->qr_dns_flags);
+    SubmitOpcodeAndFlags(r_sig->query_opcode, cdns::get_dns_flags(r_sig->qr_dns_flags, true));
 
     if (query->query_name_index > 0) {
-        uint8_t* q_name = cdns_ctx->block.tables.name_rdata[query->query_name_index-1].v;
-        uint32_t q_name_length = (uint32_t)cdns_ctx->block.tables.name_rdata[query->query_name_index-1].l;
+        size_t nid = (size_t)query->query_name_index - CNDS_INDEX_OFFSET;
+        uint8_t* q_name = cdns_ctx->block.tables.name_rdata[nid].v;
+        uint32_t q_name_length = (uint32_t)cdns_ctx->block.tables.name_rdata[nid].l;
 
         if (query->query_name_index < 0 || q_name_length == 0) {
             q_name = null_name;
@@ -2204,7 +2233,9 @@ void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_
         if (r_sig->query_opcode == DNS_OPCODE_QUERY)
         {
             NameLeaksAnalysis(server_addr, server_addr_length, client_addr, client_addr_length,
-                r_sig->response_rcode, q_name, q_name_length, 0, ts, (r_sig->query_an_count > 0 || r_sig->query_ns_count > 0));
+                r_sig->response_rcode, q_name, q_name_length, 0, ts, 
+                (r_sig->query_an_count > 0 || r_sig->query_ns_count > 0 ||
+                    query->r_extended.answer_index >= 0 || query->r_extended.authority_index >= 0));
         }
 
         SubmitCborRecords(cdns_ctx, query, r_sig, &query->r_extended, true);
@@ -2215,12 +2246,12 @@ void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_
             RegisterStatsByIp(client_addr, client_addr_length);
 
             if (is_do_flag_set) {
-                if (dnssec_name_index == 0) {
+                if (dnssec_packet == NULL) {
                     RegisterDnssecUsageByName(q_name, q_name_length, 0, false);
                 }
                 else {
                     /* TODO: verify that this the proper name */
-                    RegisterDnssecUsageByName(q_name, q_name_length, 0, true);
+                    RegisterDnssecUsageByName(dnssec_packet, dnssec_packet_length, dnssec_name_index, true);
                 }
             }
         }
@@ -2243,26 +2274,37 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
 
         if (x_i[0] > 0) {
             /* assume just one query per q_sig, but sometimes there is none. */
-            SubmitQueryContent(cdns_ctx->block.tables.class_ids[q_sig->query_classtype_index-1].rr_type,
-                cdns_ctx->block.tables.class_ids[q_sig->query_classtype_index-1].rr_class,
-                cdns_ctx->block.tables.name_rdata[query->query_name_index-1].v,
-                (uint32_t)cdns_ctx->block.tables.name_rdata[query->query_name_index-1].l, 0);
+            size_t cid = (size_t)q_sig->query_classtype_index - CNDS_INDEX_OFFSET;
+            size_t nid = (size_t)query->query_name_index - CNDS_INDEX_OFFSET;
+            SubmitQueryContent(cdns_ctx->block.tables.class_ids[cid].rr_type,
+                cdns_ctx->block.tables.class_ids[cid].rr_class,
+                cdns_ctx->block.tables.name_rdata[nid].v,
+                (uint32_t)cdns_ctx->block.tables.name_rdata[nid].l, 0);
         }
 
         for (int i = 1; i < 4; i++) {
             if (x_i[i] >= 0) {
-                cdns_rr_list* list = &cdns_ctx->block.tables.rr_list[x_i[i]-1];
+                cdns_rr_list* list = &cdns_ctx->block.tables.rr_list[(size_t)x_i[i]- CNDS_INDEX_OFFSET];
 
                 for (size_t j = 0; j < list->rr_index.size(); j++) {
-                    cdns_rr_field * rr = &cdns_ctx->block.tables.rrs[list->rr_index[j]-1];
+                    cdns_rr_field * rr = &cdns_ctx->block.tables.rrs[(size_t)list->rr_index[j]- CNDS_INDEX_OFFSET];
+                    size_t cid = (size_t)rr->classtype_index - CNDS_INDEX_OFFSET;
+                    size_t rrid = (size_t) rr->rdata_index - CNDS_INDEX_OFFSET;
+                    size_t nid = (size_t)rr->name_index - CNDS_INDEX_OFFSET;
+                    int rr_class = cdns_ctx->block.tables.class_ids[cid].rr_class;
+                    int ttl = rr->ttl;
+
+                    if (cdns_ctx->block.tables.class_ids[cid].rr_type == DnsRtype_OPT) {
+                        rr_class = q_sig->udp_buf_size;
+                        ttl = cdns::get_edns_flags(q_sig->qr_dns_flags);
+                    }
+
                     SubmitRecordContent(
-                        cdns_ctx->block.tables.class_ids[rr->classtype_index-1].rr_type,
-                        cdns_ctx->block.tables.class_ids[rr->classtype_index-1].rr_class,
-                        rr->ttl,
-                        (uint32_t)cdns_ctx->block.tables.name_rdata[rr->rdata_index-1].l,
-                        cdns_ctx->block.tables.name_rdata[rr->rdata_index-1].v,
-                        cdns_ctx->block.tables.name_rdata[rr->name_index-1].v,
-                        (uint32_t)cdns_ctx->block.tables.name_rdata[rr->name_index-1].l,
+                        cdns_ctx->block.tables.class_ids[cid].rr_type, rr_class, ttl,
+                        (uint32_t)cdns_ctx->block.tables.name_rdata[rrid].l,
+                        cdns_ctx->block.tables.name_rdata[rrid].v,
+                        cdns_ctx->block.tables.name_rdata[nid].v,
+                        (uint32_t)cdns_ctx->block.tables.name_rdata[nid].l,
                         0, (i == 3) ? &e_rcode : NULL, (i == 3) ? &e_length : NULL, is_response);
                     if (first_rname_index < 0 && i < 3) {
                         first_rname_index = rr->name_index;
@@ -2272,10 +2314,13 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
         }
     }
 
-    if (q_sig->opt_rdata_index >= 0) {
-        SubmitRecordContent(DnsRtype_OPT, DnsRClass_IN, q_sig->udp_buf_size,
-            (uint32_t)cdns_ctx->block.tables.name_rdata[q_sig->opt_rdata_index-1].l,
-            cdns_ctx->block.tables.name_rdata[q_sig->opt_rdata_index-1].v,
+    if (q_sig->opt_rdata_index >= 0 && !is_response) {
+        size_t opt_rrid = (size_t)q_sig->opt_rdata_index - CNDS_INDEX_OFFSET;
+        int edns_flags = cdns::get_edns_flags(q_sig->qr_dns_flags);
+
+        SubmitRecordContent(DnsRtype_OPT, q_sig->udp_buf_size, edns_flags,
+            (uint32_t)cdns_ctx->block.tables.name_rdata[opt_rrid].l,
+            cdns_ctx->block.tables.name_rdata[opt_rrid].v,
             NULL, 0, 0, &e_rcode, &e_length, is_response);
     }
 
@@ -2288,7 +2333,7 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
         if (is_response)
         {
             SubmitRegistryNumber(REGISTRY_DNS_Response_Size, query->response_size);
-            if ((q_sig->qr_dns_flags & (1 << 5)) != 0)
+            if ((cdns::get_dns_flags(q_sig->qr_dns_flags,true) & (1 << 5)) != 0)
             {
                 SubmitRegistryNumber(REGISTRY_DNS_TC_length, e_length);
             }
@@ -2301,18 +2346,22 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
     }
 
     if (is_response && first_rname_index >= 0) {
-        if (cdns_ctx->block.tables.name_rdata[query->query_name_index-1].l == 0) {
+        size_t nid = (size_t)query->query_name_index - CNDS_INDEX_OFFSET;
+        if (cdns_ctx->block.tables.name_rdata[nid].l == 0) {
             is_qname_minimized = true;
         }
         else {
+            size_t cid = (size_t)q_sig->query_classtype_index - CNDS_INDEX_OFFSET;
+            size_t rrid = (size_t)first_rname_index - CNDS_INDEX_OFFSET;
+
             is_qname_minimized = IsQNameMinimized(
                 1,
-                cdns_ctx->block.tables.class_ids[q_sig->query_classtype_index-1].rr_class,
-                cdns_ctx->block.tables.class_ids[q_sig->query_classtype_index-1].rr_type,
-                cdns_ctx->block.tables.name_rdata[query->query_name_index-1].v,
-                (uint32_t)cdns_ctx->block.tables.name_rdata[query->query_name_index-1].l, 0,
-                cdns_ctx->block.tables.name_rdata[first_rname_index-1].v,
-                (uint32_t)cdns_ctx->block.tables.name_rdata[first_rname_index-1].l, 0);
+                cdns_ctx->block.tables.class_ids[cid].rr_class,
+                cdns_ctx->block.tables.class_ids[cid].rr_type,
+                cdns_ctx->block.tables.name_rdata[nid].v,
+                (uint32_t)cdns_ctx->block.tables.name_rdata[nid].l, 0,
+                cdns_ctx->block.tables.name_rdata[rrid].v,
+                (uint32_t)cdns_ctx->block.tables.name_rdata[rrid].l, 0);
         }
     }
 }

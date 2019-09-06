@@ -197,6 +197,25 @@ bool cdns::open_block(int* err)
     return ret;
 }
 
+int cdns::get_dns_flags(int q_dns_flags, bool is_response)
+{
+    int flags = 0;
+
+    if (is_response) {
+        flags = (q_dns_flags >> 8) & 0x7F;
+    }
+    else {
+        flags = q_dns_flags & 0x7F;
+    }
+
+    return flags;
+}
+
+int cdns::get_edns_flags(int q_dns_flags)
+{
+    return (q_dns_flags << 8) & (1<<15);
+}
+
 bool cdns::load_entire_file()
 {
     bool ret = true;

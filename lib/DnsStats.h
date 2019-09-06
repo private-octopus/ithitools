@@ -318,11 +318,15 @@ public:
     int response_count;
     uint32_t error_flags;
     uint32_t dnssec_name_index;
+    uint8_t * dnssec_packet;
+    uint32_t dnssec_packet_length;
     bool is_do_flag_set;
     bool is_using_edns;
     uint8_t * edns_options;
     uint32_t edns_options_length;
     bool is_qname_minimized;
+
+    int dnssec_flag_do_count;
 
     static bool IsValidTldSyntax(uint8_t * tld, size_t length);
     static bool IsInSortedList(const char ** list, size_t nb_list, uint8_t * tld, size_t length);

@@ -249,6 +249,8 @@ public:
     int is_filled;
 };
 
+#define CNDS_INDEX_OFFSET 1
+
 class cdns
 {
 public:
@@ -263,6 +265,9 @@ public:
     bool open_block(int* err);
 
     cdnsBlock block; /* Current block */
+
+    static int get_dns_flags(int q_dns_flags, bool is_response);
+    static int get_edns_flags(int q_dns_flags);
 
 private:
     FILE* F;
