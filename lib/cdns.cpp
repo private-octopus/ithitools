@@ -53,25 +53,15 @@ cdns::~cdns()
     }
 }
 
-bool cdns::open(char const* file_name, size_t buf_size)
+bool cdns::open(char const* file_name)
 {
     bool ret = false;
 
     if (F == NULL && buf == NULL) {
-        if (buf_size == 0) {
-            this->buf_size = 0x10000;
-        }
-        else {
-            this->buf_size = buf_size;
-        }
 
         F = ithi_file_open(file_name, "rb");
         if (F != NULL) {
-            buf = new uint8_t[this->buf_size];
-
-            if (buf != NULL) {
-                ret = load_buffer();
-            }
+            ret = load_entire_file();
         }
     }
 
@@ -175,8 +165,6 @@ bool cdns::open_block(int* err)
         ret = false;
     }
 
-    /* TODO: if not enough data for next block, move and read */
-
     if (ret){
         uint8_t* in = buf + buf_parsed;
         uint8_t* in_max = buf + buf_read;
@@ -209,27 +197,43 @@ bool cdns::open_block(int* err)
     return ret;
 }
 
-bool cdns::load_buffer()
+bool cdns::load_entire_file()
 {
-    if (buf_parsed < buf_read) {
-        buf_read -= buf_parsed;
-        memmove(buf, buf + buf_parsed, buf_read);
-    }
-    else {
-        buf_read = 0;
-    }
-    buf_parsed = 0;
+    bool ret = true;
+    do {
+        if (buf == NULL) {
+            /* Initialize to a small size, so we make sure that the reallocation code is well tested */
+            buf_size = 0x20000;
+            buf = new uint8_t[buf_size];
+            if (buf == NULL) {
+                ret = false;
+                buf_size = 0;
+            }
+        } else if (buf_read > 0 && buf_read == buf_size) {
+            uint8_t* new_buf;
+            size_t new_size = 4 * buf_size;
+            new_buf = new uint8_t[new_size];
+            if (new_buf == NULL) {
+                ret = false;
+            }
+            else {
+                memcpy(new_buf, buf, buf_read);
+                delete[] buf;
+                buf = new_buf;
+                buf_size = new_size;
+            }
+        }
+        else {
+            size_t asked = buf_size - buf_read;
+            size_t n_bytes = fread(buf + buf_read, 1, asked, F);
+            end_of_file = (n_bytes < asked);
+            buf_read += n_bytes;
+        }
+    } while (ret && !end_of_file);
 
-    if (buf_read < buf_size && !end_of_file) {
-        size_t asked = buf_size - buf_read;
-        size_t n_bytes = fread(buf + buf_read, 1, asked, F);
-
-        end_of_file = (n_bytes < asked);
-        buf_read += n_bytes;
-    }
-
-    return (buf_read > 0);
+    return (ret);
 }
+
 
 bool cdns::read_preamble(int * err)
 {

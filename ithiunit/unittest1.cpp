@@ -281,9 +281,17 @@ namespace ithiunit
             Assert::AreEqual(ret, true);
         }
 
-        TEST_METHOD(Cdns)
+        TEST_METHOD(CdnsDump)
         {
-            CdnsTest test;
+            CdnsDumpTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(CdnsCapture)
+        {
+            CdnsCaptureTest test;
             bool ret = test.DoTest();
 
             Assert::AreEqual(ret, true);

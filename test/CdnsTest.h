@@ -33,14 +33,20 @@ public:
     bool DoTest() override;
 };
 
-
-
 class CdnsDumpTest : public ithi_test_class
 {
 public:
     CdnsDumpTest();
     ~CdnsDumpTest();
 
+    bool DoTest() override;
+};
+
+class CdnsCaptureTest : public ithi_test_class
+{
+public:
+    CdnsCaptureTest();
+    ~CdnsCaptureTest();
     bool DoTest() override;
 };
 

@@ -59,7 +59,10 @@ enum test_list_enum {
     test_enum_max_number,
     test_enum_cbor,
     test_enum_cbor_skip,
-    test_enum_cdns
+    test_enum_cdns,
+    test_enum_cdns_dump,
+    test_enum_cdns_capture,
+
 };
 
 ithi_test_class::ithi_test_class()
@@ -138,6 +141,10 @@ char const * ithi_test_class::GetTestName(int number)
         return("cborSkip");
     case test_enum_cdns:
         return("cdns");
+    case test_enum_cdns_dump:
+        return("cdns_dump");
+    case test_enum_cdns_capture:
+        return("cdns_capture");
     default:
         break;
     }
@@ -254,6 +261,12 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_enum_cdns:
         test = new CdnsTest();
+        break;
+    case test_enum_cdns_dump:
+        test = new CdnsDumpTest();
+        break;
+    case test_enum_cdns_capture:
+        test = new CdnsCaptureTest();
         break;
     default:
         break;

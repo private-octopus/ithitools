@@ -256,7 +256,7 @@ public:
 
     ~cdns();
 
-    bool open(char const* file_name, size_t buf_size);
+    bool open(char const* file_name);
 
     bool dump(char const* file_out);
 
@@ -277,7 +277,7 @@ private:
     int64_t nb_blocks_present;
     int64_t nb_blocks_read;
 
-    bool load_buffer();
+    bool load_entire_file();
     bool read_preamble(int* err); /* Leaves nb_read pointing to the beginning of the 1st block */
 
 

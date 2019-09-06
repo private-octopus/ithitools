@@ -291,6 +291,7 @@ public:
 
     /* For the command line tools */
     bool LoadPcapFiles(size_t nb_files, char const ** fileNames);
+    bool LoadCborFile(char const* fileNames);
     bool ExportToCaptureSummary(CaptureSummary * cs);
 
     bool IsCaptureStopped() { return is_capture_stopped; };

@@ -25,19 +25,24 @@
 #include <string.h>
 #include "cbor.h"
 #include "cdns.h"
+#include "DnsStats.h"
 
 #include "CdnsTest.h"
 
 #ifdef _WINDOWS
 #ifndef _WINDOWS64
 static char const* cbor_in = "..\\data\\tiny-capture.cbor";
+static char const* cbor_csv_ref = "..\\data\\tiny-capture-cbor.csv";
 #else
 static char const* cbor_in = "..\\..\\data\\tiny-capture.cbor";
+static char const* cbor_csv_ref = "..\\..\\data\\tiny-capture-cbor.csv";
 #endif
 #else
 static char const* cbor_in = "data/tiny-capture.cbor";
+static char const* cbor_csv_ref = "data/tiny-capture-cbor.csv";
 #endif
 static char const* text_out = "tiny-capture-cbor.txt";
+static char const* cbor_csv_out = "tiny-capture-cbor.csv";
 
 
 CdnsDumpTest::CdnsDumpTest()
@@ -51,7 +56,7 @@ CdnsDumpTest::~CdnsDumpTest()
 bool CdnsDumpTest::DoTest()
 {
     cdns cap_cbor;
-    bool ret = cap_cbor.open(cbor_in, 700000);
+    bool ret = cap_cbor.open(cbor_in);
 
     if (ret) {
         ret = cap_cbor.dump(text_out);
@@ -74,7 +79,7 @@ bool CdnsTest::DoTest()
     cdns cap_cbor;
     int err;
     int nb_calls = 0;
-    bool ret = cap_cbor.open(cbor_in, 700000);
+    bool ret = cap_cbor.open(cbor_in);
 
     if (!ret) {
         TEST_LOG("Could not open file: %s\n", cbor_in);
@@ -90,6 +95,48 @@ bool CdnsTest::DoTest()
         }
         else {
             TEST_LOG("Open blocks returns err: %d after %d calls\n", err, nb_calls);
+        }
+    }
+
+    return ret;
+}
+
+CdnsCaptureTest::CdnsCaptureTest()
+{
+}
+
+CdnsCaptureTest::~CdnsCaptureTest()
+{
+}
+
+bool CdnsCaptureTest::DoTest()
+{
+    DnsStats capture;
+    CaptureSummary cs;
+    bool ret = capture.LoadCborFile(cbor_in);
+
+    if (ret)
+    {
+        ret = capture.ExportToCaptureSummary(&cs);
+
+        if (ret)
+        {
+            CaptureSummary tcs;
+
+            ret = tcs.Load(cbor_csv_ref);
+
+            if (ret)
+            {
+                cs.Sort();
+                tcs.Sort();
+
+                ret = cs.Compare(&tcs);
+
+                if (!ret)
+                {
+                    cs.Save(cbor_csv_out);
+                }
+            }
         }
     }
 

@@ -1784,6 +1784,27 @@ bool DnsStats::LoadPcapFiles(size_t nb_files, char const ** fileNames)
     return ret;
 }
 
+
+bool DnsStats::LoadCborFile(char const* fileName)
+{
+    cdns cdns_ctx;
+    int err;
+    bool ret = cdns_ctx.open(fileName);
+
+    while (ret) {
+        if (!cdns_ctx.open_block(&err)) {
+            ret = (err == CBOR_END_OF_ARRAY);
+            break;
+        }
+
+        for (size_t i = 0; i < cdns_ctx.block.queries.size(); i++) {
+            SubmitCborPacket(&cdns_ctx, i);
+        }
+    }
+
+    return ret;
+}
+
 bool DnsStats::LoadPcapFile(char const * fileName)
 {
     bool ret = true;
@@ -2072,8 +2093,8 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
 {
     bool unfiltered = false;
     cdns_query* query = &cdns_ctx->block.queries[packet_id];
-    cdns_query_signature* q_sig = &cdns_ctx->block.tables.q_sigs[query->query_signature_index];
-    cdns_query_signature* r_sig = &cdns_ctx->block.tables.q_sigs[query->query_signature_index];
+    cdns_query_signature* q_sig = &cdns_ctx->block.tables.q_sigs[query->query_signature_index -1];
+    cdns_query_signature* r_sig = &cdns_ctx->block.tables.q_sigs[query->query_signature_index -1];
 
     if (t_start_sec == 0 && t_start_usec == 0) {
         t_start_sec = cdns_ctx->block.preamble.earliest_time_sec;
@@ -2092,8 +2113,8 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
         rootAddresses.SetList(DefaultRootAddresses, sizeof(DefaultRootAddresses) / sizeof(char const*));
     }
 
-    unfiltered = CheckAddress(cdns_ctx->block.tables.addresses[query->client_address_index].v,
-        cdns_ctx->block.tables.addresses[query->client_address_index].l);
+    unfiltered = CheckAddress(cdns_ctx->block.tables.addresses[query->client_address_index-1].v,
+        cdns_ctx->block.tables.addresses[query->client_address_index-1].l);
 
     if (unfiltered)
     {
@@ -2128,25 +2149,32 @@ void DnsStats::SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_que
     /* Check that all work is done here.. */
     if (q_sig->query_opcode == DNS_OPCODE_QUERY &&
         q_sig->query_rcode == DNS_RCODE_NOERROR &&
+        query->query_name_index >= 0 &&
         error_flags == 0)
     {
         /* This works because parsing of OPT records sets the proper values for OPT fields */
-        SubmitQueryExtensions(cdns_ctx->block.tables.addresses[query->query_name_index].v, 
-            (uint32_t)cdns_ctx->block.tables.addresses[query->query_name_index].l, 0, 
-            cdns_ctx->block.tables.addresses[query->client_address_index].v,
-            cdns_ctx->block.tables.addresses[query->client_address_index].l);
+        uint32_t name_len = (uint32_t)cdns_ctx->block.tables.name_rdata[query->query_name_index-1].l;
+        uint8_t* name = cdns_ctx->block.tables.name_rdata[query->query_name_index-1].v;
+        uint8_t null_name[] = { 0,0 };
+        if (name_len == 0) {
+            name = null_name;
+            name_len = 2;
+        }
+
+        SubmitQueryExtensions(name, name_len, 0,
+            cdns_ctx->block.tables.addresses[query->client_address_index-1].v,
+            cdns_ctx->block.tables.addresses[query->client_address_index-1].l);
     }
 }
 
 void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* r_sig)
 {
     uint32_t rcode = r_sig->response_rcode;
-    uint32_t server_addr_length = (uint32_t)cdns_ctx->block.tables.addresses[r_sig->server_address_index].l;
-    uint8_t* server_addr = cdns_ctx->block.tables.addresses[r_sig->server_address_index].v;
-    uint32_t client_addr_length = (uint32_t)cdns_ctx->block.tables.addresses[query->client_address_index].l;
-    uint8_t* client_addr = cdns_ctx->block.tables.addresses[query->client_address_index].v;
-    uint8_t* q_name = cdns_ctx->block.tables.addresses[query->query_name_index].v;
-    uint32_t q_name_length = (uint32_t)cdns_ctx->block.tables.addresses[query->query_name_index].l;
+    uint32_t server_addr_length = (uint32_t)cdns_ctx->block.tables.addresses[r_sig->server_address_index-1].l;
+    uint8_t* server_addr = cdns_ctx->block.tables.addresses[r_sig->server_address_index-1].v;
+    uint32_t client_addr_length = (uint32_t)cdns_ctx->block.tables.addresses[query->client_address_index-1].l;
+    uint8_t* client_addr = cdns_ctx->block.tables.addresses[query->client_address_index-1].v;
+    uint8_t null_name[] = { 0, 0 };
     my_bpftimeval ts;
     int r_delay = query->delay_useconds + query->time_offset_usec;
 
@@ -2161,28 +2189,39 @@ void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_
     is_qname_minimized = false;
     dnssec_name_index = 0;
 
+
     SubmitOpcodeAndFlags(r_sig->query_opcode, r_sig->qr_dns_flags);
 
-    if (r_sig->query_opcode == DNS_OPCODE_QUERY)
-    {
-        NameLeaksAnalysis(server_addr, server_addr_length, client_addr, client_addr_length,
-            r_sig->response_rcode, q_name, q_name_length, 0, ts, (r_sig->query_an_count > 0 || r_sig->query_ns_count > 0));
-    }
+    if (query->query_name_index > 0) {
+        uint8_t* q_name = cdns_ctx->block.tables.name_rdata[query->query_name_index-1].v;
+        uint32_t q_name_length = (uint32_t)cdns_ctx->block.tables.name_rdata[query->query_name_index-1].l;
 
-    SubmitCborRecords(cdns_ctx, query, r_sig, &query->r_extended, true);
+        if (query->query_name_index < 0 || q_name_length == 0) {
+            q_name = null_name;
+            q_name_length = 2;
+        }
 
-    if (r_sig->query_opcode == DNS_OPCODE_QUERY &&
-        rcode == DNS_RCODE_NOERROR && error_flags == 0)
-    {
-        RegisterStatsByIp(client_addr, client_addr_length);
+        if (r_sig->query_opcode == DNS_OPCODE_QUERY)
+        {
+            NameLeaksAnalysis(server_addr, server_addr_length, client_addr, client_addr_length,
+                r_sig->response_rcode, q_name, q_name_length, 0, ts, (r_sig->query_an_count > 0 || r_sig->query_ns_count > 0));
+        }
 
-        if (is_do_flag_set) {
-            if (dnssec_name_index == 0) {
-                RegisterDnssecUsageByName(q_name, q_name_length, 0, false);
-            }
-            else {
-                /* TODO: verify that this the proper name */
-                RegisterDnssecUsageByName(q_name, q_name_length, 0, true);
+        SubmitCborRecords(cdns_ctx, query, r_sig, &query->r_extended, true);
+
+        if (r_sig->query_opcode == DNS_OPCODE_QUERY &&
+            rcode == DNS_RCODE_NOERROR && error_flags == 0)
+        {
+            RegisterStatsByIp(client_addr, client_addr_length);
+
+            if (is_do_flag_set) {
+                if (dnssec_name_index == 0) {
+                    RegisterDnssecUsageByName(q_name, q_name_length, 0, false);
+                }
+                else {
+                    /* TODO: verify that this the proper name */
+                    RegisterDnssecUsageByName(q_name, q_name_length, 0, true);
+                }
             }
         }
     }
@@ -2198,29 +2237,32 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
     uint32_t e_length = 512;
     int first_rname_index = -1;
 
-    /* assume just one query per q_sig, which is true in practice */
-    SubmitQueryContent(cdns_ctx->block.tables.class_ids[q_sig->query_classtype_index].rr_type,
-        cdns_ctx->block.tables.class_ids[q_sig->query_classtype_index].rr_class,
-        cdns_ctx->block.tables.addresses[query->query_name_index].v,
-        (uint32_t)cdns_ctx->block.tables.addresses[query->query_name_index].l, 0);
 
     if (ext->is_filled) {
         int x_i[4] = { ext->question_index, ext->answer_index, ext->authority_index, ext->additional_index };
 
+        if (x_i[0] > 0) {
+            /* assume just one query per q_sig, but sometimes there is none. */
+            SubmitQueryContent(cdns_ctx->block.tables.class_ids[q_sig->query_classtype_index-1].rr_type,
+                cdns_ctx->block.tables.class_ids[q_sig->query_classtype_index-1].rr_class,
+                cdns_ctx->block.tables.name_rdata[query->query_name_index-1].v,
+                (uint32_t)cdns_ctx->block.tables.name_rdata[query->query_name_index-1].l, 0);
+        }
+
         for (int i = 1; i < 4; i++) {
             if (x_i[i] >= 0) {
-                cdns_rr_list* list = &cdns_ctx->block.tables.rr_list[x_i[i]];
+                cdns_rr_list* list = &cdns_ctx->block.tables.rr_list[x_i[i]-1];
 
                 for (size_t j = 0; j < list->rr_index.size(); j++) {
-                    cdns_rr_field * rr = &cdns_ctx->block.tables.rrs[list->rr_index[j]];
+                    cdns_rr_field * rr = &cdns_ctx->block.tables.rrs[list->rr_index[j]-1];
                     SubmitRecordContent(
-                        cdns_ctx->block.tables.class_ids[rr->classtype_index].rr_type,
-                        cdns_ctx->block.tables.class_ids[rr->classtype_index].rr_class,
+                        cdns_ctx->block.tables.class_ids[rr->classtype_index-1].rr_type,
+                        cdns_ctx->block.tables.class_ids[rr->classtype_index-1].rr_class,
                         rr->ttl,
-                        (uint32_t)cdns_ctx->block.tables.addresses[rr->rdata_index].l,
-                        cdns_ctx->block.tables.addresses[rr->rdata_index].v,
-                        cdns_ctx->block.tables.addresses[rr->name_index].v,
-                        (uint32_t)cdns_ctx->block.tables.addresses[rr->name_index].l,
+                        (uint32_t)cdns_ctx->block.tables.name_rdata[rr->rdata_index-1].l,
+                        cdns_ctx->block.tables.name_rdata[rr->rdata_index-1].v,
+                        cdns_ctx->block.tables.name_rdata[rr->name_index-1].v,
+                        (uint32_t)cdns_ctx->block.tables.name_rdata[rr->name_index-1].l,
                         0, (i == 3) ? &e_rcode : NULL, (i == 3) ? &e_length : NULL, is_response);
                     if (first_rname_index < 0 && i < 3) {
                         first_rname_index = rr->name_index;
@@ -2232,8 +2274,8 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
 
     if (q_sig->opt_rdata_index >= 0) {
         SubmitRecordContent(DnsRtype_OPT, DnsRClass_IN, q_sig->udp_buf_size,
-            (uint32_t)cdns_ctx->block.tables.addresses[q_sig->opt_rdata_index].l,
-            cdns_ctx->block.tables.addresses[q_sig->opt_rdata_index].v,
+            (uint32_t)cdns_ctx->block.tables.name_rdata[q_sig->opt_rdata_index-1].l,
+            cdns_ctx->block.tables.name_rdata[q_sig->opt_rdata_index-1].v,
             NULL, 0, 0, &e_rcode, &e_length, is_response);
     }
 
@@ -2259,14 +2301,19 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
     }
 
     if (is_response && first_rname_index >= 0) {
-        is_qname_minimized = IsQNameMinimized(
-            1, 
-            cdns_ctx->block.tables.class_ids[q_sig->query_classtype_index].rr_class,
-            cdns_ctx->block.tables.class_ids[q_sig->query_classtype_index].rr_type,
-            cdns_ctx->block.tables.addresses[query->query_name_index].v,
-            (uint32_t)cdns_ctx->block.tables.addresses[query->query_name_index].l, 0,
-            cdns_ctx->block.tables.addresses[first_rname_index].v,
-            (uint32_t)cdns_ctx->block.tables.addresses[first_rname_index].l, 0);
+        if (cdns_ctx->block.tables.name_rdata[query->query_name_index-1].l == 0) {
+            is_qname_minimized = true;
+        }
+        else {
+            is_qname_minimized = IsQNameMinimized(
+                1,
+                cdns_ctx->block.tables.class_ids[q_sig->query_classtype_index-1].rr_class,
+                cdns_ctx->block.tables.class_ids[q_sig->query_classtype_index-1].rr_type,
+                cdns_ctx->block.tables.name_rdata[query->query_name_index-1].v,
+                (uint32_t)cdns_ctx->block.tables.name_rdata[query->query_name_index-1].l, 0,
+                cdns_ctx->block.tables.name_rdata[first_rname_index-1].v,
+                (uint32_t)cdns_ctx->block.tables.name_rdata[first_rname_index-1].l, 0);
+        }
     }
 }
 
@@ -2535,7 +2582,6 @@ void DnsStats::NameLeaksAnalysis(
                 if (present != NULL) {
                     /* keep statistics about this address */
                     present->count++;
-                    SubmitRegistryNumber(REGISTRY_DNS_UsefulQueries, 0);
                     /* Compute the delay between this and the previous view, and update */
                     int64_t delay = DeltaUsec(ts.tv_sec, ts.tv_usec, present->ts.tv_sec, present->ts.tv_usec);
 
@@ -2549,8 +2595,6 @@ void DnsStats::NameLeaksAnalysis(
                     /* If table is full, stick with just the transactions that are present */
                     bool stored = false;
                     (void)queryUsage.InsertOrAdd(&key, true, &stored);
-
-                    SubmitRegistryNumber(REGISTRY_DNS_UsefulQueries, 1);
                 }
 
                 /* Analysis of traffic per TLD */
@@ -2686,6 +2730,7 @@ void DnsStats::ExportQueryUsage()
     TldAddressAsKey *tld_address_entry;
     std::vector<TldAddressAsKey *> lines(queryUsage.GetCount());
     int vector_index = 0;
+    uint64_t total_queries = 0;
     const uint32_t cache_bucket[9] = { 1, 10, 30, 60, 120, 180, 240, 300, 600 };
     uint64_t ip_per_bucket[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     uint64_t ip_per_bucket_d[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -2713,6 +2758,8 @@ void DnsStats::ExportQueryUsage()
     uint64_t tld_nb_delay = 0;
 
     for (size_t i = 0; i < lines.size(); i++) {
+        total_queries += lines[i]->count;
+
         if (min_tld_delay < 0 ||
             (lines[i]->tld_min_delay > 0 && lines[i]->tld_min_delay < min_tld_delay)) {
             min_tld_delay = lines[i]->tld_min_delay;
@@ -2816,6 +2863,9 @@ void DnsStats::ExportQueryUsage()
             tld_nb_delay = 0;
         }
     }
+
+    SubmitRegistryNumberAndCount(REGISTRY_DNS_UsefulQueries, 1, lines.size());
+    SubmitRegistryNumberAndCount(REGISTRY_DNS_UsefulQueries, 0, total_queries - lines.size());
 
     /* Add the counters per bucket */
     for (int i_bucket = 0; i_bucket < 9; i_bucket++) {
