@@ -732,29 +732,7 @@ void DnsStats::SubmitOPTRecord(uint32_t flags, uint8_t * content, uint32_t lengt
 {
     uint32_t current_index = 0;
 
-    /* Process the flags and rcodes */
-    if (e_rcode != NULL)
-    {
-        *e_rcode = (flags >> 24) & 0xFF;
-    }
-
-    /* Register that EDNS was used */
-    is_using_edns = true;
-
-    /* Register whether the DO bit was set */
-    is_do_flag_set = (flags & (1<<15)) != 0;
-
-    /* Add flags to registration */
-    for (int i = 0; i < 16; i++)
-    {
-        if ((flags & (1 << i)) != 0)
-        {
-            SubmitRegistryNumber(REGISTRY_EDNS_Header_Flags, 15 - i);
-        }
-    }
-
-    SubmitRegistryNumber(REGISTRY_EDNS_Version_number, (flags >> 16) & 0xFF);
-
+    RegisterEdnsUsage(flags, e_rcode);
 
     if (current_index < length) {
         edns_options = &content[current_index];
@@ -775,6 +753,33 @@ void DnsStats::SubmitOPTRecord(uint32_t flags, uint8_t * content, uint32_t lengt
         SubmitRegistryNumber(REGISTRY_EDNS_OPT_CODE, o_code);
     }
 }
+
+void DnsStats::RegisterEdnsUsage(uint32_t flags, uint32_t* e_rcode)
+{
+    /* Process the flags and rcodes */
+    if (e_rcode != NULL)
+    {
+        *e_rcode = (flags >> 24) & 0xFF;
+    }
+
+    /* Register that EDNS was used */
+    is_using_edns = true;
+
+    /* Register whether the DO bit was set */
+    is_do_flag_set = (flags & (1 << 15)) != 0;
+
+    /* Add flags to registration */
+    for (int i = 0; i < 16; i++)
+    {
+        if ((flags & (1 << i)) != 0)
+        {
+            SubmitRegistryNumber(REGISTRY_EDNS_Header_Flags, 15 - i);
+        }
+    }
+
+    SubmitRegistryNumber(REGISTRY_EDNS_Version_number, (flags >> 16) & 0xFF);
+}
+
 
 void DnsStats::SubmitKeyRecord(uint8_t * content, uint32_t length)
 {
@@ -1789,6 +1794,18 @@ bool DnsStats::LoadPcapFiles(size_t nb_files, char const ** fileNames)
     return ret;
 }
 
+bool DnsStats::LoadCborFiles(size_t nb_files, char const** fileNames)
+{
+    bool ret = true;
+
+    for (size_t i = 0; ret && i < nb_files; i++)
+    {
+        ret = LoadCborFile(fileNames[i]);
+    }
+
+    return ret;
+}
+
 
 bool DnsStats::LoadCborFile(char const* fileName)
 {
@@ -2129,13 +2146,13 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
 
     if (unfiltered)
     {
-        if ( q_sig != NULL && (q_sig->qr_sig_flags&1) != 0)
+        if ( q_sig != NULL && (q_sig->qr_sig_flags&0x0D) != 0)
         {
             query_count++;
             SubmitCborPacketQuery(cdns_ctx, query, q_sig);
         }
 
-        if ( q_sig != NULL && (q_sig->qr_sig_flags & 18) != 0)
+        if ( q_sig != NULL && (q_sig->qr_sig_flags & 0x32) != 0)
         {
             response_count++;
             SubmitCborPacketResponse(cdns_ctx, query, q_sig);
@@ -2272,6 +2289,11 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
     if (ext->is_filled) {
         int x_i[4] = { ext->question_index, ext->answer_index, ext->authority_index, ext->additional_index };
 
+        if (is_response && x_i[1] < 0 && x_i[2] < 0)
+        {
+            int x = 0;
+        }
+
         if (x_i[0] > 0) {
             /* assume just one query per q_sig, but sometimes there is none. */
             size_t cid = (size_t)q_sig->query_classtype_index - CNDS_INDEX_OFFSET;
@@ -2314,14 +2336,16 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
         }
     }
 
-    if (q_sig->opt_rdata_index >= 0 && !is_response) {
-        size_t opt_rrid = (size_t)q_sig->opt_rdata_index - CNDS_INDEX_OFFSET;
+    if (!is_response) {
         int edns_flags = cdns::get_edns_flags(q_sig->qr_dns_flags);
+        if (q_sig->opt_rdata_index >= 0) {
+            size_t opt_rrid = (size_t)q_sig->opt_rdata_index - CNDS_INDEX_OFFSET;
 
-        SubmitRecordContent(DnsRtype_OPT, q_sig->udp_buf_size, edns_flags,
-            (uint32_t)cdns_ctx->block.tables.name_rdata[opt_rrid].l,
-            cdns_ctx->block.tables.name_rdata[opt_rrid].v,
-            NULL, 0, 0, &e_rcode, &e_length, is_response);
+            SubmitRecordContent(DnsRtype_OPT, q_sig->udp_buf_size, edns_flags,
+                (uint32_t)cdns_ctx->block.tables.name_rdata[opt_rrid].l,
+                cdns_ctx->block.tables.name_rdata[opt_rrid].v,
+                NULL, 0, 0, &e_rcode, &e_length, is_response);
+        }
     }
 
     
@@ -2345,23 +2369,32 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
         }
     }
 
-    if (is_response && first_rname_index >= 0) {
+    if (is_response) {
         size_t nid = (size_t)query->query_name_index - CNDS_INDEX_OFFSET;
-        if (cdns_ctx->block.tables.name_rdata[nid].l == 0) {
-            is_qname_minimized = true;
+        if (first_rname_index >= 0) {
+            if (cdns_ctx->block.tables.name_rdata[nid].l == 0) {
+                is_qname_minimized = true;
+            }
+            else {
+                size_t cid = (size_t)q_sig->query_classtype_index - CNDS_INDEX_OFFSET;
+                size_t rname_id = (size_t)first_rname_index - CNDS_INDEX_OFFSET;
+
+                is_qname_minimized = IsQNameMinimized(
+                    1,
+                    cdns_ctx->block.tables.class_ids[cid].rr_class,
+                    cdns_ctx->block.tables.class_ids[cid].rr_type,
+                    cdns_ctx->block.tables.name_rdata[nid].v,
+                    (uint32_t)cdns_ctx->block.tables.name_rdata[nid].l, 0,
+                    cdns_ctx->block.tables.name_rdata[rname_id].v,
+                    (uint32_t)cdns_ctx->block.tables.name_rdata[rname_id].l, 0);
+            }
         }
         else {
-            size_t cid = (size_t)q_sig->query_classtype_index - CNDS_INDEX_OFFSET;
-            size_t rname_id = (size_t)first_rname_index - CNDS_INDEX_OFFSET;
-
-            is_qname_minimized = IsQNameMinimized(
-                1,
-                cdns_ctx->block.tables.class_ids[cid].rr_class,
-                cdns_ctx->block.tables.class_ids[cid].rr_type,
-                cdns_ctx->block.tables.name_rdata[nid].v,
-                (uint32_t)cdns_ctx->block.tables.name_rdata[nid].l, 0,
-                cdns_ctx->block.tables.name_rdata[rname_id].v,
-                (uint32_t)cdns_ctx->block.tables.name_rdata[rname_id].l, 0);
+            /* This may be a bug, but it ensures compatibility with PCAP mode. */
+            if (cdns_ctx->block.tables.name_rdata[nid].l == 0 ||
+                cdns_ctx->block.tables.name_rdata[nid].v[0] == 0) {
+                is_qname_minimized = true;
+            }
         }
     }
 }
@@ -2459,7 +2492,7 @@ void DnsStats::SubmitPcapRecords(uint8_t * packet, uint32_t length, uint32_t par
         is_qname_minimized = IsQNameMinimized(
             qdcount, query_rclass, query_rtype,
             packet, length, first_query_index,
-            packet, length, (first_answer_index == 0) ? first_ns_index : first_answer_index);
+            packet, length, (ancount == 0) ? first_ns_index : first_answer_index);
     }
 }
 

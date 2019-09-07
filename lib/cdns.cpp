@@ -1639,7 +1639,7 @@ cdns_query_signature::cdns_query_signature():
     query_an_count(0),
     query_ar_count(0),
     query_ns_count(0),
-    edns_version(0),
+    edns_version(-1),
     udp_buf_size(0),
     opt_rdata_index(-1),
     response_rcode(0)

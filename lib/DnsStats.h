@@ -291,6 +291,7 @@ public:
 
     /* For the command line tools */
     bool LoadPcapFiles(size_t nb_files, char const ** fileNames);
+    bool LoadCborFiles(size_t nb_files, char const** fileNames);
     bool LoadCborFile(char const* fileNames);
     bool ExportToCaptureSummary(CaptureSummary * cs);
 
@@ -404,6 +405,7 @@ private:
     int SubmitName(uint8_t * packet, uint32_t length, uint32_t start, bool should_tabulate);
 
     void SubmitOPTRecord(uint32_t flags, uint8_t * content, uint32_t length, uint32_t * e_rcode);
+    void RegisterEdnsUsage(uint32_t flags, uint32_t* e_rcode);
     void SubmitKeyRecord(uint8_t * content, uint32_t length);
     void SubmitRRSIGRecord(uint8_t * content, uint32_t length);
     void SubmitDSRecord(uint8_t * content, uint32_t length);
