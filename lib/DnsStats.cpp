@@ -1135,18 +1135,18 @@ int DnsStats::GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
 
 }
 
-int DnsStats::CompareDnsName(uint8_t * packet, uint32_t length, uint32_t start1, uint32_t start2)
+int DnsStats::CompareDnsName(const uint8_t * packet, uint32_t length, uint32_t start1, uint32_t start2)
 {
     return Compare2DnsNames(packet, length, start1, packet, length, start2);
 }
 
-int DnsStats::Compare2DnsNames(uint8_t* packet1, uint32_t length1, uint32_t start1, uint8_t* packet2, uint32_t length2, uint32_t start2)
+int DnsStats::Compare2DnsNames(const uint8_t* packet1, uint32_t length1, uint32_t start1, const uint8_t* packet2, uint32_t length2, uint32_t start2)
 
 {
     bool ret = false;
 
     while (start1 < length1 && start2 < length2) {
-        if (start1 == start2) {
+        if (start1 == start2 && packet1 == packet2) {
             ret = true;
             break;
         } 
@@ -2348,7 +2348,7 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
         }
         else {
             size_t cid = (size_t)q_sig->query_classtype_index - CNDS_INDEX_OFFSET;
-            size_t rrid = (size_t)first_rname_index - CNDS_INDEX_OFFSET;
+            size_t rname_id = (size_t)first_rname_index - CNDS_INDEX_OFFSET;
 
             is_qname_minimized = IsQNameMinimized(
                 1,
@@ -2356,8 +2356,8 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
                 cdns_ctx->block.tables.class_ids[cid].rr_type,
                 cdns_ctx->block.tables.name_rdata[nid].v,
                 (uint32_t)cdns_ctx->block.tables.name_rdata[nid].l, 0,
-                cdns_ctx->block.tables.name_rdata[rrid].v,
-                (uint32_t)cdns_ctx->block.tables.name_rdata[rrid].l, 0);
+                cdns_ctx->block.tables.name_rdata[rname_id].v,
+                (uint32_t)cdns_ctx->block.tables.name_rdata[rname_id].l, 0);
         }
     }
 }

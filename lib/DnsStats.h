@@ -353,9 +353,9 @@ public:
     static int GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
         uint8_t * name, size_t name_max, size_t * name_length);
 
-    static int CompareDnsName(uint8_t * packet, uint32_t length, uint32_t start1, uint32_t start2);
-    static int Compare2DnsNames(uint8_t* packet1, uint32_t length1, uint32_t start1, 
-        uint8_t* packet2, uint32_t length2, uint32_t start2);
+    static int CompareDnsName(const uint8_t * packet, uint32_t length, uint32_t start1, uint32_t start2);
+    static int Compare2DnsNames(const uint8_t* packet1, uint32_t length1, uint32_t start1, 
+        const uint8_t* packet2, uint32_t length2, uint32_t start2);
 
     static bool IsIpv4Name(const uint8_t * name, size_t name_length);
     static bool IsIpv4Tld(uint8_t * packet, uint32_t length, uint32_t start);
