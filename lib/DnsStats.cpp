@@ -2104,12 +2104,8 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
     cdns_query_signature* r_sig = NULL;
     size_t c_address_id = (size_t)query->client_address_index - CNDS_INDEX_OFFSET;
 
-    if (query->query_signature_index > CNDS_INDEX_OFFSET) {
+    if (query->query_signature_index >= CNDS_INDEX_OFFSET) {
         q_sig = &cdns_ctx->block.tables.q_sigs[(size_t)query->query_signature_index - CNDS_INDEX_OFFSET];
-    }
-
-    if (query->query_signature_index > CNDS_INDEX_OFFSET) {
-        r_sig = &cdns_ctx->block.tables.q_sigs[(size_t)query->query_signature_index - CNDS_INDEX_OFFSET];
     }
 
     if (t_start_sec == 0 && t_start_usec == 0) {
@@ -2134,16 +2130,16 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
 
     if (unfiltered)
     {
-        if (query->query_size > 0 && q_sig != NULL)
+        if ( q_sig != NULL && (q_sig->qr_sig_flags&1) != 0)
         {
             query_count++;
             SubmitCborPacketQuery(cdns_ctx, query, q_sig);
         }
 
-        if (query->response_size > 0 && r_sig != NULL)
+        if ( q_sig != NULL && (q_sig->qr_sig_flags & 18) != 0)
         {
             response_count++;
-            SubmitCborPacketResponse(cdns_ctx, query, r_sig);
+            SubmitCborPacketResponse(cdns_ctx, query, q_sig);
         }
     }
 }

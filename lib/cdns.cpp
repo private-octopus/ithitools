@@ -202,10 +202,10 @@ int cdns::get_dns_flags(int q_dns_flags, bool is_response)
     int flags = 0;
 
     if (is_response) {
-        flags = (q_dns_flags >> 8) & 0x7F;
+        flags = (q_dns_flags >> 8) & 0x7E;
     }
     else {
-        flags = q_dns_flags & 0x7F;
+        flags = q_dns_flags & 0x7E;
     }
 
     return flags;
