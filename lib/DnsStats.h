@@ -326,8 +326,6 @@ public:
     uint32_t edns_options_length;
     bool is_qname_minimized;
 
-    int dnssec_flag_do_count;
-
     static bool IsValidTldSyntax(uint8_t * tld, size_t length);
     static bool IsInSortedList(const char ** list, size_t nb_list, uint8_t * tld, size_t length);
     static bool IsRfc6761Tld(uint8_t * tld, size_t length);

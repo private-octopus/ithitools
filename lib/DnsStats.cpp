@@ -58,8 +58,7 @@ DnsStats::DnsStats()
     is_using_edns(false),
     edns_options(NULL),
     edns_options_length(0),
-    is_qname_minimized(false),
-    dnssec_flag_do_count(0)
+    is_qname_minimized(false)
 {
 }
 
@@ -744,9 +743,6 @@ void DnsStats::SubmitOPTRecord(uint32_t flags, uint8_t * content, uint32_t lengt
 
     /* Register whether the DO bit was set */
     is_do_flag_set = (flags & (1<<15)) != 0;
-    if (is_do_flag_set) {
-        dnssec_flag_do_count++;
-    }
 
     /* Add flags to registration */
     for (int i = 0; i < 16; i++)
@@ -965,7 +961,7 @@ bool DnsStats::GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_
         {
             /* end of parsing*/
 
-            if (previous != 0)
+            if (nb_parts != 0)
             {
                 *offset = previous;
             }
@@ -2225,9 +2221,9 @@ void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_
         uint8_t* q_name = cdns_ctx->block.tables.name_rdata[nid].v;
         uint32_t q_name_length = (uint32_t)cdns_ctx->block.tables.name_rdata[nid].l;
 
-        if (query->query_name_index < 0 || q_name_length == 0) {
+        if (q_name_length == 0) {
             q_name = null_name;
-            q_name_length = 2;
+            q_name_length = 0;
         }
 
         if (r_sig->query_opcode == DNS_OPCODE_QUERY)
@@ -2487,7 +2483,6 @@ void DnsStats::NameLeaksAnalysis(
     bool is_bad_syntax = false;
     bool is_numeric = false;
 
-
     if (gotTld) {
         DnsStats::SetToUpperCase(tld, tld_length);
         /* Verify that the TLD is valid, so as to exclude random traffic that would drown the stats */
@@ -2590,7 +2585,7 @@ void DnsStats::NameLeaksAnalysis(
                     uint8_t key2_length;
                     uint8_t should_keep = false;
 
-                    if (previous_offset == 0) {
+                    if (nb_name_parts <= 1) {
                         key2_name = (uint8_t*)"-- NONE --";
                         key2_length = 10;
                         should_keep = true;
@@ -2722,7 +2717,6 @@ void DnsStats::NameLeaksAnalysis(
         {
             /* Keep a count */
             SubmitRegistryNumber(REGISTRY_DNS_TLD_Usage_Count, 0);
-
 
             /* Analysis of domain leakage */
             if (IsRfc6761Tld(tld, tld_length))
