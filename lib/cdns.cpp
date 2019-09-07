@@ -273,8 +273,6 @@ bool cdns::read_preamble(int * err)
         ret = false;
     }
     else {
-        int rank = 0;
-
         if (val == CBOR_END_OF_ARRAY) {
             file_head_undef = 1;
             val = 0xffffffff;
@@ -301,7 +299,6 @@ bool cdns::read_preamble(int * err)
             if (in != NULL && in < in_max && *in != 0xff) {
                 int64_t nb_blocks;
                 int blocks_type = CBOR_CLASS(*in);
-                int is_undef = 0;
                 in = cbor_get_number(in, in_max, &nb_blocks);
 
                 if (in == NULL || blocks_type != CBOR_T_ARRAY) {

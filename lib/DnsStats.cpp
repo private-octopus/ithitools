@@ -2101,7 +2101,6 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
     bool unfiltered = false;
     cdns_query* query = &cdns_ctx->block.queries[packet_id];
     cdns_query_signature* q_sig = NULL; 
-    cdns_query_signature* r_sig = NULL;
     size_t c_address_id = (size_t)query->client_address_index - CNDS_INDEX_OFFSET;
 
     if (query->query_signature_index >= CNDS_INDEX_OFFSET) {
@@ -2247,6 +2246,15 @@ void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_
                 }
             }
         }
+    }
+    else {
+        /* Response code 1, malformed packet, happens here. */
+        if (rootAddresses.IsInList(server_addr, server_addr_length))
+        {
+            /* Perform statistics on root traffic */
+            SubmitRegistryNumber(REGISTRY_DNS_root_QR, rcode);
+        }
+        SubmitRegistryNumber(REGISTRY_DNS_RCODES, rcode);
     }
 
     SubmitRegistryNumber(REGISTRY_DNS_error_flag, error_flags);
