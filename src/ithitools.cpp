@@ -55,7 +55,7 @@ static int usage()
     fprintf(stderr, "  -v                 Print the current version number.\n");
     fprintf(stderr, "  -c                 process DNS traffic capture files in PCAP format,\n");
     fprintf(stderr, "                     PCAP files listed the input files arguments.\n");
-    fprintf(stderr, "  -y                 process DNS traffic capture file in CBOR format,\n");
+    fprintf(stderr, "  -X                 process DNS traffic capture file in CBOR format,\n");
     fprintf(stderr, "                     CBOR files listed the input files arguments.\n");
     fprintf(stderr, "  -s                 process summary files, from previous captures.\n");
     fprintf(stderr, "                     CSV files listed the input files arguments,\n");
@@ -196,7 +196,7 @@ int main(int argc, char ** argv)
         case 'c':
             exit_code = check_execution_mode(ithi_mode_capture, &exec_mode);
             break;
-        case 'y':
+        case 'X':
             exit_code = check_execution_mode(ithi_mode_cbor_capture, &exec_mode);
             break;
         case 's':

@@ -741,7 +741,6 @@ void DnsStats::SubmitOPTRecord(uint32_t flags, uint8_t * content, uint32_t lengt
     else {
         edns_options = NULL;
         edns_options_length = 0;
-
     }
 
     /* Find the options in the payload */
@@ -756,6 +755,10 @@ void DnsStats::SubmitOPTRecord(uint32_t flags, uint8_t * content, uint32_t lengt
 
 void DnsStats::RegisterEdnsUsage(uint32_t flags, uint32_t* e_rcode)
 {
+    /* Little safety because flags are set differently for some packets */
+    if (dnssec_packet != NULL) {
+        flags |= (1 << 15);
+    }
     /* Process the flags and rcodes */
     if (e_rcode != NULL)
     {
@@ -2146,7 +2149,7 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
 
     if (unfiltered)
     {
-        if ( q_sig != NULL && (q_sig->qr_sig_flags&0x0D) != 0)
+        if ( q_sig != NULL && (q_sig->qr_sig_flags&0x01) != 0)
         {
             query_count++;
             SubmitCborPacketQuery(cdns_ctx, query, q_sig);
@@ -2171,6 +2174,7 @@ void DnsStats::SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_que
     dnssec_name_index = 0;
     dnssec_packet = NULL;
     dnssec_packet_length = 0;
+    error_flags = 0;
 
     SubmitOpcodeAndFlags(q_sig->query_opcode, cdns::get_dns_flags(q_sig->qr_dns_flags,false));
 
@@ -2197,6 +2201,8 @@ void DnsStats::SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_que
             cdns_ctx->block.tables.addresses[addrid].v,
             cdns_ctx->block.tables.addresses[addrid].l);
     }
+
+    SubmitRegistryNumber(REGISTRY_DNS_error_flag, error_flags);
 }
 
 void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* r_sig)
@@ -2224,6 +2230,7 @@ void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_
     dnssec_name_index = 0;
     dnssec_packet = NULL;
     dnssec_packet_length = 0;
+    error_flags = 0;
 
 
     SubmitOpcodeAndFlags(r_sig->query_opcode, cdns::get_dns_flags(r_sig->qr_dns_flags, true));
@@ -2289,11 +2296,6 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
     if (ext->is_filled) {
         int x_i[4] = { ext->question_index, ext->answer_index, ext->authority_index, ext->additional_index };
 
-        if (is_response && x_i[1] < 0 && x_i[2] < 0)
-        {
-            int x = 0;
-        }
-
         if (x_i[0] > 0) {
             /* assume just one query per q_sig, but sometimes there is none. */
             size_t cid = (size_t)q_sig->query_classtype_index - CNDS_INDEX_OFFSET;
@@ -2319,6 +2321,10 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
                     if (cdns_ctx->block.tables.class_ids[cid].rr_type == DnsRtype_OPT) {
                         rr_class = q_sig->udp_buf_size;
                         ttl = cdns::get_edns_flags(q_sig->qr_dns_flags);
+
+                        if (dnssec_packet != NULL) {
+                            ttl |= (1 << 15);
+                        }
                     }
 
                     SubmitRecordContent(
