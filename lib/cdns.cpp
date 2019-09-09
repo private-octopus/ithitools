@@ -28,6 +28,7 @@
 #include "cdns.h"
 
 cdns::cdns():
+    first_block_start_us(0),
     F(NULL),
     buf(NULL),
     buf_size(0),
@@ -194,6 +195,10 @@ bool cdns::open_block(int* err)
         }
     }
 
+    if (ret && first_block_start_us == 0) {
+        first_block_start_us = block.block_start_us;
+    }
+
     return ret;
 }
 
@@ -205,7 +210,7 @@ int cdns::get_dns_flags(int q_dns_flags, bool is_response)
         flags = (q_dns_flags >> 8) & 0x7E;
     }
     else {
-        flags = q_dns_flags & 0x7E;
+        flags = q_dns_flags & 0x7C;
     }
 
     return flags;
@@ -1329,7 +1334,8 @@ uint8_t* cdns::dump_list(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_
 }
 
 cdnsBlock::cdnsBlock():
-    is_filled(false)
+    is_filled(false),
+    block_start_us(0)
 {
 }
 
@@ -1343,6 +1349,12 @@ uint8_t * cdnsBlock::parse(uint8_t* in, uint8_t const* in_max, int* err)
     clear();
     is_filled = 1;
     in = cbor_map_parse(in, in_max, this, err);
+
+    if (preamble.is_filled) {
+        block_start_us = preamble.earliest_time_sec;
+        block_start_us *= 1000000;
+        block_start_us += preamble.earliest_time_usec;
+    }
 
     return in;
 }
@@ -1381,6 +1393,7 @@ void cdnsBlock::clear()
         queries.clear();
         address_events.clear();
         is_filled = false;
+        block_start_us = 0;
     }
 }
    

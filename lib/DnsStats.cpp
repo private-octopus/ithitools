@@ -1951,6 +1951,26 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
         dest_addr, dest_addr_length, ts);
 }
 
+void DnsStats::UpdateDuration(my_bpftimeval ts)
+{
+    if (t_start_sec == 0 && t_start_usec == 0) {
+        t_start_sec = ts.tv_sec;
+        t_start_usec = ts.tv_usec;
+    }
+    else {
+        int64_t delta_t = DeltaUsec(ts.tv_sec, ts.tv_usec, t_start_sec, t_start_usec);
+
+        if (delta_t < 0) {
+            t_start_sec = ts.tv_sec;
+            t_start_usec = ts.tv_usec;
+            duration_usec -= delta_t;
+        }
+        else if (delta_t > duration_usec) {
+            duration_usec = delta_t;
+        }
+    }
+}
+
 void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     uint8_t * source_addr, size_t source_addr_length,
     uint8_t * dest_addr, size_t dest_addr_length,
@@ -1969,22 +1989,8 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     uint32_t parse_index = 0;
     bool unfiltered = false;
 
-    if (t_start_sec == 0 && t_start_usec == 0) {
-        t_start_sec = ts.tv_sec;
-        t_start_usec = ts.tv_usec;
-    }
-    else {
-        int64_t delta_t = DeltaUsec(ts.tv_sec, ts.tv_usec, t_start_sec, t_start_usec);
+    UpdateDuration(ts);
 
-        if (delta_t < 0) {
-            t_start_sec = ts.tv_sec;
-            t_start_usec = ts.tv_usec;
-            duration_usec -= delta_t;
-        }
-        else if (delta_t > duration_usec) {
-            duration_usec = delta_t;
-        }
-    }
     volume_53only += length;
 
     error_flags = 0;
@@ -2131,10 +2137,6 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
         t_start_usec = cdns_ctx->block.preamble.earliest_time_usec;
     }
 
-    if (query->time_offset_usec > duration_usec) {
-        duration_usec = query->time_offset_usec;
-    }
-
     volume_53only += query->query_size;
     volume_53only += query->response_size;
 
@@ -2164,6 +2166,9 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
   
 void DnsStats::SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig)
 {
+    uint64_t query_time_usec = cdns_ctx->block.block_start_us + query->time_offset_usec;
+    my_bpftimeval ts;
+
     error_flags = 0;
     is_do_flag_set = false;
     is_using_edns = false;
@@ -2174,6 +2179,11 @@ void DnsStats::SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_que
     dnssec_packet = NULL;
     dnssec_packet_length = 0;
     error_flags = 0;
+
+    ts.tv_sec = (long)(query_time_usec / 1000000);
+    ts.tv_usec = (long)(query_time_usec % 1000000);
+
+    UpdateDuration(ts);
 
     SubmitOpcodeAndFlags(q_sig->query_opcode, cdns::get_dns_flags(q_sig->qr_dns_flags,false));
 
@@ -2215,10 +2225,13 @@ void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_
     uint8_t* client_addr = cdns_ctx->block.tables.addresses[c_addrid].v;
     uint8_t null_name[] = { 0, 0 };
     my_bpftimeval ts;
-    int r_delay = query->delay_useconds + query->time_offset_usec;
+    uint64_t query_time_usec = cdns_ctx->block.block_start_us + query->time_offset_usec;
+    uint64_t r_delay = query_time_usec + query->delay_useconds;
 
-    ts.tv_sec = r_delay / 1000000;
-    ts.tv_usec = r_delay % 1000000;
+    ts.tv_sec = (long)(r_delay / 1000000);
+    ts.tv_usec = (long)(r_delay % 1000000);
+
+    UpdateDuration(ts);
 
     error_flags = 0;
     is_do_flag_set = false;

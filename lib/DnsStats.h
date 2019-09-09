@@ -370,6 +370,8 @@ public:
     void SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header,
         my_bpftimeval ts);
 
+    void UpdateDuration(my_bpftimeval ts);
+
     void SubmitCborPacket(cdns* cdns_ctx, size_t packet_id);
     void SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig);
     void SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* r_sig);
