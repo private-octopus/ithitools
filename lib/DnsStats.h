@@ -32,6 +32,7 @@
 #include "CaptureSummary.h"
 #include "TldAsKey.h"
 #include "dnscap_common.h"
+#include "cdns.h"
 
 #ifndef UNREFERENCED_PARAMETER
 #define UNREFERENCED_PARAMETER(x) (void)(x)
@@ -290,6 +291,8 @@ public:
 
     /* For the command line tools */
     bool LoadPcapFiles(size_t nb_files, char const ** fileNames);
+    bool LoadCborFiles(size_t nb_files, char const** fileNames);
+    bool LoadCborFile(char const* fileNames);
     bool ExportToCaptureSummary(CaptureSummary * cs);
 
     bool IsCaptureStopped() { return is_capture_stopped; };
@@ -316,6 +319,8 @@ public:
     int response_count;
     uint32_t error_flags;
     uint32_t dnssec_name_index;
+    uint8_t * dnssec_packet;
+    uint32_t dnssec_packet_length;
     bool is_do_flag_set;
     bool is_using_edns;
     uint8_t * edns_options;
@@ -349,18 +354,32 @@ public:
     static int GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
         uint8_t * name, size_t name_max, size_t * name_length);
 
-    static int CompareDnsName(uint8_t * packet, uint32_t length, uint32_t start1, uint32_t start2);
+    static int CompareDnsName(const uint8_t * packet, uint32_t length, uint32_t start1, uint32_t start2);
+    static int Compare2DnsNames(const uint8_t* packet1, uint32_t length1, uint32_t start1, 
+        const uint8_t* packet2, uint32_t length2, uint32_t start2);
 
     static bool IsIpv4Name(const uint8_t * name, size_t name_length);
     static bool IsIpv4Tld(uint8_t * packet, uint32_t length, uint32_t start);
 
-    static bool IsQNameMinimized(uint8_t * packet, uint32_t length, uint32_t nb_queries, int q_rclass, int q_rtype, uint32_t qr_index, uint32_t an_index, uint32_t ns_index);
-
+    static bool IsQNameMinimized(uint32_t nb_queries, int q_rclass, int q_rtype,
+        uint8_t* packet1, uint32_t length1, uint32_t qr_name_offset,
+        uint8_t* packet2, uint32_t length2, uint32_t rr_name_offset);
     static void GetSourceAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
     static void GetDestAddress(int ip_type, uint8_t * ip_header, uint8_t ** addr, size_t * addr_length);
 
     void SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint8_t* ip_header,
         my_bpftimeval ts);
+
+    void SubmitCborPacket(cdns* cdns_ctx, size_t packet_id);
+    void SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig);
+    void SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* r_sig);
+
+    /* Parallel construction for parsing CBOR and PCAP records. */
+    void SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig,
+        cdns_qr_extended* ext, bool is_response);
+    void SubmitPcapRecords(uint8_t* packet, uint32_t length, uint32_t parse_index,
+        bool is_response, bool has_header, uint32_t rcode, uint32_t flags,
+        uint32_t qdcount, uint32_t ancount, uint32_t nscount, uint32_t arcount);
 
     static bool GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t *offset, uint32_t * previous_offset, int * nb_name_parts);
 
@@ -369,11 +388,24 @@ private:
     bool LoadPcapFile(char const * fileName);
 
     int SubmitQuery(uint8_t * packet, uint32_t length, uint32_t start, bool is_response, int * qclass, int * qtype);
+    void SubmitQueryContent(int rrtype, int rrclass,
+        uint8_t* packet, uint32_t packet_length, uint32_t name_offset);
+    void SubmitQueryExtensions(
+        uint8_t* packet, uint32_t length, uint32_t name_offset,
+        uint8_t* client_addr, size_t client_addr_length);
+
     int SubmitRecord(uint8_t * packet, uint32_t length, uint32_t start, 
         uint32_t * e_rcode, uint32_t * e_length, bool is_response);
+    void SubmitRecordContent(int rrtype, int rrclass, int ttl, int ldata,
+        uint8_t* data, uint8_t* packet, uint32_t packet_length, uint32_t name_offset,
+        uint32_t* e_rcode, uint32_t* e_length, bool is_response);
+
+    void SubmitOpcodeAndFlags(uint32_t opcode, uint32_t flags);
+
     int SubmitName(uint8_t * packet, uint32_t length, uint32_t start, bool should_tabulate);
 
     void SubmitOPTRecord(uint32_t flags, uint8_t * content, uint32_t length, uint32_t * e_rcode);
+    void RegisterEdnsUsage(uint32_t flags, uint32_t* e_rcode);
     void SubmitKeyRecord(uint8_t * content, uint32_t length);
     void SubmitRRSIGRecord(uint8_t * content, uint32_t length);
     void SubmitDSRecord(uint8_t * content, uint32_t length);
@@ -383,6 +415,21 @@ private:
     void SubmitRegistryNumber(uint32_t registry_id, uint32_t number);
     void SubmitRegistryStringAndCount(uint32_t registry_id, uint32_t length, uint8_t * value, uint64_t count);
     void SubmitRegistryString(uint32_t registry_id, uint32_t length, uint8_t * value);
+
+    void NameLeaksAnalysis(
+        uint8_t* server_addr,
+        size_t server_addr_length,
+        uint8_t* client_addr,
+        size_t client_addr_length,
+        int rcode,
+        uint8_t* packet,
+        uint32_t packet_length,
+        uint32_t name_offset,
+        my_bpftimeval ts,
+        bool is_not_empty_response
+    );
+
+
 
     int CheckForUnderline(uint8_t * packet, uint32_t length, uint32_t start);
 

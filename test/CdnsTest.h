@@ -1,6 +1,6 @@
 /*
 * Author: Christian Huitema
-* Copyright (c) 2018, Private Octopus, Inc.
+* Copyright (c) 2019, Private Octopus, Inc.
 * All rights reserved.
 *
 * Permission to use, copy, modify, and distribute this software for any
@@ -19,47 +19,35 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "ithiutil.h"
-#include "ComputeMetric.h"
+#ifndef CDNS_TEST_H
+#define CDNS_TEST_H
 
-ComputeMetric::ComputeMetric()
-    :
-    F_log(NULL)
+#include "ithi_test_class.h"
+
+class CdnsTest : public ithi_test_class
 {
-}
+public:
+    CdnsTest();
+    ~CdnsTest();
 
-ComputeMetric::~ComputeMetric()
+    bool DoTest() override;
+};
+
+class CdnsDumpTest : public ithi_test_class
 {
-}
+public:
+    CdnsDumpTest();
+    ~CdnsDumpTest();
 
-bool ComputeMetric::LoadMultipleFiles(char const ** in_files, int nb_files)
+    bool DoTest() override;
+};
+
+class CdnsCaptureTest : public ithi_test_class
 {
-    bool ret = true;
+public:
+    CdnsCaptureTest();
+    ~CdnsCaptureTest();
+    bool DoTest() override;
+};
 
-    if (nb_files == 1)
-    {
-        ret = Load(in_files[0]);
-    }
-    else
-    {
-        ret = false;
-    }
-    return ret;
-}
-
-bool ComputeMetric::Save(char const * out_file)
-{
-    bool ret;
-    FILE * F = NULL;
-    
-    F = ithi_file_open(out_file, "w");
-    ret = (F != NULL);
-
-    if (ret)
-    {
-        ret = Write(F);
-        fclose(F);
-    }
-
-    return ret;
-}
+#endif

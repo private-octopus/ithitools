@@ -135,6 +135,60 @@ static const qname_test_line_t qname_test_case[] = {
 
 static const size_t nb_qname_test_cases = sizeof(qname_test_case) / sizeof(qname_test_line_t);
 
+static const uint8_t n1[] = {
+    0x03, 'w', 'w', 'w', 0x07, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 0x03, 'c', 'o', 'm', 0x00
+};
+
+static const uint8_t n1b[] = {
+    0x03, 'w', 'w', 'w', 0x07, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 0x03, 'c', 'o', 'm', 0x00
+};
+
+static const uint8_t n2[] = {
+     0x07, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 0x03, 'c', 'o', 'm', 0x00
+};
+
+static const uint8_t n2b[] = {
+     0x07, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 0x03, 'c', 'o', 'm', 0x00
+};
+
+static const uint8_t n3[] = {
+    0x03, 'c', 'o', 'm', 0x00
+};
+
+static const uint8_t n3b[] = {
+    0x03, 'c', 'o', 'm', 0x00
+};
+
+static const uint8_t n0[] = {
+    0x00, 0x00
+};
+
+typedef struct st_qname_test_line2_t {
+    const uint8_t* name1;
+    size_t length1;
+    const uint8_t* name2;
+    size_t length2;
+    bool name_cmp;
+} qname_test_line2_t;
+
+static const qname_test_line2_t qname_test_case2[] = {
+    { n1, sizeof(n1), n1, sizeof(n1), true},
+    { n1, sizeof(n1), n1b, sizeof(n1b), true},
+    { n1, sizeof(n1), n2, sizeof(n2), false},
+    { n1, sizeof(n1), n3, sizeof(n3), false},
+    { n1, sizeof(n1), n0, 0, false},
+    { n2, sizeof(n2), n2, sizeof(n2), true},
+    { n2, sizeof(n2), n2b, sizeof(n2b), true},
+    { n2, sizeof(n2), n3, sizeof(n3), false},
+    { n2, sizeof(n2), n0, 0, false},
+    { n3, sizeof(n3), n3, sizeof(n3), true},
+    { n3, sizeof(n3), n3b, sizeof(n3b), true},
+    { n3, sizeof(n3), n0, 0, false},
+    { n0, 0, n0, 0, false},
+};
+
+static const size_t nb_qname_test_case2 = sizeof(qname_test_case2) / sizeof(qname_test_line2_t);
+
 CmpNameTest::CmpNameTest()
 {
 }
@@ -146,7 +200,7 @@ CmpNameTest::~CmpNameTest()
 bool CmpNameTest::DoTest()
 {
     bool ret = true;
-
+    
     for (size_t i = 0; i < nb_qname_test_cases; i++) {
         uint32_t n2 = (qname_test_case[i].an_start == 0) ? qname_test_case[i].ns_start : qname_test_case[i].an_start;
         bool x = DnsStats::CompareDnsName(qname_test_case[i].packet,
@@ -155,6 +209,18 @@ bool CmpNameTest::DoTest()
         if (x != qname_test_case[i].name_cmp) {
             TEST_LOG("Comparison case %d fails, returns %s instead of %s\n", (int)i,
                 (x)?"true":"false", (qname_test_case[i].name_cmp) ? "true" : "false");
+            ret = false;
+        }
+    }
+
+    for (size_t i = 0; i < nb_qname_test_case2; i++) {
+        bool x = DnsStats::Compare2DnsNames(qname_test_case2[i].name1,
+            (uint32_t)qname_test_case2[i].length1, 0, qname_test_case2[i].name2,
+            (uint32_t)qname_test_case2[i].length2, 0);
+
+        if (x != qname_test_case2[i].name_cmp) {
+            TEST_LOG("Comparison case2 %d fails, returns %s instead of %s\n", (int)i,
+                (x) ? "true" : "false", (qname_test_case[i].name_cmp) ? "true" : "false");
             ret = false;
         }
     }
@@ -176,10 +242,11 @@ bool QNameTest::DoTest()
     bool ret = true;
 
     for (size_t i = 0; i < nb_qname_test_cases; i++) {
-        bool x = DnsStats::IsQNameMinimized(qname_test_case[i].packet,
-            (uint32_t)qname_test_case[i].length, qname_test_case[i].nb_queries,
-            qname_test_case[i].q_class, qname_test_case[i].q_type,            
-            qname_test_case[i].qr_start, qname_test_case[i].an_start, qname_test_case[i].ns_start);
+        bool x = DnsStats::IsQNameMinimized(
+            qname_test_case[i].nb_queries, qname_test_case[i].q_class, qname_test_case[i].q_type,
+            qname_test_case[i].packet, (uint32_t)qname_test_case[i].length, qname_test_case[i].qr_start,
+            qname_test_case[i].packet, (uint32_t)qname_test_case[i].length, 
+            (qname_test_case[i].an_start ==0)?qname_test_case[i].ns_start: qname_test_case[i].an_start);
 
         if (x != qname_test_case[i].is_minimized) {
             TEST_LOG("Is QName case %d fails, returns %s instead of %s\n", (int)i,

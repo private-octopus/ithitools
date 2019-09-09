@@ -33,6 +33,7 @@
 #include "CaptureSummary.h"
 #include "ComputeM6.h"
 #include "ithimetrics.h"
+#include "ithiutil.h"
 #include "ithipublisher.h"
 
 // Place holder data, if metrics do not provide actual number
@@ -197,13 +198,8 @@ bool ithipublisher::LoadFileData(int file_index, char const * dir_met_name)
     bool ret = snprintf(file_name, sizeof(file_name), "%s%s", dir_met_name, file_list[file_index]->file_name) > 0;
 
     if (ret) {
-#ifdef _WINDOWS
-        errno_t err = fopen_s(&F, file_name, "r");
-        ret = (err == 0 && F != NULL);
-#else
-        F = fopen(file_name, "r");
+        F = ithi_file_open(file_name, "r");
         ret = (F != NULL);
-#endif
     }
 
     while (ret && fgets(buffer, sizeof(buffer), F))
@@ -306,13 +302,8 @@ bool ithipublisher::Publish(char const * web_folder)
     if (ret)
     {
         /* Create the file */
-#ifdef _WINDOWS
-        errno_t err = fopen_s(&F, file_name, "w");
-        ret = (err == 0 && F != NULL);
-#else
-        F = fopen(file_name, "w");
+        F = ithi_file_open(file_name, "w");
         ret = (F != NULL);
-#endif
     }
 
     if (ret)
@@ -438,7 +429,7 @@ bool ithipublisher::GetCurrent(char const * metric_name, char const * key_value,
     std::vector<double> val;
     bool ret = GetVector(metric_name, key_value, &val);
 
-    *current = val[nb_months - 1];
+    *current = val[((size_t)nb_months) - 1];
 
     return ret;
 }
@@ -460,10 +451,10 @@ bool ithipublisher::GetAverageAndCurrent(char const * metric_name, char const * 
             {
                 sum += val[i];
             }
-            *average = sum / (nb_months - 1);
+            *average = sum / (double)(((size_t)nb_months) - 1);
         }
 
-        *current = val[nb_months - 1];
+        *current = val[(size_t)nb_months - 1];
     }
     
     return ret;
@@ -499,7 +490,7 @@ bool ithipublisher::GetNameList(char const * metric_name, std::vector<MetricName
         {
             if (nb_months > 1)
             {
-                current_name.average = sum / (nb_months - 1);
+                current_name.average = sum / (((size_t)nb_months) - 1);
             }
             name_list->push_back(current_name);
             current_name.name = line_list[line_index]->key_value;
@@ -525,7 +516,7 @@ bool ithipublisher::GetNameList(char const * metric_name, std::vector<MetricName
     {
         if (nb_months > 1)
         {
-            current_name.average = sum / (nb_months - 1);
+            current_name.average = sum / (((size_t)nb_months) - 1);
         }
         name_list->push_back(current_name);
     }
@@ -1148,13 +1139,8 @@ bool ithiIndexPublisher::Publish(char const * web_folder)
     if (ret)
     {
         /* Create the file */
-#ifdef _WINDOWS
-        errno_t err = fopen_s(&F, file_name, "w");
-        ret = (err == 0 && F != NULL);
-#else
-        F = fopen(file_name, "w");
+        F = ithi_file_open(file_name, "w");
         ret = (F != NULL);
-#endif
     }
 
     if (ret)

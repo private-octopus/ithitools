@@ -20,6 +20,7 @@
 */
 
 #include <stdio.h>
+#include "ithiutil.h"
 #include "CaptureSummary.h"
 #include "LoadTest.h"
 
@@ -66,31 +67,20 @@ bool LoadTest::DoGoodTest()
     if (ret)
     {
         /* Count the lines in the test file and verify that the count matches. */
-        FILE* F = NULL;
         char buffer[512];
         size_t nb_lines = 0;
+        FILE* F = ithi_file_open(good_file, "r");
 
-#ifdef _WINDOWS
-        errno_t err = fopen_s(&F, good_file, "r");
-        ret = (err == 0 && F != NULL);
-#else
-        F = fopen(good_file, "r");
-        ret = (F != NULL);
-#endif
-
-        while (ret && fgets(buffer, sizeof(buffer), F))
-        {
-            nb_lines++;
-        }
-
-        if (F != NULL)
-        {
+        if (F != NULL) {
+            while (ret && fgets(buffer, sizeof(buffer), F))
+            {
+                nb_lines++;
+            }
             fclose(F);
-        }
-
-        if (ret)
-        {
             ret = (nb_lines == cs.Size());
+        }
+        else {
+            ret = false;
         }
     }
 

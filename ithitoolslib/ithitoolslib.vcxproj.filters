@@ -87,10 +87,16 @@
     <ClInclude Include="..\lib\TldAsKey.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\UsefulTransaction.h">
+    <ClInclude Include="..\lib\Version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\Version.h">
+    <ClInclude Include="..\lib\cdns.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\ithiutil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lib\cbor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -149,7 +155,13 @@
     <ClCompile Include="..\lib\pcap_reader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\UsefulTransaction.cpp">
+    <ClCompile Include="..\lib\cdns.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\ithiutil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lib\cbor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

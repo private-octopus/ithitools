@@ -55,6 +55,8 @@ static int usage()
     fprintf(stderr, "  -v                 Print the current version number.\n");
     fprintf(stderr, "  -c                 process DNS traffic capture files in PCAP format,\n");
     fprintf(stderr, "                     PCAP files listed the input files arguments.\n");
+    fprintf(stderr, "  -X                 process DNS traffic capture file in CBOR format,\n");
+    fprintf(stderr, "                     CBOR files listed the input files arguments.\n");
     fprintf(stderr, "  -s                 process summary files, from previous captures.\n");
     fprintf(stderr, "                     CSV files listed the input files arguments,\n");
     fprintf(stderr, "                     or in a text file, see -S argument description.\n");
@@ -143,6 +145,7 @@ static int usage()
 enum ithi_tool_mode {
     ithi_mode_unspecified=0,
     ithi_mode_capture,
+    ithi_mode_cbor_capture,
     ithi_mode_summary,
     ithi_mode_metrics,
     ithi_mode_publish,
@@ -186,12 +189,15 @@ int main(int argc, char ** argv)
     char const * data_dir = NULL;
     /* Get the parameters */
     int opt;
-    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:V:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:O:P:D:N:AEhfcsmpTvW?")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:V:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:O:P:D:N:AEhfcsmpTvWy?")) != -1)
     {
         switch (opt)
         {
         case 'c':
             exit_code = check_execution_mode(ithi_mode_capture, &exec_mode);
+            break;
+        case 'X':
+            exit_code = check_execution_mode(ithi_mode_cbor_capture, &exec_mode);
             break;
         case 's':
             exit_code = check_execution_mode(ithi_mode_summary, &exec_mode);
@@ -443,6 +449,38 @@ int main(int argc, char ** argv)
             else
             {
                 printf("Capture processing succeeded.\n");
+            }
+        }
+    }
+    else if (exec_mode == ithi_mode_cbor_capture)
+    {
+        if (optind >= argc)
+        {
+            fprintf(stderr, "No capture file to analyze!\n");
+            exit_code = usage();
+        }
+        else
+        {
+            if (!stats.LoadCborFiles((size_t)argc - optind, (char const**)(argv + optind)))
+            {
+                fprintf(stderr, "Cannot process the CBOR input files.\n");
+                exit_code = -1;
+            }
+            else if (!stats.ExportToCaptureSummary(&cs))
+            {
+                fprintf(stderr, "Cannot process the CBOR capture summary.\n");
+                exit_code = -1;
+
+            }
+            else if (!cs.Save(out_file))
+            {
+                fprintf(stderr, "Cannot save the merged summary on <%s>.\n",
+                    out_file);
+                exit_code = -1;
+            }
+            else
+            {
+                printf("CBOR Capture processing succeeded.\n");
             }
         }
     }

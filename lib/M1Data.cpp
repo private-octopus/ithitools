@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include "CsvHelper.h"
 #include "M1Data.h"
+#include "ithiutil.h"
 
 #ifndef UNREFERENCED_PARAMETER
 #define UNREFERENCED_PARAMETER(x) (void)(x)
@@ -60,16 +61,9 @@ bool M1Data::Load(char const * monthly_compliance_file_name)
     double current_sum = 0;
     size_t current_reg = 0;
     bool skip_month_column = false;
-
-#ifdef _WINDOWS
-    errno_t err = fopen_s(&F, monthly_compliance_file_name, "r");
-    bool ret = (err == 0 && F != NULL);
-#else
     bool ret;
-    F = fopen(monthly_compliance_file_name, "r");
+    F = ithi_file_open(monthly_compliance_file_name, "r");
     ret = (F != NULL);
-#endif
-
 
     /*
     MAYBE parse file name for date.

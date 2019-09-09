@@ -1,6 +1,6 @@
 /*
 * Author: Christian Huitema
-* Copyright (c) 2018, Private Octopus, Inc.
+* Copyright (c) 2019, Private Octopus, Inc.
 * All rights reserved.
 *
 * Permission to use, copy, modify, and distribute this software for any
@@ -19,47 +19,35 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "ithiutil.h"
-#include "ComputeMetric.h"
 
-ComputeMetric::ComputeMetric()
-    :
-    F_log(NULL)
+#ifndef CBOR_TEST_H
+#define CBOR_TEST_H
+
+#include "ithi_test_class.h"
+
+class CborTest : public ithi_test_class
 {
-}
+public:
+    CborTest();
+    ~CborTest();
 
-ComputeMetric::~ComputeMetric()
+    bool DoTest() override;
+private:
+    bool DoOneDumpTest(uint8_t* in, size_t in_length, char const* expected);
+    bool DoIntTest();
+    bool DoBytesTest();
+    bool DoMapTest();
+};
+
+class CborSkipTest : public ithi_test_class
 {
-}
+public:
+    CborSkipTest();
+    ~CborSkipTest();
 
-bool ComputeMetric::LoadMultipleFiles(char const ** in_files, int nb_files)
-{
-    bool ret = true;
+    bool DoTest() override;
+private:
+    static bool DoOneTest(uint8_t* in, size_t in_length);
+};
 
-    if (nb_files == 1)
-    {
-        ret = Load(in_files[0]);
-    }
-    else
-    {
-        ret = false;
-    }
-    return ret;
-}
-
-bool ComputeMetric::Save(char const * out_file)
-{
-    bool ret;
-    FILE * F = NULL;
-    
-    F = ithi_file_open(out_file, "w");
-    ret = (F != NULL);
-
-    if (ret)
-    {
-        ret = Write(F);
-        fclose(F);
-    }
-
-    return ret;
-}
+#endif

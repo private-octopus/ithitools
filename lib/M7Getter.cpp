@@ -6,6 +6,7 @@
 #include "HashBinGeneric.h"
 #include "CaptureSummary.h"
 #include "DnsStats.h"
+#include "ithiutil.h"
 #include "M7Getter.h"
 
 
@@ -27,18 +28,11 @@ M7Getter::~M7Getter()
 
 bool M7Getter::GetM7(char const * root_zone_file_name)
 {
-    FILE* F;
+    
     char buffer[512];
     BinHash<TldDSAsKey> table;
-
-#ifdef _WINDOWS
-    errno_t err = fopen_s(&F, root_zone_file_name, "r");
-    bool ret = (err == 0 && F != NULL);
-#else
-    bool ret;
-    F = fopen(root_zone_file_name, "r");
-    ret = (F != NULL);
-#endif
+    bool ret = true;
+    FILE* F = ithi_file_open(root_zone_file_name, "r");
 
     if (F == NULL)
     {

@@ -41,6 +41,8 @@
 #include "QNameTest.h"
 #include "StatsByIpTest.h"
 #include "capture_fuzz.h"
+#include "CborTest.h"
+#include "CdnsTest.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -256,10 +258,40 @@ namespace ithiunit
 
             Assert::AreEqual(ret, true);
         }
-
         TEST_METHOD(CaptureFuzz)
         {
             capture_fuzz test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+        TEST_METHOD(Cbor)
+        {
+            CborTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(CborSkip)
+        {
+            CborSkipTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(CdnsDump)
+        {
+            CdnsDumpTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(CdnsCapture)
+        {
+            CdnsCaptureTest test;
             bool ret = test.DoTest();
 
             Assert::AreEqual(ret, true);

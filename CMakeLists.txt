@@ -14,14 +14,16 @@ INCLUDE_DIRECTORIES(src lib test include)
 SET(ITHITOOLS_LIBRARY_FILES
    lib/AddressFilter.cpp
    lib/CaptureSummary.cpp
+   lib/cbor.cpp
+   lib/cdns.cpp
+   lib/DnscapPlugIn.cpp
    lib/DnsStats.cpp
    lib/ithimetrics.cpp
    lib/ithipublisher.cpp
+   lib/ithiutil.cpp
    lib/pcap_reader.cpp
-   lib/UsefulTransaction.cpp
    lib/NamePattern.cpp
    lib/getopt.c
-   lib/DnscapPlugIn.cpp
    lib/M7Getter.cpp
    lib/CsvHelper.cpp
    lib/M1Data.cpp
@@ -33,7 +35,9 @@ SET(ITHITOOLS_LIBRARY_FILES
 )
 
 SET(ITHITOOLS_TEST_LIBRARY_FILES
-   test/CaptureTest.cpp 
+   test/CaptureTest.cpp
+   test/CborTest.cpp
+   test/CdnsTest.cpp
    test/DnsPrefixTest.cpp
    test/hashtest.cpp
    test/GetNameTest.cpp
@@ -60,11 +64,13 @@ ADD_EXECUTABLE(ithitools
    src/ithitools.cpp
    lib/AddressFilter.cpp
    lib/CaptureSummary.cpp
+   lib/cbor.cpp
+   lib/cdns.cpp
    lib/DnsStats.cpp
    lib/ithimetrics.cpp
    lib/ithipublisher.cpp
+   lib/ithiutil.cpp
    lib/pcap_reader.cpp
-   lib/UsefulTransaction.cpp
    lib/NamePattern.cpp
    lib/M7Getter.cpp
    lib/getopt.c
@@ -81,11 +87,13 @@ ADD_EXECUTABLE(ithitest
    src/ithitest.cpp 
    lib/AddressFilter.cpp
    lib/CaptureSummary.cpp
+   lib/cbor.cpp
+   lib/cdns.cpp
    lib/DnsStats.cpp
    lib/ithimetrics.cpp
    lib/ithipublisher.cpp
+   lib/ithiutil.cpp
    lib/pcap_reader.cpp
-   lib/UsefulTransaction.cpp
    lib/NamePattern.cpp
    lib/DnscapPlugIn.cpp
    lib/M7Getter.cpp
@@ -98,6 +106,8 @@ ADD_EXECUTABLE(ithitest
    lib/OdiPublisher.cpp
    lib/getopt.c
    test/CaptureTest.cpp
+   test/CborTest.cpp
+   test/CdnsTest.cpp
    test/DnsPrefixTest.cpp
    test/hashtest.cpp
    test/GetNameTest.cpp
@@ -123,7 +133,10 @@ ADD_EXECUTABLE(ithitest
 ADD_LIBRARY(ithicap SHARED
    lib/AddressFilter.cpp
    lib/CaptureSummary.cpp
+   lib/cbor.cpp
+   lib/cdns.cpp
    lib/DnsStats.cpp
+   lib/ithiutil.cpp
    lib/pcap_reader.cpp
    lib/UsefulTransaction.cpp
    lib/NamePattern.cpp

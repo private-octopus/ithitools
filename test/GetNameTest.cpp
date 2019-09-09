@@ -23,6 +23,7 @@
 #include "DnsStats.h"
 #include "MetricTest.h"
 #include "GetNameTest.h"
+#include "ithiutil.h"
 
 #ifdef _WINDOWS
 #ifndef _WINDOWS64
@@ -88,13 +89,9 @@ static struct st_getNameTestLine {
 bool GetNameTest::DoTest()
 {
     bool ret = true;
-#ifdef _WINDOWS
-    errno_t err = fopen_s(&test_out, getname_test_debug, "w");
-    ret = (err == 0 && test_out != NULL);
-#else
-    test_out = fopen(getname_test_debug, "w");
+
+    test_out = ithi_file_open(getname_test_debug, "w");
     ret = (test_out != NULL);
-#endif
 
     for (size_t i = 0; ret && i < sizeof(getNameTestData) / sizeof(struct st_getNameTestLine); i++) {
         char name_out[1024];
