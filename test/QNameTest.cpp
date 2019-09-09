@@ -173,7 +173,7 @@ typedef struct st_qname_test_line2_t {
 
 static const qname_test_line2_t qname_test_case2[] = {
     { n1, sizeof(n1), n1, sizeof(n1), true},
-    { n1, sizeof(n1), n1, sizeof(n1b), true},
+    { n1, sizeof(n1), n1b, sizeof(n1b), true},
     { n1, sizeof(n1), n2, sizeof(n2), false},
     { n1, sizeof(n1), n3, sizeof(n3), false},
     { n1, sizeof(n1), n0, 0, false},

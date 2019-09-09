@@ -2005,7 +2005,6 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     if (length < 12)
     {
         error_flags |= DNS_REGISTRY_ERROR_FORMAT;
-        parse_index = length;
         has_header = false;
     }
     else

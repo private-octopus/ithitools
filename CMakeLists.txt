@@ -133,6 +133,8 @@ ADD_EXECUTABLE(ithitest
 ADD_LIBRARY(ithicap SHARED
    lib/AddressFilter.cpp
    lib/CaptureSummary.cpp
+   lib/cbor.cpp
+   lib/cdns.cpp
    lib/DnsStats.cpp
    lib/ithiutil.cpp
    lib/pcap_reader.cpp
