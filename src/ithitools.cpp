@@ -55,7 +55,7 @@ static int usage()
     fprintf(stderr, "  -v                 Print the current version number.\n");
     fprintf(stderr, "  -c                 process DNS traffic capture files in PCAP format,\n");
     fprintf(stderr, "                     PCAP files listed the input files arguments.\n");
-    fprintf(stderr, "  -X                 process DNS traffic capture file in CBOR format,\n");
+    fprintf(stderr, "  -Y                 process DNS traffic capture file in CBOR format,\n");
     fprintf(stderr, "                     CBOR files listed the input files arguments.\n");
     fprintf(stderr, "  -s                 process summary files, from previous captures.\n");
     fprintf(stderr, "                     CSV files listed the input files arguments,\n");
@@ -189,14 +189,14 @@ int main(int argc, char ** argv)
     char const * data_dir = NULL;
     /* Get the parameters */
     int opt;
-    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:V:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:O:P:D:N:AEhfcsmpTvWy?")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:V:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:O:P:D:N:AEhfcsmpTvWyY?")) != -1)
     {
         switch (opt)
         {
         case 'c':
             exit_code = check_execution_mode(ithi_mode_capture, &exec_mode);
             break;
-        case 'X':
+        case 'Y':
             exit_code = check_execution_mode(ithi_mode_cbor_capture, &exec_mode);
             break;
         case 's':
