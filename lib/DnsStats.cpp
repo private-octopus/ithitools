@@ -2413,11 +2413,8 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
             }
         }
         else {
-            /* This may be a bug, but it ensures compatibility with PCAP mode. */
-            if (cdns_ctx->block.tables.name_rdata[nid].l == 0 ||
-                cdns_ctx->block.tables.name_rdata[nid].v[0] == 0) {
-                is_qname_minimized = true;
-            }
+            /* In the absence of further knowledge, assume that this is true. */
+            is_qname_minimized = true;
         }
     }
 }
@@ -2512,10 +2509,17 @@ void DnsStats::SubmitPcapRecords(uint8_t * packet, uint32_t length, uint32_t par
     }
 
     if (has_header && is_response) {
-        is_qname_minimized = IsQNameMinimized(
-            qdcount, query_rclass, query_rtype,
-            packet, length, first_query_index,
-            packet, length, (ancount == 0) ? first_ns_index : first_answer_index);
+        if (ancount > 0 || nscount > 0) {
+            uint32_t second_name_index = (ancount == 0) ? first_ns_index : first_answer_index;
+            is_qname_minimized = IsQNameMinimized(
+                qdcount, query_rclass, query_rtype,
+                packet, length, first_query_index,
+                packet, length, second_name_index);
+        }
+        else {
+            /* In the absence of further knowledge, this may be true... */
+            is_qname_minimized = true;
+        }
     }
 }
 
