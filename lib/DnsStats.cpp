@@ -160,7 +160,8 @@ static char const * RegistryNameById[] = {
     "TLD_MIN_DELAY_IP",
     "TLD_AVG_DELAY_IP",
     "TLD_MIN_DELAY_LOAD",
-    "ADDRESS_DELAY"
+    "ADDRESS_DELAY",
+    "DEBUG"
 };
 
 static uint32_t RegistryNameByIdNb = sizeof(RegistryNameById) / sizeof(char const*);
@@ -2148,17 +2149,21 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
     unfiltered = CheckAddress(cdns_ctx->block.tables.addresses[c_address_id].v,
         cdns_ctx->block.tables.addresses[c_address_id].l);
 
-    if (unfiltered)
+    if (unfiltered && q_sig != NULL &&
+        ((q_sig->transport_flags & 1) == 0 || (dnsstat_flags& dnsStateFlagIncludeTcpRecords) != 0))
     {
-        if ( q_sig != NULL && (q_sig->qr_sig_flags&0x01) != 0)
+
+        if ((q_sig->qr_sig_flags&0x01) != 0)
         {
             query_count++;
+
             SubmitCborPacketQuery(cdns_ctx, query, q_sig);
         }
 
-        if ( q_sig != NULL && (q_sig->qr_sig_flags & 0x32) != 0)
+        if ((q_sig->qr_sig_flags & 0x32) != 0)
         {
             response_count++;
+
             SubmitCborPacketResponse(cdns_ctx, query, q_sig);
         }
     }
@@ -2559,7 +2564,7 @@ void DnsStats::NameLeaksAnalysis(
             {
 #ifdef PRIVACY_CONSCIOUS
                 /* Debug option, list all the erroneous addresses */
-                if (dnsstat_flags & dbsStateFlagListErroneousNames) {
+                if (dnsstat_flags & dnsStateFlagListErroneousNames) {
                     uint8_t name[1024];
                     size_t name_len = 0;
 
@@ -2703,7 +2708,7 @@ void DnsStats::NameLeaksAnalysis(
                 }
             }
 #ifdef PRIVACY_CONSCIOUS
-            if (dnsstat_flags & dbsStateFlagReportResolverIPAddress) {
+            if (dnsstat_flags & dnsStateFlagReportResolverIPAddress) {
                 uint8_t name[512];
                 size_t name_len = 0;
 
@@ -2911,7 +2916,7 @@ void DnsStats::ExportQueryUsage()
 
 #ifdef PRIVACY_CONSCIOUS
             /* Optional detailed data */
-            if (dnsstat_flags& dbsStateFlagReportResolverIPAddress) {
+            if (dnsstat_flags& dnsStateFlagReportResolverIPAddress) {
                 uint8_t name[512];
                 size_t name_len = 0;
 

@@ -128,8 +128,9 @@ enum DnsStatsFlags
     dnsStateFlagCountUnderlinedNames = 8,
     dnsStateFlagCountPacketSizes = 16,
     dnsStateFlagListTldUsed = 32,
-    dbsStateFlagReportResolverIPAddress = 64,
-    dbsStateFlagListErroneousNames = 128
+    dnsStateFlagReportResolverIPAddress = 64,
+    dnsStateFlagListErroneousNames = 128,
+    dnsStateFlagIncludeTcpRecords = 256
 };
 
 

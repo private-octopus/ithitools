@@ -268,6 +268,14 @@ public:
     cdnsBlock block; /* Current block */
     uint64_t first_block_start_us;
 
+    bool is_first_block() {
+        return nb_blocks_read == 1;
+    }
+
+    bool is_last_block() {
+        return nb_blocks_read == nb_blocks_present;
+    }
+
     static int get_dns_flags(int q_dns_flags, bool is_response);
     static int get_edns_flags(int q_dns_flags);
 

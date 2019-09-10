@@ -79,6 +79,7 @@ static int usage()
     fprintf(stderr, "  -u tld-file.txt    Text file containing special usage TLD (RFC6761).\n");
     fprintf(stderr, "  -n number          Number of strings in the list of leaking domains(M4).\n");
     fprintf(stderr, "  -N number          Number of packets to read from this capture.\n");
+    fprintf(stderr, "  -X                 Include TCP records in CBOR files.\n");
 #ifdef PRIVACY_CONSCIOUS
     fprintf(stderr, "  -A                 List all IP addresses and their usage in the report.\n");
     fprintf(stderr, "  -E                 List all erroneous DNS names and their usage in the report.\n");
@@ -189,7 +190,7 @@ int main(int argc, char ** argv)
     char const * data_dir = NULL;
     /* Get the parameters */
     int opt;
-    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:V:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:O:P:D:N:AEhfcsmpTvWyY?")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:V:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:O:P:D:N:AEhfcsmpTvWyXY?")) != -1)
     {
         switch (opt)
         {
@@ -233,6 +234,9 @@ int main(int argc, char ** argv)
         case 'x':
             stats.bannedAddresses.AddToList(optarg);
             break;
+        case 'X':
+            stats.dnsstat_flags |= dnsStateFlagIncludeTcpRecords;
+            break;
         case 'V':
             fprintf(stderr, "The table redefinition option is not yet implemented.\n");
             break;
@@ -274,10 +278,10 @@ int main(int argc, char ** argv)
             break;
 #ifdef PRIVACY_CONSCIOUS
         case 'A':
-            stats.dnsstat_flags |= dbsStateFlagReportResolverIPAddress;
+            stats.dnsstat_flags |= dnsStateFlagReportResolverIPAddress;
             break;
         case 'E':
-            stats.dnsstat_flags |= dbsStateFlagListErroneousNames;
+            stats.dnsstat_flags |= dnsStateFlagListErroneousNames;
             break;
 #endif
         case 'S':
