@@ -247,6 +247,7 @@ public:
     std::vector<cdns_address_event_count> address_events;
 
     int is_filled;
+    uint64_t block_start_us;
 };
 
 #define CNDS_INDEX_OFFSET 1
@@ -265,6 +266,15 @@ public:
     bool open_block(int* err);
 
     cdnsBlock block; /* Current block */
+    uint64_t first_block_start_us;
+
+    bool is_first_block() {
+        return nb_blocks_read == 1;
+    }
+
+    bool is_last_block() {
+        return nb_blocks_read == nb_blocks_present;
+    }
 
     static int get_dns_flags(int q_dns_flags, bool is_response);
     static int get_edns_flags(int q_dns_flags);

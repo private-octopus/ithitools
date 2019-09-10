@@ -160,7 +160,8 @@ static char const * RegistryNameById[] = {
     "TLD_MIN_DELAY_IP",
     "TLD_AVG_DELAY_IP",
     "TLD_MIN_DELAY_LOAD",
-    "ADDRESS_DELAY"
+    "ADDRESS_DELAY",
+    "DEBUG"
 };
 
 static uint32_t RegistryNameByIdNb = sizeof(RegistryNameById) / sizeof(char const*);
@@ -1951,6 +1952,26 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length, int ip_type, uint
         dest_addr, dest_addr_length, ts);
 }
 
+void DnsStats::UpdateDuration(my_bpftimeval ts)
+{
+    if (t_start_sec == 0 && t_start_usec == 0) {
+        t_start_sec = ts.tv_sec;
+        t_start_usec = ts.tv_usec;
+    }
+    else {
+        int64_t delta_t = DeltaUsec(ts.tv_sec, ts.tv_usec, t_start_sec, t_start_usec);
+
+        if (delta_t < 0) {
+            t_start_sec = ts.tv_sec;
+            t_start_usec = ts.tv_usec;
+            duration_usec -= delta_t;
+        }
+        else if (delta_t > duration_usec) {
+            duration_usec = delta_t;
+        }
+    }
+}
+
 void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     uint8_t * source_addr, size_t source_addr_length,
     uint8_t * dest_addr, size_t dest_addr_length,
@@ -1969,22 +1990,8 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     uint32_t parse_index = 0;
     bool unfiltered = false;
 
-    if (t_start_sec == 0 && t_start_usec == 0) {
-        t_start_sec = ts.tv_sec;
-        t_start_usec = ts.tv_usec;
-    }
-    else {
-        int64_t delta_t = DeltaUsec(ts.tv_sec, ts.tv_usec, t_start_sec, t_start_usec);
+    UpdateDuration(ts);
 
-        if (delta_t < 0) {
-            t_start_sec = ts.tv_sec;
-            t_start_usec = ts.tv_usec;
-            duration_usec -= delta_t;
-        }
-        else if (delta_t > duration_usec) {
-            duration_usec = delta_t;
-        }
-    }
     volume_53only += length;
 
     error_flags = 0;
@@ -2131,10 +2138,6 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
         t_start_usec = cdns_ctx->block.preamble.earliest_time_usec;
     }
 
-    if (query->time_offset_usec > duration_usec) {
-        duration_usec = query->time_offset_usec;
-    }
-
     volume_53only += query->query_size;
     volume_53only += query->response_size;
 
@@ -2146,17 +2149,21 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
     unfiltered = CheckAddress(cdns_ctx->block.tables.addresses[c_address_id].v,
         cdns_ctx->block.tables.addresses[c_address_id].l);
 
-    if (unfiltered)
+    if (unfiltered && q_sig != NULL &&
+        ((q_sig->transport_flags & 1) == 0 || (dnsstat_flags& dnsStateFlagIncludeTcpRecords) != 0))
     {
-        if ( q_sig != NULL && (q_sig->qr_sig_flags&0x01) != 0)
+
+        if ((q_sig->qr_sig_flags&0x01) != 0)
         {
             query_count++;
+
             SubmitCborPacketQuery(cdns_ctx, query, q_sig);
         }
 
-        if ( q_sig != NULL && (q_sig->qr_sig_flags & 0x32) != 0)
+        if ((q_sig->qr_sig_flags & 0x32) != 0)
         {
             response_count++;
+
             SubmitCborPacketResponse(cdns_ctx, query, q_sig);
         }
     }
@@ -2164,6 +2171,9 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
   
 void DnsStats::SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig)
 {
+    uint64_t query_time_usec = cdns_ctx->block.block_start_us + query->time_offset_usec;
+    my_bpftimeval ts;
+
     error_flags = 0;
     is_do_flag_set = false;
     is_using_edns = false;
@@ -2174,6 +2184,11 @@ void DnsStats::SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_que
     dnssec_packet = NULL;
     dnssec_packet_length = 0;
     error_flags = 0;
+
+    ts.tv_sec = (long)(query_time_usec / 1000000);
+    ts.tv_usec = (long)(query_time_usec % 1000000);
+
+    UpdateDuration(ts);
 
     SubmitOpcodeAndFlags(q_sig->query_opcode, cdns::get_dns_flags(q_sig->qr_dns_flags,false));
 
@@ -2215,10 +2230,13 @@ void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_
     uint8_t* client_addr = cdns_ctx->block.tables.addresses[c_addrid].v;
     uint8_t null_name[] = { 0, 0 };
     my_bpftimeval ts;
-    int r_delay = query->delay_useconds + query->time_offset_usec;
+    uint64_t query_time_usec = cdns_ctx->block.block_start_us + query->time_offset_usec;
+    uint64_t r_delay = query_time_usec + query->delay_useconds;
 
-    ts.tv_sec = r_delay / 1000000;
-    ts.tv_usec = r_delay % 1000000;
+    ts.tv_sec = (long)(r_delay / 1000000);
+    ts.tv_usec = (long)(r_delay % 1000000);
+
+    UpdateDuration(ts);
 
     error_flags = 0;
     is_do_flag_set = false;
@@ -2395,11 +2413,8 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
             }
         }
         else {
-            /* This may be a bug, but it ensures compatibility with PCAP mode. */
-            if (cdns_ctx->block.tables.name_rdata[nid].l == 0 ||
-                cdns_ctx->block.tables.name_rdata[nid].v[0] == 0) {
-                is_qname_minimized = true;
-            }
+            /* In the absence of further knowledge, assume that this is true. */
+            is_qname_minimized = true;
         }
     }
 }
@@ -2494,10 +2509,17 @@ void DnsStats::SubmitPcapRecords(uint8_t * packet, uint32_t length, uint32_t par
     }
 
     if (has_header && is_response) {
-        is_qname_minimized = IsQNameMinimized(
-            qdcount, query_rclass, query_rtype,
-            packet, length, first_query_index,
-            packet, length, (ancount == 0) ? first_ns_index : first_answer_index);
+        if (ancount > 0 || nscount > 0) {
+            uint32_t second_name_index = (ancount == 0) ? first_ns_index : first_answer_index;
+            is_qname_minimized = IsQNameMinimized(
+                qdcount, query_rclass, query_rtype,
+                packet, length, first_query_index,
+                packet, length, second_name_index);
+        }
+        else {
+            /* In the absence of further knowledge, this may be true... */
+            is_qname_minimized = true;
+        }
     }
 }
 
@@ -2546,7 +2568,7 @@ void DnsStats::NameLeaksAnalysis(
             {
 #ifdef PRIVACY_CONSCIOUS
                 /* Debug option, list all the erroneous addresses */
-                if (dnsstat_flags & dbsStateFlagListErroneousNames) {
+                if (dnsstat_flags & dnsStateFlagListErroneousNames) {
                     uint8_t name[1024];
                     size_t name_len = 0;
 
@@ -2690,7 +2712,7 @@ void DnsStats::NameLeaksAnalysis(
                 }
             }
 #ifdef PRIVACY_CONSCIOUS
-            if (dnsstat_flags & dbsStateFlagReportResolverIPAddress) {
+            if (dnsstat_flags & dnsStateFlagReportResolverIPAddress) {
                 uint8_t name[512];
                 size_t name_len = 0;
 
@@ -2898,7 +2920,7 @@ void DnsStats::ExportQueryUsage()
 
 #ifdef PRIVACY_CONSCIOUS
             /* Optional detailed data */
-            if (dnsstat_flags& dbsStateFlagReportResolverIPAddress) {
+            if (dnsstat_flags& dnsStateFlagReportResolverIPAddress) {
                 uint8_t name[512];
                 size_t name_len = 0;
 

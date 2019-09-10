@@ -218,12 +218,12 @@ extern "C"
 #ifdef PRIVACY_CONSCIOUS
             if (libithicap_enable_ip_address_report)
             {
-                libithicap_stats->dnsstat_flags |= dbsStateFlagReportResolverIPAddress;
+                libithicap_stats->dnsstat_flags |= dnsStateFlagReportResolverIPAddress;
             }
 
             if (libithicap_enable_erroneous_name_list)
             {
-                libithicap_stats->dnsstat_flags |= dbsStateFlagListErroneousNames;
+                libithicap_stats->dnsstat_flags |= dnsStateFlagListErroneousNames;
             }
 #endif
         }
