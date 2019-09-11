@@ -72,6 +72,8 @@ def country_from_city(city):
 # parse file names like
 # /home/rarends/data/20190609/aa01-in-bom.l.dns.icann.org/20190609-132848_300-aa01-in-bom.l.dns.icann.org.csv
 # or 20180512-105748_300-bah01.l.root-servers.org.csv
+# or "june2018\\results-br\\results-aa01-br-bcl.l.dns.icann.org\\20190630-235930_300.cbor.xz-results.csv"
+
 class m3name:
     def __init__(self):
         self.m3_date = ""
@@ -87,6 +89,13 @@ class m3name:
             parts = file_id.split("\\")
         file_name = parts[len(parts) - 1]
         name_parts = file_name.split("-")
+        # Check whether this is the result of cbor parsing format 
+        if (len(parts) >= 2 and parts[len(parts)-2].startswith("results-")):
+            folder = parts[len(parts)-2]
+            last_parts = file_name.split(".")
+            file_name = last_parts[0] + "-" + folder[8:]
+            name_parts = file_name.split("-")
+        # now parse the file name
         if (len(name_parts) >= 5):
             self.address_id = name_parts[2]
             self.country_code = name_parts[3]
@@ -165,13 +174,15 @@ def m3name_test():
         "/home/rarends/data/20190614/aa01-mx-mty.l.dns.icann.org/20190614-143947_300-aa01-mx-mty.l.dns.icann.org.csv",
         "/home/rarends/data/20190609/aa01-fr-par.l.dns.icann.org/20190609-144834_300-aa01-fr-par.l.dns.icann.org.csv",
         "20190609-144834_25-aa01-fr-par.l.dns.icann.org.csv",
-        "20180512-105748_300-bah01.l.root-servers.org.csv"]
-    test_date = [ "2019-06-09", "2019-06-14", "2019-06-09", "2019-06-09", "2018-05-12" ]
-    test_hour = [ "13:28:48", "14:39:47", "14:48:34", "14:48:34", "10:57:48"]
-    test_duration = [ 300, 300, 300, 25, 300] 
-    test_country_code = [ "in", "mx", "fr", "fr", "bh" ]
-    test_city_code = [ "bom", "mty", "par", "par", "bah" ]
-    test_address_id = ["aa01", "aa01", "aa01", "aa01", "aa01" ]
+        "20180512-105748_300-bah01.l.root-servers.org.csv",
+        "june2018\\results-br\\results-aa01-br-bcl.l.dns.icann.org\\20190630-235930_300.cbor.xz-results.csv"
+        ]
+    test_date = [ "2019-06-09", "2019-06-14", "2019-06-09", "2019-06-09", "2018-05-12", "2019-06-30" ]
+    test_hour = [ "13:28:48", "14:39:47", "14:48:34", "14:48:34", "10:57:48", "23:59:30" ]
+    test_duration = [ 300, 300, 300, 25, 300, 300] 
+    test_country_code = [ "in", "mx", "fr", "fr", "bh", "br" ]
+    test_city_code = [ "bom", "mty", "par", "par", "bah", "bcl" ]
+    test_address_id = ["aa01", "aa01", "aa01", "aa01", "aa01", "aa01" ]
 
     if city_test() == 0:
         print("City test passes")

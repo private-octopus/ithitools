@@ -297,8 +297,9 @@ class projection(Enum):
     country_hour = 5
 
 def summary_title_line():
-    s = "address,cc,city,date,hour,duration,queries,useless,nx_domain,"
-    s += "local,localhost,rfc6761,home,lan,internal,ip,localdomain,corp,mail,dga" 
+    s = "address,cc,city,date,hour,duration,queries,nx_domain,"
+    s += "useful, useless, dga, others"
+    s += "local,localhost,rfc6761,home,lan,internal,ip,localdomain,corp,mail" 
     return s
 
 class m3summary_line():
@@ -319,8 +320,11 @@ class m3summary_line():
         self.hour = ""
         self.duration = 0
         self.nb_queries = 0
-        self.nb_useless = 0
         self.nb_nx_domains = 0
+        self.nb_useful = 0
+        self.nb_useless = 0
+        self.dga = 0
+        self.nb_nx_others = 0
         self.nb_local = 0
         self.nb_localhost = 0
         self.nb_rfc6761 = 0
@@ -331,7 +335,6 @@ class m3summary_line():
         self.nb_localdomain = 0
         self.nb_corp = 0
         self.nb_mail = 0
-        self.dga = 0
 
     def load(self, line):
         parts = line.split(",")
@@ -358,6 +361,8 @@ class m3summary_line():
             self.nb_corp = int(parts[17])
             self.nb_mail = int(parts[18])
             self.dga = int(parts[19])
+            self.nb_useful = self.nb_queries - self.nb_useless - self.nb_nx_domains
+            self.nb_nx_others = self.nb_nx_domains - self.dga
         except:
             return -1
         return 0
@@ -397,6 +402,8 @@ class m3summary_line():
         self.dga = 0
         for l in [7, 8, 9, 10, 11, 12, 13, 14, 15]:
             self.dga += capture.find("LeakByLength", 0, l, "")
+        self.nb_useful = self.nb_queries - self.nb_useless - self.nb_nx_domains
+        self.nb_nx_others = self.nb_nx_domains - self.dga
             
         return 0
 
@@ -408,8 +415,11 @@ class m3summary_line():
         s += self.hour + ","
         s += str(self.duration) + ","
         s += str(self.nb_queries) + ","
+        s += str(self.nb_nx_domains)  + ","
+        s += str(self.nb_useful) + ","
         s += str(self.nb_useless) + ","
-        s += str(self.nb_nx_domains) + ","
+        s += str(self.dga) + ","
+        s += str(self.nb_nx_others) + ","
         s += str(self.nb_local) + ","
         s += str(self.nb_localhost) + ","
         s += str(self.nb_rfc6761) + ","
@@ -419,8 +429,7 @@ class m3summary_line():
         s += str(self.nb_ip) + ","
         s += str(self.nb_localdomain) + ","
         s += str(self.nb_corp) + ","
-        s += str(self.nb_mail) + ","
-        s += str(self.dga) 
+        s += str(self.nb_mail)
         return s;
 
     def add(self, other):

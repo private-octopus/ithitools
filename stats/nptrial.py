@@ -9,8 +9,8 @@ from sklearn.decomposition import PCA
 import m3summary
 
 columns = ["useful", "useless",
-           "local", "localhost", "rfc6761",
-           "home", "lan", "internal", "ip", "localdomain" ,"corp", "mail",
+#           "local", "localhost", "rfc6761",
+#           "home", "lan", "internal", "ip", "localdomain" ,"corp", "mail",
            "dga", "others"]
 
 df = pd.read_csv(sys.argv[1])
@@ -62,8 +62,16 @@ while j < len(columns):
 print("fraction")
 print(fraction)
 
+nbcomponents = 8
+if (len(columns) < nbcomponents):
+    nbcomponents = len(columns)
+
+coefs = np.corrcoef(fdf, rowvar=False)
+print("Correlation coefficients")
+print(coefs)
+
 print("PCA")
-pca=PCA(n_components=8)
+pca=PCA(nbcomponents)
 pca.fit(fdf)
 print(pca.components_)
 print(pca.explained_variance_)
