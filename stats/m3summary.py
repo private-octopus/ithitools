@@ -298,7 +298,7 @@ class projection(Enum):
 
 def summary_title_line():
     s = "address,cc,city,date,hour,duration,queries,nx_domain,"
-    s += "useful, useless, dga, others"
+    s += "useful, useless, dga, others,"
     s += "local,localhost,rfc6761,home,lan,internal,ip,localdomain,corp,mail" 
     return s
 
