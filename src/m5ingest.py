@@ -51,9 +51,13 @@ mypath = sys.argv[1]
 for (dirpath, dirnames, filenames) in walk(mypath):
     for file_name in filenames :
         if (file_name.startswith("m5-")):
-            print("Found: " + file_name)
-            file_path = os.path.join(dirpath, file_name)
-            summary.add_to_summary(file_path)
+            try:
+                print("Found: " + file_name)
+                file_path = os.path.join(dirpath, file_name)
+                summary.add_to_summary(file_path)
+            except:
+                print("Could not extract data from: " + file_path)
+
 print("Found " + str(summary.i_count) + " summaries.")
 summary.average()
 i = 0

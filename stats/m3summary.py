@@ -299,7 +299,7 @@ class projection(Enum):
 def summary_title_line():
     s = "address,cc,city,date,hour,duration,queries,nx_domain,"
     s += "useful, useless, dga, others,"
-    s += "local,localhost,rfc6761,home,lan,internal,ip,localdomain,corp,mail" 
+    s += "local,localhost,rfc6761,home,lan,internal,ip,localdomain,corp,mail,other_names" 
     return s
 
 class m3summary_line():
@@ -335,6 +335,7 @@ class m3summary_line():
         self.nb_localdomain = 0
         self.nb_corp = 0
         self.nb_mail = 0
+        self.nb_other_names = 0
 
     def load(self, line):
         parts = line.split(",")
@@ -348,21 +349,22 @@ class m3summary_line():
             self.hour = parts[4].strip()
             self.duration = int(parts[5])
             self.nb_queries = int(parts[6])
-            self.nb_useless = int(parts[7])
-            self.nb_nx_domains = int(parts[8])
-            self.nb_local = int(parts[9])
-            self.nb_localhost = int(parts[10])
-            self.nb_rfc6761 = int(parts[11])
-            self.nb_home = int(parts[12])
-            self.nb_lan = int(parts[13])
-            self.nb_internal = int(parts[14])
-            self.nb_ip = int(parts[15])
-            self.nb_localdomain = int(parts[16])
-            self.nb_corp = int(parts[17])
-            self.nb_mail = int(parts[18])
-            self.dga = int(parts[19])
-            self.nb_useful = self.nb_queries - self.nb_useless - self.nb_nx_domains
-            self.nb_nx_others = self.nb_nx_domains - self.dga
+            self.nb_nx_domains = int(parts[7])
+            self.nb_useful = int(parts[8])
+            self.nb_useless = int(parts[9])
+            self.dga = int(parts[10])
+            self.nb_nx_others = int(parts[11])
+            self.nb_local = int(parts[12])
+            self.nb_localhost = int(parts[13])
+            self.nb_rfc6761 = int(parts[14])
+            self.nb_home = int(parts[15])
+            self.nb_lan = int(parts[16])
+            self.nb_internal = int(parts[17])
+            self.nb_ip = int(parts[18])
+            self.nb_localdomain = int(parts[19])
+            self.nb_corp = int(parts[20])
+            self.nb_mail = int(parts[21])
+            self.nb_other_names = int(parts[22])
         except:
             return -1
         return 0
@@ -404,6 +406,10 @@ class m3summary_line():
             self.dga += capture.find("LeakByLength", 0, l, "")
         self.nb_useful = self.nb_queries - self.nb_useless - self.nb_nx_domains
         self.nb_nx_others = self.nb_nx_domains - self.dga
+        self.nb_other_names = self.nb_nx_others - (
+            self.nb_local + self.nb_localhost + self.nb_rfc6761 +
+            self.nb_home + self.nb_lan + self.nb_internal + self.nb_ip +
+            self.nb_localdomain + self.nb_corp + self.nb_mail)
             
         return 0
 
@@ -429,14 +435,18 @@ class m3summary_line():
         s += str(self.nb_ip) + ","
         s += str(self.nb_localdomain) + ","
         s += str(self.nb_corp) + ","
-        s += str(self.nb_mail)
+        s += str(self.nb_mail) + ","
+        s += str(self.nb_other_names)
         return s;
 
     def add(self, other):
         self.duration += other.duration
         self.nb_queries += other.nb_queries
-        self.nb_useless += other.nb_useless
         self.nb_nx_domains += other.nb_nx_domains
+        self.nb_usefull += other.nb_usefull
+        self.nb_useless += other.nb_useless
+        self.dga  += other.dga
+        self.nb_nx_others += other.nb_nx_others
         self.nb_local += other.nb_local
         self.nb_localhost  += other.nb_localhost
         self.nb_rfc6761  += other.nb_rfc6761
@@ -447,7 +457,7 @@ class m3summary_line():
         self.nb_localdomain  += other.nb_localdomain
         self.nb_corp  += other.nb_corp
         self.nb_mail  += other.nb_mail
-        self.dga  += other.dga
+        self.nb_other_names += other.nb_other_names
 
     def project(self, p_enum):
         p = copy.deepcopy(self)
