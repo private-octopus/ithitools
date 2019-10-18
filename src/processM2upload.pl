@@ -28,6 +28,7 @@ print "Dir: $dirname, Target: $targetdir\n";
 opendir(DIR, $dirname) or die "Could not open $dirname\n";
 
 while ($filename = readdir(DIR)) {
+  if (length($filename) > 8) {
     $filepath="$dirname/$filename";
     $target="$targetdir/$filename";
     copy($filepath, $target) or die "Cannot copy $filename to $target\n";
@@ -35,6 +36,7 @@ while ($filename = readdir(DIR)) {
     $moved = "$processdir/$filename";
     move($filepath, $moved) or die "Cannot move $filename to $moved\n";
     printf "Moved $filename to $processdir\n";
+  }
 }
 
 closedir(DIR);
