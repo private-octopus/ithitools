@@ -7,12 +7,16 @@ from os import walk
 
 class m5_summary:
     def __init__(self):
+        self.counters = []
         self.i_count = 0
-        self.total = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-                      0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        self.total = []
         self.key_list = ["M5.1.1", "M5.1.2", "M5.1.3", "M5.1.4", "M5.1.5", "M5.1.6",
            "M5.2.1", "M5.2.2", "M5.2.3", "M5.3.1", "M5.3.2", "M5.4.1",
-           "M5.4.2","M5.5"]
+           "M5.4.2","M5.5", 
+           "M5.6.1", "M5.6.2", "M5.6.3", "M5.6.4", "M5.6.5", "M5.6.6", "M5.6.7", "M5.6.8"]
+        for x in self.key_list:
+            self.counters.append(0)
+            self.total.append(0.0)
     
     def add_to_summary (self, f_name):
         "Parse a JSON file and add the results to the summary"
@@ -22,18 +26,21 @@ class m5_summary:
             m5_data = json.loads(m5_text)
             i = 0
             while i < len(self.key_list) :
-                self.total[i] += m5_data[0][self.key_list[i]]
+                try:
+                    self.total[i] += m5_data[0][self.key_list[i]]
+                    self.counters[i] += 1
+                except:
+                    pass
                 i += 1
             m5_file.close()
     
     def average(self):
         "Divide the results by the number of summaries counted"
-        if (self.i_count > 1) :
-            i = 0
-            while i < len(self.key_list) :
-                self.total[i] /= self.i_count;
-                i += 1
-            self.i_count = 1
+        i = 0
+        while i < len(self.key_list) :
+            if self.counters[i] > 0:
+                self.total[i] /= self.counters[i]
+            i += 1
     
     def save_as_csv(self, f_name):
         "Save the summary as a CSV file"
