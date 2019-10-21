@@ -790,7 +790,9 @@ bool ithipublisher::PublishDataM5(FILE * F)
 {
     bool ret = true;
     const char * subMet[] = { "M5.1.1", "M5.1.2", "M5.1.3", "M5.1.4", "M5.1.5", "M5.1.6",
-        "M5.2.1", "M5.2.2", "M5.2.3", "M5.3.1", "M5.3.2", "M5.4.1", "M5.4.2", "M5.5" };
+        "M5.2.1", "M5.2.2", "M5.2.3", "M5.3.1", "M5.3.2", "M5.4.1", "M5.4.2", "M5.5",
+        "M5.6.1", "M5.6.2", "M5.6.3", "M5.6.4", "M5.6.5", "M5.6.6", "M5.6.7", "M5.6.8"
+    };
     const size_t nbSubMet = sizeof(subMet) / sizeof(const char *);
 
     ret &= fprintf(F, "\"M5\" : [") > 0;
@@ -1186,6 +1188,18 @@ bool ithiIndexPublisher::Publish(char const * web_folder)
 
         if (ret) {
             ret = PickThreeNames(F, threeStubNames, MData[2], "M4.2", "M4.3");
+        }
+
+        /* Then a set of submetrics for M56 */
+        char const* M56Metrics[2] = {
+            "M5.6.1", "M5.6.2" };
+
+        for (int i = 0; ret && i < 2; i++) {
+            ret = fprintf(F, ",\n") > 0;
+            ret &= MData[3]->GetVector(M56Metrics[i], NULL, &mvec);
+            if (ret) {
+                ret = MData[3]->PrintVector(F, &mvec, 1.0);
+            }
         }
 
         /* Then a set of submetrics from M2 */

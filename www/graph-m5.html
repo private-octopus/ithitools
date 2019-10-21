@@ -21,10 +21,19 @@
         ["valM532", "averageM532", "minM532", "maxM532"],
         ["valM541", "averageM541", "minM541", "maxM541"],
         ["valM542", "averageM542", "minM542", "maxM542"],
-        ["valM551", "averageM551", "minM551", "maxM551"]
+        ["valM551", "averageM551", "minM551", "maxM551"],
+        ["valM561", "averageM561", "minM561", "maxM561"],
+        ["valM562", "averageM562", "minM562", "maxM562"],
+        ["valM563", "averageM563", "minM563", "maxM563"],
+        ["valM564", "averageM564", "minM564", "maxM564"],
+        ["valM565", "averageM565", "minM565", "maxM565"],
+        ["valM566", "averageM566", "minM566", "maxM566"],
+        ["valM567", "averageM567", "minM567", "maxM567"],
+        ["valM568", "averageM568", "minM568", "maxM568"]
     ];
 
-    var format = [1, 1, 1, 1];
+    var format1 = [1, 1, 1, 1];
+    var format2 = [0, 2, 0, 0];
 
     var M5Data;
 
@@ -50,13 +59,18 @@
         // Set the date
         setDateElement(M5Data.date);
 
-        fillCurrentDateFields(["currentId1", "currentId2", "currentId3", "currentId4", "currentId5"], M5Data);
+        fillCurrentDateFields(["currentId1", "currentId2", "currentId3", "currentId4", "currentId5", "currentId6"], M5Data);
 
         // Compute and set the values of the metrics
         rowSet = M5Data.M5;
 
-        for (i = 0; i < pilot.length; i++) {
-            fillValueAverageMinMax(pilot[i], M5Data.M5[i].v, format);
+        // metrics for row 0 to 12 (M5.4.2) are percentiles
+        for (; i < 13; i++) {
+            fillValueAverageMinMax(pilot[i], M5Data.M5[i].v, format1);
+        }
+        // metrics for row 13 to 21 (M5.5 to M5.6.8) are percentiles
+        for (; i < pilot.length; i++) {
+            fillValueAverageMinMax(pilot[i], M5Data.M5[i].v, format2);
         }
     }
 
@@ -86,41 +100,78 @@ behind the 10000 largest resolvers.
 There are five components in the M5 metric:
 </p>
 <ul>
-<li>
-The metric M5.1 measures the % of visible recursive resolvers that refresh
-their local cache in accordance with the time specified in the SOA TTL, and the effect on users.
-For each population, we compute the fraction of users or resolvers
-that re-fetch erlier than the stated TTL, and the fraction that re-fetch according to
-the TTL. These two numbers do not add to 100%, because there is also a fraction of
-resolvers for which our measurements are inconclusive.
-</li>
-<li>
-The metric M5.2 measure the % of visible recursive resolvers that refresh their local 
-cache automatically (without a triggering user query), as well as the estimated query
-load % due to automated cache refresh and the % of users using resolvers that
-auto-refresh their cache.
-</li>
-<li>
-The Metric M5.3 measures the % of visible recursive resolvers that set the DO (DNSSEC OK) 
-bit in their queries, as well as the fraction of users using resolvers that set 
-the DO bit in queries.
-</li>
-<li>
-The Metric M54 measures the % of visible recursive resolvers that perform DNSSEC validation of
-responses, as well as the fraction of users using resolvers that perform DNSSEC validation of
-responses.
-</li>
-<li>
-The metric M5 provide a distribution of the estimated client size of 
-the 10,000 largest visible recursive resolvers.
-</li>
+    <li>
+        The metric M5.1 measures the % of visible recursive resolvers that refresh
+        their local cache in accordance with the time specified in the SOA TTL, and the effect on users.
+        For each population, we compute the fraction of users or resolvers
+        that re-fetch erlier than the stated TTL, and the fraction that re-fetch according to
+        the TTL. These two numbers do not add to 100%, because there is also a fraction of
+        resolvers for which our measurements are inconclusive.
+    </li>
+    <li>
+        The metric M5.2 measure the % of visible recursive resolvers that refresh their local
+        cache automatically (without a triggering user query), as well as the estimated query
+        load % due to automated cache refresh and the % of users using resolvers that
+        auto-refresh their cache.
+    </li>
+    <li>
+        The Metric M5.3 measures the % of visible recursive resolvers that set the DO (DNSSEC OK)
+        bit in their queries, as well as the fraction of users using resolvers that set
+        the DO bit in queries.
+    </li>
+    <li>
+        The Metric M5.4 measures the % of visible recursive resolvers that perform DNSSEC validation of
+        responses, as well as the fraction of users using resolvers that perform DNSSEC validation of
+        responses.
+    </li>
+    <li>
+        The metric M5.5 estimates the fraction of the clients that is served by
+        the 10,000 largest visible recursive resolvers.
+    </li>
+    <li>
+        The metrics M5.6 measure the concentration of the resolver services by tracking the number
+        of resolvers required to serve 50% or 90% of the number of clients. 
+    </li>
+</ul>
+<p>It turns out that the
+link between clients and resolvers is a bit fuzzy for two reasons:</p>
+<ul>
+    <li>
+        Some clients send their first queries to one resolver, but if the resolver does
+        not respond they may try other resolvers. We thus distinguish "first use" resolver
+        and "all" resolvers.
+    </li>
+    <li>
+        Some clients send their queries in parallel to several resolvers. We thus distinguish
+        between the set of resolvers that a fraction of client "sees" at least once, and the
+        larger set resolvers that includes all the resolvers that a client "uses".
+    </li>
+</ul>
+This results in several variants of the M5.6 metrics:
+<ul>
+    <li>
+        Metrics M5.6.1 and M5.6.2 measure the number of first use resolvers "seen" by 50% of
+        users (M5.6.1) or 90% of users (M5.6.2)
+    </li>
+    <li>
+        Metrics M5.6.3 and M5.6.4 measure the number of first use resolvers "used" by 50% of
+        users (M5.6.3) or 90% of users (M5.6.4)
+    </li>
+    <li>
+        Metrics M5.6.5 and M5.6.6 measure the number of all resolvers "seen" by 50% of
+        users (M5.6.5) or 90% of users (M5.6.6) 
+    </li>
+    <li>
+        Metrics M5.6.7 and M5.6.8 measure the number of all resolvers "used" by 50% of
+        users (M5.6.7) or 90% of users (M5.6.8)
+    </li>
 </ul>
 <p>
     The following table provides the value observed for the
     metrics in the current month, as well as the average value over the 3 previous months,
     and the "historical" minimum and maximum observed since the beginning of the measurements.
 </p>
-<table display="inline" class="metrics" >
+<table display="inline" class="metrics">
     <tr>
         <th colspan=2>M5.1 (% alignment of cache time to SOA TTL) </th>
         <th class="number" id="currentId1">Current Value</th>
@@ -255,222 +306,399 @@ the 10,000 largest visible recursive resolvers.
             -
         </td>
     </tr>
-<tr></tr>
-<tr>
-    <th colspan=2>
-        M5.2 (% auto cache refresh)
-    </th>
-    <th class="number" id="currentId2">Current Value</th>
-    <th class="number">Past 3 months</th>
-    <th class="number">Historic Low</th>
-    <th class="number">Historic High</th>
-</tr>
-<tr>
-    <td class="number">
-        M5.2.1
-        <a href="about-m5.html">(?)</a>
-    </td>
-    <td>
-        % of users using resolvers that auto-refresh their cache
-    </td>
-    <td class="number" id="valM521">
-        -
-    </td>
-    <td class="number" id="averageM521">
-        -
-    </td>
-    <td class="number" id="minM521">
-        -
-    </td>
-    <td class="number" id="maxM521">
-        -
-    </td>
-</tr>
+    <tr></tr>
+    <tr>
+        <th colspan=2>
+            M5.2 (% auto cache refresh)
+        </th>
+        <th class="number" id="currentId2">Current Value</th>
+        <th class="number">Past 3 months</th>
+        <th class="number">Historic Low</th>
+        <th class="number">Historic High</th>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.2.1
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            % of users using resolvers that auto-refresh their cache
+        </td>
+        <td class="number" id="valM521">
+            -
+        </td>
+        <td class="number" id="averageM521">
+            -
+        </td>
+        <td class="number" id="minM521">
+            -
+        </td>
+        <td class="number" id="maxM521">
+            -
+        </td>
+    </tr>
 
-<tr>
-    <td class="number">
-        M5.2.2
-        <a href="about-m5.html">(?)</a>
-    </td>
-    <td>
-        % of query load due to cache refresh
-    </td>
-    <td class="number" id="valM522">
-        -
-    </td>
-    <td class="number" id="averageM522">
-        -
-    </td>
-    <td class="number" id="minM522">
-        -
-    </td>
-    <td class="number" id="maxM522">
-        -
-    </td>
-</tr>
+    <tr>
+        <td class="number">
+            M5.2.2
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            % of query load due to cache refresh
+        </td>
+        <td class="number" id="valM522">
+            -
+        </td>
+        <td class="number" id="averageM522">
+            -
+        </td>
+        <td class="number" id="minM522">
+            -
+        </td>
+        <td class="number" id="maxM522">
+            -
+        </td>
+    </tr>
 
-<tr>
-    <td class="number">
-        M5.2.3
-        <a href="about-m5.html">(?)</a>
-    </td>
-    <td>
-        % of resolvers that auto-refresh their cache
-    </td>
-    <td class="number" id="valM523">
-        -
-    </td>
-    <td class="number" id="averageM523">
-        -
-    </td>
-    <td class="number" id="minM523">
-        -
-    </td>
-    <td class="number" id="maxM523">
-        -
-    </td>
-</tr>
-        <tr>
-            <th colspan=2>
-                M5.3 (% EDNS0 DO query rate)
-            </th>
-            <th class="number" id="currentId3">Current Value</th>
-            <th class="number">Past 3 months</th>
-            <th class="number">Historic Low</th>
-            <th class="number">Historic High</th>
-        </tr>
+    <tr>
+        <td class="number">
+            M5.2.3
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            % of resolvers that auto-refresh their cache
+        </td>
+        <td class="number" id="valM523">
+            -
+        </td>
+        <td class="number" id="averageM523">
+            -
+        </td>
+        <td class="number" id="minM523">
+            -
+        </td>
+        <td class="number" id="maxM523">
+            -
+        </td>
+    </tr>
+    <tr>
+        <th colspan=2>
+            M5.3 (% EDNS0 DO query rate)
+        </th>
+        <th class="number" id="currentId3">Current Value</th>
+        <th class="number">Past 3 months</th>
+        <th class="number">Historic Low</th>
+        <th class="number">Historic High</th>
+    </tr>
 
-        <tr>
-            <td class="number">
-                M5.3.1
-                <a href="about-m5.html">(?)</a>
-            </td>
-            <td>
-                % of users using resolvers that set the DO bit in queries
-            </td>
-            <td class="number" id="valM531">
-                -
-            </td>
-            <td class="number" id="averageM531">
-                -
-            </td>
-            <td class="number" id="minM531">
-                -
-            </td>
-            <td class="number" id="maxM531">
-                -
-            </td>
-        </tr>
+    <tr>
+        <td class="number">
+            M5.3.1
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            % of users using resolvers that set the DO bit in queries
+        </td>
+        <td class="number" id="valM531">
+            -
+        </td>
+        <td class="number" id="averageM531">
+            -
+        </td>
+        <td class="number" id="minM531">
+            -
+        </td>
+        <td class="number" id="maxM531">
+            -
+        </td>
+    </tr>
 
-        <tr>
-            <td class="number">
-                M5.3.2
-                <a href="about-m5.html">(?)</a>
-            </td>
-            <td>
-                % of resolvers that set the DO bit in queries
-            </td>
-            <td class="number" id="valM532">
-                -
-            </td>
-            <td class="number" id="averageM532">
-                -
-            </td>
-            <td class="number" id="minM532">
-                -
-            </td>
-            <td class="number" id="maxM532">
-                -
-            </td>
-        </tr>
-<tr></tr>
-<tr>
-    <th colspan=2>
-        M5.4 (%DNSSEC Validation rate)
-    </th>
-    <th class="number" id="currentId4">Current Value</th>
-    <th class="number">Past 3 months</th>
-    <th class="number">Historic Low</th>
-    <th class="number">Historic High</th>
-</tr>
+    <tr>
+        <td class="number">
+            M5.3.2
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            % of resolvers that set the DO bit in queries
+        </td>
+        <td class="number" id="valM532">
+            -
+        </td>
+        <td class="number" id="averageM532">
+            -
+        </td>
+        <td class="number" id="minM532">
+            -
+        </td>
+        <td class="number" id="maxM532">
+            -
+        </td>
+    </tr>
+    <tr></tr>
+    <tr>
+        <th colspan=2>
+            M5.4 (%DNSSEC Validation rate)
+        </th>
+        <th class="number" id="currentId4">Current Value</th>
+        <th class="number">Past 3 months</th>
+        <th class="number">Historic Low</th>
+        <th class="number">Historic High</th>
+    </tr>
 
-<tr>
-    <td class="number">
-        M5.4.1
-        <a href="about-m5.html">(?)</a>
-    </td>
-    <td>
-        % of users using resolvers that perform DNSSEC validation
-    </td>
-    <td class="number" id="valM541">
-        -
-    </td>
-    <td class="number" id="averageM541">
-        -
-    </td>
-    <td class="number" id="minM541">
-        -
-    </td>
-    <td class="number" id="maxM541">
-        -
-    </td>
-</tr>
+    <tr>
+        <td class="number">
+            M5.4.1
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            % of users using resolvers that perform DNSSEC validation
+        </td>
+        <td class="number" id="valM541">
+            -
+        </td>
+        <td class="number" id="averageM541">
+            -
+        </td>
+        <td class="number" id="minM541">
+            -
+        </td>
+        <td class="number" id="maxM541">
+            -
+        </td>
+    </tr>
 
-<tr>
-    <td class="number">
-        M5.4.2
-        <a href="about-m5.html">(?)</a>
-    </td>
-    <td>
-        % of resolvers that perform DNSSEC validation
-    </td>
-    <td class="number" id="valM542">
-        -
-    </td>
-    <td class="number" id="averageM542">
-        -
-    </td>
-    <td class="number" id="minM542">
-        -
-    </td>
-    <td class="number" id="maxM542">
-        -
-    </td>
-</tr>
-<tr></tr>
-<tr>
-    <th colspan=2>
-        M5.5 (Distribution of resolver use)
-    </th>
-    <th class="number" id="currentId5">Current Value</th>
-    <th class="number">Past 3 months</th>
-    <th class="number">Historic Low</th>
-    <th class="number">Historic High</th>
-</tr>
+    <tr>
+        <td class="number">
+            M5.4.2
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            % of resolvers that perform DNSSEC validation
+        </td>
+        <td class="number" id="valM542">
+            -
+        </td>
+        <td class="number" id="averageM542">
+            -
+        </td>
+        <td class="number" id="minM542">
+            -
+        </td>
+        <td class="number" id="maxM542">
+            -
+        </td>
+    </tr>
+    <tr></tr>
+    <tr>
+        <th colspan=2>
+            M5.5 (Distribution of resolver use)
+        </th>
+        <th class="number" id="currentId5">Current Value</th>
+        <th class="number">Past 3 months</th>
+        <th class="number">Historic Low</th>
+        <th class="number">Historic High</th>
+    </tr>
 
-<tr>
-    <td class="number">
-        M5.5
-        <a href="about-m5.html">(?)</a>
-    </td>
-    <td>
-        % of users using one of the top 10,000 resolvers
-    </td>
-    <td class="number" id="valM551">
-        -
-    </td>
-    <td class="number" id="averageM551">
-        -
-    </td>
-    <td class="number" id="minM551">
-        -
-    </td>
-    <td class="number" id="maxM551">
-        -
-    </td>
-</tr>
+    <tr>
+        <td class="number">
+            M5.5
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            % of users using one of the top 10,000 resolvers
+        </td>
+        <td class="number" id="valM551">
+            -
+        </td>
+        <td class="number" id="averageM551">
+            -
+        </td>
+        <td class="number" id="minM551">
+            -
+        </td>
+        <td class="number" id="maxM551">
+            -
+        </td>
+    </tr>
+    <tr>
+        <th colspan=2>
+            M5.6 (Concentration of the resolver service)
+        </th>
+        <th class="number" id="currentId6">Current Value</th>
+        <th class="number">Past 3 months</th>
+        <th class="number">Historic Low</th>
+        <th class="number">Historic High</th>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.6.1
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            Number of first use resolvers seen by 50% of users
+        </td>
+        <td class="number" id="valM561">
+            -
+        </td>
+        <td class="number" id="averageM561">
+            -
+        </td>
+        <td class="number" id="minM561">
+            -
+        </td>
+        <td class="number" id="maxM561">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.6.2
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            Number of first use resolvers seen by 90% of users
+        </td>
+        <td class="number" id="valM562">
+            -
+        </td>
+        <td class="number" id="averageM562">
+            -
+        </td>
+        <td class="number" id="minM562">
+            -
+        </td>
+        <td class="number" id="maxM562">
+            -
+        </td>
+    </tr>
 
-    </table>
+    <tr>
+        <td class="number">
+            M5.6.3
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            Nnumber of first use resolvers seen by 50% of users
+        </td>
+        <td class="number" id="valM563">
+            -
+        </td>
+        <td class="number" id="averageM563">
+            -
+        </td>
+        <td class="number" id="minM563">
+            -
+        </td>
+        <td class="number" id="maxM563">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.6.4
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            Number of first use resolvers used by 90% of users
+        </td>
+        <td class="number" id="valM564">
+            -
+        </td>
+        <td class="number" id="averageM564">
+            -
+        </td>
+        <td class="number" id="minM564">
+            -
+        </td>
+        <td class="number" id="maxM564">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.6.5
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            Number of all use resolvers seen by 50% of users
+        </td>
+        <td class="number" id="valM565">
+            -
+        </td>
+        <td class="number" id="averageM565">
+            -
+        </td>
+        <td class="number" id="minM565">
+            -
+        </td>
+        <td class="number" id="maxM565">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.6.6
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            Number of all use resolvers seen by 90% of users
+        </td>
+        <td class="number" id="valM566">
+            -
+        </td>
+        <td class="number" id="averageM566">
+            -
+        </td>
+        <td class="number" id="minM566">
+            -
+        </td>
+        <td class="number" id="maxM566">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.6.7
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            Number of all use resolvers used by 50% of users
+        </td>
+        <td class="number" id="valM567">
+            -
+        </td>
+        <td class="number" id="averageM567">
+            -
+        </td>
+        <td class="number" id="minM567">
+            -
+        </td>
+        <td class="number" id="maxM567">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.6.8
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            Number of all use resolvers used by 90% of users
+        </td>
+        <td class="number" id="valM568">
+            -
+        </td>
+        <td class="number" id="averageM568">
+            -
+        </td>
+        <td class="number" id="minM568">
+            -
+        </td>
+        <td class="number" id="maxM568">
+            -
+        </td>
+    </tr>
+</table>
 
 </body>
 </html>
