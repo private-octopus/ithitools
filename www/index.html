@@ -39,6 +39,10 @@
                 ["valNrecurs1", "averageNrecurs1", "minNrecurs1", "maxNrecurs1"],
                 ["valNrecurs2", "averageNrecurs2", "minNrecurs2", "maxNrecurs2"],
                 ["valNrecurs3", "averageNrecurs3", "minNrecurs3", "maxNrecurs3"],
+
+                ["valM561", "averageM561", "minM561", "maxM561"],
+                ["valM562", "averageM562", "minM562", "maxM562"],
+
                 ["valM2211", "averageM2211", "minM2211", "maxM2211"],
                 ["valM2221", "averageM2221", "minM2221", "maxM2221"],
                 ["valM2231", "averageM2231", "minM2231", "maxM2231"],
@@ -65,6 +69,10 @@
                 [1, 1, 1, 1],
                 [1, 1, 1, 1],
                 [1, 1, 1, 1],
+
+                [0, 2, 0, 0],
+                [0, 2, 0, 0],
+
                 [2, 2, 2, 2],
                 [2, 2, 2, 2],
                 [2, 2, 2, 2],
@@ -87,7 +95,10 @@
             setFormattedValElement("t-valM542", getLastElement(IndexData.mData[1]), 1);
             setFormattedValElement("t-valNroot1", getLastElement(IndexData.mData[2]), 1);
             setFormattedValElement("t-valNrecurs1", getLastElement(IndexData.mData[5]), 1);
-            setFormattedValElement("t-valM2211", getLastElement(IndexData.mData[8]), 2);
+
+            setFormattedValElement("t-valM561", getLastElement(IndexData.mData[8]), 0);
+
+            setFormattedValElement("t-valM2211", getLastElement(IndexData.mData[10]), 2);
             setStringElement("t-Nroot1", "." + IndexData.RootNames[0]);
             setStringElement("t-Nrecurs1", "." + IndexData.StubNames[0]);
 
@@ -142,10 +153,9 @@
             <td class="number" id="t-valNrecurs1">-</td>
         </tr>
         <tr>
-            <th colspan=2 class="title">Number of resolvers accounting for 50% of eyeballs </th>
-            <td>Coming soon</td>
+            <th colspan=2 class="title"><a href="graph-m5.html">Number of resolvers seeing 50% of first queries</a></th>
+            <td class="number" id="t-valM561">-</td>
         </tr>
-
         <tr>
             <th colspan=2 class="title"><a href="graph-m2.html">Phishing Domains per 10,000 registered names</a></th>
             <td class="number" id="t-valM2211"> - </td>
@@ -250,10 +260,19 @@
         </tr>
         <tr>
             <th rowspan=2 class="title">Resolver Concentration</th>
-            <th colspan=2 class="title">Number of resolvers accounting for 50% of eyeballs </th>
-            <td colspan=4>Coming soon</td>
+            <th colspan=2 class="title"><a href="graph-m5.html">Number of resolvers seeing 50% of first queries</a></th>
+            <td class="number" id="valM561"> - </td>
+            <td class="number" id="averageM561"> - </td>
+            <td class="number" id="minM561"> - </td>
+            <td class="number" id="maxM561"> - </td>
         </tr>
-        <tr><th colspan=2 class="title">Number of resolvers accounting for 90% of eyeballs </th><td colspan=4>Coming soon</td></tr>
+        <tr>
+            <th colspan=2 class="title"><a href="graph-m5.html">Number of resolvers seeing 90% of first queries</a></th>
+            <td class="number" id="valM562"> - </td>
+            <td class="number" id="averageM562"> - </td>
+            <td class="number" id="minM562"> - </td>
+            <td class="number" id="maxM562"> - </td>
+        </tr>
 
 
         <tr>
