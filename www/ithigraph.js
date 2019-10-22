@@ -511,6 +511,13 @@ function fillValueAverageMinMax(pilot, dataSet, format) {
     setFormattedValElement(pilot[3], getMaxElement(dataSet), format[3]);
 }
 
+function fillValueAverageMinMaxSkip0(pilot, dataSet, format) {
+    setFormattedValElement(pilot[0], getLastElement(dataSet), format[0]);
+    setFormattedValElement(pilot[1], getAverageLastNSkip0(dataSet, 3), format[1]);
+    setFormattedValElement(pilot[2], getMinElementSkip0(dataSet), format[2]);
+    setFormattedValElement(pilot[3], getMaxElement(dataSet), format[3]);
+}
+
 function setScale(canvasId, v_max, sections, firstMonth, unit) {
     var v_min = 0;
     var stepSize = v_max / 10;

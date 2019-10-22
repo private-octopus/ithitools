@@ -102,9 +102,15 @@
             setStringElement("t-Nroot1", "." + IndexData.RootNames[0]);
             setStringElement("t-Nrecurs1", "." + IndexData.StubNames[0]);
 
-            for (i = 0; i < pilot.length; i++) {
+            for (i = 0; i < 8; i++) {
                 fillValueAverageMinMax(pilot[i], IndexData.mData[i], formats[i]);
             }
+
+            for (i = 8; i < pilot.length; i++) {
+                fillValueAverageMinMaxSkip0(pilot[i], IndexData.mData[i], formats[i]);
+            }
+
+            
 
             for (i = 0; i < 3; i++) {
                 setStringElement(RootNamesPilot[i], "." + IndexData.RootNames[i]);
