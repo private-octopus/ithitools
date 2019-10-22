@@ -66,11 +66,11 @@
 
         // metrics for row 0 to 12 (M5.4.2) are percentiles
         for (; i < 13; i++) {
-            fillValueAverageMinMax(pilot[i], M5Data.M5[i].v, format1);
+            fillValueAverageMinMaxSkip0(pilot[i], M5Data.M5[i].v, format1);
         }
-        // metrics for row 13 to 21 (M5.5 to M5.6.8) are percentiles
+        // metrics for row 13 to 21 (M5.5 to M5.6.8) are straight values
         for (; i < pilot.length; i++) {
-            fillValueAverageMinMax(pilot[i], M5Data.M5[i].v, format2);
+            fillValueAverageMinMaxSkip0(pilot[i], M5Data.M5[i].v, format2);
         }
     }
 
@@ -133,39 +133,16 @@ There are five components in the M5 metric:
         of resolvers required to serve 50% or 90% of the number of clients. 
     </li>
 </ul>
-<p>It turns out that the
-link between clients and resolvers is a bit fuzzy for two reasons:</p>
-<ul>
-    <li>
-        Some clients send their first queries to one resolver, but if the resolver does
-        not respond they may try other resolvers. We thus distinguish "first use" resolver
-        and "all" resolvers.
-    </li>
-    <li>
-        Some clients send their queries in parallel to several resolvers. We thus distinguish
-        between the set of resolvers that a fraction of client "sees" at least once, and the
-        larger set resolvers that includes all the resolvers that a client "uses".
-    </li>
-</ul>
-This results in several variants of the M5.6 metrics:
-<ul>
-    <li>
-        Metrics M5.6.1 and M5.6.2 measure the number of first use resolvers "seen" by 50% of
-        users (M5.6.1) or 90% of users (M5.6.2)
-    </li>
-    <li>
-        Metrics M5.6.3 and M5.6.4 measure the number of first use resolvers "used" by 50% of
-        users (M5.6.3) or 90% of users (M5.6.4)
-    </li>
-    <li>
-        Metrics M5.6.5 and M5.6.6 measure the number of all resolvers "seen" by 50% of
-        users (M5.6.5) or 90% of users (M5.6.6) 
-    </li>
-    <li>
-        Metrics M5.6.7 and M5.6.8 measure the number of all resolvers "used" by 50% of
-        users (M5.6.7) or 90% of users (M5.6.8)
-    </li>
-</ul>
+<p>
+    M5.1 to M5.5 only consider the individual resolvers identified by an individual
+    IPv4 or IPv6 address, but for M5.6 we may group several addresses together if they
+    belong to the same "resolver service". We also observe that clients may
+    send their first queries to one resolver, but if it does
+    not respond they may try other resolvers. Some clients send these first requests
+    in parallel use multiple resolvers. For that reason, be use four different methods
+    for computing concentration, leading to four different submetrics. The details
+    of grouping and computation are explained in <a href="about-m5.html">the "about M5" page</a>.
+</p>
 <p>
     The following table provides the value observed for the
     metrics in the current month, as well as the average value over the 3 previous months,
@@ -522,7 +499,7 @@ This results in several variants of the M5.6 metrics:
     </tr>
     <tr>
         <th colspan=2>
-            M5.6 (Concentration of the resolver service)
+            M5.6 (Concentration of the resolver services)
         </th>
         <th class="number" id="currentId6">Current Value</th>
         <th class="number">Past 3 months</th>

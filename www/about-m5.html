@@ -27,6 +27,7 @@
         <li>The metric M5.5 provide a distribution of the estimated client size of the 10,000 largest visible recursive resolvers.</li>
         <li>The metric M5.6 estimates the concentration of the resolver services.</li>
     </ul>
+    <h3>The APNIC polling process</h3>
     <p>
         The M5 metric is computed by APNIC. The process involves buying Google ads to generate a large number
         of "impressions" every day. The count varies from day to day, as explained <a href="https://stats.labs.apnic.net/about/">
@@ -46,6 +47,36 @@
         the clients, and then computing a "per country" weight defined as the ratio of the number of Internet users
         in the country divided by the number of impressions in that country.
     </p>
+    <h3>Individual resolvers and resolver services</h3>
+    <p>
+        The first 5 metrics identify and count resolvers by their individual IP addresses. This is not sufficient to
+        assess the concentration of the resolver services, because a single service will often field several
+        individual resolvers. We need to group the individual resolvers into clusters corresponding to separate services.
+        We do that using three methods:
+    </p>
+    <nl>
+        <li>
+            Recognize the IP address that have been associated with an open resolver
+            as belonging to a single service. We have used the list at established by
+            the <a hhref="https://www.publicdns.xyz">Public DNS project</a> to define
+            the open DNS resolvers. This project established the list of open resolver
+            ip addresses by measurements using <a href="https://atlas.ripe.net/">
+                RIPE Atlas
+            </a>.
+        </li>
+
+        <li>
+            Check the remaining addresses and group them as single resolvers if they sit
+            within a common subnet (a /24 in IPv4 and a /48 in IPv6). We used this in preference
+            to testing whether they belong to the same BGP Autonomous System because looking
+            at ASes tended to treat unrelated resolvers as a single service.
+        </li>
+
+        <li>
+            Treat the remaining addresses as corresponding to individual services.
+        </li>
+    </nl>
+    <h3>Linking users to services</h3>
     <p>
         The web pages used by the script generate a different URL for each user, with a unique domain name and
         a known TTL. APNIC can observe DNS requests trying to "refresh the cache" for these domain names, and can infer
@@ -88,6 +119,39 @@
             users (M5.6.7) or 90% of users (M5.6.8)
         </li>
     </ul>
+    <p>
+        We illustrate these computations with an example network of just three clients and four resolvers, each belonging to different services:
+    </p>
+    <img src="explain-m56.png"
+         alt="Graph showing hypothetical clients and resolvers and the resulting groupings"
+         style="float:right;width:25%;margin:0px 10px" />
+    <ul>
+        <li>
+            The client X sends its first queries in parallel to resolvers A and B,
+        </li>
+        <li>
+            The client Y sends its first queries to resolver C and may use resolver B as a backup,
+        </li>
+        <li>
+            The client Z sends its first queries in parallel to B, and may use C and D as a backup.
+        </li>
+    </ul>
+    <p>
+        The purpose of the example is to explain the differences between what we call "first" and "all",
+        or "used" and "seen". We compute the smallest set of resolvers that are seen the first queries of every client,
+        that are used in the first queries of every client, that are seen in all queries of every client,
+        and that are used in all queries of every client. We see that these are four different sets:
+    </p>
+    <ul>
+        <li>The smallest set is the minimal set of resolvers that are seen in all queries of every client. In our example, the set only includes resolver B.</li>
+        <li>The next smallest set is the minimal set of resolvers that are seen in all first queries of every client. This set includes resolvers B and C.</li>
+        <li>The next set is the minimal set of resolvers that are used in all first queries of every client. This set includes resolvers A, B and C.</li>
+        <li>The largest set is the minimal set of resolvers that are used in all queries of every client. This set includes resolvers A, B, C, and C.</li>
+    </ul>
+    <p>
+        The computation of the metrics M5.6 follow the same logic, but instead of measuring the set that serves "every" client, we look at the minimal sets that are seen or used by 50% or 90% of clients.
+    </p>
+    <h3>Complete list of M5 metrics</h3>
     <p>
         The complete list of M5 metrics is listed in the following table:
     </p>
