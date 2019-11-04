@@ -230,6 +230,27 @@ function getMaxElement(dataSet) {
     }
 }
 
+function getMaxElementSkip0(dataSet) {
+    if (dataSet.length < 1) {
+        return 0;
+    } else {
+        var i = 0;
+        var maxEl = dataSet[0];
+
+        for (i = 1; i < dataSet.length - 1; i++) {
+            if (maxEl < dataSet[i]) {
+                maxEl = dataSet[i];
+            }
+        }
+
+        if (maxEl <= 0) {
+            maxEl = dataSet[dataSet.length - 1];
+        }
+
+        return maxEl;
+    }
+}
+
 function getMaxRange(rawMax) {
     var i = 0;
     var t_max = 0.1;
@@ -515,7 +536,7 @@ function fillValueAverageMinMaxSkip0(pilot, dataSet, format) {
     setFormattedValElement(pilot[0], getLastElement(dataSet), format[0]);
     setFormattedValElement(pilot[1], getAverageLastNSkip0(dataSet, 3), format[1]);
     setFormattedValElement(pilot[2], getMinElementSkip0(dataSet), format[2]);
-    setFormattedValElement(pilot[3], getMaxElement(dataSet), format[3]);
+    setFormattedValElement(pilot[3], getMaxElementSkip0(dataSet), format[3]);
 }
 
 function setScale(canvasId, v_max, sections, firstMonth, unit) {
