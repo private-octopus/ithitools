@@ -29,7 +29,15 @@
         ["valM565", "averageM565", "minM565", "maxM565"],
         ["valM566", "averageM566", "minM566", "maxM566"],
         ["valM567", "averageM567", "minM567", "maxM567"],
-        ["valM568", "averageM568", "minM568", "maxM568"]
+        ["valM568", "averageM568", "minM568", "maxM568"],
+        ["valM569", "averageM569", "minM569", "maxM569"],
+        ["valM5610", "averageM5610", "minM5610", "maxM5610"],
+        ["valM5611", "averageM5611", "minM5611", "maxM5611"],
+        ["valM5612", "averageM5612", "minM5612", "maxM5612"],
+        ["valM5613", "averageM5613", "minM5613", "maxM5613"],
+        ["valM5614", "averageM5614", "minM5614", "maxM5614"],
+        ["valM5615", "averageM5615", "minM5615", "maxM5615"],
+        ["valM5616", "averageM5616", "minM5616", "maxM5616"]
     ];
 
     var format1 = [1, 1, 1, 1];
@@ -69,7 +77,7 @@
         for (; i < 13; i++) {
             fillValueAverageMinMaxSkip0(pilot[i], M5Data.M5[i].v, format1);
         }
-        // metrics for row 13 to 21 (M5.5 to M5.6.8) are straight values
+        // metrics for row 13 to 29 (M5.5 to M5.6.16) are straight values
         fillValueAverageMinMaxSkip0(pilot[i], M5Data.M5[i].v, format2);
         i++;
         for (; i < pilot.length; i++) {
@@ -675,6 +683,175 @@ There are five components in the M5 metric:
             -
         </td>
         <td class="number" id="maxM568">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.6.9
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            Number of first use resolver-ASes seen by 50% of users
+        </td>
+        <td class="number" id="valM569">
+            -
+        </td>
+        <td class="number" id="averageM569">
+            -
+        </td>
+        <td class="number" id="minM569">
+            -
+        </td>
+        <td class="number" id="maxM569">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.6.10
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            Number of first use resolver-ASes seen by 90% of users
+        </td>
+        <td class="number" id="valM5610">
+            -
+        </td>
+        <td class="number" id="averageM5610">
+            -
+        </td>
+        <td class="number" id="minM5610">
+            -
+        </td>
+        <td class="number" id="maxM5610">
+            -
+        </td>
+    </tr>
+
+    <tr>
+        <td class="number">
+            M5.6.11
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            Number of first use resolver-ASes used by 50% of users
+        </td>
+        <td class="number" id="valM5611">
+            -
+        </td>
+        <td class="number" id="averageM5611">
+            -
+        </td>
+        <td class="number" id="minM5611">
+            -
+        </td>
+        <td class="number" id="maxM5611">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.6.12
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            Number of first use resolver-ASes used by 90% of users
+        </td>
+        <td class="number" id="valM5612">
+            -
+        </td>
+        <td class="number" id="averageM5612">
+            -
+        </td>
+        <td class="number" id="minM5612">
+            -
+        </td>
+        <td class="number" id="maxM5612">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.6.13
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            Number of all use resolver-ASes seen by 50% of users
+        </td>
+        <td class="number" id="valM5613">
+            -
+        </td>
+        <td class="number" id="averageM5613">
+            -
+        </td>
+        <td class="number" id="minM5613">
+            -
+        </td>
+        <td class="number" id="maxM5613">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.6.14
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            Number of all use resolver-ASes seen by 90% of users
+        </td>
+        <td class="number" id="valM5614">
+            -
+        </td>
+        <td class="number" id="averageM5614">
+            -
+        </td>
+        <td class="number" id="minM5614">
+            -
+        </td>
+        <td class="number" id="maxM5614">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.6.15
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            Number of all use resolver-ASes used by 50% of users
+        </td>
+        <td class="number" id="valM5615">
+            -
+        </td>
+        <td class="number" id="averageM5615">
+            -
+        </td>
+        <td class="number" id="minM5615">
+            -
+        </td>
+        <td class="number" id="maxM5615">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.6.16
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            Number of all use resolver-ASes used by 90% of users
+        </td>
+        <td class="number" id="valM5616">
+            -
+        </td>
+        <td class="number" id="averageM5616">
+            -
+        </td>
+        <td class="number" id="minM5616">
+            -
+        </td>
+        <td class="number" id="maxM5616">
             -
         </td>
     </tr>
