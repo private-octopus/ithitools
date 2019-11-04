@@ -81,7 +81,7 @@
         run multiple resolvers at different locations, in different IPv4 or IPv6 subnets. They are counted as many
         resolvers using the definition above, but would be counted as a single service if we grouped addresses
         routed via BGP to the same Autonomous System (AS). The problem of course is that if grouping just
-        by subnet is possibly too narrow, grouping by As is too wide. For example, if an ISP serves several
+        by subnet is possibly too narrow, grouping by AS is too wide. For example, if an ISP serves several
         businesses that run their own resolvers, all these resolvers will be lumped in a single in the grouping
         per AS. Since we have not found the perfect grouping yet, we compute two series of numbers, one with the
         "subnet" grouping of resolvers, and one with the "AS" grouping.
