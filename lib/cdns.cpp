@@ -183,13 +183,24 @@ bool cdns::open_block(int* err)
             ret = false;
         }
         else {
-            in = block.parse(in, in_max, err);
+            uint8_t* old_in = in;
+
+            in = block.parse(old_in, in_max, err);
 
             if (in != NULL) {
                 nb_blocks_read++;
                 buf_parsed = in - buf;
             }
             else {
+                char out_buf[1024];
+                int err = 0;
+
+                fprintf(stderr, "\nBlock parsing error at position %lld:\n", (unsigned long long)(old_in - buf));
+
+                (void)dump_block_properties(old_in, in_max, out_buf, out_buf + sizeof(out_buf), &err, stderr);
+
+                fprintf(stderr, "\n");
+
                 ret = false;
             }
         }
@@ -1516,8 +1527,9 @@ uint8_t* cdns_query::parse(uint8_t* in, uint8_t const* in_max, int* err)
     return cbor_map_parse(in, in_max, this, err);
 }
 
-uint8_t* cdns_query::parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t val, int* err)
+uint8_t* cdns_query::parse_map_item(uint8_t* old_in, uint8_t const* in_max, int64_t val, int* err)
 {
+    uint8_t* in = old_in;
     switch (val) {
     case 0: // time_useconds
         in = cbor_parse_int(in, in_max, &time_offset_usec, 1, err);
@@ -1548,7 +1560,7 @@ uint8_t* cdns_query::parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t 
         in = cbor_parse_int(in, in_max, &client_hoplimit, 0, err);
         break;
     case 7: // delay_useconds
-        in = cbor_parse_int(in, in_max, &delay_useconds, 0, err);
+        in = cbor_parse_int(in, in_max, &delay_useconds, 1, err);
         break;
     case 8: // delay_pseconds
     {
@@ -1579,6 +1591,10 @@ uint8_t* cdns_query::parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t 
         /* TODO: something */
         in = cbor_skip(in, in_max, err);
         break;
+    }
+
+    if (in == NULL) {
+        fprintf(stderr, "\nError parsing query field type %d\n", (int)val);
     }
 
     return in;
