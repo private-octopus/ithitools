@@ -192,12 +192,8 @@ bool cdns::open_block(int* err)
                 buf_parsed = in - buf;
             }
             else {
-                char out_buf[1024];
-                int err = 0;
-
-                fprintf(stderr, "\nBlock parsing error at position %lld:\n", (unsigned long long)(old_in - buf));
-
-                (void)dump_block_properties(old_in, in_max, out_buf, out_buf + sizeof(out_buf), &err, stderr);
+                fprintf(stderr, "\nBlock parsing error %d after %d blocks at position %lld.\n", *err, (int)(nb_blocks_read+1),
+                    (unsigned long long)(old_in - buf));
 
                 fprintf(stderr, "\n");
 
@@ -865,7 +861,7 @@ uint8_t* cdns::dump_queries(uint8_t* in, uint8_t* in_max, char* out_buf, char* o
     return in;
 }
 
-uint8_t* cdns::dump_query(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out)
+uint8_t* cdns::dump_query(uint8_t* in, const uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out)
 {
     char* p_out;
     int64_t val;
@@ -1392,6 +1388,13 @@ uint8_t* cdnsBlock::parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t v
         in = cbor_skip(in, in_max, err);
         break;
     }
+
+    if (in == NULL) {
+        char const* e[] = { "preamble", "statistics", "tables", "queries", "address_events" };
+        int nb_e = (int)sizeof(e) / sizeof(char const*);
+
+        fprintf(stderr, "Cannot parse block element %d (%s), err=%d\n", (int)val, (val >= 0 && val < nb_e) ? e[val] : "unknown", *err);
+    }
     return in;
 }
 
@@ -1458,8 +1461,10 @@ uint8_t* cdnsBlockTables::parse(uint8_t* in, uint8_t const* in_max, int* err)
     return cbor_map_parse(in, in_max, this, err);
 }
 
-uint8_t* cdnsBlockTables::parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t val, int* err)
+uint8_t* cdnsBlockTables::parse_map_item(uint8_t* old_in, uint8_t const* in_max, int64_t val, int* err)
 {
+    uint8_t * in = old_in;
+
     switch (val) {
     case 0: // ip_address
         in = cbor_array_parse(in, in_max, &addresses, err);
@@ -1488,6 +1493,22 @@ uint8_t* cdnsBlockTables::parse_map_item(uint8_t* in, uint8_t const* in_max, int
     default:
         in = cbor_skip(in, in_max, err);
     }
+
+    if (in == NULL) {
+        char out_buf[1024];
+        char* p_out = out_buf;
+        int dump_err = 0;
+        char const* e[] = { "ip_address", "classtype", "name_rdata", "query_signature", "question_list", "question_rr", "rr_list", "rr" };
+        int nb_e = (int)sizeof(e) / sizeof(char const*);
+
+        fprintf(stderr, "Cannot parse block table item %d (%s), err: %d\n", (int)val,
+            (val >= 0 && val < nb_e) ? e[val] : "unknown", *err);
+
+        fprintf(stderr, "Error %d parsing %s:\n", *err, (val >= 0 && val < nb_e) ? e[val] : "unknown item");
+        (void)cbor_to_text(old_in, in_max, &p_out, out_buf + sizeof(out_buf), &dump_err);
+        fprintf(stderr, "%s\n", out_buf);
+    }
+
     return in;
 }
 
@@ -1594,7 +1615,7 @@ uint8_t* cdns_query::parse_map_item(uint8_t* old_in, uint8_t const* in_max, int6
     }
 
     if (in == NULL) {
-        fprintf(stderr, "\nError parsing query field type %d\n", (int)val);
+        fprintf(stderr, "\nError %d parsing query field type %d\n", *err, (int)val);
     }
 
     return in;
@@ -1754,7 +1775,17 @@ cdns_question::~cdns_question()
 
 uint8_t* cdns_question::parse(uint8_t* in, uint8_t const* in_max, int* err)
 {
-    return cbor_map_parse(in, in_max, this, err);
+    uint8_t * out = cbor_map_parse(in, in_max, this, err);
+
+    if (out == NULL) {
+        char out_buf[1024];
+        char* p_out = out_buf;
+        int dump_err = 0;
+        fprintf(stderr, "\nError %d parsing question:\n", *err);
+        (void)cbor_to_text(in, in_max, &p_out, out_buf + sizeof(out_buf), &dump_err);
+        fprintf(stderr, "%s\n", out_buf);
+    }
+    return out;
 }
 
 uint8_t* cdns_question::parse_map_item(uint8_t* in, uint8_t const* in_max, int64_t val, int* err)
@@ -2014,4 +2045,17 @@ uint8_t* cdns_address_event_count::parse_map_item(uint8_t* in, uint8_t const* in
     }
 
     return in;
+}
+
+cdns_question_list::cdns_question_list()
+{
+}
+
+cdns_question_list::~cdns_question_list()
+{
+}
+
+uint8_t* cdns_question_list::parse(uint8_t* in, uint8_t const* in_max, int* err)
+{
+    return cbor_array_parse(in, in_max, &question_table_index, err);
 }
