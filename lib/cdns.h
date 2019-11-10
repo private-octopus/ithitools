@@ -164,6 +164,7 @@ public:
     int response_rcode;
 };
 
+/* The cdns_question class describes the elements in the QRR table */
 class cdns_question {
 public:
     cdns_question();
@@ -177,6 +178,7 @@ public:
     int classtype_index;
 };
 
+/* The RR_FIELD table describes elements in the RR table */
 class cdns_rr_field {
 public:
     cdns_rr_field();
@@ -192,6 +194,7 @@ public:
     int rdata_index;
 };
 
+/* The RR list table */
 class cdns_rr_list{
 public:
     cdns_rr_list();
@@ -201,6 +204,18 @@ public:
 
     std::vector<int> rr_index;
 };
+
+/* The Question List table */
+class cdns_question_list {
+public:
+    cdns_question_list();
+    ~cdns_question_list();
+
+    uint8_t* parse(uint8_t* in, uint8_t const* in_max, int* err);
+
+    std::vector<int> question_table_index;
+};
+
 
 
 class cdnsBlockTables
@@ -220,8 +235,8 @@ public:
     std::vector<cdns_class_id> class_ids;
     std::vector<cbor_bytes> name_rdata;
     std::vector<cdns_query_signature> q_sigs;
-    std::vector<cdns_question> question_list;
-    std::vector<cdns_rr_field> qrr;
+    std::vector<cdns_question_list> question_list;
+    std::vector<cdns_question> qrr;
     std::vector<cdns_rr_list> rr_list;
     std::vector<cdns_rr_field> rrs;
     bool is_filled;
@@ -279,6 +294,9 @@ public:
     static int get_dns_flags(int q_dns_flags, bool is_response);
     static int get_edns_flags(int q_dns_flags);
 
+
+    static uint8_t* dump_query(uint8_t* in, const uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out);
+
 private:
     FILE* F;
     uint8_t* buf;
@@ -303,7 +321,6 @@ private:
     uint8_t* dump_block_properties(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out);
     uint8_t* dump_block_tables(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out); 
     uint8_t* dump_queries(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out);
-    uint8_t* dump_query(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out);
     uint8_t* dump_class_types(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out);
     uint8_t* dump_class_type(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out);
     uint8_t* dump_qr_sigs(uint8_t* in, uint8_t* in_max, char* out_buf, char* out_max, int* err, FILE* F_out);
