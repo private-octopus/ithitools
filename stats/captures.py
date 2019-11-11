@@ -15,24 +15,32 @@ class capture_line:
         self.index_string = ""
         self.count = 0
 
-    def load(self, m_line):
+    def load_filtered(self, m_line, load_all):
         ret = 0
         try:
             m_line = m_line.strip()
             cells = m_line.split(",")
             if (len(cells) < 4):
-                ret = 0
+                print("Too few cells:" + str(len(cells)))
+                ret = -1
             else:
                 self.name = cells[0].strip()
-                self.index_type = int(cells[1], base=10)
-                if (self.index_type == 0):
-                    self.index_num = int(cells[2], base=10)
+                if not load_all and (self.name == "ADDRESS_DELAY" or self.name == "ADDRESS_LIST" or self.name == "FULL_NAME_LIST"):
+                    ret = -1
                 else:
-                    self.index_string = cells[2].strip()
-                self.count = int(cells[3].strip())
-        except:
+                    self.index_type = int(cells[1], base=10)
+                    if (self.index_type == 0):
+                        self.index_num = int(cells[2], base=10)
+                    else:
+                        self.index_string = cells[2].strip()
+                    self.count = int(cells[3].strip())
+        except Exception as e:
+            print("Fail: " + str(e))
             ret = -1
         return ret
+
+    def load(self, m_line):
+        return self.load_filtered(m_line, False)
 
 # load an ITHI capture file in memory
 class capture_file:
