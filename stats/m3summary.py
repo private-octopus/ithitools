@@ -517,10 +517,6 @@ class m3summary_line():
             return -1
         elif (self.city > other.city):
             return 1
-        elif (self.date < other.date):
-            return -1
-        elif (self.date > other.date):
-            return 1
         elif (self.address_id < other.address_id):
             return -1
         elif (self.address_id > other.address_id):
