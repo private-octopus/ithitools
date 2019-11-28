@@ -494,14 +494,14 @@ char const * M2Data::get_file_suffix(M2DataType f_type)
 }
 
 ComputeM2::ComputeM2() :
-    nb_registrars(0),
-    nb_gtld(0),
     ithi_m2_tlds(),
     ithi_median_tlds(),
     ithi_ninety_tlds(),
     ithi_m2_registrars(),
     ithi_median_registrars(),
-    ithi_ninety_registrars()
+    ithi_ninety_registrars(),
+    nb_registrars(0),
+    nb_gtld(0)
 {
     for (int i = 0; i < 4; i++)
     {

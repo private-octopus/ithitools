@@ -213,8 +213,8 @@ bool M1Data::FirstNoticeIsBigger(M1RegSummary_t x, M1RegSummary_t y)
 }
 
 ComputeM1::ComputeM1() :
-    nb_registrars(0),
-    ithi_m1()
+    ithi_m1(),
+    nb_registrars(0)
 {
     for (int i = 0; i < 3; i++) {
         ithi_m1[1] = 0;
