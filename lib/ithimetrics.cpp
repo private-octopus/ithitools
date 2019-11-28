@@ -493,20 +493,19 @@ bool ithimetrics::SaveMetricFiles()
 
 bool ithimetrics::Save(char const * file_name)
 {
-
     ComputeMetric * cm[ITHI_NUMBER_OF_METRICS] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7, &cm8 };
     FILE* F;
     char version[128];
     bool ret = true;
+
+    F = ithi_file_open(file_name, "w");
+    ret = (F != NULL);
 
     /* Set the version number */
     if (ret)
     {
         ret = snprintf(version, sizeof(version), "v%d.%02d", ITHITOOLS_VERSION_MAJOR, ITHITOOLS_VERSION_MINOR) > 0;
     }
-
-    F = ithi_file_open(file_name, "w");
-    ret = (F != NULL);
 
     for (int i = 0; ret && i < ITHI_NUMBER_OF_METRICS; i++)
     {
