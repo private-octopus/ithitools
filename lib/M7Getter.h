@@ -49,7 +49,7 @@ public:
 
     bool Load(char const * single_file_name) override;
     bool Compute() override;
-    bool Write(FILE * F_out) override;
+    bool Write(FILE * F_out, char const* date, char const* version) override;
 
 private:
     M7Getter m7Getter;

@@ -44,7 +44,7 @@ public:
     bool Load(char const * single_file_name) override;
     bool LoadMultipleFiles(char const ** in_files, int nb_files) override;
     bool Compute() override;
-    bool Write(FILE * F_out) override;
+    bool Write(FILE * F_out, char const* date, char const* version) override;
 
 private:
     uint64_t nb_rootqueries;
@@ -84,7 +84,7 @@ public:
     bool Load(char const * single_file_name) override;
     bool LoadMultipleFiles(char const ** in_files, int nb_files) override;
     bool Compute() override;
-    bool Write(FILE * F_out) override;
+    bool Write(FILE * F_out, char const* date, char const* version) override;
 
 private:
     uint64_t nb_userqueries;
@@ -116,7 +116,7 @@ public:
     bool Load(char const * single_file_name) override;
     bool LoadMultipleFiles(char const ** in_files, int nb_files) override;
     bool Compute() override;
-    bool Write(FILE * F_out) override;
+    bool Write(FILE * F_out, char const* date, char const* version) override;
 
     static bool ComputeEdnsMetrics(CaptureSummary * cs, double * m_edns, std::vector<metric8_line_t>* m_edns_opt);
 

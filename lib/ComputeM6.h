@@ -61,7 +61,7 @@ public:
     bool Load(char const * single_file_name) override;
     bool LoadMultipleFiles(char const ** in_files, int nb_files) override;
     bool Compute() override;
-    bool Write(FILE * F_out) override;
+    bool Write(FILE * F_out, char const* date, char const* version) override;
     static metric6_def_t const * GetTable(char const * m6_prefix);
 
 private:

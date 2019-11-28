@@ -47,7 +47,7 @@ bool ComputeMetric::LoadMultipleFiles(char const ** in_files, int nb_files)
     return ret;
 }
 
-bool ComputeMetric::Save(char const * out_file)
+bool ComputeMetric::Save(char const * out_file, char const* date, char const* version)
 {
     bool ret;
     FILE * F = NULL;
@@ -57,7 +57,7 @@ bool ComputeMetric::Save(char const * out_file)
 
     if (ret)
     {
-        ret = Write(F);
+        ret = Write(F, date, version);
         fclose(F);
     }
 
