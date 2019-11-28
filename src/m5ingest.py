@@ -43,12 +43,12 @@ class m5_summary:
                 self.total[i] /= self.counters[i]
             i += 1
     
-    def save_as_csv(self, f_name):
+    def save_as_csv(self, f_name, date_string):
         "Save the summary as a CSV file"
         csv_file = open(f_name, "w")
         i = 0
         while i < len(self.key_list):
-            csv_file.write(self.key_list[i] + ", , " + str(self.total[i]) + ",\n")
+            csv_file.write(self.key_list[i] + "," + date_string + ",v1.06, , " + str(self.total[i]) + ",\n")
             i += 1
         csv_file.close()
 
@@ -72,4 +72,4 @@ i = 0
 while i < len(summary.key_list) :
     print("m5[" + summary.key_list[i] + "] = " + str(summary.total[i]))
     i += 1
-summary.save_as_csv(sys.argv[2])
+summary.save_as_csv(sys.argv[2], sys.argv[3])

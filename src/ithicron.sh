@@ -99,10 +99,10 @@ echo "Computing metrics for $LAST_DAY"
 ./ithitools/ithitools -i /home/ubuntu/ithi -d $LAST_DAY -m
 
 echo "Ingesting M5 for $LAST_LAST_DAY"
-python ithitools/src/m5ingest.py /home/gih/data/$PREVIOUS_YEAR/$PREVIOUS_MM/ /home/ubuntu/ithi/M5/M5-$LAST_LAST_DAY.csv
+python ithitools/src/m5ingest.py /home/gih/data/$PREVIOUS_YEAR/$PREVIOUS_MM/ /home/ubuntu/ithi/M5/M5-$LAST_LAST_DAY.csv $LAST_LAST_DAY
 
 echo "Ingesting M5 for $LAST_DAY"
-python ithitools/src/m5ingest.py /home/gih/data/$YEAR/$MM/ /home/ubuntu/ithi/M5/M5-$LAST_DAY.csv
+python ithitools/src/m5ingest.py /home/gih/data/$YEAR/$MM/ /home/ubuntu/ithi/M5/M5-$LAST_DAY.csv $LAST_DAY
 
 echo "Computing JSON Data for publication"
 ./ithitools/ithitools -i /home/ubuntu/ithi -w /var/www/html -p

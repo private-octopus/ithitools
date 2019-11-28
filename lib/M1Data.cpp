@@ -34,6 +34,8 @@ M1Data::M1Data()
     :
     totalDomain(0),
     total1stN(0),
+    nbRegistrars50pc(0),
+    nbRegistrars90pc(0),
     nb_registrars(0)
 {
 }
@@ -211,6 +213,7 @@ bool M1Data::FirstNoticeIsBigger(M1RegSummary_t x, M1RegSummary_t y)
 }
 
 ComputeM1::ComputeM1() :
+    ithi_m1(),
     nb_registrars(0)
 {
     for (int i = 0; i < 3; i++) {
@@ -241,14 +244,14 @@ bool ComputeM1::Compute()
     return ret;
 }
 
-bool ComputeM1::Write(FILE * F_out)
+bool ComputeM1::Write(FILE * F_out, char const* date, char const* version)
 {
     bool ret = true;
 
-    ret &= fprintf(F_out, "M1.1, , %8f,\n", ithi_m1[0]) > 0;
-    ret &= fprintf(F_out, "M1.2, , %f,\n", ithi_m1[1]) > 0;
-    ret &= fprintf(F_out, "M1.3, , %f,\n", ithi_m1[2]) > 0;
-    ret &= fprintf(F_out, "M1.4, , %d,\n", nb_registrars) > 0;
+    ret &= fprintf(F_out, "M1.1,%s,%s, , %8f,\n", date, version, ithi_m1[0]) > 0;
+    ret &= fprintf(F_out, "M1.2,%s,%s, , %f,\n", date, version, ithi_m1[1]) > 0;
+    ret &= fprintf(F_out, "M1.3,%s,%s, , %f,\n", date, version, ithi_m1[2]) > 0;
+    ret &= fprintf(F_out, "M1.4,%s,%s, , %d,\n", date, version, nb_registrars) > 0;
 
     return ret;
 }

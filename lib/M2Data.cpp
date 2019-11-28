@@ -46,6 +46,7 @@ M2Data::M2Data()
     :
     year(0),
     month(0),
+    day(0),
     M2Type(Unknown)
 {
 }
@@ -493,6 +494,12 @@ char const * M2Data::get_file_suffix(M2DataType f_type)
 }
 
 ComputeM2::ComputeM2() :
+    ithi_m2_tlds(),
+    ithi_median_tlds(),
+    ithi_ninety_tlds(),
+    ithi_m2_registrars(),
+    ithi_median_registrars(),
+    ithi_ninety_registrars(),
     nb_registrars(0),
     nb_gtld(0)
 {
@@ -562,7 +569,7 @@ bool ComputeM2::Compute()
     return true;
 }
 
-bool ComputeM2::Write(FILE * F_out)
+bool ComputeM2::Write(FILE * F_out, char const* date, char const* version)
 {
     bool ret = true;
 
@@ -584,11 +591,11 @@ bool ComputeM2::Write(FILE * F_out)
 
         for (int i = 0; i < 4; i++)
         {
-            ret &= (fprintf(F_out, "M2.%d.%d.1, , %6f,\n", m, i + 1, average[i]) > 0);
-            ret &= (fprintf(F_out, "M2.%d.%d.2, , %6f,\n", m, i + 1, median[i]) > 0);
-            ret &= (fprintf(F_out, "M2.%d.%d.3, , %6f,\n", m, i + 1, ninety[i]) > 0);
+            ret &= (fprintf(F_out, "M2.%d.%d.1,%s,%s, , %6f,\n", m, i + 1, date, version, average[i]) > 0);
+            ret &= (fprintf(F_out, "M2.%d.%d.2,%s,%s, , %6f,\n", m, i + 1, date, version, median[i]) > 0);
+            ret &= (fprintf(F_out, "M2.%d.%d.3,%s,%s, , %6f,\n", m, i + 1, date, version, ninety[i]) > 0);
         }
-        ret &= (fprintf(F_out, "M2.%d.5, , %d,\n", m, count) > 0);
+        ret &= (fprintf(F_out, "M2.%d.5,%s,%s, , %d,\n", m, date, version, count) > 0);
     }
     return ret;
 }

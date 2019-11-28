@@ -322,12 +322,12 @@ bool ComputeM7::Compute()
     return ret;
 }
 
-bool ComputeM7::Write(FILE * F_out)
+bool ComputeM7::Write(FILE * F_out, char const* date, char const* version)
 {
     bool ret = true;
 
-    ret = (fprintf(F_out, "M7.1, , %6f,\n", m71) > 0);
-    ret &= (fprintf(F_out, "M7.2, , %6f,\n", m72) > 0);
+    ret = (fprintf(F_out, "M7.1,%s,%s, , %6f,\n", date, version, m71) > 0);
+    ret &= (fprintf(F_out, "M7.2,%s,%s, , %6f,\n", date, version, m72) > 0);
 
     return ret;
 }

@@ -29,6 +29,8 @@
 
 typedef struct _metric_line {
     char metric_name[64];
+    char metric_date[64];
+    char metric_version[64];
     char key_value[64];
     int year;
     int month;

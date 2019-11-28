@@ -411,17 +411,17 @@ bool ComputeM6::Compute()
     return found_at_least_one;
 }
 
-bool ComputeM6::Write(FILE * F_out)
+bool ComputeM6::Write(FILE * F_out, char const* date, char const* version)
 {
     bool ret = true;
 
     for (size_t i = 0; i < m6.size(); i++)
     {
-        ret &= fprintf(F_out, "%s.1, , %6f,\n", m6[i].m6_prefix, m6[i].m6_x_1) > 0;
-        ret &= fprintf(F_out, "%s.2, , %6f,\n", m6[i].m6_prefix, m6[i].m6_x_2) > 0;
+        ret &= fprintf(F_out, "%s.1,%s,%s, , %6f,\n", m6[i].m6_prefix,date, version, m6[i].m6_x_1) > 0;
+        ret &= fprintf(F_out, "%s.2,%s,%s, , %6f,\n", m6[i].m6_prefix, date, version, m6[i].m6_x_2) > 0;
         for (size_t j = 0; j < m6[i].m6_x_3.size(); j++)
         {
-            ret &= fprintf(F_out, "%s.3, %d, %llu,\n", m6[i].m6_prefix,
+            ret &= fprintf(F_out, "%s.3,%s,%s, %d, %llu,\n", m6[i].m6_prefix, date, version,
                 m6[i].m6_x_3[j].parameter_value,
                 (unsigned long long)m6[i].m6_x_3[j].parameter_count) > 0;
         }

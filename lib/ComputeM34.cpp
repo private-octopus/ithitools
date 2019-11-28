@@ -185,58 +185,58 @@ bool ComputeM3::Compute()
     return ret;
 }
 
-bool ComputeM3::Write(FILE * F_out)
+bool ComputeM3::Write(FILE * F_out, char const* date, char const* version)
 {
     bool ret = true;
 
-    ret = (fprintf(F_out, "M3.1, , %6f,\n", m3_1) > 0 &&
-        fprintf(F_out, "M3.2, , %6f,\n", m3_2) > 0);
+    ret = (fprintf(F_out, "M3.1,%s,%s, , %6f,\n", date, version, m3_1) > 0 &&
+        fprintf(F_out, "M3.2,%s,%s, , %6f,\n", date, version, m3_2) > 0);
 
     for (size_t i = 0; ret && i < m33_1.size(); i++)
     {
         /* This is the RFC 6761 table. We need a check to fix a data collection bug. */
         if (DnsStats::IsRfc6761Tld((uint8_t *)(m33_1[i].domain), strlen(m33_1[i].domain))) {
-            ret = fprintf(F_out, "M3.3.1, %s, %6f,\n", m33_1[i].domain, m33_1[i].frequency) > 0;
+            ret = fprintf(F_out, "M3.3.1,%s,%s, %s, %6f,\n", date, version, m33_1[i].domain, m33_1[i].frequency) > 0;
         }
     }
 
     for (size_t i = 0; ret && i < m33_2.size(); i++)
     {
-        ret = fprintf(F_out, "M3.3.2, %s, %6f,\n", m33_2[i].domain, m33_2[i].frequency) > 0;
+        ret = fprintf(F_out, "M3.3.2,%s,%s, %s, %6f,\n", date, version, m33_2[i].domain, m33_2[i].frequency) > 0;
     }
 
     for (size_t i = 0; ret && i < m33_3.size(); i++)
     {
-        ret = fprintf(F_out, "M3.3.3, %s, %6f,\n", m33_3[i].domain, m33_3[i].frequency) > 0;
+        ret = fprintf(F_out, "M3.3.3,%s,%s, %s, %6f,\n", date, version, m33_3[i].domain, m33_3[i].frequency) > 0;
     }
 
     if (ret)
     {
-        ret = fprintf(F_out, "M3.3.4, , %6f,\n", (m33_4 > 0) ? m33_4 : 0);
+        ret = fprintf(F_out, "M3.3.4,%s,%s, , %6f,\n", date, version, (m33_4 > 0) ? m33_4 : 0);
     }
 
     if (ret) {
-        ret = fprintf(F_out, "M3.4.1, , %6f,\n", m3_4_1) > 0;
+        ret = fprintf(F_out, "M3.4.1,%s,%s, , %6f,\n", date, version, m3_4_1) > 0;
     }
 
     for (size_t i = 0; ret && i < m3_4_2.size(); i++) {
-        ret = fprintf(F_out, "M3.4.2, %d, %6f,\n",
+        ret = fprintf(F_out, "M3.4.2,%s,%s, %d, %6f,\n", date, version,
             m3_4_2[i].opt_code,
             m3_4_2[i].frequency) > 0;
     }
 
     if (ret) {
-        ret = fprintf(F_out, "M3.5, , %6f,\n", m3_5) > 0;
+        ret = fprintf(F_out, "M3.5,%s,%s, , %6f,\n", date, version, m3_5) > 0;
     }
 
     if (ret) {
-        ret = fprintf(F_out, "M3.6, , %6f,\n", m3_6) > 0;
+        ret = fprintf(F_out, "M3.6,%s,%s, , %6f,\n", date, version, m3_6) > 0;
     }
 
     if (ret) {
         for (size_t i = 0; ret && i < m3_7.size(); i++)
         {
-            ret = fprintf(F_out, "M3.7, %s, %6f,\n", m3_7[i].domain, m3_7[i].frequency) > 0;
+            ret = fprintf(F_out, "M3.7,%s,%s, %s, %6f,\n", date, version, m3_7[i].domain, m3_7[i].frequency) > 0;
         }
     }
 
@@ -486,29 +486,29 @@ bool ComputeM4::Compute()
     return ret;
 }
 
-bool ComputeM4::Write(FILE * F_out)
+bool ComputeM4::Write(FILE * F_out, char const* date, char const* version)
 {
-    bool ret = fprintf(F_out, "M4.1, , %6f,\n", m4_1) > 0;
+    bool ret = fprintf(F_out, "M4.1,%s,%s, , %6f,\n", date, version, m4_1) > 0;
 
     for (size_t i = 0; ret && i < m4_2.size(); i++) {
-        ret = fprintf(F_out, "M4.2, %s, %6f,\n", m4_2[i].domain, m4_2[i].frequency) > 0;
+        ret = fprintf(F_out, "M4.2,%s,%s, %s, %6f,\n", date, version, m4_2[i].domain, m4_2[i].frequency) > 0;
     }
 
     for (size_t i = 0; ret && i < m4_3.size(); i++) {
-        ret = fprintf(F_out, "M4.3, %s, %6f,\n", m4_3[i].domain, m4_3[i].frequency) > 0;
+        ret = fprintf(F_out, "M4.3,%s,%s, %s, %6f,\n", date, version, m4_3[i].domain, m4_3[i].frequency) > 0;
     }
 
     if (ret) {
-        ret = fprintf(F_out, "M4.4, , %6f,\n", m4_4) > 0;
+        ret = fprintf(F_out, "M4.4,%s,%s, , %6f,\n", date, version, m4_4) > 0;
     }
 
     if (ret) {
-        ret = fprintf(F_out, "M4.5, , %6f,\n", m4_5) > 0;
+        ret = fprintf(F_out, "M4.5,%s,%s, , %6f,\n", date, version, m4_5) > 0;
     }
     /* Removing metric M4.6 until investigation completes */
 #if 0
     if (ret) {
-        ret = fprintf(F_out, "M4.6, , %6f,\n", m4_6) > 0;
+        ret = fprintf(F_out, "M4.6,%s,%s, , %6f,\n", date, version, m4_6) > 0;
     }
 #endif
 
@@ -656,26 +656,26 @@ bool ComputeM8::Compute()
     return ret;
 }
 
-bool ComputeM8::Write(FILE * F_out)
+bool ComputeM8::Write(FILE * F_out, char const* date, char const* version)
 {
-    bool ret = fprintf(F_out, "M8.1, , %6f,\n", m8_1) > 0;
+    bool ret = fprintf(F_out, "M8.1,%s,%s, %6f,\n", date, version, m8_1) > 0;
 
     if (ret) {
-        ret = fprintf(F_out, "M8.2.1, , %6f,\n", m8_2_1) > 0;
+        ret = fprintf(F_out, "M8.2.1,%s,%s, , %6f,\n", date, version, m8_2_1) > 0;
     }
 
     for (size_t i = 0; ret && i < m8_2_2.size(); i++) {
-        ret = fprintf(F_out, "M8.2.2, %d, %6f,\n", 
+        ret = fprintf(F_out, "M8.2.2,%s,%s, %d, %6f,\n", date, version,
             m8_2_2[i].opt_code,
             m8_2_2[i].frequency) > 0;
     }
 
     if (ret) {
-        ret = fprintf(F_out, "M8.3, , %6f,\n", m8_3) > 0;
+        ret = fprintf(F_out, "M8.3,%s,%s, , %6f,\n", date, version, m8_3) > 0;
     }
 
     if (ret) {
-        ret = fprintf(F_out, "M8.4, , %6f,\n", m8_4) > 0;
+        ret = fprintf(F_out, "M8.4,%s,%s, , %6f,\n", date, version, m8_4) > 0;
     }
 
     return ret;

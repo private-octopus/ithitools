@@ -59,6 +59,7 @@ static char const * tlds_test_tlds = "data/2017-01-31_tlds.csv";
 static char const * tlds_test_registrars = "data/2017-01-31_registrars.csv";
 static char const * compliance_file = "data/M1-2017-01-31-compliance.csv";
 #endif
+static char const* metric_test_date = "2017-01-31";
 
 MetricTest::MetricTest()
 {
@@ -108,6 +109,11 @@ bool MetricTest::DoTest()
         {
             ret = false;
             TEST_LOG("Could not set Registrars abuse file name to %s\n", tlds_test_tlds);
+        }
+        else if (!met.SetDateString(metric_test_date))
+        {
+            ret = false;
+            TEST_LOG("Could not set test metric date to %s\n", metric_test_date);
         }
         else
         {

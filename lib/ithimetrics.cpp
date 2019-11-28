@@ -30,6 +30,7 @@
 #include <ctype.h>
 #include <algorithm>
 
+#include "Version.h"
 #include "DnsStats.h"
 #include "CaptureSummary.h"
 #include "M7Getter.h"
@@ -350,7 +351,6 @@ bool ithimetrics::copy_name(char ** target, char const * name)
 bool ithimetrics::GetMetrics() {
     bool ret = false;
 
-
     if (compliance_file_name == NULL)
     {
         (void)SetDefaultComplianceFileName();
@@ -436,8 +436,15 @@ bool ithimetrics::GetMetrics() {
 bool ithimetrics::SaveMetricFiles()
 {
     bool ret = true;
+    char version[128];
     char buffer[512];
     ComputeMetric * cm[ITHI_NUMBER_OF_METRICS] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7, &cm8 };
+
+    /* Set the version number */
+    if (ret)
+    {
+        ret = snprintf(version, sizeof(version), "v%d.%02d", ITHITOOLS_VERSION_MAJOR, ITHITOOLS_VERSION_MINOR) > 0;
+    }
 
     if (ret && ithi_folder == NULL)
     {
@@ -449,6 +456,8 @@ bool ithimetrics::SaveMetricFiles()
     {
         ret = SetDefaultDate(time(0));
     }
+
+    
 
     for (int i = 0; ret && i < ITHI_NUMBER_OF_METRICS; i++)
     {
@@ -473,7 +482,7 @@ bool ithimetrics::SaveMetricFiles()
 
         if (ret)
         {
-            ret = cm[i]->Save(metric_file[i]);
+            ret = cm[i]->Save(metric_file[i], metric_date, version);
         }
 
     }
@@ -484,13 +493,19 @@ bool ithimetrics::SaveMetricFiles()
 
 bool ithimetrics::Save(char const * file_name)
 {
-
     ComputeMetric * cm[ITHI_NUMBER_OF_METRICS] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7, &cm8 };
     FILE* F;
-    bool ret;
+    char version[128];
+    bool ret = true;
 
     F = ithi_file_open(file_name, "w");
     ret = (F != NULL);
+
+    /* Set the version number */
+    if (ret)
+    {
+        ret = snprintf(version, sizeof(version), "v%d.%02d", ITHITOOLS_VERSION_MAJOR, ITHITOOLS_VERSION_MINOR) > 0;
+    }
 
     for (int i = 0; ret && i < ITHI_NUMBER_OF_METRICS; i++)
     {
@@ -499,7 +514,7 @@ bool ithimetrics::Save(char const * file_name)
             continue;
         }
 
-        ret = cm[i]->Write(F);
+        ret = cm[i]->Write(F, metric_date, version);
     }
 
     if (F != NULL)

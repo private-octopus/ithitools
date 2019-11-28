@@ -95,7 +95,7 @@ public:
     bool LoadMultipleFiles(char const ** in_files, int nb_files) override;
     bool LoadTwoFiles(char const * tld_file_name, char const * registrars_file_name);
     bool Compute() override;
-    bool Write(FILE * F_out) override;
+    bool Write(FILE * F_out, char const* date, char const* version) override;
 
     void SetNbRegistrars(uint32_t nb_registrars);
     void SetNbGtld(uint32_t nb_gtld);

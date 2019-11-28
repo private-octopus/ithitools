@@ -44,8 +44,8 @@ public:
     virtual bool Load(char const * single_file_name) = 0;
     virtual bool LoadMultipleFiles(char const ** in_files, int nb_files);
     virtual bool Compute() = 0;
-    virtual bool Save(char const * out_file);
-    virtual bool Write(FILE * F_out) = 0;
+    virtual bool Save(char const * out_file, char const* date, char const* version);
+    virtual bool Write(FILE * F_out, char const * date, char const * version) = 0;
 
     FILE * F_log;
 };

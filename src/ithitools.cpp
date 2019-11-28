@@ -524,7 +524,11 @@ int main(int argc, char ** argv)
             fprintf(stderr, "Cannot compute the ITHI metrics.\n");
             exit_code = -1;
         } else {
-            if (metric_file != NULL) {
+            if (met.GetMetricDate() == NULL && !met.SetDefaultDate(time(0))) {
+                fprintf(stderr, "Cannot set the metrics date.\n");
+                exit_code = -1;           
+            }
+            else if (metric_file != NULL) {
                 if (!met.Save(metric_file)) {
                     fprintf(stderr, "Cannot save the ITHI metrics in <%s>.\n", metric_file);
                     exit_code = -1;
