@@ -214,6 +214,8 @@ bool ithipublisher::LoadFileData(int file_index, char const * dir_met_name)
         }
 
         start = CsvHelper::read_string(line->metric_name, sizeof(line->metric_name), start, buffer, sizeof(buffer));
+        start = CsvHelper::read_string(line->metric_date, sizeof(line->metric_date), start, buffer, sizeof(buffer));
+        start = CsvHelper::read_string(line->metric_version, sizeof(line->metric_version), start, buffer, sizeof(buffer));
         start = CsvHelper::read_string(line->key_value, sizeof(line->key_value), start, buffer, sizeof(buffer));
         CsvHelper::read_double(&line->frequency, start, buffer, sizeof(buffer));
         line->year = file_list[file_index]->year;
