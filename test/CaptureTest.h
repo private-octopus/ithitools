@@ -38,4 +38,14 @@ public:
     bool DoTest() override;
 };
 
+#ifdef PRIVACY_CONSCIOUS
+class CaptureNamesTest : public ithi_test_class
+{
+public:
+    CaptureNamesTest();
+    ~CaptureNamesTest();
+    bool DoTest() override;
+};
+#endif
+
 #endif /* CAPTURE_TEST_H */

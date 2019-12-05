@@ -23,8 +23,11 @@
 #define ITHIUTIL_H
 
 #include <stdio.h>
+#include <stdint.h>
 
 FILE* ithi_file_open(char const* file_name, char const* flags);
+
+size_t ithi_copy_to_safe_text(char* text, size_t text_max, uint8_t* x_in, size_t l_in);
 
 #endif
 

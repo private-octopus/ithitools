@@ -20,8 +20,9 @@
 */
 
 #include "DnsStats.h"
-#include "CaptureTest.h"
 #include "pcap_reader.h"
+#include "MetricTest.h"
+#include "CaptureTest.h"
 
 #ifdef _WINDOWS
 #ifndef _WINDOWS64
@@ -36,6 +37,21 @@ static char const * pcap_test_debug = "tiny-capture-out.csv";
 static char const * pcap_input_test = "data/tiny-capture.pcap";
 static char const * pcap_test_output = "data/tiny-capture-tcp.csv";
 static char const * pcap_test_debug = "tiny-capture-out.csv";
+#endif
+
+#ifdef PRIVACY_CONSCIOUS
+#ifdef _WINDOWS
+#ifndef _WINDOWS64
+static char const* pcap_names_output = "..\\data\\tiny-capture-names.csv";
+#else
+static char const* pcap_names_output = "..\\..\\data\\tiny-capture-names.csv";
+#endif
+static char const* pcap_names_debug = "tiny-capture-names.csv";
+#else
+static char const* pcap_names_output = "data/tiny-capture-names.csv";
+static char const* pcap_names_debug = "tiny-capture-names.csv";
+#endif
+
 #endif
 
 CaptureTest::CaptureTest()
@@ -75,6 +91,58 @@ bool CaptureTest::DoTest()
                 {
                     cs.Save(pcap_test_debug);
                 }
+            }
+        }
+    }
+
+    return ret;
+}
+
+CaptureNamesTest::CaptureNamesTest()
+{
+}
+
+CaptureNamesTest::~CaptureNamesTest()
+{
+}
+
+bool CaptureNamesTest::DoTest()
+{
+    DnsStats capture;
+    CaptureSummary cs;
+    char const* list[1] = { pcap_input_test };
+    bool ret = true;
+
+    capture.name_report = pcap_names_debug;
+    
+    ret = capture.LoadPcapFiles(1, list);
+
+    if (ret)
+    {
+        ret = capture.ExportToCaptureSummary(&cs);
+
+        if (ret)
+        {
+            CaptureSummary tcs;
+
+            ret = tcs.Load(pcap_test_output);
+
+            if (ret)
+            {
+                cs.Sort();
+                tcs.Sort();
+
+                ret = cs.Compare(&tcs);
+
+                if (!ret)
+                {
+                    cs.Save(pcap_test_debug);
+                }
+            }
+
+            if (ret)
+            {
+                ret = MetricTest::compare_files(pcap_names_debug, pcap_names_output);
             }
         }
     }

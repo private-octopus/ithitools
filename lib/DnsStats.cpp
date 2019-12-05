@@ -27,6 +27,7 @@
 #include "pcap_reader.h"
 #include "DnsTypes.h"
 #include "Version.h"
+#include "ithiutil.h"
 #include "DnsStats.h"
 
 DnsStats::DnsStats()
@@ -58,7 +59,9 @@ DnsStats::DnsStats()
     is_using_edns(false),
     edns_options(NULL),
     edns_options_length(0),
-    is_qname_minimized(false)
+    is_qname_minimized(false),
+    address_report(NULL),
+    name_report(NULL)
 {
 }
 
@@ -2563,24 +2566,44 @@ void DnsStats::NameLeaksAnalysis(
         {
 #ifdef PRIVACY_CONSCIOUS
             DnsStatsLeakType x_type = dnsLeakNoLeak;
-#endif
 
-            if (rcode == DNS_RCODE_NXDOMAIN)
-            {
-#ifdef PRIVACY_CONSCIOUS
-                /* Debug option, list all the erroneous addresses */
-                if (dnsstat_flags & dnsStateFlagListErroneousNames) {
+            /* Debug option, list all the addresses */
+            if (name_report != NULL) {
+                int is_nx = -1;
+                if (rcode == DNS_RCODE_NXDOMAIN) {
+                    is_nx = 1;
+                }
+                else if (rcode == DNS_RCODE_NOERROR && is_not_empty_response) {
+                    is_nx = 0;
+                }
+
+                if (is_nx >= 0) {
                     uint8_t name[1024];
                     size_t name_len = 0;
 
                     (void)GetDnsName(packet, packet_length, name_offset, name, sizeof(name), &name_len);
 
                     if (name_len > 0) {
+                        /* Insert in leakage table */
+                        DnsNameEntry key;
+                        bool stored = false;
+
                         DnsStats::SetToUpperCase(name, name_len);
-                        SubmitRegistryString(REGISTRY_DNS_ERRONEOUS_NAME_LIST, (uint32_t)name_len, name);
+                        key.name_len = name_len;
+                        key.name = name;
+                        key.is_nx = is_nx;
+                        key.count = 1;
+
+                        (void)nameList.InsertOrAdd(&key, true, &stored);
+                        key.name = NULL;
+                        key.name_len = 0;
                     }
                 }
+            }
 #endif
+
+            if (rcode == DNS_RCODE_NXDOMAIN)
+            {
                 /* Analysis of domain leakage */
                 if (is_binary) {
                     SubmitRegistryNumber(REGISTRY_DNS_LEAK_BINARY, 0);
@@ -2985,6 +3008,45 @@ void DnsStats::ExportQueryUsage()
     queryUsage.Clear();
 }
 
+void DnsStats::ExportNameReport()
+{
+    DnsNameEntry* name_entry;
+    FILE* F = ithi_file_open(name_report, "w");
+
+    if (F == NULL) {
+        fprintf(stderr, "Cannot open file <%s> for writing\n", name_report);
+    }
+    else {
+        bool ret = true;
+
+        if (fprintf(F, "Name, Is_nx, count\n") <= 0) {
+            ret = false;
+            fprintf(stderr, "Cannot write header line to <%s>\n", name_report);
+        }
+
+        for (uint32_t i = 0; ret && i < nameList.GetSize(); i++)
+        {
+            name_entry = nameList.GetEntry(i);
+
+            while (name_entry != NULL)
+            {
+                char safe_name[1024];
+
+                if (ithi_copy_to_safe_text(safe_name, sizeof(safe_name), name_entry->name, name_entry->name_len) <= 0) {
+                    fprintf(stderr, "Cannot sanitize name entry #%d (%s) for <%s>\n", i, name_entry->name, name_report);
+                    ret = false;
+                } else if (fprintf(F, "%s, %d, %llu\n", safe_name, name_entry->is_nx, (unsigned long long)name_entry->count) <= 0){
+                    ret = false;
+                    fprintf(stderr, "Cannot export entry #%d (%s) to <%s>\n", i, name_entry->name, name_report);
+                }
+                name_entry = name_entry->HashNext;
+            }
+        }
+
+        (void)fclose(F);
+    }
+}
+
 bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
 {
     DnsHashEntry *entry;
@@ -3008,6 +3070,11 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
     ExportDnssecUsage();
     /* export the cache statistics */
     ExportQueryUsage();
+#ifdef PRIVACY_CONSCIOUS
+    if (name_report != NULL) {
+        ExportNameReport();
+    }
+#endif
 
     /* Export the data */
     cs->Reserve((size_t)hashTable.GetCount()+1);
@@ -3053,44 +3120,8 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
             {
                 char text[128];
                 size_t text_length = 0;
-                bool previous_was_space = true; /* Cannot have space at beginning */
 
-                /* escape any non printable character */
-                for (uint32_t i = 0; i < entry->key_length && text_length+1 < sizeof(text); i++)
-                {
-                    int x = entry->key_value[i];
-                    bool should_escape = false;
-
-                    if (x > ' ' && x < 127 && x != '"' && x != ',' && x!= '"' && x != '\''
-                        && (x != '=' || i > 0))
-                    {
-                        previous_was_space = false;
-                    }
-                    else if (x == ' ' && !previous_was_space && i != entry->key_length - 1)
-                    {
-                        /* Cannot have several spaces */
-                        previous_was_space = true;
-                    }
-                    else
-                    {
-                        should_escape = true;
-                    }
-
-                    if (should_escape) {
-                        if (text_length + 5 < sizeof(text)) {
-                            text[text_length++] = '\\';
-                            text[text_length++] = '0' + (x/100);
-                            text[text_length++] = '0' + (x%100)/10;
-                            text[text_length++] = '0' + x%10;
-                        }
-                        else {
-                            text[text_length++] = '!';
-                        }
-                    }
-                    else {
-                        text[text_length++] = (char) x;
-                    }
-                }
+                text_length = ithi_copy_to_safe_text(text, sizeof(text), entry->key_value, entry->key_length);
 
                 if (text_length < sizeof(line.key_value)) {
                     memcpy(line.key_value, text, text_length);
@@ -3881,7 +3912,7 @@ DomainEntry * DomainEntry::CreateCopy()
             }
             else {
                 memcpy(key->domain, domain, domain_length);
-                domain[domain_length + 1] = 0;
+                key->domain[domain_length] = 0;
             }
         }
     }
@@ -3890,6 +3921,82 @@ DomainEntry * DomainEntry::CreateCopy()
 }
 
 void DomainEntry::Add(DomainEntry * key)
+{
+    count += key->count;
+}
+
+DnsNameEntry::DnsNameEntry():
+    HashNext(NULL),
+    hash(0),
+    name(NULL),
+    name_len(0),
+    count(0),
+    is_nx(0)
+{
+}
+
+DnsNameEntry::~DnsNameEntry()
+{
+    if (name != NULL) {
+        delete[] name;
+        name = NULL;
+    }
+}
+
+bool DnsNameEntry::IsSameKey(DnsNameEntry* key)
+{
+    return (name_len == key->name_len &&
+        ((name_len == 0 && name == NULL && key->name == NULL) ||
+        (name_len > 0 && name != NULL && key->name != NULL &&
+            memcmp(name, key->name, name_len) == 0)));
+}
+
+uint32_t DnsNameEntry::Hash()
+{
+    if (hash == 0)
+    {
+        hash = 0xCACAB0B0;
+
+        for (size_t i = 0; i < name_len; i++)
+        {
+            hash = hash * 101 + name[i];
+        }
+    }
+
+    return hash;
+}
+
+DnsNameEntry* DnsNameEntry::CreateCopy()
+{
+    DnsNameEntry* key = new DnsNameEntry();
+
+    if (key != NULL)
+    {
+        key->name_len = name_len;
+        if (name_len > 0) {
+            if (key->name != NULL) {
+                delete[] key->name;
+            }
+
+            key->name = new uint8_t[(size_t)name_len + 1];
+
+            if (key->name == NULL) {
+                delete key;
+                key = NULL;
+            }
+            else {
+                memcpy(key->name, name, name_len);
+                key->name[name_len] = 0;
+                key->count = count;
+                key->is_nx = is_nx;
+            }
+        }
+    }
+
+    return key;
+}
+
+void DnsNameEntry::Add(DnsNameEntry* key)
 {
     count += key->count;
 }

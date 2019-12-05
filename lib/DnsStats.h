@@ -129,8 +129,7 @@ enum DnsStatsFlags
     dnsStateFlagCountPacketSizes = 16,
     dnsStateFlagListTldUsed = 32,
     dnsStateFlagReportResolverIPAddress = 64,
-    dnsStateFlagListErroneousNames = 128,
-    dnsStateFlagIncludeTcpRecords = 256
+    dnsStateFlagIncludeTcpRecords = 128
 };
 
 
@@ -195,6 +194,25 @@ public:
     uint32_t hash;
     char * dnsPrefix;
     DnsPrefixClass dnsPrefixClass;
+};
+
+class DnsNameEntry {
+public:
+    DnsNameEntry();
+    ~DnsNameEntry();
+
+    bool IsSameKey(DnsNameEntry* key);
+    uint32_t Hash();
+    DnsNameEntry* CreateCopy();
+    void Add(DnsNameEntry* key);
+
+    DnsNameEntry* HashNext;
+
+    uint32_t hash;
+    size_t name_len;
+    uint8_t* name;
+    uint64_t count;
+    int is_nx;
 };
 
 class DnssecPrefixEntry {
@@ -284,6 +302,8 @@ public:
     BinHash<DnssecPrefixEntry> dnssecPrefixTable;
     BinHash<StatsByIP> statsByIp;
 
+    BinHash<DnsNameEntry> nameList;
+
     /* For the plug in */
     void SubmitPacket(uint8_t * packet, uint32_t length,
         uint8_t * source_addr, size_t source_addr_length,
@@ -327,6 +347,8 @@ public:
     uint8_t * edns_options;
     uint32_t edns_options_length;
     bool is_qname_minimized;
+    char const* address_report;
+    char const* name_report;
 
     static bool IsValidTldSyntax(uint8_t * tld, size_t length);
     static bool IsInSortedList(const char ** list, size_t nb_list, uint8_t * tld, size_t length);
@@ -443,6 +465,7 @@ private:
     void ExportStringUsage();
     void ExportSecondLeaked();
     void ExportQueryUsage();
+    void ExportNameReport();
 
     void LoadRegisteredTLD_from_memory();
 

@@ -188,9 +188,10 @@ int main(int argc, char ** argv)
     char const * metric_file_name = NULL;
     char const * odi_dir = NULL;
     char const * data_dir = NULL;
+
     /* Get the parameters */
     int opt;
-    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:V:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:O:P:D:N:AEhfcsmpTvWyXY?")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:V:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:O:P:D:N:A:E:hfcsmpTvWyXY?")) != -1)
     {
         switch (opt)
         {
@@ -279,9 +280,10 @@ int main(int argc, char ** argv)
 #ifdef PRIVACY_CONSCIOUS
         case 'A':
             stats.dnsstat_flags |= dnsStateFlagReportResolverIPAddress;
+            stats.address_report = optarg;
             break;
         case 'E':
-            stats.dnsstat_flags |= dnsStateFlagListErroneousNames;
+            stats.name_report = optarg;
             break;
 #endif
         case 'S':

@@ -296,5 +296,15 @@ namespace ithiunit
 
             Assert::AreEqual(ret, true);
         }
+
+#ifdef PRIVACY_CONSCIOUS
+        TEST_METHOD(CaptureNames)
+        {
+            CaptureNamesTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+#endif
 	};
 }

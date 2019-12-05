@@ -36,6 +36,9 @@ enum test_list_enum {
     test_enum_Merge,
     test_enum_Merge_List,
     test_enum_Capture,
+#ifdef PRIVACY_CONSCIOUS
+    test_enum_Capture_Names,
+#endif
     test_enum_Metric,
     test_enum_MetricDate,
     test_enum_MetricCaptureFile,
@@ -95,6 +98,10 @@ char const * ithi_test_class::GetTestName(int number)
         return("merge_list");
     case test_enum_Capture:
         return("capture");
+#ifdef PRIVACY_CONSCIOUS
+    case test_enum_Capture_Names:
+        return("CaptureNames");
+#endif
     case test_enum_Metric:
         return("metric");
     case test_enum_MetricDate:
@@ -193,6 +200,11 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
     case test_enum_Capture:
         test = new CaptureTest();
         break;
+#ifdef PRIVACY_CONSCIOUS
+    case test_enum_Capture_Names:
+        test = new CaptureNamesTest();
+        break;
+#endif
     case test_enum_Metric:
         test = new MetricTest();
         break;

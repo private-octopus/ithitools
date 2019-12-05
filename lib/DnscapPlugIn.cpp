@@ -64,7 +64,8 @@ static bool libithicap_enable_filtering = false;
 static bool libithicap_enable_tld_list = false;
 #ifdef PRIVACY_CONSCIOUS
 static bool libithicap_enable_ip_address_report = false;
-static bool libithicap_enable_erroneous_name_list = false;
+char const* libithicap_address_list = NULL;
+char const* libithicap_name_list = NULL;
 #endif
 
 static DnsStats* libithicap_stats = NULL;
@@ -97,9 +98,8 @@ extern "C"
         fprintf(stderr, "  -t tld-file.txt    Text file containing a list of registered TLD, one per line.\n");
         fprintf(stderr, "  -u tld-file.txt	  Text file containing special usage TLD (RFC6761).\n");
 #ifdef PRIVACY_CONSCIOUS
-        fprintf(stderr, "  -A                 List all IP addresses and their usage in the report.\n");
-        fprintf(stderr, "  -C                 Collect traffic statistics per TLD.\n");
-        fprintf(stderr, "  -E                 List all erroneous DNS names and their usage in the report.\n");
+        fprintf(stderr, "  -A addr_list.txt   List all IP addresses and their usage in specified file.\n");
+        fprintf(stderr, "  -E name_list.txt   List all erroneous DNS names and their usage in specified file.\n");
         fprintf(stderr, "                     Options A and E are rather slow, and have privacy issues.\n");
         fprintf(stderr, "                     No such traces enabled by default.\n");
 #endif
@@ -114,7 +114,7 @@ extern "C"
         int opt;
         int exit_code = 0;
 
-        while (exit_code == 0 && (opt = getopt(*argc, *argv, "o:r:a:x:n:t:u:hfACET")) != -1)
+        while (exit_code == 0 && (opt = getopt(*argc, *argv, "o:r:a:x:n:t:u:A:E:hfT")) != -1)
         {
             switch (opt)
             {
@@ -152,9 +152,10 @@ extern "C"
 #ifdef PRIVACY_CONSCIOUS
             case 'A':
                 libithicap_enable_ip_address_report = true;
+                libithicap_address_list = optarg;
                 break;
             case 'E':
-                libithicap_enable_erroneous_name_list = true;
+                libithicap_name_list = optarg;
                 break;
 #endif
             case 'T':
@@ -219,11 +220,12 @@ extern "C"
             if (libithicap_enable_ip_address_report)
             {
                 libithicap_stats->dnsstat_flags |= dnsStateFlagReportResolverIPAddress;
+                libithicap_stats->address_report = libithicap_address_list;
             }
 
-            if (libithicap_enable_erroneous_name_list)
+            if (libithicap_name_list != NULL)
             {
-                libithicap_stats->dnsstat_flags |= dnsStateFlagListErroneousNames;
+                libithicap_stats->name_report = libithicap_name_list;
             }
 #endif
         }
