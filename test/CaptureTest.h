@@ -46,6 +46,14 @@ public:
     ~CaptureNamesTest();
     bool DoTest() override;
 };
+
+class CaptureAddressesTest : public ithi_test_class
+{
+public:
+    CaptureAddressesTest();
+    ~CaptureAddressesTest();
+    bool DoTest() override;
+};
 #endif
 
 #endif /* CAPTURE_TEST_H */

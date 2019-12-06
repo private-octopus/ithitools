@@ -128,27 +128,21 @@ enum DnsStatsFlags
     dnsStateFlagCountUnderlinedNames = 8,
     dnsStateFlagCountPacketSizes = 16,
     dnsStateFlagListTldUsed = 32,
-    dnsStateFlagReportResolverIPAddress = 64,
-    dnsStateFlagIncludeTcpRecords = 128
+    dnsStateFlagIncludeTcpRecords = 64
 };
 
-
-#ifdef PRIVACY_CONSCIOUS
 enum DnsStatsLeakType
 {
     dnsLeakNoLeak = 0,
     dnsLeakBinary,
     dnsLeakBadSyntax,
     dnsLeakNumeric,
-    dnsLeakIpv4,
     dnsLeakRfc6771,
     dnsLeakFrequent,
-    dnsLeakSinglePart,
-    dnsLeakMultiPart,
-    dnsLeakSinglePartDGA,
-    dnsLeakMultiPartDGA
+    dnsLeakDGA,
+    dnsLeakJumbo,
+    dnsLeakOther
 };
-#endif
 
 class DnsHashEntry {
 public:
@@ -256,7 +250,7 @@ public:
 class TldAddressAsKey
 {
 public:
-    TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len, my_bpftimeval ts);
+    TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len, my_bpftimeval ts, DnsStatsLeakType leakType);
     ~TldAddressAsKey();
 
     bool IsSameKey(TldAddressAsKey* key);
@@ -277,6 +271,7 @@ public:
     my_bpftimeval ts;
     my_bpftimeval ts_init;
     int64_t tld_min_delay;
+    DnsStatsLeakType leakType;
 };
 
 class DnsStats
@@ -409,6 +404,9 @@ public:
     static bool GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t *offset, uint32_t * previous_offset, int * nb_name_parts);
 
     static int64_t DeltaUsec(long tv_sec, long tv_usec, long tv_sec_start, long tv_usec_start);
+
+    static char const* LeakTypeName(DnsStatsLeakType leakType);
+
 private:
     bool LoadPcapFile(char const * fileName);
 

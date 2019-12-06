@@ -63,7 +63,6 @@ static int libithicap_nb_names_in_m4 = -1;
 static bool libithicap_enable_filtering = false;
 static bool libithicap_enable_tld_list = false;
 #ifdef PRIVACY_CONSCIOUS
-static bool libithicap_enable_ip_address_report = false;
 char const* libithicap_address_list = NULL;
 char const* libithicap_name_list = NULL;
 #endif
@@ -151,7 +150,6 @@ extern "C"
 
 #ifdef PRIVACY_CONSCIOUS
             case 'A':
-                libithicap_enable_ip_address_report = true;
                 libithicap_address_list = optarg;
                 break;
             case 'E':
@@ -217,9 +215,8 @@ extern "C"
             }
 
 #ifdef PRIVACY_CONSCIOUS
-            if (libithicap_enable_ip_address_report)
+            if (libithicap_address_list != NULL)
             {
-                libithicap_stats->dnsstat_flags |= dnsStateFlagReportResolverIPAddress;
                 libithicap_stats->address_report = libithicap_address_list;
             }
 

@@ -37,6 +37,7 @@ enum test_list_enum {
     test_enum_Merge_List,
     test_enum_Capture,
 #ifdef PRIVACY_CONSCIOUS
+    test_enum_Capture_Addresses,
     test_enum_Capture_Names,
 #endif
     test_enum_Metric,
@@ -99,6 +100,8 @@ char const * ithi_test_class::GetTestName(int number)
     case test_enum_Capture:
         return("capture");
 #ifdef PRIVACY_CONSCIOUS
+    case test_enum_Capture_Addresses:
+        return("CaptureAddresses");
     case test_enum_Capture_Names:
         return("CaptureNames");
 #endif
@@ -201,6 +204,9 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         test = new CaptureTest();
         break;
 #ifdef PRIVACY_CONSCIOUS
+    case test_enum_Capture_Addresses:
+        test = new CaptureAddressesTest();
+        break;
     case test_enum_Capture_Names:
         test = new CaptureNamesTest();
         break;

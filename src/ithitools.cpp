@@ -279,7 +279,6 @@ int main(int argc, char ** argv)
             break;
 #ifdef PRIVACY_CONSCIOUS
         case 'A':
-            stats.dnsstat_flags |= dnsStateFlagReportResolverIPAddress;
             stats.address_report = optarg;
             break;
         case 'E':

@@ -43,13 +43,18 @@ static char const * pcap_test_debug = "tiny-capture-out.csv";
 #ifdef _WINDOWS
 #ifndef _WINDOWS64
 static char const* pcap_names_output = "..\\data\\tiny-capture-names.csv";
+static char const* pcap_addresses_output = "..\\data\\tiny-capture-addresses.csv";
 #else
 static char const* pcap_names_output = "..\\..\\data\\tiny-capture-names.csv";
+static char const* pcap_addresses_output = "..\\..\\data\\tiny-capture-addresses.csv";
 #endif
 static char const* pcap_names_debug = "tiny-capture-names.csv";
+static char const* pcap_addresses_debug = "tiny-capture-addresses.csv";
 #else
 static char const* pcap_names_output = "data/tiny-capture-names.csv";
 static char const* pcap_names_debug = "tiny-capture-names.csv";
+static char const* pcap_addresses_output = "data/tiny-capture-addresses.csv";
+static char const* pcap_addresses_debug = "tiny-capture-addresses.csv";
 #endif
 
 #endif
@@ -143,6 +148,58 @@ bool CaptureNamesTest::DoTest()
             if (ret)
             {
                 ret = MetricTest::compare_files(pcap_names_debug, pcap_names_output);
+            }
+        }
+    }
+
+    return ret;
+}
+
+CaptureAddressesTest::CaptureAddressesTest()
+{
+}
+
+CaptureAddressesTest::~CaptureAddressesTest()
+{
+}
+
+bool CaptureAddressesTest::DoTest()
+{
+    DnsStats capture;
+    CaptureSummary cs;
+    char const* list[1] = { pcap_input_test };
+    bool ret = true;
+
+    capture.address_report = pcap_addresses_debug;
+
+    ret = capture.LoadPcapFiles(1, list);
+
+    if (ret)
+    {
+        ret = capture.ExportToCaptureSummary(&cs);
+
+        if (ret)
+        {
+            CaptureSummary tcs;
+
+            ret = tcs.Load(pcap_test_output);
+
+            if (ret)
+            {
+                cs.Sort();
+                tcs.Sort();
+
+                ret = cs.Compare(&tcs);
+
+                if (!ret)
+                {
+                    cs.Save(pcap_test_debug);
+                }
+            }
+
+            if (ret)
+            {
+                ret = MetricTest::compare_files(pcap_addresses_debug, pcap_addresses_output);
             }
         }
     }

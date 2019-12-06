@@ -43,7 +43,7 @@ DnsStats::DnsStats()
     frequent_address_max_count(128),
     max_tld_leakage_count(0x80),
     max_tld_leakage_table_count(0x8000),
-    max_query_usage_count(4000000),
+    max_query_usage_count(8000000),
     max_tld_string_usage_count(0x8000),
     max_tld_string_leakage_count(0x200),
     max_stats_by_ip_count(0x8000),
@@ -1059,6 +1059,45 @@ int64_t DnsStats::DeltaUsec(long tv_sec, long tv_usec, long tv_sec_start, long t
     int64_t delta_t = (int64_t)delta_sec * 1000000;
     delta_t += delta_usec;
     return delta_t;
+}
+
+char const* DnsStats::LeakTypeName(DnsStatsLeakType leakType)
+{
+    char const* x = "unknown";
+
+    switch (leakType) {
+    case dnsLeakNoLeak:
+        x = "tld";
+        break;
+    case dnsLeakBinary:
+        x = "binary";
+        break;
+    case dnsLeakBadSyntax:
+        x = "bad_syntax";
+        break;
+    case dnsLeakNumeric:
+        x = "numeric";
+        break;
+    case dnsLeakRfc6771:
+        x = "rfc6771";
+        break;
+    case dnsLeakFrequent:
+        x = "frequent";
+        break;
+    case dnsLeakDGA:
+        x = "dga";
+        break;
+    case dnsLeakJumbo:
+        x = "jumbo";
+        break;
+    case dnsLeakOther:
+        x = "other";
+        break;
+    default:
+        break;
+    }
+
+    return x;
 }
 
 int DnsStats::GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
@@ -2565,45 +2604,14 @@ void DnsStats::NameLeaksAnalysis(
         if (gotTld)
         {
 #ifdef PRIVACY_CONSCIOUS
+            /* Debug option, classify the TLD */
             DnsStatsLeakType x_type = dnsLeakNoLeak;
-
-            /* Debug option, list all the addresses */
-            if (name_report != NULL) {
-                int is_nx = -1;
-                if (rcode == DNS_RCODE_NXDOMAIN) {
-                    is_nx = 1;
-                }
-                else if (rcode == DNS_RCODE_NOERROR && is_not_empty_response) {
-                    is_nx = 0;
-                }
-
-                if (is_nx >= 0) {
-                    uint8_t name[1024];
-                    size_t name_len = 0;
-
-                    (void)GetDnsName(packet, packet_length, name_offset, name, sizeof(name), &name_len);
-
-                    if (name_len > 0) {
-                        /* Insert in leakage table */
-                        DnsNameEntry key;
-                        bool stored = false;
-
-                        DnsStats::SetToUpperCase(name, name_len);
-                        key.name_len = name_len;
-                        key.name = name;
-                        key.is_nx = is_nx;
-                        key.count = 1;
-
-                        (void)nameList.InsertOrAdd(&key, true, &stored);
-                        key.name = NULL;
-                        key.name_len = 0;
-                    }
-                }
-            }
-#endif
+#endif 
+            int is_nx = -1;
 
             if (rcode == DNS_RCODE_NXDOMAIN)
             {
+                is_nx = 1;
                 /* Analysis of domain leakage */
                 if (is_binary) {
                     SubmitRegistryNumber(REGISTRY_DNS_LEAK_BINARY, 0);
@@ -2618,17 +2626,14 @@ void DnsStats::NameLeaksAnalysis(
 #endif
                 }
                 else if (is_numeric) {
+#ifdef PRIVACY_CONSCIOUS
+                    x_type = dnsLeakNumeric;
+#endif
                     if (IsIpv4Tld(packet, packet_length, name_offset)) {
                         SubmitRegistryNumber(REGISTRY_DNS_LEAK_IPV4, 0);
-#ifdef PRIVACY_CONSCIOUS
-                        x_type = dnsLeakIpv4;
-#endif
                     }
                     else {
                         SubmitRegistryNumber(REGISTRY_DNS_LEAK_NUMERIC, 0);
-#ifdef PRIVACY_CONSCIOUS
-                        x_type = dnsLeakNumeric;
-#endif
                     }
                 }
                 else if (IsRfc6761Tld(tld, tld_length))
@@ -2649,10 +2654,13 @@ void DnsStats::NameLeaksAnalysis(
                         x_type = dnsLeakFrequent;
                     }
                     else if (IsProbablyDgaTld(tld, tld_length)) {
-                        x_type = (previous_offset == 0) ? dnsLeakSinglePartDGA : dnsLeakMultiPartDGA;
+                        x_type = dnsLeakDGA;
+                    }
+                    else if (tld_length >= 16) {
+                        x_type = dnsLeakJumbo;
                     }
                     else {
-                        x_type = (previous_offset == 0) ? dnsLeakSinglePart : dnsLeakMultiPart;
+                        x_type = dnsLeakOther;
                     }
 #endif
                     /* TODO: If full enough, remove the LRU, and account for it in the patterns catalog */
@@ -2707,8 +2715,17 @@ void DnsStats::NameLeaksAnalysis(
             }
             else if (rcode == DNS_RCODE_NOERROR && is_not_empty_response)
             {
+                is_nx = 0;
+                /* Analysis of traffic per TLD */
+                if (dnsstat_flags & dnsStateFlagCountTld)
+                {
+                    SubmitRegistryString(REGISTRY_TLD_response, tld_length, tld);
+                }
+            }
+
+            if (is_nx >= 0) {
                 /* Analysis of useless traffic to the root */
-                TldAddressAsKey key(client_addr, client_addr_length, tld, tld_length, ts);
+                TldAddressAsKey key(client_addr, client_addr_length, tld, tld_length, ts, x_type);
                 TldAddressAsKey* present = queryUsage.Retrieve(&key);
 
                 if (present != NULL) {
@@ -2729,56 +2746,32 @@ void DnsStats::NameLeaksAnalysis(
                     (void)queryUsage.InsertOrAdd(&key, true, &stored);
                 }
 
-                /* Analysis of traffic per TLD */
-                if (dnsstat_flags & dnsStateFlagCountTld)
-                {
-                    SubmitRegistryString(REGISTRY_TLD_response, tld_length, tld);
-                }
-            }
 #ifdef PRIVACY_CONSCIOUS
-            if (dnsstat_flags & dnsStateFlagReportResolverIPAddress) {
-                uint8_t name[512];
-                size_t name_len = 0;
+                /* Debug option, list all the addresses */
+                if (name_report != NULL) {
+                    uint8_t name[1024];
+                    size_t name_len = 0;
 
-                if (client_addr_length == 4) {
-#ifdef _WINDOWS
-                    sprintf_s((char*)name, sizeof(name), "%d.%d.%d.%d/%d",
-                        client_addr[0], client_addr[1], client_addr[2], client_addr[3], (int)x_type);
-#else
-                    sprintf((char*)name, "%d.%d.%d.%d/%d",
-                        client_addr[0], client_addr[1], client_addr[2], client_addr[3], (int)x_type);
+                    (void)GetDnsName(packet, packet_length, name_offset, name, sizeof(name), &name_len);
+
+                    if (name_len > 0) {
+                        /* Insert in leakage table */
+                        DnsNameEntry key;
+                        bool stored = false;
+
+                        DnsStats::SetToUpperCase(name, name_len);
+                        key.name_len = name_len;
+                        key.name = name;
+                        key.is_nx = is_nx;
+                        key.count = 1;
+
+                        (void)nameList.InsertOrAdd(&key, true, &stored);
+                        key.name = NULL;
+                        key.name_len = 0;
+                    }
+                }
 #endif
-                }
-                else if (client_addr_length == 16) {
-#ifdef _WINDOWS
-                    sprintf_s((char*)name, sizeof(name),
-                        "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x/%d",
-                        client_addr[0], client_addr[1], client_addr[2], client_addr[3],
-                        client_addr[4], client_addr[5], client_addr[6], client_addr[7],
-                        client_addr[8], client_addr[9], client_addr[10], client_addr[11],
-                        client_addr[12], client_addr[13], client_addr[14], client_addr[15],
-                        (int)x_type);
-#else
-                    sprintf((char*)name,
-                        "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x/%d",
-                        client_addr[0], client_addr[1], client_addr[2], client_addr[3],
-                        client_addr[4], client_addr[5], client_addr[6], client_addr[7],
-                        client_addr[8], client_addr[9], client_addr[10], client_addr[11],
-                        client_addr[12], client_addr[13], client_addr[14], client_addr[15],
-                        (int)x_type);
-#endif
-                }
-                else {
-                    name[0] = 0;
-                }
-
-                name_len = strlen((char*)name);
-
-                if (name_len > 0) {
-                    SubmitRegistryString(REGISTRY_DNS_ADDRESS_LIST, (uint32_t)name_len, name);
-                }
             }
-#endif
         }
     }
     else if (gotTld)
@@ -2861,11 +2854,23 @@ void DnsStats::ExportQueryUsage()
     TldAddressAsKey *tld_address_entry;
     std::vector<TldAddressAsKey *> lines(queryUsage.GetCount());
     int vector_index = 0;
-    uint64_t total_queries = 0;
+    uint64_t total_no_error_queries = 0;
+    uint64_t total_no_error_entries = 0;
     const uint32_t cache_bucket[9] = { 1, 10, 30, 60, 120, 180, 240, 300, 600 };
     uint64_t ip_per_bucket[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     uint64_t ip_per_bucket_d[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     uint64_t total_per_bucket[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    FILE* F = NULL;
+    
+    if (address_report) {
+        F = ithi_file_open(address_report, "w");
+        if (F == NULL) {
+            fprintf(stderr, "Cannot open <%s> for writing\n", address_report);
+        }
+        else {
+            fprintf(F, "Address, TLD, is_nx, min_delay, count\n");
+        }
+    }
 
     for (uint32_t i = 0; i < queryUsage.GetSize(); i++)
     {
@@ -2889,104 +2894,87 @@ void DnsStats::ExportQueryUsage()
     uint64_t tld_nb_delay = 0;
 
     for (size_t i = 0; i < lines.size(); i++) {
-        total_queries += lines[i]->count;
+#ifdef PRIVACY_CONSCIOUS
+        /* Optional detailed data */
+        if (F != NULL) {
+            char safe_tld[512];
+            size_t safe_tld_len = ithi_copy_to_safe_text(safe_tld, sizeof(safe_tld), lines[i]->tld, lines[i]->tld_len);
 
-        if (min_tld_delay < 0 ||
-            (lines[i]->tld_min_delay > 0 && lines[i]->tld_min_delay < min_tld_delay)) {
-            min_tld_delay = lines[i]->tld_min_delay;
+
+            if (lines[i]->addr_len == 4) {
+                fprintf(F, "%d.%d.%d.%d,\"%s\",%s,%lld,%llu\n",
+                    lines[i]->addr[0], lines[i]->addr[1], lines[i]->addr[2], lines[i]->addr[3],
+                    safe_tld, LeakTypeName(lines[i]->leakType), (long long)lines[i]->tld_min_delay, (unsigned long long)lines[i]->count);
+            }
+            else if (lines[i]->addr_len == 16) {
+                fprintf(F,
+                    "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x,\"%s\",%d,%lld,%llu\n",
+                    lines[i]->addr[0], lines[i]->addr[1], lines[i]->addr[2], lines[i]->addr[3],
+                    lines[i]->addr[4], lines[i]->addr[5], lines[i]->addr[6], lines[i]->addr[7],
+                    lines[i]->addr[8], lines[i]->addr[9], lines[i]->addr[10], lines[i]->addr[11],
+                    lines[i]->addr[12], lines[i]->addr[13], lines[i]->addr[14], lines[i]->addr[15],
+                    safe_tld, LeakTypeName(lines[i]->leakType), (long long)lines[i]->tld_min_delay, (unsigned long long)lines[i]->count);
+            }
         }
-        count_per_ip += lines[i]->count;
-        if (lines[i]->count > 1) {
-            int64_t duration = DeltaUsec(lines[i]->ts.tv_sec, lines[i]->ts.tv_usec, lines[i]->ts_init.tv_sec, lines[i]->ts_init.tv_usec);
-            tld_sum_delay += duration;
-            tld_nb_delay += lines[i]->count - 1;
+#endif
+        if (lines[i]->leakType == dnsLeakNoLeak) {
+            total_no_error_queries += lines[i]->count;
+            total_no_error_entries++;
+
+            if (min_tld_delay < 0 ||
+                (lines[i]->tld_min_delay > 0 && lines[i]->tld_min_delay < min_tld_delay)) {
+                min_tld_delay  = lines[i]->tld_min_delay;
+            }
+            count_per_ip += lines[i]->count;
+            if (lines[i]->count > 1) {
+                int64_t duration = DeltaUsec(lines[i]->ts.tv_sec, lines[i]->ts.tv_usec, lines[i]->ts_init.tv_sec, lines[i]->ts_init.tv_usec);
+                tld_sum_delay += duration;
+                tld_nb_delay += lines[i]->count - 1;
+            }
         }
 
         if (i + 1 >= lines.size() ||
             lines[i]->addr_len != lines[i + 1]->addr_len ||
             memcmp(lines[i]->addr, lines[i + 1]->addr, lines[i]->addr_len) != 0) {
-            /* Finished analyzing this IP address */
-            int i_bucket = 8;
-            int i_bucket_d = 8;
+            if (count_per_ip > 0) {
+                /* Finished analyzing this IP address */
+                int i_bucket = 8;
+                int i_bucket_d = 8;
 
-            if (tld_nb_delay > 0) {
-                tld_average_delay = tld_sum_delay / tld_nb_delay;
-            }
-            else {
-                tld_average_delay = 600000000;
-            }
-            
-            for (i_bucket_d = 0; i_bucket_d < 8; i_bucket_d++) {
-                if ((uint64_t)cache_bucket[i_bucket_d] * 1000000 > tld_average_delay) {
-                    break;
+                if (tld_nb_delay > 0) {
+                    tld_average_delay = tld_sum_delay / tld_nb_delay;
                 }
-            }
+                else {
+                    tld_average_delay = 600000000;
+                }
 
-            if (min_tld_delay > 0) {
-                for (i_bucket = 0; i_bucket < 8; i_bucket++) {
-                    if ((uint64_t)cache_bucket[i_bucket] * 1000000 > (uint64_t)min_tld_delay) {
+                for (i_bucket_d = 0; i_bucket_d < 8; i_bucket_d++) {
+                    if ((uint64_t)cache_bucket[i_bucket_d] * 1000000 > tld_average_delay) {
                         break;
                     }
                 }
-            }
-            else if (min_tld_delay < 0) {
+
+                if (min_tld_delay > 0) {
+                    for (i_bucket = 0; i_bucket < 8; i_bucket++) {
+                        if ((uint64_t)cache_bucket[i_bucket] * 1000000 > (uint64_t)min_tld_delay) {
+                            break;
+                        }
+                    }
+                }
+                else if (min_tld_delay < 0) {
 #ifdef PRIVACY_CONSCIOUS
-                min_tld_delay = 600000000;
-#endif
-            }
-            else
-            {
-                i_bucket = 0;
-            }
-            ip_per_bucket[i_bucket] += 1;
-            ip_per_bucket_d[i_bucket_d] += 1;
-            total_per_bucket[i_bucket] += count_per_ip;
-
-#ifdef PRIVACY_CONSCIOUS
-            /* Optional detailed data */
-            if (dnsstat_flags& dnsStateFlagReportResolverIPAddress) {
-                uint8_t name[512];
-                size_t name_len = 0;
-
-                name[0] = 0;
-
-                if (lines[i]->addr_len == 4) {
-#ifdef _WINDOWS
-                    sprintf_s((char *)name, sizeof(name), "%d.%d.%d.%d/%d/%d",
-                        lines[i]->addr[0], lines[i]->addr[1], lines[i]->addr[2], lines[i]->addr[3],
-                        (int)min_tld_delay, (int)tld_average_delay);
-#else
-                    sprintf((char *)name, "%d.%d.%d.%d/%d/%d",
-                        lines[i]->addr[0], lines[i]->addr[1], lines[i]->addr[2], lines[i]->addr[3],
-                        (int)min_tld_delay, (int)tld_average_delay);
+                    min_tld_delay = 600000000;
 #endif
                 }
-                else if (lines[i]->addr_len == 16) {
-#ifdef _WINDOWS
-                    sprintf_s((char *)name, sizeof(name),
-                        "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x/%d/%d",
-                        lines[i]->addr[0], lines[i]->addr[1], lines[i]->addr[2], lines[i]->addr[3],
-                        lines[i]->addr[4], lines[i]->addr[5], lines[i]->addr[6], lines[i]->addr[7],
-                        lines[i]->addr[8], lines[i]->addr[9], lines[i]->addr[10], lines[i]->addr[11],
-                        lines[i]->addr[12], lines[i]->addr[13], lines[i]->addr[14], lines[i]->addr[15],
-                        (int)min_tld_delay, (int)tld_average_delay);
-#else
-                    sprintf((char *)name,
-                        "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x/%d/%d",
-                        lines[i]->addr[0], lines[i]->addr[1], lines[i]->addr[2], lines[i]->addr[3],
-                        lines[i]->addr[4], lines[i]->addr[5], lines[i]->addr[6], lines[i]->addr[7],
-                        lines[i]->addr[8], lines[i]->addr[9], lines[i]->addr[10], lines[i]->addr[11],
-                        lines[i]->addr[12], lines[i]->addr[13], lines[i]->addr[14], lines[i]->addr[15],
-                        (int)min_tld_delay, (int)tld_average_delay);
-#endif
+                else
+                {
+                    i_bucket = 0;
                 }
-                name_len = strlen((char *)name);
-
-                if (name_len > 0) {
-                    SubmitRegistryString(REGISTRY_DNS_ADDRESS_DELAY, (uint32_t)name_len, name);
-                }
+                ip_per_bucket[i_bucket] += 1;
+                ip_per_bucket_d[i_bucket_d] += 1;
+                total_per_bucket[i_bucket] += count_per_ip;
             }
-#endif
+
             /* Reset the counters */
             min_tld_delay = -1;
             count_per_ip = 0;
@@ -2995,8 +2983,12 @@ void DnsStats::ExportQueryUsage()
         }
     }
 
-    SubmitRegistryNumberAndCount(REGISTRY_DNS_UsefulQueries, 1, lines.size());
-    SubmitRegistryNumberAndCount(REGISTRY_DNS_UsefulQueries, 0, total_queries - lines.size());
+    if (F != NULL) {
+        (void)fclose(F);
+    }
+
+    SubmitRegistryNumberAndCount(REGISTRY_DNS_UsefulQueries, 1, total_no_error_entries);
+    SubmitRegistryNumberAndCount(REGISTRY_DNS_UsefulQueries, 0, total_no_error_queries - total_no_error_entries);
 
     /* Add the counters per bucket */
     for (int i_bucket = 0; i_bucket < 9; i_bucket++) {
@@ -3229,12 +3221,13 @@ void TldAsKey::CanonicCopy(uint8_t * tldDest, size_t tldDestMax, size_t * tldDes
 }
 
 
-TldAddressAsKey::TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len, my_bpftimeval ts)
+TldAddressAsKey::TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len, my_bpftimeval ts, DnsStatsLeakType leakType)
     :
     HashNext(NULL),
     count(1),
     hash(0),
-    tld_min_delay(-1)
+    tld_min_delay(-1),
+    leakType(leakType)
 {
     if (addr_len > 16)
     {
@@ -3289,7 +3282,7 @@ uint32_t TldAddressAsKey::Hash()
 
 TldAddressAsKey * TldAddressAsKey::CreateCopy()
 {
-    TldAddressAsKey* ret = new TldAddressAsKey(addr, addr_len, tld, tld_len, ts);
+    TldAddressAsKey* ret = new TldAddressAsKey(addr, addr_len, tld, tld_len, ts, leakType);
 
     if (ret != NULL)
     {
@@ -3928,8 +3921,8 @@ void DomainEntry::Add(DomainEntry * key)
 DnsNameEntry::DnsNameEntry():
     HashNext(NULL),
     hash(0),
-    name(NULL),
     name_len(0),
+    name(NULL),
     count(0),
     is_nx(0)
 {
