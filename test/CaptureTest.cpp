@@ -103,6 +103,7 @@ bool CaptureTest::DoTest()
     return ret;
 }
 
+#ifdef PRIVACY_CONSCIOUS
 CaptureNamesTest::CaptureNamesTest()
 {
 }
@@ -206,3 +207,4 @@ bool CaptureAddressesTest::DoTest()
 
     return ret;
 }
+#endif
