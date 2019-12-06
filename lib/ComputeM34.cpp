@@ -123,6 +123,7 @@ ComputeM3::ComputeM3()
     m3_1(0),
     m3_2(0),
     m33_4(0),
+    m33_5(0),
     m3_4_1(0),
     m3_5(0),
     m3_6(0)
@@ -152,6 +153,10 @@ bool ComputeM3::Compute()
         GetM33_1() &&
         GetM33_2() &&
         GetM33_3();
+
+    if (ret) {
+        ret = GetM33_5();
+    }
 
     if (ret) {
         m33_4 = m3_1;
@@ -213,6 +218,11 @@ bool ComputeM3::Write(FILE * F_out, char const* date, char const* version)
     if (ret)
     {
         ret = fprintf(F_out, "M3.3.4,%s,%s, , %6f,\n", date, version, (m33_4 > 0) ? m33_4 : 0);
+    }
+
+    if (ret && m33_5 > 0)
+    {
+        ret = fprintf(F_out, "M3.3.5,%s,%s, , %6f,\n", date, version, m33_5);
     }
 
     if (ret) {
@@ -389,6 +399,28 @@ bool ComputeM3::GetM33_3()
         GetM33_3_pattern(REGISTRY_DNS_LEAK_NUMERIC, "numeric");
 
         std::sort(m33_3.begin(), m33_3.end(), metric34_line_is_bigger);
+    }
+
+    return ret;
+}
+
+bool ComputeM3::GetM33_5()
+{
+    bool ret = true;
+    uint64_t nb_useful = cs.GetCountByNumber(
+        DnsStats::GetTableName(REGISTRY_DNS_UsefulQueries), 2);
+    uint64_t nb_useless = cs.GetCountByNumber(
+        DnsStats::GetTableName(REGISTRY_DNS_UsefulQueries), 3);
+    uint64_t total = nb_useful + nb_useless;
+
+    if (total > 0)
+    {
+        m33_5 = (double)nb_useless;
+        m33_5 /= (double)total;
+    }
+    else
+    {
+        m33_5 = 0;
     }
 
     return ret;

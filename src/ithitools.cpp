@@ -73,6 +73,7 @@ static int usage()
     fprintf(stderr, "                     excessive traffic filtering mechanism.\n");
     fprintf(stderr, "  -x res-addr.txt    excluded list of resolver addresses. Traffic to or from\n");
     fprintf(stderr, "                     these addresses will be ignored when extracting traffic.\n");
+    fprintf(stderr, "  -e                 compute ratio of non-cached NX-Domain queries.\n");
     fprintf(stderr, "  -f                 Filter out address sources that generate too much traffic.\n");
     fprintf(stderr, "  -T                 Capture a list of TLD found in user queries.\n");
     fprintf(stderr, "  -t tld-file.txt    Text file containing a list of registered TLD, one per line.\n");
@@ -191,7 +192,7 @@ int main(int argc, char ** argv)
 
     /* Get the parameters */
     int opt;
-    while (exit_code == 0 && (opt = getopt(argc, argv, "o:r:a:x:V:n:M:t:u:i:d:y:b:B:k:z:l:1:2:3:4:5:6:7:S:w:O:P:D:N:A:E:hfcsmpTvWyXY?")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "a:b:cd:efhi:k:l:mn:o:pr:st:u:vw:x:y:z:A:B:D:E:O:P:M:N:S:TV:WXY1:2:3:4:5:6:7:?")) != -1)
     {
         switch (opt)
         {
@@ -274,6 +275,9 @@ int main(int argc, char ** argv)
             }
             break;
         }
+        case 'e':
+            stats.capture_cache_ratio_nx_domain = true;
+            break;
         case 'f':
             stats.enable_frequent_address_filtering = true;
             break;
@@ -407,6 +411,11 @@ int main(int argc, char ** argv)
             break;
         case 'w':
             web_root = optarg;
+            break;
+        default:
+            fprintf(stderr, "Unsupported option = %c\n", opt);
+            (void)usage();
+            exit(1);
             break;
         }
     }

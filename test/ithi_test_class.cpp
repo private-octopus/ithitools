@@ -38,6 +38,7 @@ enum test_list_enum {
     test_enum_Merge,
     test_enum_Merge_List,
     test_enum_Capture,
+    test_enum_CaptureNxCache,
 #ifdef PRIVACY_CONSCIOUS
     test_enum_Capture_Addresses,
     test_enum_Capture_Names,
@@ -101,6 +102,8 @@ char const * ithi_test_class::GetTestName(int number)
         return("merge_list");
     case test_enum_Capture:
         return("capture");
+    case test_enum_CaptureNxCache:
+        return("CaptureNxCache");
 #ifdef PRIVACY_CONSCIOUS
     case test_enum_Capture_Addresses:
         return("CaptureAddresses");
@@ -204,6 +207,9 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_enum_Capture:
         test = new CaptureTest();
+        break;
+    case test_enum_CaptureNxCache:
+        test = new CaptureNxCacheTest();
         break;
 #ifdef PRIVACY_CONSCIOUS
     case test_enum_Capture_Addresses:
@@ -336,27 +342,27 @@ bool ithi_test_class::CompareCS(CaptureSummary* x, CaptureSummary * y)
 
     for (size_t i = 0; ret && i < min_size; i++)
     {
-        ret = CaptureSummary::CaptureLineIsSameKey(x->summary[i], y->summary[i]);
-        if (ret)
-        {
-            if (x->summary[i]->count != x->summary[i]->count)
-            {
-                TEST_LOG("Summary %d differ, count = %d vs %d\n", i, x->summary[i], y->summary[i]);
-                ret = false;
-            }
+        if (CaptureSummary::compare_string(x->summary[i]->registry_name, y->summary[i]->registry_name) != 0) {
+            TEST_LOG("Summary %d differ, name = %s vs %s\n", i, x->summary[i]->registry_name, y->summary[i]->registry_name);
+            ret = false;
         }
-        else
+        else if (x->summary[i]->key_type != y->summary[i]->key_type)
         {
-            if (CaptureSummary::compare_string(x->summary[i]->registry_name, y->summary[i]->registry_name) != 0) {
-                TEST_LOG("Summary %d differ, name = %s vs %s\n", i, x->summary[i]->registry_name, y->summary[i]->registry_name);
-            }
-            else if (x->summary[i]->key_type == 0) {
-                TEST_LOG("Summary %d differ, key = %d vs %d\n", i, x->summary[i]->key_number, y->summary[i]->key_number);
-            }
-            else {
-                TEST_LOG("Summary %d differ, key = %s vs %s\n", i, (char const*)x->summary[i]->key_value, (char const*)y->summary[i]->key_value);
-            }
-            break;
+            TEST_LOG("Summary %d differ, key type = %d vs %d\n", i, x->summary[i]->key_type, y->summary[i]->key_type);
+            ret = false;
+        }
+        else if (x->summary[i]->key_type == 0 && x->summary[i]->key_number != y->summary[i]->key_number) {
+            TEST_LOG("Summary %d differ, key = %d vs %d\n", i, x->summary[i]->key_number, y->summary[i]->key_number);
+            ret = false;
+        }
+        else if (x->summary[i]->key_type == 0 && CaptureSummary::compare_string(x->summary[i]->key_value, y->summary[i]->key_value) != 0) {
+            TEST_LOG("Summary %d differ, key = %s vs %s\n", i, (char const*)x->summary[i]->key_value, (char const*)y->summary[i]->key_value);
+            ret = false;
+        }
+        else if (x->summary[i]->count != y->summary[i]->count)
+        {
+            TEST_LOG("Summary %d differ, count = %d vs %d\n", i, x->summary[i], y->summary[i]);
+            ret = false;
         }
     }
 

@@ -134,6 +134,7 @@ enum DnsStatsFlags
 enum DnsStatsLeakType
 {
     dnsLeakNoLeak = 0,
+    dnsLeakRoot,
     dnsLeakBinary,
     dnsLeakBadSyntax,
     dnsLeakNumeric,
@@ -206,6 +207,7 @@ public:
     size_t name_len;
     uint8_t* name;
     uint64_t count;
+    int is_nx;
     DnsStatsLeakType leakType;
 };
 
@@ -250,7 +252,7 @@ public:
 class TldAddressAsKey
 {
 public:
-    TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len, my_bpftimeval ts, DnsStatsLeakType leakType);
+    TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len, my_bpftimeval ts, int is_nx, DnsStatsLeakType leakType);
     ~TldAddressAsKey();
 
     bool IsSameKey(TldAddressAsKey* key);
@@ -271,6 +273,7 @@ public:
     my_bpftimeval ts;
     my_bpftimeval ts_init;
     int64_t tld_min_delay;
+    int is_nx;
     DnsStatsLeakType leakType;
 };
 
@@ -321,6 +324,7 @@ public:
     int64_t duration_usec;
     uint64_t volume_53only;
     bool enable_frequent_address_filtering;
+    bool capture_cache_ratio_nx_domain;
     uint32_t target_number_dns_packets;
     uint32_t frequent_address_max_count;
     uint32_t max_tld_leakage_count; 

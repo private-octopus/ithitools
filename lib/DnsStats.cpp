@@ -39,6 +39,7 @@ DnsStats::DnsStats()
     duration_usec(0),
     volume_53only(0),
     enable_frequent_address_filtering(false),
+    capture_cache_ratio_nx_domain(false),
     target_number_dns_packets(0),
     frequent_address_max_count(128),
     max_tld_leakage_count(0x80),
@@ -1068,6 +1069,9 @@ char const* DnsStats::LeakTypeName(DnsStatsLeakType leakType)
     switch (leakType) {
     case dnsLeakNoLeak:
         x = "tld";
+        break;
+    case dnsLeakRoot:
+        x = "root";
         break;
     case dnsLeakBinary:
         x = "binary";
@@ -2613,9 +2617,7 @@ void DnsStats::NameLeaksAnalysis(
                 /* Analysis of domain leakage */
                 if (is_binary) {
                     SubmitRegistryNumber(REGISTRY_DNS_LEAK_BINARY, 0);
-#ifdef PRIVACY_CONSCIOUS
                     x_type = dnsLeakBinary;
-#endif
                 }
                 else if (is_bad_syntax) {
                     SubmitRegistryNumber(REGISTRY_DNS_LEAK_SYNTAX, 0);
@@ -2646,8 +2648,7 @@ void DnsStats::NameLeaksAnalysis(
                     /* Insert in leakage table */
                     TldAsKey key(tld, tld_length);
                     bool stored = false;
-                    (void)tldLeakage.InsertOrAdd(&key, true, &stored);
-#ifdef PRIVACY_CONSCIOUS
+                    (void)tldLeakage.InsertOrAdd(&key, true, &stored);\
                     if (IsFrequentLeakTld(tld, tld_length)) {
                         x_type = dnsLeakFrequent;
                     }
@@ -2660,7 +2661,6 @@ void DnsStats::NameLeaksAnalysis(
                     else {
                         x_type = dnsLeakOther;
                     }
-#endif
                     /* TODO: If full enough, remove the LRU, and account for it in the patterns catalog */
                     if (tldLeakage.GetCount() > max_tld_leakage_table_count)
                     {
@@ -2714,6 +2714,10 @@ void DnsStats::NameLeaksAnalysis(
             else if (rcode == DNS_RCODE_NOERROR && is_not_empty_response)
             {
                 is_nx = 0;
+                if (tld_length == 0) {
+                    x_type = dnsLeakRoot;
+                }
+
                 /* Analysis of traffic per TLD */
                 if (dnsstat_flags & dnsStateFlagCountTld)
                 {
@@ -2722,26 +2726,28 @@ void DnsStats::NameLeaksAnalysis(
             }
 
             if (is_nx >= 0) {
-                /* Analysis of useless traffic to the root */
-                TldAddressAsKey key(client_addr, client_addr_length, tld, tld_length, ts, x_type);
-                TldAddressAsKey* present = queryUsage.Retrieve(&key);
+                if (is_nx == 0 || capture_cache_ratio_nx_domain || address_report != NULL) {
+                    /* Analysis of useless traffic to the root */
+                    TldAddressAsKey key(client_addr, client_addr_length, tld, tld_length, ts, is_nx, x_type);
+                    TldAddressAsKey* present = queryUsage.Retrieve(&key);
 
-                if (present != NULL) {
-                    /* keep statistics about this address */
-                    present->count++;
-                    /* Compute the delay between this and the previous view, and update */
-                    int64_t delay = DeltaUsec(ts.tv_sec, ts.tv_usec, present->ts.tv_sec, present->ts.tv_usec);
+                    if (present != NULL) {
+                        /* keep statistics about this address */
+                        present->count++;
+                        /* Compute the delay between this and the previous view, and update */
+                        int64_t delay = DeltaUsec(ts.tv_sec, ts.tv_usec, present->ts.tv_sec, present->ts.tv_usec);
 
-                    if (present->tld_min_delay < 0 || present->tld_min_delay > delay) {
-                        present->tld_min_delay = delay;
+                        if (present->tld_min_delay < 0 || present->tld_min_delay > delay) {
+                            present->tld_min_delay = delay;
+                        }
+                        present->ts.tv_sec = ts.tv_sec;
+                        present->ts.tv_usec = ts.tv_usec;
                     }
-                    present->ts.tv_sec = ts.tv_sec;
-                    present->ts.tv_usec = ts.tv_usec;
-                }
-                else if (queryUsage.GetCount() < max_query_usage_count) {
-                    /* If table is full, stick with just the transactions that are present */
-                    bool stored = false;
-                    (void)queryUsage.InsertOrAdd(&key, true, &stored);
+                    else if (queryUsage.GetCount() < max_query_usage_count) {
+                        /* If table is full, stick with just the transactions that are present */
+                        bool stored = false;
+                        (void)queryUsage.InsertOrAdd(&key, true, &stored);
+                    }
                 }
 
 #ifdef PRIVACY_CONSCIOUS
@@ -2760,6 +2766,7 @@ void DnsStats::NameLeaksAnalysis(
                         DnsStats::SetToUpperCase(name, name_len);
                         key.name_len = name_len;
                         key.name = name;
+                        key.is_nx = is_nx;
                         key.leakType = x_type;
                         key.count = 1;
 
@@ -2854,6 +2861,8 @@ void DnsStats::ExportQueryUsage()
     int vector_index = 0;
     uint64_t total_no_error_queries = 0;
     uint64_t total_no_error_entries = 0;
+    uint64_t total_error_queries = 0;
+    uint64_t total_error_entries = 0;
     const uint32_t cache_bucket[9] = { 1, 10, 30, 60, 120, 180, 240, 300, 600 };
     uint64_t ip_per_bucket[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     uint64_t ip_per_bucket_d[9] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -2866,7 +2875,7 @@ void DnsStats::ExportQueryUsage()
             fprintf(stderr, "Cannot open <%s> for writing\n", address_report);
         }
         else {
-            fprintf(F, "Address, TLD, name_type, min_delay, count\n");
+            fprintf(F, "Address, TLD, nx_domain, name_type, min_delay, count\n");
         }
     }
 
@@ -2900,22 +2909,22 @@ void DnsStats::ExportQueryUsage()
 
 
             if (lines[i]->addr_len == 4) {
-                fprintf(F, "%d.%d.%d.%d,\"%s\",%s,%lld,%llu\n",
+                fprintf(F, "%d.%d.%d.%d,\"%s\",%d,%s,%lld,%llu\n",
                     lines[i]->addr[0], lines[i]->addr[1], lines[i]->addr[2], lines[i]->addr[3],
-                    safe_tld, LeakTypeName(lines[i]->leakType), (long long)lines[i]->tld_min_delay, (unsigned long long)lines[i]->count);
+                    safe_tld, lines[i]->is_nx, LeakTypeName(lines[i]->leakType), (long long)lines[i]->tld_min_delay, (unsigned long long)lines[i]->count);
             }
             else if (lines[i]->addr_len == 16) {
                 fprintf(F,
-                    "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x,\"%s\",%s,%lld,%llu\n",
+                    "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x,\"%s\",%d,%s,%lld,%llu\n",
                     lines[i]->addr[0], lines[i]->addr[1], lines[i]->addr[2], lines[i]->addr[3],
                     lines[i]->addr[4], lines[i]->addr[5], lines[i]->addr[6], lines[i]->addr[7],
                     lines[i]->addr[8], lines[i]->addr[9], lines[i]->addr[10], lines[i]->addr[11],
                     lines[i]->addr[12], lines[i]->addr[13], lines[i]->addr[14], lines[i]->addr[15],
-                    safe_tld, LeakTypeName(lines[i]->leakType), (long long)lines[i]->tld_min_delay, (unsigned long long)lines[i]->count);
+                    safe_tld, lines[i]->is_nx, LeakTypeName(lines[i]->leakType), (long long)lines[i]->tld_min_delay, (unsigned long long)lines[i]->count);
             }
         }
 #endif
-        if (lines[i]->leakType == dnsLeakNoLeak) {
+        if (lines[i]->is_nx == 0) {
             total_no_error_queries += lines[i]->count;
             total_no_error_entries++;
 
@@ -2929,6 +2938,10 @@ void DnsStats::ExportQueryUsage()
                 tld_sum_delay += duration;
                 tld_nb_delay += lines[i]->count - 1;
             }
+        }
+        else {
+            total_error_queries += lines[i]->count;
+            total_error_entries++;
         }
 
         if (i + 1 >= lines.size() ||
@@ -2987,6 +3000,10 @@ void DnsStats::ExportQueryUsage()
 
     SubmitRegistryNumberAndCount(REGISTRY_DNS_UsefulQueries, 1, total_no_error_entries);
     SubmitRegistryNumberAndCount(REGISTRY_DNS_UsefulQueries, 0, total_no_error_queries - total_no_error_entries);
+    if (capture_cache_ratio_nx_domain) {
+        SubmitRegistryNumberAndCount(REGISTRY_DNS_UsefulQueries, 2, total_error_entries);
+        SubmitRegistryNumberAndCount(REGISTRY_DNS_UsefulQueries, 3, total_error_queries - total_error_entries);
+    }
 
     /* Add the counters per bucket */
     for (int i_bucket = 0; i_bucket < 9; i_bucket++) {
@@ -3009,7 +3026,7 @@ void DnsStats::ExportNameReport()
     else {
         bool ret = true;
 
-        if (fprintf(F, "Name, name_type, count\n") <= 0) {
+        if (fprintf(F, "Name, nx_domain, name_type, count\n") <= 0) {
             ret = false;
             fprintf(stderr, "Cannot write header line to <%s>\n", name_report);
         }
@@ -3025,7 +3042,7 @@ void DnsStats::ExportNameReport()
                 if (ithi_copy_to_safe_text(safe_name, sizeof(safe_name), name_entry->name, name_entry->name_len) <= 0) {
                     fprintf(stderr, "Cannot sanitize name entry #%d (%s) for <%s>\n", i, name_entry->name, name_report);
                     ret = false;
-                } else if (fprintf(F, "%s,%s,%llu\n", safe_name, LeakTypeName(name_entry->leakType), (unsigned long long)name_entry->count) <= 0){
+                } else if (fprintf(F, "%s,%d,%s,%llu\n", safe_name, name_entry->is_nx, LeakTypeName(name_entry->leakType), (unsigned long long)name_entry->count) <= 0){
                     ret = false;
                     fprintf(stderr, "Cannot export entry #%d (%s) to <%s>\n", i, name_entry->name, name_report);
                 }
@@ -3219,12 +3236,13 @@ void TldAsKey::CanonicCopy(uint8_t * tldDest, size_t tldDestMax, size_t * tldDes
 }
 
 
-TldAddressAsKey::TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len, my_bpftimeval ts, DnsStatsLeakType leakType)
+TldAddressAsKey::TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len, my_bpftimeval ts, int is_nx, DnsStatsLeakType leakType)
     :
     HashNext(NULL),
     count(1),
     hash(0),
     tld_min_delay(-1),
+    is_nx(is_nx),
     leakType(leakType)
 {
     if (addr_len > 16)
@@ -3280,7 +3298,7 @@ uint32_t TldAddressAsKey::Hash()
 
 TldAddressAsKey * TldAddressAsKey::CreateCopy()
 {
-    TldAddressAsKey* ret = new TldAddressAsKey(addr, addr_len, tld, tld_len, ts, leakType);
+    TldAddressAsKey* ret = new TldAddressAsKey(addr, addr_len, tld, tld_len, ts, is_nx, leakType);
 
     if (ret != NULL)
     {
@@ -3922,6 +3940,7 @@ DnsNameEntry::DnsNameEntry():
     name_len(0),
     name(NULL),
     count(0),
+    is_nx(0),
     leakType(DnsStatsLeakType::dnsLeakNoLeak)
 {
 }
