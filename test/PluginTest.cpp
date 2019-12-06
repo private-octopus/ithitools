@@ -213,7 +213,7 @@ bool PluginTest::DoOneTest(int nb_repeat)
             cs.Sort();
             tcs.Sort();
 
-            ret = cs.Compare(&tcs);
+            ret = ithi_test_class::CompareCS(&cs, &tcs);
         }
     }
 

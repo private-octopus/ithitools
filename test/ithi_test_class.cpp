@@ -4,6 +4,8 @@
 #include <string.h>
 #include <string.h>
 
+#include "CaptureSummary.h"
+
 #include "hashtest.h"
 #include "testRfc6761.h"
 #include "LoadTest.h"
@@ -292,6 +294,85 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
 
     return test;
 }
+
+#if 0
+bool ithi_test_class::CaptureLineIsSameKey(struct _capture_line* x, struct _capture_line* y)
+{
+    bool ret = false;
+    int cmp;
+
+    cmp = CaptureSummary::compare_string(x->registry_name, y->registry_name);
+
+    if (cmp != 0)
+    {
+        ret = false;
+    }
+    else if (x->key_type != y->key_type)
+    {
+        ret = false;
+    }
+    else
+    {
+        if (x->key_type == 0)
+        {
+            ret = (x->key_number == y->key_number);
+        }
+        else
+        {
+            cmp = compare_string(x->key_value, y->key_value);
+
+            ret = cmp == 0;
+        }
+    }
+
+    return ret;
+}
+#endif
+
+bool ithi_test_class::CompareCS(CaptureSummary* x, CaptureSummary * y)
+{
+    bool ret = true;
+    size_t min_size = (x->Size() < y->Size())?x->Size():y->Size();
+
+    for (size_t i = 0; ret && i < min_size; i++)
+    {
+        ret = CaptureSummary::CaptureLineIsSameKey(x->summary[i], y->summary[i]);
+        if (ret)
+        {
+            if (x->summary[i]->count != x->summary[i]->count)
+            {
+                TEST_LOG("Summary %d differ, count = %d vs %d\n", i, x->summary[i], y->summary[i]);
+                ret = false;
+            }
+        }
+        else
+        {
+            if (CaptureSummary::compare_string(x->summary[i]->registry_name, y->summary[i]->registry_name) != 0) {
+                TEST_LOG("Summary %d differ, name = %s vs %s\n", i, x->summary[i]->registry_name, y->summary[i]->registry_name);
+            }
+            else if (x->summary[i]->key_type == 0) {
+                TEST_LOG("Summary %d differ, key = %d vs %d\n", i, x->summary[i]->key_number, y->summary[i]->key_number);
+            }
+            else {
+                TEST_LOG("Summary %d differ, key = %s vs %s\n", i, (char const*)x->summary[i]->key_value, (char const*)y->summary[i]->key_value);
+            }
+            break;
+        }
+    }
+
+    if (x->Size() > min_size) {
+        TEST_LOG("%d extra keys\n", (int)(x->Size() - min_size));
+        ret = false;
+    }
+
+    if (y->Size() > min_size) {
+        TEST_LOG("%d missing keys\n", (int)(y->Size() - min_size));
+        ret = false;
+    }
+
+    return ret;
+} 
+
 
 static FILE * F_log = NULL;
 

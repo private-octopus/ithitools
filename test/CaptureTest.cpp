@@ -19,9 +19,11 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <stdio.h>
 #include "DnsStats.h"
 #include "pcap_reader.h"
 #include "MetricTest.h"
+#include "ithi_test_class.h"
 #include "CaptureTest.h"
 
 #ifdef _WINDOWS
@@ -90,7 +92,7 @@ bool CaptureTest::DoTest()
                 cs.Sort();
                 tcs.Sort();
 
-                ret = cs.Compare(&tcs);
+                ret = ithi_test_class::CompareCS(&cs, &tcs);
 
                 if (!ret)
                 {
@@ -138,7 +140,7 @@ bool CaptureNamesTest::DoTest()
                 cs.Sort();
                 tcs.Sort();
 
-                ret = cs.Compare(&tcs);
+                ret = ithi_test_class::CompareCS(&cs, &tcs);
 
                 if (!ret)
                 {
@@ -190,7 +192,7 @@ bool CaptureAddressesTest::DoTest()
                 cs.Sort();
                 tcs.Sort();
 
-                ret = cs.Compare(&tcs);
+                ret = ithi_test_class::CompareCS(&cs, &tcs);
 
                 if (!ret)
                 {

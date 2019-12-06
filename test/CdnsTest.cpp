@@ -130,7 +130,7 @@ bool CdnsCaptureTest::DoTest()
                 cs.Sort();
                 tcs.Sort();
 
-                ret = cs.Compare(&tcs);
+                ret = ithi_test_class::CompareCS(&cs, &tcs);
 
                 if (!ret)
                 {

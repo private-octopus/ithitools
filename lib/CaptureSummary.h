@@ -73,11 +73,13 @@ public:
 
     int capture_version;
 
+    static bool CaptureLineIsSameKey(CaptureLine* x, CaptureLine* y);
+
+    std::vector<CaptureLine*> summary;
+
 private:
-    std::vector<CaptureLine *> summary;
 
     static bool CaptureLineIsLower(CaptureLine * x, CaptureLine * y);
-    static bool CaptureLineIsSameKey(CaptureLine * x, CaptureLine * y); 
     static bool CaptureLineIsLargerCount(CaptureLine * x, CaptureLine * y);
 };
 

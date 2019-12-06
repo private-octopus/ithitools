@@ -64,8 +64,7 @@ bool MergeTest::DoTest()
         if (ret)
         {
             tcs.Sort();
-
-            ret = cs.Compare(&tcs);
+            ret = ithi_test_class::CompareCS(&cs, &tcs);
         }
     }
 
@@ -138,7 +137,7 @@ bool MergeListTest::DoTest()
             tcs.MultiplyByConstantForTest(multiplier);
             tcs.Sort();
 
-            ret = cs.Compare(&tcs);
+            ret = ithi_test_class::CompareCS(&cs, &tcs);
 
             if (!ret)
             {

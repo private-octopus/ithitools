@@ -62,7 +62,7 @@ bool SaveTest::DoTest()
 
             if (ret)
             {
-                ret = cs.Compare(&cs2);
+                ret = ithi_test_class::CompareCS(&cs, &cs2);
             }
         }
     }
