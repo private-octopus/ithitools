@@ -39,7 +39,7 @@ static char const* pcap_test_output_nx = "..\\..\\data\\tiny-capture-nx.csv";
 #else
 static char const * pcap_input_test = "data/tiny-capture.pcap";
 static char const * pcap_test_output = "data/tiny-capture-tcp.csv";
-static char const* pcap_test_output = "data/tiny-capture-nx.csv";
+static char const* pcap_test_output_nx = "data/tiny-capture-nx.csv";
 #endif
 static char const* pcap_test_debug = "tiny-capture-out.csv";
 static char const* pcap_test_debug_nx = "tiny-capture-nx.csv";
