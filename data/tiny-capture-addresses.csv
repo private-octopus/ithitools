@@ -1,4 +1,4 @@
-Address, TLD, is_nx, min_delay, count
+Address, TLD, name_type, min_delay, count
 223.196.88.27,"ACCOUNTANT",tld,-1,1
 223.196.88.27,"",tld,-1,1
 222.246.129.94,"COM",tld,-1,1

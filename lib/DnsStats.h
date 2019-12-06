@@ -206,7 +206,7 @@ public:
     size_t name_len;
     uint8_t* name;
     uint64_t count;
-    int is_nx;
+    DnsStatsLeakType leakType;
 };
 
 class DnssecPrefixEntry {
