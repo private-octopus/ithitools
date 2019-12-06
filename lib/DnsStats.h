@@ -128,28 +128,22 @@ enum DnsStatsFlags
     dnsStateFlagCountUnderlinedNames = 8,
     dnsStateFlagCountPacketSizes = 16,
     dnsStateFlagListTldUsed = 32,
-    dnsStateFlagReportResolverIPAddress = 64,
-    dnsStateFlagListErroneousNames = 128,
-    dnsStateFlagIncludeTcpRecords = 256
+    dnsStateFlagIncludeTcpRecords = 64
 };
 
-
-#ifdef PRIVACY_CONSCIOUS
 enum DnsStatsLeakType
 {
     dnsLeakNoLeak = 0,
+    dnsLeakRoot,
     dnsLeakBinary,
     dnsLeakBadSyntax,
     dnsLeakNumeric,
-    dnsLeakIpv4,
     dnsLeakRfc6771,
     dnsLeakFrequent,
-    dnsLeakSinglePart,
-    dnsLeakMultiPart,
-    dnsLeakSinglePartDGA,
-    dnsLeakMultiPartDGA
+    dnsLeakDGA,
+    dnsLeakJumbo,
+    dnsLeakOther
 };
-#endif
 
 class DnsHashEntry {
 public:
@@ -197,6 +191,26 @@ public:
     DnsPrefixClass dnsPrefixClass;
 };
 
+class DnsNameEntry {
+public:
+    DnsNameEntry();
+    ~DnsNameEntry();
+
+    bool IsSameKey(DnsNameEntry* key);
+    uint32_t Hash();
+    DnsNameEntry* CreateCopy();
+    void Add(DnsNameEntry* key);
+
+    DnsNameEntry* HashNext;
+
+    uint32_t hash;
+    size_t name_len;
+    uint8_t* name;
+    uint64_t count;
+    int is_nx;
+    DnsStatsLeakType leakType;
+};
+
 class DnssecPrefixEntry {
 public:
     DnssecPrefixEntry();
@@ -238,7 +252,7 @@ public:
 class TldAddressAsKey
 {
 public:
-    TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len, my_bpftimeval ts);
+    TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len, my_bpftimeval ts, int is_nx, DnsStatsLeakType leakType);
     ~TldAddressAsKey();
 
     bool IsSameKey(TldAddressAsKey* key);
@@ -259,6 +273,8 @@ public:
     my_bpftimeval ts;
     my_bpftimeval ts_init;
     int64_t tld_min_delay;
+    int is_nx;
+    DnsStatsLeakType leakType;
 };
 
 class DnsStats
@@ -284,6 +300,8 @@ public:
     BinHash<DnssecPrefixEntry> dnssecPrefixTable;
     BinHash<StatsByIP> statsByIp;
 
+    BinHash<DnsNameEntry> nameList;
+
     /* For the plug in */
     void SubmitPacket(uint8_t * packet, uint32_t length,
         uint8_t * source_addr, size_t source_addr_length,
@@ -306,6 +324,7 @@ public:
     int64_t duration_usec;
     uint64_t volume_53only;
     bool enable_frequent_address_filtering;
+    bool capture_cache_ratio_nx_domain;
     uint32_t target_number_dns_packets;
     uint32_t frequent_address_max_count;
     uint32_t max_tld_leakage_count; 
@@ -327,6 +346,8 @@ public:
     uint8_t * edns_options;
     uint32_t edns_options_length;
     bool is_qname_minimized;
+    char const* address_report;
+    char const* name_report;
 
     static bool IsValidTldSyntax(uint8_t * tld, size_t length);
     static bool IsInSortedList(const char ** list, size_t nb_list, uint8_t * tld, size_t length);
@@ -387,6 +408,9 @@ public:
     static bool GetTLD(uint8_t * packet, uint32_t length, uint32_t start, uint32_t *offset, uint32_t * previous_offset, int * nb_name_parts);
 
     static int64_t DeltaUsec(long tv_sec, long tv_usec, long tv_sec_start, long tv_usec_start);
+
+    static char const* LeakTypeName(DnsStatsLeakType leakType);
+
 private:
     bool LoadPcapFile(char const * fileName);
 
@@ -443,6 +467,7 @@ private:
     void ExportStringUsage();
     void ExportSecondLeaked();
     void ExportQueryUsage();
+    void ExportNameReport();
 
     void LoadRegisteredTLD_from_memory();
 

@@ -60,11 +60,12 @@ static char const * libithicap_out_file = default_csv_file;
 static char const * libithicap_allowed = NULL;
 static char const * libithicap_banned = NULL;
 static int libithicap_nb_names_in_m4 = -1;
+static bool libithicap_compute_nx_domain_cache = false;
 static bool libithicap_enable_filtering = false;
 static bool libithicap_enable_tld_list = false;
 #ifdef PRIVACY_CONSCIOUS
-static bool libithicap_enable_ip_address_report = false;
-static bool libithicap_enable_erroneous_name_list = false;
+char const* libithicap_address_list = NULL;
+char const* libithicap_name_list = NULL;
 #endif
 
 static DnsStats* libithicap_stats = NULL;
@@ -91,15 +92,15 @@ extern "C"
         fprintf(stderr, "                     excessive traffic filtering mechanism.\n");
         fprintf(stderr, "  -x res-addr.txt	  excluded list of resolver addresses. Traffic to or from\n");
         fprintf(stderr, "                     these addresses will be ignored when extracting traffic.\n");
+        fprintf(stderr, "  -e                 compute ratio of non-cached NX-Domain queries.\n");
         fprintf(stderr, "  -f	              Filter out address sources that generate too much traffic.\n");
         fprintf(stderr, "  -n number	      Number of strings in the list of leaking domains(M332).\n");
         fprintf(stderr, "  -T                 Capture a list of TLD found in user queries.\n");
         fprintf(stderr, "  -t tld-file.txt    Text file containing a list of registered TLD, one per line.\n");
         fprintf(stderr, "  -u tld-file.txt	  Text file containing special usage TLD (RFC6761).\n");
 #ifdef PRIVACY_CONSCIOUS
-        fprintf(stderr, "  -A                 List all IP addresses and their usage in the report.\n");
-        fprintf(stderr, "  -C                 Collect traffic statistics per TLD.\n");
-        fprintf(stderr, "  -E                 List all erroneous DNS names and their usage in the report.\n");
+        fprintf(stderr, "  -A addr_list.txt   List all IP addresses and their usage in specified file.\n");
+        fprintf(stderr, "  -E name_list.txt   List all erroneous DNS names and their usage in specified file.\n");
         fprintf(stderr, "                     Options A and E are rather slow, and have privacy issues.\n");
         fprintf(stderr, "                     No such traces enabled by default.\n");
 #endif
@@ -114,7 +115,7 @@ extern "C"
         int opt;
         int exit_code = 0;
 
-        while (exit_code == 0 && (opt = getopt(*argc, *argv, "o:r:a:x:n:t:u:hfACET")) != -1)
+        while (exit_code == 0 && (opt = getopt(*argc, *argv, "o:r:a:x:n:t:u:A:E:hefT")) != -1)
         {
             switch (opt)
             {
@@ -145,16 +146,19 @@ extern "C"
                 }
                 break;
             }
+            case 'e':
+                libithicap_compute_nx_domain_cache = true;
+                break;
             case 'f':
                 libithicap_enable_filtering = true;
                 break;
 
 #ifdef PRIVACY_CONSCIOUS
             case 'A':
-                libithicap_enable_ip_address_report = true;
+                libithicap_address_list = optarg;
                 break;
             case 'E':
-                libithicap_enable_erroneous_name_list = true;
+                libithicap_name_list = optarg;
                 break;
 #endif
             case 'T':
@@ -207,6 +211,7 @@ extern "C"
                 libithicap_stats->max_tld_leakage_count = (uint32_t)libithicap_nb_names_in_m4;
             }
 
+            libithicap_stats->capture_cache_ratio_nx_domain = libithicap_compute_nx_domain_cache;
             libithicap_stats->enable_frequent_address_filtering = libithicap_enable_filtering;
 
             if (libithicap_enable_tld_list)
@@ -216,14 +221,14 @@ extern "C"
             }
 
 #ifdef PRIVACY_CONSCIOUS
-            if (libithicap_enable_ip_address_report)
+            if (libithicap_address_list != NULL)
             {
-                libithicap_stats->dnsstat_flags |= dnsStateFlagReportResolverIPAddress;
+                libithicap_stats->address_report = libithicap_address_list;
             }
 
-            if (libithicap_enable_erroneous_name_list)
+            if (libithicap_name_list != NULL)
             {
-                libithicap_stats->dnsstat_flags |= dnsStateFlagListErroneousNames;
+                libithicap_stats->name_report = libithicap_name_list;
             }
 #endif
         }

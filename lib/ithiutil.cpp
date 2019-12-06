@@ -60,3 +60,52 @@ FILE* ithi_file_open(char const* file_name, char const* flags)
     return ithi_file_open_ex(file_name, flags, NULL);
 }
 
+size_t ithi_copy_to_safe_text(char* text, size_t text_max, uint8_t * x_in, size_t l_in)
+{
+    size_t text_length = 0;
+    bool previous_was_space = true; /* Cannot have space at beginning */
+
+    /* escape any non printable character */
+    for (uint32_t i = 0; i < l_in && text_length + 1 < text_max; i++)
+    {
+        int x = x_in[i];
+        bool should_escape = false;
+
+        if (x > ' ' && x < 127 && x != '"' && x != ',' && x != '"' && x != '\''
+            && (x != '=' || i > 0))
+        {
+            previous_was_space = false;
+        }
+        else if (x == ' ' && !previous_was_space && i != l_in - 1)
+        {
+            /* Cannot have several spaces */
+            previous_was_space = true;
+        }
+        else
+        {
+            should_escape = true;
+        }
+
+        if (should_escape) {
+            if (text_length + 5 < text_max) {
+                text[text_length++] = '\\';
+                text[text_length++] = '0' + (x / 100);
+                text[text_length++] = '0' + (x % 100) / 10;
+                text[text_length++] = '0' + x % 10;
+            }
+            else {
+                text[text_length++] = '!';
+            }
+        }
+        else {
+            text[text_length++] = (char)x;
+        }
+    }
+
+    if (text_length < text_max) {
+        text[text_length] = 0;
+    }
+
+    return (text_length);
+}
+

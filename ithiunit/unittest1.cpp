@@ -296,5 +296,31 @@ namespace ithiunit
 
             Assert::AreEqual(ret, true);
         }
+
+        TEST_METHOD(CaptureNxCache)
+        {
+            CaptureNxCacheTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+#ifdef PRIVACY_CONSCIOUS
+        TEST_METHOD(CaptureAddresses)
+        {
+            CaptureAddressesTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(CaptureNames)
+        {
+            CaptureNamesTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+#endif
 	};
 }

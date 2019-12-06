@@ -4,6 +4,8 @@
 #include <string.h>
 #include <string.h>
 
+#include "CaptureSummary.h"
+
 #include "hashtest.h"
 #include "testRfc6761.h"
 #include "LoadTest.h"
@@ -36,6 +38,11 @@ enum test_list_enum {
     test_enum_Merge,
     test_enum_Merge_List,
     test_enum_Capture,
+    test_enum_CaptureNxCache,
+#ifdef PRIVACY_CONSCIOUS
+    test_enum_Capture_Addresses,
+    test_enum_Capture_Names,
+#endif
     test_enum_Metric,
     test_enum_MetricDate,
     test_enum_MetricCaptureFile,
@@ -95,6 +102,14 @@ char const * ithi_test_class::GetTestName(int number)
         return("merge_list");
     case test_enum_Capture:
         return("capture");
+    case test_enum_CaptureNxCache:
+        return("CaptureNxCache");
+#ifdef PRIVACY_CONSCIOUS
+    case test_enum_Capture_Addresses:
+        return("CaptureAddresses");
+    case test_enum_Capture_Names:
+        return("CaptureNames");
+#endif
     case test_enum_Metric:
         return("metric");
     case test_enum_MetricDate:
@@ -193,6 +208,17 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
     case test_enum_Capture:
         test = new CaptureTest();
         break;
+    case test_enum_CaptureNxCache:
+        test = new CaptureNxCacheTest();
+        break;
+#ifdef PRIVACY_CONSCIOUS
+    case test_enum_Capture_Addresses:
+        test = new CaptureAddressesTest();
+        break;
+    case test_enum_Capture_Names:
+        test = new CaptureNamesTest();
+        break;
+#endif
     case test_enum_Metric:
         test = new MetricTest();
         break;
@@ -274,6 +300,85 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
 
     return test;
 }
+
+#if 0
+bool ithi_test_class::CaptureLineIsSameKey(struct _capture_line* x, struct _capture_line* y)
+{
+    bool ret = false;
+    int cmp;
+
+    cmp = CaptureSummary::compare_string(x->registry_name, y->registry_name);
+
+    if (cmp != 0)
+    {
+        ret = false;
+    }
+    else if (x->key_type != y->key_type)
+    {
+        ret = false;
+    }
+    else
+    {
+        if (x->key_type == 0)
+        {
+            ret = (x->key_number == y->key_number);
+        }
+        else
+        {
+            cmp = compare_string(x->key_value, y->key_value);
+
+            ret = cmp == 0;
+        }
+    }
+
+    return ret;
+}
+#endif
+
+bool ithi_test_class::CompareCS(CaptureSummary* x, CaptureSummary * y)
+{
+    bool ret = true;
+    size_t min_size = (x->Size() < y->Size())?x->Size():y->Size();
+
+    for (size_t i = 0; ret && i < min_size; i++)
+    {
+        if (CaptureSummary::compare_string(x->summary[i]->registry_name, y->summary[i]->registry_name) != 0) {
+            TEST_LOG("Summary %d differ, name = %s vs %s\n", i, x->summary[i]->registry_name, y->summary[i]->registry_name);
+            ret = false;
+        }
+        else if (x->summary[i]->key_type != y->summary[i]->key_type)
+        {
+            TEST_LOG("Summary %d differ, key type = %d vs %d\n", i, x->summary[i]->key_type, y->summary[i]->key_type);
+            ret = false;
+        }
+        else if (x->summary[i]->key_type == 0 && x->summary[i]->key_number != y->summary[i]->key_number) {
+            TEST_LOG("Summary %d differ, key = %d vs %d\n", i, x->summary[i]->key_number, y->summary[i]->key_number);
+            ret = false;
+        }
+        else if (x->summary[i]->key_type == 0 && CaptureSummary::compare_string(x->summary[i]->key_value, y->summary[i]->key_value) != 0) {
+            TEST_LOG("Summary %d differ, key = %s vs %s\n", i, (char const*)x->summary[i]->key_value, (char const*)y->summary[i]->key_value);
+            ret = false;
+        }
+        else if (x->summary[i]->count != y->summary[i]->count)
+        {
+            TEST_LOG("Summary %d differ, count = %d vs %d\n", i, x->summary[i], y->summary[i]);
+            ret = false;
+        }
+    }
+
+    if (x->Size() > min_size) {
+        TEST_LOG("%d extra keys\n", (int)(x->Size() - min_size));
+        ret = false;
+    }
+
+    if (y->Size() > min_size) {
+        TEST_LOG("%d missing keys\n", (int)(y->Size() - min_size));
+        ret = false;
+    }
+
+    return ret;
+} 
+
 
 static FILE * F_log = NULL;
 

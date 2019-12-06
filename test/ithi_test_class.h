@@ -34,6 +34,8 @@ void SET_LOG_FILE(FILE* f_log);
 FILE*  GET_LOG_FILE();
 void TEST_LOG(const char * fmt, ...);
 
+class CaptureSummary;
+
 class ithi_test_class
 {
 public:
@@ -47,8 +49,7 @@ public:
     static int GetTestNumberByName(const char * name);
     static ithi_test_class * TestByNumber(int number);
 
-    static void SetLog(FILE* F);
-    static FILE * GetLog();
+    static bool CompareCS(CaptureSummary* x, CaptureSummary* y);
 };
 
 

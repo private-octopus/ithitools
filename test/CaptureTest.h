@@ -38,4 +38,30 @@ public:
     bool DoTest() override;
 };
 
+class CaptureNxCacheTest : public ithi_test_class
+{
+public:
+    CaptureNxCacheTest();
+    ~CaptureNxCacheTest();
+    bool DoTest() override;
+};
+
+#ifdef PRIVACY_CONSCIOUS
+class CaptureNamesTest : public ithi_test_class
+{
+public:
+    CaptureNamesTest();
+    ~CaptureNamesTest();
+    bool DoTest() override;
+};
+
+class CaptureAddressesTest : public ithi_test_class
+{
+public:
+    CaptureAddressesTest();
+    ~CaptureAddressesTest();
+    bool DoTest() override;
+};
+#endif
+
 #endif /* CAPTURE_TEST_H */

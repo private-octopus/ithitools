@@ -54,6 +54,7 @@ private:
     std::vector<metric34_line_t> m33_2;
     std::vector<metric34_line_t> m33_3;
     double m33_4;
+    double m33_5;
     double m3_4_1; /* EDNS usage */
     std::vector<metric8_line_t> m3_4_2;
     double m3_5; /* DNS OK Option */
@@ -69,6 +70,7 @@ private:
     bool GetM33_2();
     void GetM33_3_pattern(int registry_id, char const * pattern_name);
     bool GetM33_3();
+    bool GetM33_5();
     bool GetM3_4();
     bool GetM3_5();
     bool GetM3_6();
