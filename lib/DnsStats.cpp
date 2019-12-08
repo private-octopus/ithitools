@@ -3941,7 +3941,7 @@ DnsNameEntry::DnsNameEntry():
     name(NULL),
     count(0),
     is_nx(0),
-    leakType(DnsStatsLeakType::dnsLeakNoLeak)
+    leakType(dnsLeakNoLeak)
 {
 }
 
