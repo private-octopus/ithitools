@@ -103,89 +103,20 @@ def find_min_slice_index(smooth):
         i += 1
     return i_min
 
-def save_smooth(orig, sum_v, smooth, average, day_time_avg, file_name):
+def save_smooth(orig, sum_v, smooth, average, day_time_avg, day_time_stdev, file_name):
     try:
         sum_file = codecs.open(file_name, "w", "UTF-8")
-        sum_file.write("orig, aligned, smoothed, day-average, average\n")
+        sum_file.write("orig, aligned, smoothed, day-average, average, stdev\n")
         i = 0
         while i < len(sum_v):
             sum_file.write(str(orig[i]) + ',' + str(sum_v[i]) + "," + str(smooth[i]) + "," +
-                          str(average[i]) + "," + str(day_time_avg[i]) + "\n")
+                          str(average[i]) + "," + str(day_time_avg[i]) + "," + str(day_time_stdev) + "\n")
             i += 1
         sum_file.close()
         return True
     except Exception:
         print("Cannot write <" + file_name + ">");
         return False
-
-def sin_vector(n, p):
-    vector = []
-    phi = math.pi * 2 * p
-    i = 0
-    while i < n:
-        alpha = (phi*i)/n
-        vector.append(math.sin(alpha))
-        i += 1
-    return vector
-
-def cos_vector(n, p):
-    vector = []
-    phi = math.pi * 2 * p
-    i = 0
-    while i < n:
-        alpha = (phi*i)/n
-        vector.append(math.sin(alpha))
-        i += 1
-    return vector
-
-def base_vectors(n, p):
-    base = []
-    unit = []
-    i = 0
-    while i < n:
-        unit.append(1.0)
-        i += 1
-    base.append(unit)
-    i = 1
-    while i <= p:
-        base.append(cos_vector(n, i))
-        base.append(sin_vector(n, i))
-        i += 1
-    return base
-
-def project(n, v, base):
-    coeff = []
-    i = 0
-    while i < len(base):
-        vector = base[i]
-        c = 0.0
-        j = 0
-        while j < n:
-            c += vector[j]*v[j]
-            j += 1
-        coeff.append(c)
-        i += 1
-    return coeff
-
-def predict(n, coeff, base):
-    r = []
-    i = 0
-    while i < n:
-        v = base[0]
-        r.append(coeff[0]*v[i])
-        i += 1
-    j = 1
-    while j < len(base):
-        v = base[j]
-        i = 0
-        while i < n:
-            r[i] += v[i]*coeff[j]
-            i += 1
-        j += 1
-    return r
-
-
-
 
 
 
@@ -226,6 +157,7 @@ print("Low i = " + str(i_min))
 
 nb_days = 0
 day_average = []
+day_time_x2 = 0.0
 while len(day_average) < len(sum_s):
     day_average.append(0.0)
 i = 0
@@ -243,6 +175,7 @@ while i < len(sum_s):
         i_night = len(sum_s) -1;
     while i <= i_night:
         day_tot += sum_s[i]
+        day_time_x2 += sum_s[i]*sum_s[i]
         day_nb += 1
         i += 1
     nb_days += 1
@@ -255,7 +188,6 @@ while i < len(sum_s):
 
 print("Found " + str(nb_days) + " days.")
 
-
 day_time_avg = []
 day_time_tot = 0.0
 nb_day_time_tot = 0
@@ -263,7 +195,11 @@ for x in day_average:
     if x > 0.0:
         nb_day_time_tot += 1
         day_time_tot += x
+
 day_time_average = day_time_tot / nb_day_time_tot
+day_time_variance = day_time_x2 / nb_day_time_tot - day_time_average*day_time_average
+day_time_stdev = math.sqrt(day_time_variance)
+
 i = 0
 while i < len(day_average):
     if day_average[i] == 0.0:
@@ -272,9 +208,7 @@ while i < len(day_average):
         day_time_avg.append(day_time_average)
     i += 1
 
-
-
-if not save_smooth(orig, sum_s, smooth, day_average, day_time_avg, sys.argv[2]):
+if not save_smooth(orig, sum_s, smooth, day_average, day_time_avg, day_time_stdev, sys.argv[2]):
     exit(-1)
     
 
