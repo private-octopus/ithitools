@@ -10,6 +10,7 @@ from enum import Enum
 import copy
 import traceback
 import datetime
+import math
 import m3name
 import captures
 
@@ -302,6 +303,105 @@ def summary_title_line():
     s += "local,localhost,rfc6761,home,lan,internal,ip,localdomain,corp,mail,other_names,jumbo" 
     return s
 
+def hour_slice(hour):
+    slice = 0.0
+    try:
+        h_part = hour.split(':')
+        hours = int(h_part[0])
+        minutes = int(h_part[1])
+        seconds = int(h_part[2])
+        slice = seconds/300 + minutes/5 + hours*12
+    except Exception as e:
+        print("Cannot parse hour: " + hour + " Exception: " + str(e))
+    return slice
+
+def day_slice(day, hour):
+    slice = hour_slice(hour)
+    try:
+        d_part = day.split('-')
+        d = int(d_part[2])
+        slice += 24*12*(d - 1)
+    except Exception as e:
+        print("Cannot parse day: " + day + " Exception: " + str(e))
+    return slice
+
+def add_slice(day, hour, v, d, sum_v, sum_d):
+    slice = day_slice(day, hour)
+    i_slice = int(slice)
+    while i_slice >= len(sum_v):
+        sum_v.append(0.0)
+    while i_slice >= len(sum_d):
+        sum_d.append(0.0)
+    frac = slice - i_slice
+    if (i_slice > 0 and frac > 0.0):
+        d_v = frac*v
+        d_d = frac*d
+        sum_v[i_slice -1] += d_v
+        sum_d[i_slice-1] += d_d
+        v -= d_v
+        d -= d_d
+    sum_v[i_slice] += v
+    sum_d[i_slice] += d
+
+def smooth_curve(sum_v, l):
+    smooth = []
+    smoothed = 0.0
+    l1 = int(l/2)
+    l2 = l - l1 - 1
+    smoothed += sum_v[0]*(l1 + 1)
+    i = 0
+    while i < l2:
+        if i < len(sum_v):
+            smoothed += sum_v[i]
+        else:
+            smoothed += sum_v[len(sum_v) - 1]
+        i = i + 1
+    i = 0
+    while i < len(sum_v):
+        smooth.append(smoothed/l)
+        if i >= l1:
+            smoothed -= sum_v[i-l1]
+        else:
+            smoothed -= sum_v[0]
+        if i + l2 >= len(sum_v): 
+            smoothed += sum_v[len(sum_v) - 1]
+        else:
+            smoothed += sum_v[i+l2]
+        i += 1
+    return smooth
+
+def find_min_slice_index(smooth):
+    i = 0
+    i_min = 0
+    ave_min = smooth[0]
+    while i < 24*12:
+        n = 0
+        v = 0
+        while n < 31:
+            j = i + 24*12*n
+            if j >= len(smooth):
+                break
+            v += smooth[j]
+            n += 1
+        if n > 0:
+            ave = v / n
+            if ave < ave_min:
+                i_min = i
+                ave_min = ave
+        else:
+            print ("For i = " + str(i) + " n <= 0")
+        i += 1
+    return i_min
+
+def ithiwalk(file_list, path):
+    print(path)
+    for x in os.listdir(path):
+        y = join(path, x)
+        if isfile(y):
+            file_list.append(y)
+        else:
+            ithiwalk(file_list, y)
+
 class m3summary_line():
     default_address_id = "aa00"
     default_date = "2020-01-01"
@@ -576,9 +676,36 @@ class m3summary_line():
     def __ne__(self, other):
         return self.compare(other) != 0
 
+# Manage a list of capture, read them from files
+#
+# Most capture lists show a very marked dip during the night.
+# The find_midnight function reliably finds that dips as follow:
+#
+# 1- Create an "aligned" version of the traffic, with one entry per
+#    5 minute interval. Some of the original measurement intervals
+#    straddle two aligned intervals, in which case their load and
+#    duration is split proportionally between these two intervals.
+# 2- Normalize the load per interval to represent the 5 minute average
+# 3- Apply a low pass filter to get a smoothed version. This is computed
+#    as a 25 slice average centered on the target.
+# 4- Find the "slice per day" that provides the minimum load. Doing
+#    this on the smoothed version is much more reliable than operating
+#    on the raw data.
+#
+# Once midnight is found, we can compute statistics such as average,
+# stdev, etc. However, we compute them on the "day time" values, so
+# as to build more reliable estimations.
 class m3summary_list:
     def __init__(self):
         self.summary_list = []
+        self.midnight_index = -1
+        self.is_sorted = False
+        self.day_time_average = 0.0
+        self.day_time_stdev = 0.0
+        self.day_time_q3 = 0.0
+        self.day_time_iqd = 0.0
+        self.component_average = [ 0.0, 0.0, 0.0, 0.0, 0.0]
+        self.component_stdev = [ 0.0, 0.0, 0.0, 0.0, 0.0]
 
     def load_line(self, line):
         m3l = m3summary_line()
@@ -589,6 +716,8 @@ class m3summary_list:
 
     def load_file(self, file_name):
         try:
+            self.__init__()
+
             sum_file = codecs.open(file_name, "r", "UTF-8")
             nb_fail = 0
             for line in sum_file:
@@ -639,6 +768,86 @@ class m3summary_list:
             i += 1
         projected.append(p)
         return projected
+
+    def Sort(self):
+        if not self.is_sorted:
+            self.summary_list = sorted(self.summary_list)
+            is_sorted = True
+ 
+    def find_midnight_index(self):
+        if self.midnight_index < 0:
+            sum_transaction_per_slice = []
+            sum_duration_per_slice = []
+
+            for s3 in self.summary_list:
+                i_slice = int(day_slice(s3.date, s3.hour))
+                add_slice(s3.date, s3.hour, s3.nb_queries, s3.duration, sum_transaction_per_slice, sum_duration_per_slice)
+
+            i = 0
+            while i < len(sum_duration_per_slice):
+                if (sum_duration_per_slice[i] > 0 and sum_duration_per_slice[i] != 300):
+                    sum_transaction_per_slice[i] /= sum_duration_per_slice[i]
+                    sum_transaction_per_slice[i] *= 300
+                i += 1
+
+            smooth = smooth_curve(sum_transaction_per_slice,25)
+            i_min = find_min_slice_index(smooth)
+            self.midnight_index = i_min
+        return self.midnight_index
+
+    def compute_daytime_stats(self):
+        if self.day_time_average == 0:
+            self.Sort()
+            i_min = self.find_midnight_index()
+
+            day_time_tot = 0.0
+            day_time_x2 = 0.0
+            nb_day_time_tot = 0
+            day_time_v = []
+            tot_c = [ 0.0, 0.0, 0.0, 0.0, 0.0]
+            tot_c2 = [ 0.0, 0.0, 0.0, 0.0, 0.0]
+    
+            i = 0
+            i_night = i_min - 4*12
+            if i_night < 0:
+                i_night += 24*12
+            i_min = i_night - 16*12
+            if i < i_min:
+                i = i_min
+            while i < len(self.summary_list):
+                if i_night >= len(self.summary_list):
+                    i_night = len(self.summary_list) -1
+                while i <= i_night:
+                    x = self.summary_list[i].nb_queries
+                    day_time_v.append(x)
+                    day_time_tot += x
+                    day_time_x2 += x*x
+                    x_c = [ self.summary_list[i].nb_useful, self.summary_list[i].nb_useless, self.summary_list[i].dga  + \
+                        self.summary_list[i].jumbo, self.summary_list[i].nb_nx_others]
+                    i_c = 0
+                    while i_c < len(x_c):
+                        tot_c[i_c] += x_c[i_c]
+                        tot_c2[i_c] += x_c[i_c]*x_c[i_c]
+                        i_c += 1
+                    nb_day_time_tot += 1
+                    i += 1
+                i_night += 24*12
+                i = i_night - 16*12
+
+            self.day_time_average = day_time_tot / nb_day_time_tot
+            day_time_variance = day_time_x2 / nb_day_time_tot - self.day_time_average*self.day_time_average
+            self.day_time_stdev = math.sqrt(day_time_variance)
+            i_c = 0
+            while i_c < len(tot_c):
+                self.component_average[i_c] = tot_c[i_c]/nb_day_time_tot
+                v_c = tot_c2[i_c]/nb_day_time_tot - self.component_average[i_c]*self.component_average[i_c]
+                self.component_stdev[i_c] = math.sqrt(v_c)
+                i_c += 1
+            day_time_v_sorted = sorted(day_time_v)
+            i_q1 = int(len(day_time_v_sorted)/4)
+            i_q3 = 3*i_q1
+            self.day_time_q3 = day_time_v_sorted[i_q3]
+            self.day_time_iqd = self.day_time_q3  - day_time_v_sorted[i_q1]
 
 # self_test function
 
