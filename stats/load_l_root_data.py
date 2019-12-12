@@ -11,15 +11,6 @@ import m3summary
 import os
 from os.path import isfile, join
 
-def ithiwalk(file_list, path):
-    print(path)
-    for x in os.listdir(path):
-        y = join(path, x)
-        if isfile(y):
-            file_list.append(y)
-        else:
-            ithiwalk(file_list, y)
-
 def load_m3(file_name, sum_m3):
     m3sl = m3summary.m3summary_line()
     if m3sl.load_m3(file_name) != 0:
@@ -37,7 +28,7 @@ sum_m3 = codecs.open(name_sum_f3, "w", "UTF-8")
 sum_m3.write(m3summary.summary_title_line() + "\n")
 
 file_list = []
-ithiwalk(file_list,mypath)
+m3summary.ithiwalk(file_list,mypath)
 nb_loaded = 0
 for file in file_list:
     # If this is an M3 capture file, add it.
