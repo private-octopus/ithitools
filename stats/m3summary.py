@@ -13,6 +13,8 @@ import datetime
 import math
 import m3name
 import captures
+import os
+from os.path import isfile, join
 
 country_list = [["Andorra","AD","AND"],
 ["United Arab Emirates","AE","ARE"],

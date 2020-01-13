@@ -36,6 +36,7 @@ class capture_line:
                     self.count = int(cells[3].strip())
         except Exception as e:
             print("Fail: " + str(e))
+            print("error parsing: <" + m_line + ">")
             ret = -1
         return ret
 
