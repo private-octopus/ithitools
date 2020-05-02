@@ -273,7 +273,7 @@ bool MetricDateTest::DoTest()
     corrected_time_jan_31_2017 += 1; /* One second after midnight */
     corrected_time_jan_31_2017 -= bias; /* Set to local time value of target time */
 
-    ret = met.SetDefaultDate(metric_date_time_t_jan_31_2017);
+    ret = met.SetDefaultDate(corrected_time_jan_31_2017);
 
     if (ret)
     {
