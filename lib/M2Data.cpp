@@ -47,7 +47,7 @@ M2Data::M2Data()
     year(0),
     month(0),
     day(0),
-    M2Type(Unknown)
+    M2Type(UnknownM2Type)
 {
 }
 
@@ -104,7 +104,7 @@ bool M2Data::Load(char const * monthly_csv_file_name)
     M2DataLine_t line;
     char buffer[512];
 
-    if (M2Type == Unknown) {
+    if (M2Type == UnknownM2Type) {
         parse_file_name(monthly_csv_file_name);
     }
 
@@ -355,7 +355,7 @@ bool M2Data::parse_file_name(char const * monthly_csv_file_name)
             }
         }
 
-        if (M2Type == Unknown)
+        if (M2Type == UnknownM2Type)
         {
             ret = false;
         }

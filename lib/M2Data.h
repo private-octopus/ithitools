@@ -27,7 +27,7 @@
 #include "ComputeMetric.h"
 
 typedef enum M2DataType {
-    Unknown = 0,
+    UnknownM2Type = 0,
     TLD,
     Registrar,
     TLD_old

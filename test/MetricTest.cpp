@@ -21,6 +21,7 @@
 
 #ifdef _WINDOWS
 #include <direct.h>
+#include <windows.h>
 #else
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -258,6 +259,19 @@ bool MetricDateTest::DoTest()
 {
     ithimetrics met;
     bool ret;
+    long bias;
+    time_t corrected_time_jan_31_2017 = metric_date_time_t_jan_31_2017;
+#ifdef _WINDOWS
+    TIME_ZONE_INFORMATION wtz;
+    memset(&wtz, 0, sizeof(wtz));
+    (void)GetTimeZoneInformation(&wtz);
+    bias = wtz.Bias*60;
+#else
+    (void)tzset();
+    bias = timezone;
+#endif
+    corrected_time_jan_31_2017 += 1; /* One second after midnight */
+    corrected_time_jan_31_2017 -= bias; /* Set to local time value of target time */
 
     ret = met.SetDefaultDate(metric_date_time_t_jan_31_2017);
 
