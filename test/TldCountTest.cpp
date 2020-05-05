@@ -344,6 +344,13 @@ static char * random_tld(char n[RANDOM_TLD_LENGTH + 1])
     return n;
 }
 
+typedef struct st_tld_error_report_t {
+    char const* tld;
+    int rank;
+    int expected_count;
+    int actual_count;
+} tld_error_report_t;
+
 bool TldCountTest::DoTest()
 {
     LruHash<TldAsKey> tldStringUsage;
@@ -362,6 +369,9 @@ bool TldCountTest::DoTest()
     uint64_t hashed_total = 0;
     bool ret = true;
     size_t * rand_table = NULL;
+    std::vector< tld_error_report_t> insert_report;
+    std::vector< tld_error_report_t> extract_report;
+    std::vector< tld_error_report_t> final_report;
 
     fill_initial_table(&hashTable);
 
@@ -386,7 +396,8 @@ bool TldCountTest::DoTest()
     if (rand_table == NULL) {
         ret = false;
         TEST_LOG("Tld count test, cannot allocate rand_table[%d]\n", total_keys);
-    } else {
+    }
+    else {
         uint64_t table_rank = 0;
         /* Build a list of ID with desired size and repetition */
         for (size_t i = 0; i <= nbTargetNames; i++) {
@@ -411,9 +422,9 @@ bool TldCountTest::DoTest()
         {
             bool stored = false;
             char rand_name[RANDOM_TLD_LENGTH + 1];
-            char const * tld = (rand_table[i] == 0)? random_tld(rand_name): TargetNames[rand_table[i]-1];
-            TldAsKey key((uint8_t *)tld, strlen(tld));
-            TldAsKey * inserted = NULL;
+            char const* tld = (rand_table[i] == 0) ? random_tld(rand_name) : TargetNames[rand_table[i] - 1];
+            TldAsKey key((uint8_t*)tld, strlen(tld));
+            TldAsKey* inserted = NULL;
             DnsHashEntry counter_entry;
 
             counter_entry.registry_id = REGISTRY_DNS_TLD_Usage_Count;
@@ -426,7 +437,7 @@ bool TldCountTest::DoTest()
 
             if (tldStringUsage.GetCount() >= max_hash_size)
             {
-                TldAsKey * removed = tldStringUsage.RemoveLRU();
+                TldAsKey* removed = tldStringUsage.RemoveLRU();
                 if (removed != NULL)
                 {
                     dropped_keys += removed->count;
@@ -435,15 +446,19 @@ bool TldCountTest::DoTest()
             }
             inserted = tldStringUsage.InsertOrAdd(&key, true, &stored);
             if (inserted != NULL && rand_table[i] > 0 && inserted->count > count_per_string[rand_table[i]]) {
-                TEST_LOG("TLD %s, count %d instead of %d\n",
-                    TargetNames[rand_table[i] - 1], (int)inserted->count, (int)count_per_string[rand_table[i]]);
+                tld_error_report_t i_r;
+                i_r.tld = TargetNames[rand_table[i] - 1];
+                i_r.rank = 0;
+                i_r.actual_count = (int)inserted->count;
+                i_r.expected_count = (int)count_per_string[rand_table[i]];
+                insert_report.push_back(i_r);
             }
         }
 
         /* Simulate extraction */
         if (tldStringUsage.GetCount() > 0) {
-            TldAsKey *tld_entry;
-            std::vector<TldAsKey *> lines(tldStringUsage.GetCount());
+            TldAsKey* tld_entry;
+            std::vector<TldAsKey*> lines(tldStringUsage.GetCount());
             int vector_index = 0;
             uint32_t export_count = 0;
 
@@ -458,8 +473,13 @@ bool TldCountTest::DoTest()
                     if (tld_index >= 0) {
                         if (((uint32_t)tld_index) < max_tld_leakage_count &&
                             count_per_string[tld_index + 1] != tld_entry->count) {
-                            TEST_LOG("TLD %s, count %d instead of %d\n",
-                                TargetNames[tld_index], (int)tld_entry->count, (int)count_per_string[tld_index + 1]);
+                            tld_error_report_t e_r;
+                            e_r.tld = TargetNames[tld_index];
+                            e_r.rank = 0;
+                            e_r.actual_count = (int)tld_entry->count;
+                            e_r.expected_count = (int)count_per_string[tld_index + 1];
+                            extract_report.push_back(e_r);
+
                             if (tld_entry->count > count_per_string[tld_index + 1]) {
                                 ret = false;
                             }
@@ -494,19 +514,32 @@ bool TldCountTest::DoTest()
 
                     (void)hashTable.InsertOrAdd(&key, true, &stored);
 
+
+                    tld_error_report_t f_r;
+                    bool add_report = false;
+                    f_r.tld = "???";
+                    f_r.rank = (int)i;
+                    f_r.actual_count = (int)lines[i]->count;
+                    f_r.expected_count = 0;
+
                     if (tld_index < 0) {
                         if (lines[i]->count > 1) {
-                            TEST_LOG("rank %d, random name, length %d, count %d\n",
-                                (int)i, lines[i]->tld_len, (int)lines[i]->count);
+                            add_report = true;
                         }
                     } else {
+                        f_r.tld = TargetNames[tld_index];
+                        f_r.expected_count = (int) count_per_string[tld_index + 1];
+
                         if (count_per_string[tld_index + 1] != lines[i]->count) {
-                            TEST_LOG("rank %d, %s, count %d instead of %d\n",
-                                (int)i, TargetNames[tld_index], (int)lines[i]->count, (int)count_per_string[tld_index + 1]);
+                            add_report = true;
                             if (lines[i]->count > count_per_string[tld_index + 1]) {
                                 ret = false;
                             }
                         }
+                    }
+
+                    if (add_report ) {
+                        final_report.push_back(f_r);
                     }
                 }
                 else
@@ -566,6 +599,26 @@ bool TldCountTest::DoTest()
 
         delete[] rand_table;
     }
+
+    if (!ret) {
+        /* In order to not create false impressions, we only list the suspected issues
+         * if the test failed. */
+        for (size_t i = 0; i < insert_report.size(); i++) {
+            TEST_LOG("TLD %s, inserted count %d instead of %d\n",
+                insert_report[i].tld, insert_report[i].actual_count, insert_report[i].expected_count);
+        }
+
+        for (size_t i = 0; i < extract_report.size(); i++) {
+            TEST_LOG("TLD %s, extracted count %d instead of %d\n",
+                extract_report[i].tld, extract_report[i].actual_count, extract_report[i].expected_count);
+        }
+
+        for (size_t i = 0; i < final_report.size(); i++) {
+            TEST_LOG("Rank %d, %s, final count %d instead of %d\n",
+                final_report[i].rank, final_report[i].tld, final_report[i].actual_count, final_report[i].expected_count);
+        }
+    }
+
     return ret;
 }
 
