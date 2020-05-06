@@ -25,7 +25,11 @@
 #include <stdio.h>
 #include <stdint.h>
 
+FILE* ithi_file_open_ex(char const* file_name, char const* flags, int* last_err);
+
 FILE* ithi_file_open(char const* file_name, char const* flags);
+
+FILE* ithi_reopen_stdin(int* last_err);
 
 size_t ithi_copy_to_safe_text(char* text, size_t text_max, uint8_t* x_in, size_t l_in);
 

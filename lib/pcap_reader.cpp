@@ -18,10 +18,7 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include <string.h>
-#ifdef _WINDOWS
-#include <fcntl.h>
-#include <io.h>
-#endif
+#include "ithiutil.h"
 #include "pcap_reader.h"
 
 pcap_reader::pcap_reader()
@@ -76,41 +73,26 @@ bool pcap_reader::Open(char const * f_name, char * f_extract_name)
     }
     else
     {
-#ifdef _WINDOWS
-        errno_t err = 0;
-        if (strcmp(f_name, "-") == 0) {
-            F_pcap = stdin;
-            if (_setmode(_fileno(F_pcap), _O_BINARY) == -1) {
-                err = -1;
-            }
-        }
-        else {
-            err = fopen_s(&F_pcap, f_name, "rb");
-        }
-        errno_t err2 = (f_extract_name == NULL) ? 0 :
-            fopen_s(&F_extract, f_extract_name, "wb");
-#else    
         int err = 0;
 
         if (strcmp(f_name, "-") == 0) {
-            F_pcap = freopen(NULL, "rb", stdin);
+            F_pcap = ithi_reopen_stdin(&err);
         }
         else {
-            F_pcap = fopen(f_name, "rb");
+            F_pcap = ithi_file_open_ex(f_name, "rb", &err);
         }
-        err = (F_pcap == NULL) ? -1 : 0;
-
-        if (err != 0 && f_extract_name != NULL)
-        {
-            F_extract = fopen(f_extract_name, "wb");
-            err = (F_extract == NULL) ? -1 : 0;
-        }
-#endif
 
         if (err != 0 || F_pcap == NULL)
         {
             ret = false;
             printf("Error: %d (0x%x) for %s\n", err, err, f_name);
+        } else if (f_extract_name != NULL) {
+            F_extract = ithi_file_open_ex(f_extract_name, "wb", &err);
+            if (err != 0 || F_pcap == NULL)
+            {
+                ret = false;
+                printf("Error: %d (0x%x) for %s\n", err, err, f_extract_name);
+            }
         }
 
         if (ret)
