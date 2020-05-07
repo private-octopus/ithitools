@@ -82,6 +82,63 @@ FILE* ithi_reopen_stdin(int* last_err)
     return F;
 }
 
+FILE* ithi_pipe_open(char const* command, char const* flags, int* last_err)
+{
+    FILE* F;
+
+#ifdef _WINDOWS
+    F = _popen(command, flags);
+    if (F == NULL) {
+        *last_err = -1;
+    }
+#else
+    F = popen(command, flags);
+    if (F == NULL && last_err != NULL) {
+        *last_err = errno;
+    }
+#endif
+
+    return F;
+}
+
+FILE* ithi_gzip_compress_open(char const* file_name, int* last_err)
+{
+    FILE * F = NULL;
+    char const* gzip_command = NULL;
+    char command[512];
+    int n_char = 0;
+
+#ifdef _WINDOWS
+    /* Running on windows requires that 7z.exe is installed */
+    gzip_command = "7z.exe -si -so -an -tgzip a";
+#else
+    gzip_command = "gzip"
+#endif
+
+#ifdef _WINDOWS
+    n_char = sprintf_s(command, sizeof(command), "%s >%s.gz", gzip_command, file_name);
+#else 
+    n_char = sprintf(command, "%s >%s.gz", gzip_command, file_name);
+#endif
+    if (n_char <= 0) {
+        *last_err = -1;
+    }
+    else {
+        F = ithi_pipe_open(command, "wb", last_err);
+    }
+
+    return F;
+}
+
+void ithi_pipe_close(FILE* F)
+{
+#ifdef _WINDOWS
+    (void)_pclose(F);
+#else
+    (void)pclose(F);
+#endif
+}
+
 size_t ithi_copy_to_safe_text(char* text, size_t text_max, uint8_t * x_in, size_t l_in)
 {
     size_t text_length = 0;

@@ -31,6 +31,12 @@ FILE* ithi_file_open(char const* file_name, char const* flags);
 
 FILE* ithi_reopen_stdin(int* last_err);
 
+FILE* ithi_pipe_open(char const* command, char const* flags, int* last_err);
+
+FILE* ithi_gzip_compress_open(char const* file_name, int* last_err);
+
+void ithi_pipe_close(FILE* F);
+
 size_t ithi_copy_to_safe_text(char* text, size_t text_max, uint8_t* x_in, size_t l_in);
 
 #endif

@@ -55,6 +55,16 @@ public:
     bool DoTest() override;
 };
 
+class CompressedNamesTest : public ithi_test_class
+{
+public:
+    CompressedNamesTest();
+    ~CompressedNamesTest();
+    bool DoTest() override;
+    static bool RemoveGz(char const* file_name);
+    static bool Decompress(char const* file_name);
+};
+
 class CaptureAddressesTest : public ithi_test_class
 {
 public:
@@ -62,6 +72,15 @@ public:
     ~CaptureAddressesTest();
     bool DoTest() override;
 };
+
+class CompressedAddressesTest : public ithi_test_class
+{
+public:
+    CompressedAddressesTest();
+    ~CompressedAddressesTest();
+    bool DoTest() override;
+};
+
 #endif
 
 #endif /* CAPTURE_TEST_H */
