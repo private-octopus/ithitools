@@ -112,7 +112,7 @@ FILE* ithi_gzip_compress_open(char const* file_name, int* last_err)
     /* Running on windows requires that 7z.exe is installed */
     gzip_command = "7z.exe -si -so -an -tgzip a";
 #else
-    gzip_command = "gzip"
+    gzip_command = "gzip";
 #endif
 
 #ifdef _WINDOWS
