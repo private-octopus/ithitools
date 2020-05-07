@@ -62,7 +62,8 @@ DnsStats::DnsStats()
     edns_options_length(0),
     is_qname_minimized(false),
     address_report(NULL),
-    name_report(NULL)
+    name_report(NULL),
+    compress_name_and_address_reports(false)
 {
 }
 
@@ -2870,11 +2871,28 @@ void DnsStats::ExportQueryUsage()
     FILE* F = NULL;
     
     if (address_report) {
+#ifdef PRIVACY_CONSCIOUS
+        if (compress_name_and_address_reports) {
+            int err = 0;
+            F = ithi_gzip_compress_open(address_report, &err);
+            if (F == NULL || err != 0) {
+                fprintf(stderr, "Cannot open file <%s> for compression, err = %d\n", address_report, err);
+            }
+        }
+        else {
+            F = ithi_file_open(address_report, "w");
+            if (F == NULL) {
+                fprintf(stderr, "Cannot open <%s> for writing\n", address_report);
+            }
+        }
+#else
         F = ithi_file_open(address_report, "w");
         if (F == NULL) {
             fprintf(stderr, "Cannot open <%s> for writing\n", address_report);
         }
-        else {
+#endif
+
+        if (F != NULL) {
             fprintf(F, "Address, TLD, nx_domain, name_type, min_delay, count\n");
         }
     }
@@ -2995,7 +3013,16 @@ void DnsStats::ExportQueryUsage()
     }
 
     if (F != NULL) {
+#ifdef PRIVACY_CONSCIOUS
+        if (compress_name_and_address_reports) {
+            ithi_pipe_close(F);
+        }
+        else {
+            (void)fclose(F);
+        }
+#else
         (void)fclose(F);
+#endif
     }
 
     SubmitRegistryNumberAndCount(REGISTRY_DNS_UsefulQueries, 1, total_no_error_entries);
@@ -3015,15 +3042,27 @@ void DnsStats::ExportQueryUsage()
     queryUsage.Clear();
 }
 
+#ifdef PRIVACY_CONSCIOUS
 void DnsStats::ExportNameReport()
 {
     DnsNameEntry* name_entry;
-    FILE* F = ithi_file_open(name_report, "w");
-
-    if (F == NULL) {
-        fprintf(stderr, "Cannot open file <%s> for writing\n", name_report);
+    FILE* F = NULL;
+    
+    if (compress_name_and_address_reports) {
+        int err = 0;
+        F = ithi_gzip_compress_open(name_report, &err);
+        if (F == NULL || err != 0) {
+            fprintf(stderr, "Cannot open file <%s> for compression, err = %d\n", name_report, err);
+        }
     }
     else {
+        F = ithi_file_open(name_report, "w");
+        if (F == NULL) {
+            fprintf(stderr, "Cannot open file <%s> for writing\n", name_report);
+        }
+    }
+
+    if (F != NULL) {
         bool ret = true;
 
         if (fprintf(F, "Name, nx_domain, name_type, count\n") <= 0) {
@@ -3053,6 +3092,7 @@ void DnsStats::ExportNameReport()
         (void)fclose(F);
     }
 }
+#endif
 
 bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
 {

@@ -348,6 +348,7 @@ public:
     bool is_qname_minimized;
     char const* address_report;
     char const* name_report;
+    bool compress_name_and_address_reports;
 
     static bool IsValidTldSyntax(uint8_t * tld, size_t length);
     static bool IsInSortedList(const char ** list, size_t nb_list, uint8_t * tld, size_t length);
@@ -467,7 +468,9 @@ private:
     void ExportStringUsage();
     void ExportSecondLeaked();
     void ExportQueryUsage();
+#ifdef PRIVACY_CONSCIOUS
     void ExportNameReport();
+#endif
 
     void LoadRegisteredTLD_from_memory();
 

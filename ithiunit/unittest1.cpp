@@ -321,6 +321,22 @@ namespace ithiunit
 
             Assert::AreEqual(ret, true);
         }
+
+        TEST_METHOD(CompressedAddresses)
+        {
+            CompressedAddressesTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(CompressedNames)
+        {
+            CompressedNamesTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
 #endif
 	};
 }

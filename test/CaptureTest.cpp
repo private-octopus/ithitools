@@ -52,15 +52,18 @@ static char const* pcap_addresses_output = "..\\data\\tiny-capture-addresses.csv
 #else
 static char const* pcap_names_output = "..\\..\\data\\tiny-capture-names.csv";
 static char const* pcap_addresses_output = "..\\..\\data\\tiny-capture-addresses.csv";
+static char const* gzip_names_output = "..\\..\\data\\tiny-compressed-names.csv";
+static char const* gzip_addresses_output = "..\\..\\data\\tiny-compressed-addresses.csv";
 #endif
-static char const* pcap_names_debug = "tiny-capture-names.csv";
-static char const* pcap_addresses_debug = "tiny-capture-addresses.csv";
 #else
 static char const* pcap_names_output = "data/tiny-capture-names.csv";
-static char const* pcap_names_debug = "tiny-capture-names.csv";
 static char const* pcap_addresses_output = "data/tiny-capture-addresses.csv";
-static char const* pcap_addresses_debug = "tiny-capture-addresses.csv";
 #endif
+
+static char const* pcap_names_debug = "tiny-capture-names.csv";
+static char const* pcap_addresses_debug = "tiny-capture-addresses.csv";
+static char const* compressed_names_debug = "tiny-gzip-names.csv";
+static char const* compressed_addresses_debug = "tiny-gzip-addresses.csv";
 
 #endif
 
@@ -207,6 +210,114 @@ bool CaptureNamesTest::DoTest()
     return ret;
 }
 
+CompressedNamesTest::CompressedNamesTest()
+{
+}
+
+CompressedNamesTest::~CompressedNamesTest()
+{
+}
+
+bool CompressedNamesTest::RemoveGz(char const* file_name)
+{
+    char command[512];
+    int nbchars = 0;
+    bool ret = false;
+    int sys_ret;
+
+#ifdef _WINDOWS
+    nbchars = sprintf_s(command, sizeof(command), "del %s*", file_name);
+#else
+    nbchars = sprintf(command, "rm %s*", file_name);
+#endif
+    if (nbchars > 0) {
+        sys_ret = system(command);
+        if (sys_ret != 0) {
+            TEST_LOG("Command <%s> returns %d\n", command, sys_ret);
+        }
+        else {
+            ret = true;
+        }
+    }
+
+    return ret;
+}
+
+bool CompressedNamesTest::Decompress(char const* file_name)
+{
+    char command[512];
+    int nbchars = 0;
+    bool ret = false;
+    int sys_ret;
+
+#ifdef _WINDOWS
+    nbchars = sprintf_s(command, sizeof(command), "7z.exe x %s.gz >7z-report.txt 2>7z-errors.txt", file_name);
+#else
+    nbchars = sprintf(command, "gunzip -c %s.gz >%s", file_name, file_name);
+#endif
+    if (nbchars > 0) {
+        sys_ret = system(command);
+        if (sys_ret != 0) {
+            TEST_LOG("Command <%s> returns %d\n", command, sys_ret);
+        }
+        else {
+            ret = true;
+        }
+    }
+
+    return ret;
+}
+
+bool CompressedNamesTest::DoTest()
+{
+    DnsStats capture;
+    CaptureSummary cs;
+    char const* list[1] = { pcap_input_test };
+    bool ret = true;
+
+    capture.name_report = compressed_names_debug;
+    capture.compress_name_and_address_reports = true;
+
+    (void)CompressedNamesTest::RemoveGz(compressed_names_debug);
+    ret = capture.LoadPcapFiles(1, list);
+
+    if (ret)
+    {
+        ret = capture.ExportToCaptureSummary(&cs);
+
+        if (ret)
+        {
+            CaptureSummary tcs;
+
+            ret = tcs.Load(pcap_test_output);
+
+            if (ret)
+            {
+                cs.Sort();
+                tcs.Sort();
+
+                ret = ithi_test_class::CompareCS(&cs, &tcs);
+
+                if (!ret)
+                {
+                    cs.Save(pcap_test_debug);
+                }
+            }
+
+            if (ret) {
+                ret = CompressedNamesTest::Decompress(compressed_names_debug);
+            }
+
+            if (ret)
+            {
+                ret = MetricTest::compare_files(compressed_names_debug, pcap_names_output);
+            }
+        }
+    }
+
+    return ret;
+}
+
 CaptureAddressesTest::CaptureAddressesTest()
 {
 }
@@ -223,7 +334,6 @@ bool CaptureAddressesTest::DoTest()
     bool ret = true;
 
     capture.address_report = pcap_addresses_debug;
-
     ret = capture.LoadPcapFiles(1, list);
 
     if (ret)
@@ -252,6 +362,64 @@ bool CaptureAddressesTest::DoTest()
             if (ret)
             {
                 ret = MetricTest::compare_files(pcap_addresses_debug, pcap_addresses_output);
+            }
+        }
+    }
+
+    return ret;
+}
+
+CompressedAddressesTest::CompressedAddressesTest()
+{
+}
+
+CompressedAddressesTest::~CompressedAddressesTest()
+{
+}
+
+bool CompressedAddressesTest::DoTest()
+{
+    DnsStats capture;
+    CaptureSummary cs;
+    char const* list[1] = { pcap_input_test };
+    bool ret = true;
+
+    capture.address_report = compressed_addresses_debug;
+    capture.compress_name_and_address_reports = true;
+    (void)CompressedNamesTest::RemoveGz(compressed_addresses_debug);
+
+    ret = capture.LoadPcapFiles(1, list);
+
+    if (ret)
+    {
+        ret = capture.ExportToCaptureSummary(&cs);
+
+        if (ret)
+        {
+            CaptureSummary tcs;
+
+            ret = tcs.Load(pcap_test_output);
+
+            if (ret)
+            {
+                cs.Sort();
+                tcs.Sort();
+
+                ret = ithi_test_class::CompareCS(&cs, &tcs);
+
+                if (!ret)
+                {
+                    cs.Save(pcap_test_debug);
+                }
+            }
+
+            if (ret) {
+                ret = CompressedNamesTest::Decompress(compressed_addresses_debug);
+            }
+
+            if (ret)
+            {
+                ret = MetricTest::compare_files(compressed_addresses_debug, pcap_addresses_output);
             }
         }
     }

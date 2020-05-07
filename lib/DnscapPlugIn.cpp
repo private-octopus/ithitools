@@ -66,6 +66,7 @@ static bool libithicap_enable_tld_list = false;
 #ifdef PRIVACY_CONSCIOUS
 char const* libithicap_address_list = NULL;
 char const* libithicap_name_list = NULL;
+static bool libithicap_compress = false;
 #endif
 
 static DnsStats* libithicap_stats = NULL;
@@ -103,6 +104,7 @@ extern "C"
         fprintf(stderr, "  -E name_list.txt   List all erroneous DNS names and their usage in specified file.\n");
         fprintf(stderr, "                     Options A and E are rather slow, and have privacy issues.\n");
         fprintf(stderr, "                     No such traces enabled by default.\n");
+        fprintf(stderr, "  -g                 Compress addresses and names files using gzip (default: don't).\n");
 #endif
     }
 
@@ -115,7 +117,7 @@ extern "C"
         int opt;
         int exit_code = 0;
 
-        while (exit_code == 0 && (opt = getopt(*argc, *argv, "o:r:a:x:n:t:u:A:E:hefT")) != -1)
+        while (exit_code == 0 && (opt = getopt(*argc, *argv, "o:r:a:x:n:t:u:A:E:ghefT")) != -1)
         {
             switch (opt)
             {
@@ -159,6 +161,9 @@ extern "C"
                 break;
             case 'E':
                 libithicap_name_list = optarg;
+                break;
+            case 'g':
+                libithicap_compress = true;
                 break;
 #endif
             case 'T':
@@ -230,6 +235,7 @@ extern "C"
             {
                 libithicap_stats->name_report = libithicap_name_list;
             }
+            libithicap_stats->compress_name_and_address_reports = libithicap_compress;
 #endif
         }
         return (libithicap_stats == NULL)?-1:0;
