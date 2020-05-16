@@ -5,6 +5,10 @@
 # versus the total number of DGA. We want to check whether we should create new categories
 # for multipart DGA names, or maybe combined categories such as DGA(7) and Length(7) in
 # the analysis.
+# The script thakes three arguments:
+# 1- the CSV file containing the name list to be analyzed - output of ithitools -E option.
+# 2- the CSV file where the list of multipart names cataloged as DGA will be written.
+# 3- the CSV file whre the statistics on multi-name TLD mistaken as DGA will be written
 
 import sys
 import codecs
@@ -193,10 +197,10 @@ class name_list:
             else:
                 self.sum_count += name_entry.count
 
-    def extract_multi_dga(self):
+    def extract(self, name_type, min_parts):
         mdlist = name_list()
         for name_entry in self.name_list:
-            if (name_entry.name_type == "dga") and (name_entry.nb_parts > 1):
+            if (name_entry.name_type == name_type) and (name_entry.nb_parts >= min_parts):
                 mdlist.name_list.append(name_entry)
         return mdlist
 
@@ -213,7 +217,8 @@ class name_list:
             tll.tld_list.append(tl)
         return tll
 
-# Testing using the file <repo>/data/tiny-capture-names.csv
+# Main program: obtain the list of multi-name-part TLD that would be confused with DGA.
+
 if len(sys.argv) < 2:
     print("usage: " + "names.csv")
     ret = -1
@@ -225,7 +230,7 @@ else:
         print("dga: " + str(nl.sum_dga) + ", multi-dga: " + str(nl.sum_dga_multi) + ", others: " + str(nl.sum_count))
 
         if len(sys.argv) > 2:
-            multi_nl = nl.extract_multi_dga()
+            multi_nl = nl.extract("dga", 2)
             if multi_nl.save(sys.argv[2]):
                 print("Saved multi-dga names in " + sys.argv[2])
                 if len(sys.argv) > 3 and ret == 0:
