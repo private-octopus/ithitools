@@ -310,6 +310,7 @@ bool CaptureSummary::Merge(char const * list_file_name)
     size_t nb_files = 0;
     FILE* F;
     char buffer[512];
+    const size_t batch_size = 128;
 
     /* Open the list file */
     bool ret;
@@ -374,10 +375,57 @@ bool CaptureSummary::Merge(char const * list_file_name)
         }
     }
 
+
     /* Merge the list */
     if (ret)
     {
-        ret = Merge(nb_files, (char const **)file_list);
+        /* Create intermediate merge files if there are more than 100 summaries */
+        if (nb_files > batch_size) {
+            size_t nb_compiled = 0;
+            size_t nb_intermediate_summaries = (nb_files + batch_size - 1) / batch_size;
+            size_t nb_created = 0;
+            CaptureSummary** intermediate_list = new  CaptureSummary * [nb_intermediate_summaries];
+
+            if (intermediate_list == NULL) {
+                ret = false;
+            }
+            else {
+                for (size_t i = 0; ret && i < nb_intermediate_summaries; i++) {
+                    intermediate_list[i] = new CaptureSummary();
+                    if (intermediate_list[i] == NULL) {
+                        ret = false;
+                        for (size_t j = nb_created; j < nb_intermediate_summaries; j++) {
+                            intermediate_list[j] = NULL;
+                        }
+                    }
+                    else {
+                        nb_created++;
+                        size_t first_file = nb_compiled;
+                        nb_compiled += batch_size;
+                        if (nb_compiled > nb_files) {
+                            nb_compiled = nb_files;
+                        }
+                        ret = intermediate_list[i]->Merge(nb_compiled - first_file, (char const**)(file_list + first_file));
+                    }
+                }
+
+                if (ret) {
+                    /* Merge all the summaries */
+                    ret = Merge(nb_intermediate_summaries, intermediate_list);
+                }
+                /* Clean up all the intermediate summaries */
+                for (size_t i = 0; i < nb_intermediate_summaries; i++) {
+                    if (intermediate_list[i] != NULL) {
+                        delete intermediate_list[i];
+                        intermediate_list[i] = NULL;
+                    }
+                }
+                delete[] intermediate_list;
+            }
+        }
+        else {
+            ret = Merge(nb_files, (char const**)file_list);
+        }
     }
 
     /* Clean up */
@@ -445,26 +493,35 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
     size_t complete_size = 0;
     std::vector<CaptureLine *> complete;
     std::vector<CaptureLine *> leaked_tld;
+    std::vector<CaptureLine*> leaked_2ld;
     std::vector<CaptureLine *> frequent_tld;
     char const * leak_tld_id = NULL;
+    char const * leak_2ld_id = NULL;
     char const * frequent_tld_id = NULL;
     char const * local_tld_id = NULL;
     char const * leak_by_length_id = NULL;
+    char const* name_list_id = NULL;
+    char const* addr_list_id = NULL;
     CaptureLine current_line;
     uint64_t nb_locally_leaked_tld = 0;
     CaptureLine *local_leak = new CaptureLine;
     uint64_t skipped_tld_length[64];
+    int nb_obsolete = 0;
 
     memset(skipped_tld_length, 0, sizeof(skipped_tld_length));
 
     if (ret)
     {
         leak_tld_id = DnsStats::GetTableName(REGISTRY_DNS_LeakedTLD);
+        leak_2ld_id = DnsStats::GetTableName(REGISTRY_DNS_LEAK_2NDLEVEL);
         frequent_tld_id = DnsStats::GetTableName(REGISTRY_DNS_Frequent_TLD_Usage);
         local_tld_id = DnsStats::GetTableName(REGISTRY_DNS_Local_TLD_Usage_Count);
         leak_by_length_id = DnsStats::GetTableName(REGISTRY_DNS_LeakByLength);
+        name_list_id = DnsStats::GetTableName(REGISTRY_DNS_ERRONEOUS_NAME_LIST);
+        addr_list_id = DnsStats::GetTableName(REGISTRY_DNS_ADDRESS_LIST);
 
-        ret = (leak_tld_id != NULL && frequent_tld_id != NULL && local_tld_id != NULL && leak_by_length_id != NULL && local_leak != NULL);
+        ret = (leak_tld_id != NULL && frequent_tld_id != NULL && local_tld_id != NULL && leak_by_length_id != NULL && local_leak != NULL
+            && name_list_id != NULL && addr_list_id != NULL);
     }
 
     /* Compute the plausible max size and the complete size */
@@ -483,6 +540,7 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
     {
         complete.reserve(complete_size);
         leaked_tld.reserve(48 * nb_summaries);
+        leaked_2ld.reserve(48 * nb_summaries);
         frequent_tld.reserve(16 * nb_summaries);
     }
 
@@ -519,6 +577,11 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
                     complete.push_back(cs[i]->summary[j]);
                 }
             }
+            else if (strcmp(cs[i]->summary[j]->registry_name, name_list_id) == 0 ||
+                strcmp(cs[i]->summary[j]->registry_name, addr_list_id) == 0) {
+                /* Obsolete records should not be part of summary */
+                nb_obsolete++;
+            }
             /* TODO: if local leak present, add to total */
             else
             {
@@ -542,7 +605,7 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
     std::sort(complete.begin(), complete.end(), CaptureLineIsLower);
 
     /* Now go through the list and perform the summations.
-     * Put the frequent tld and tls usage in separate lists */
+     * Put the frequent tld, 2nd ld and tls usage in separate lists */
     Reserve(max_size + 64* nb_summaries);
 
     for (size_t i = 0; ret && i < complete.size();) {
@@ -570,6 +633,19 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
                 ret = false;
             }
         }
+        else if (strcmp(current_line.registry_name, leak_2ld_id) == 0) {
+            CaptureLine* second_ld_line = new CaptureLine;
+
+            if (second_ld_line != NULL)
+            {
+                memcpy(second_ld_line, &current_line, sizeof(CaptureLine));
+                leaked_2ld.push_back(second_ld_line);
+            }
+            else
+            {
+                ret = false;
+            }
+        }
         else if (strcmp(current_line.registry_name, frequent_tld_id) == 0) {
             CaptureLine *tld_line = new CaptureLine;
 
@@ -591,8 +667,16 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
     /* Sort and tabulate the most used TLD. */
     if (ret) {
         std::sort(frequent_tld.begin(), frequent_tld.end(), CaptureLineIsLargerCount);
-        for (size_t i = 0; i < frequent_tld.size() && i < 128; i++) {
+        for (size_t i = 0; i < frequent_tld.size() && i < 256; i++) {
             AddLine(frequent_tld[i], true);
+        }
+    }
+
+    /* Sort and tabulate the most used 2LD. */
+    if (ret) {
+        std::sort(leaked_2ld.begin(), leaked_2ld.end(), CaptureLineIsLargerCount);
+        for (size_t i = 0; i < frequent_tld.size() && i < 256; i++) {
+            AddLine(leaked_2ld[i], true);
         }
     }
 
@@ -600,11 +684,11 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
      * TODO: tabulate the length of the discarded TLD, and correct the captured values */
     if (ret) {
         std::sort(leaked_tld.begin(), leaked_tld.end(), CaptureLineIsLargerCount);
-        for (size_t i = 0; i < leaked_tld.size() && i < 128; i++) {
+        for (size_t i = 0; i < leaked_tld.size() && i < 256; i++) {
             AddLine(leaked_tld[i], true);
         }
 
-        for (size_t i = 128; i < leaked_tld.size() && i < 128; i++) {
+        for (size_t i = 256; i < leaked_tld.size() && i < 256; i++) {
             size_t len = strlen(leaked_tld[i]->key_value);
 
             if (len < 64)
@@ -667,6 +751,15 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
         {
             delete leaked_tld[i];
             leaked_tld[i] = NULL;
+        }
+    }
+
+    for (size_t i = 0; i < leaked_2ld.size(); i++)
+    {
+        if (leaked_2ld[i] != NULL)
+        {
+            delete leaked_2ld[i];
+            leaked_2ld[i] = NULL;
         }
     }
 
