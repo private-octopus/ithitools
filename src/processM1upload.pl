@@ -37,13 +37,15 @@ print "Dir: $dirname, Target: $targetdir\n";
 opendir(DIR, $dirname) or die "Could not open $dirname\n";
 
 while ($filename = readdir(DIR)) {
+  print "File: $filename\n";
   if  (length($filename) == 51) {
       $ff1 = substr($filename, 0, 25);
       $fm = substr($filename, 25, 3);
       $fy = substr($filename, 28, 4);
       $ff2 = substr($filename, 32, 19);
+      print "ff1: $ff1, fm: $fm, fy: $fy, ff2: $ff2\n";
       if ($ff1 eq "Compliance Data for ITHI_" &&
-          $ff2 eq " Rr_Ry_Tab3_CSV.csv") {
+          $ff2 eq "_Rr_Ry_Tab3_CSV.csv") {
           $fmi = index("JanFebMarAprMayJunJulAugSepOctNovDec", $fm);
           if ($fmi >= 0) {
               $fmi /= 3;
@@ -60,7 +62,11 @@ while ($filename = readdir(DIR)) {
               $moved = "$processdir/$filename";
               move($filepath, $moved) or die "Cannot move $filename to $moved\n";
               printf "Moved $filename to $processdir\n";
+          } else {
+              print "Month index outside bounds: $fmi\n";
           }
+      } else {
+          print "ff1 or ff2 does not match expected value\n";
       }
   }
 }
