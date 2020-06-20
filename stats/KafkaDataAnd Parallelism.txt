@@ -1,0 +1,103 @@
+
+ The Kafka chain is designed to produce the same set of files as the current set
+ of scripts. The file structure is expected to be as follow:
+
+ 1) All files are in the set of folders with the same prefix, here
+    designated as ".../ITHI/"
+    The result files from the capture extractions are in three set of folders:
+   .../ITHI/results-std/yyyy-mm-dd/
+   .../ITHI/results-addr/yyyy-mm-dd/
+   .../ITHI/results-name/yyyy-mm-dd/
+   These folders contain the summaries (std), address extracts (addr) and
+   name extracts (name) produced by ithitools.
+   In each of these folders, there is a "result-xxx" folder for each capture node,
+   for example:
+   .../data/ITHI/results-name/yyyy-mm-dd/results-aa01-br-sao.l.dns.icann.org
+
+   The files are placed in these folders For each date, there is one summary, name
+   or address file per capture extraction. The name of the files are derived from
+   the name of the capture file, with a suffix "-results.csv"
+   20190601-000253_300.cbor.xz-results.csv
+
+2) For each given day and each node, a sum3 file is archived under:
+   .../ITHI/sum3/yyyy-mm-dd/
+   The file name incorporates the node name and the data, as in:
+   .../ITHI/sum3/yyyy-mm-dd/results-aa01-br-sao.l.dns.icann.org.sum3
+
+3) Once the data file for a day is ready, we can compute the "html"
+   pages. They will be archived in the folder:
+   .../ITHI/html/yyyy-mm-dd/
+   There will be one page per node, with the file name set to the
+   name of the node, e.g.:
+   aa01-br-sao.l.dns.icann.org.html
+
+4) Once all the data files in a set are ready, we can compute the
+   "average" files for specific sets of nodes. These sets of nodes
+   are specified by "labelled" regular expressions:
+   ALL results-a*
+   US results-a*-us-*
+   CA results-a*-ca-*
+   BR results-a*-br-*
+   RU results-a*-ru-*
+   CZ results-a*-cz-*
+   FR results-a*-fr-*
+   DE results-a*-de-*
+   AU results-a*-au-*
+   LAX results-a*-us-lax.*
+   RTV results-a*-us-rtv.*
+   PDX results-a*-us-pdx*
+   The contents of the files that maps a given expression are averaged
+   to produce a set of files for each expression, in the folder
+   .../data/ITHI/html/yyyy-mm-dd/
+   There is one file per day, per expression label (e.g. US), and
+   per statistical category:
+   avgminmax-US-useful.html
+   avgminmax-US-useless.html
+   avgminmax-US-dga.html
+   avgminmax-US-jumbo.html
+   avgminmax-US-others.html
+
+The Kafka prototype will produce identical results to the selected scripts.
+
+The scripts use implicit or explicit parallel processing in several places:
+
+1) In stage 1, the processing of different capture files could proceed in parallel
+
+2) In stage 2, the scripts use the "parallel" expression so the data for each
+   given node can be computed in parallel
+
+3) in stage 3, the scripts use the "parallel" expression to compute each required
+   html page in parallel
+
+4) In stage 4, there is one instance of the script running for each regular
+   expression.
+
+Some of that parallelism can be replicated easily in Kafka. For example, we can
+launch several instances of the "producer" script in parallel, to replicate
+the parallelism of stage 1. We could also easily launch a separate instance of
+SumM3Avg.py for each specified regular expression. Further simplifications are
+possible:
+
+1) Stage 2 in Kafka is split between two modules, "SumM3Analysis.py" and
+   "SumM3Thresholder.py". The "Analysis" script starts when a capture is
+   complete and produces a "message line" with the result of the capture.
+   In theory, this looks like an opportunity to test processing by
+   parallel clients in a "client group". Thresholding, on the other hand,
+   requires accumulating all messages received during a given day, and
+   understand when the day is complete.
+
+2) Stage 3 takes one file per day and per node, and produces the corresponding
+   graph in SumM3Graph.py. This, too, could be mapped to a Kafka group of
+   clients.
+
+The first version of the prototype will not test this parallism.
+
+The stage 3 and 4 scripts are designed to run once per day, when all data for
+the day is ready. We could experiment with making these scripts run at more
+frequent intervals.
+
+
+
+
+
+

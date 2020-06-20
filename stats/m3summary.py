@@ -485,7 +485,7 @@ class m3summary_line():
         self.cc = m3n.country_code
         self.city = m3n.city_code
         self.date = m3n.m3_date
-        self.hour = m3n.m3_hour
+        self.hour = m3n.m3_time
         self.duration = m3n.duration
         c0 = capture.find("root-QR", 0, 0, "")
         c1 = capture.find("root-QR", 0, 3, "")
