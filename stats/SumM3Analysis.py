@@ -36,7 +36,7 @@ c = Consumer({
     'group.id': 'sumM3Consumer'
 })
 
-# Subscribe to topic 'test'
+# Subscribe to topic 'm3Summary'
 c.subscribe(['m3Summary'])
 
 # Create a provider instance.

@@ -34,13 +34,13 @@ except:
 # create a table of node instances
 thr = sumM3Thresholder(nb_hours)
 
-# Create Consumer instance
+# Create Kafka Consumer instance
 c = Consumer({
     'bootstrap.servers': sys.argv[1],
     'group.id': 'sumM3Consumer'
 })
 
-# Subscribe to topic 'test'
+# Subscribe to topic 'm3Analysis'
 c.subscribe(['m3Analysis'])
 
 # Create a provider instance.
@@ -50,7 +50,6 @@ if err is not None:
     exit(1)
 
 # Process messages
-total_count = 0
 try:
     while True:
         msg = c.poll(60.0)
@@ -65,11 +64,9 @@ try:
             try:
                 # The Kafka message should provide keys of this summary: location and date,
                 # and the name of the file.
-                record_key = msg.key()
-                record_value = msg.value()
                 # Parse the message value as sum M3 message
                 s3msg_in = sumM3Message("")
-                if not s3msg.parse(str(record_value)):
+                if not s3msg.parse(str(msg.value())):
                     print("unexpected m3analysis message: " + str(record_value))
                 else:
                     # Check whether this message triggers a threshold
