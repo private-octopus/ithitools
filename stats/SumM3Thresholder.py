@@ -12,8 +12,8 @@ import datetime
 import math
 import m3name
 import m3summary
-from confluent_kafka import Consumer
-from sumM3Lib import sumM3Message, sumM3Thresholder
+from confluent_kafka import Consumer, Producer
+from SumM3Lib import sumM3Message, sumM3Thresholder
 
 # Ack function to detect whether Kafka is still running.
 def m3ThresholderAcked(err, msg):
@@ -23,13 +23,17 @@ def m3ThresholderAcked(err, msg):
 
 # check the calling arguments
 if len(sys.argv) != 3:
-    print("Usage: " + sys.argv[0] + "<bootstrap.servers> <nb_hours>\n")
+    print("Usage: " + sys.argv[0] + " <bootstrap.servers> <nb_hours>\n")
     exit(1)
 try:
     nb_hours = int(sys.argv[2], 10)
 except:
     print("Cannot parse the number of hours: " + sys.argv[2]);
     exit(1)
+
+   
+print("bootstrap.servers: " + sys.argv[1])
+print("nb hours: " + str(nb_hours))
 
 # create a table of node instances
 thr = sumM3Thresholder(nb_hours)
@@ -45,9 +49,6 @@ c.subscribe(['m3Analysis'])
 
 # Create a provider instance.
 p = Producer({'bootstrap.servers': sys.argv[1]})
-if err is not None:
-    print("Failed to create producer: %s: %s" % (str(p), str(err)))
-    exit(1)
 
 # Process messages
 try:

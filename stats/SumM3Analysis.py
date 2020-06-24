@@ -15,7 +15,7 @@ import math
 import m3name
 import m3summary
 from confluent_kafka import Consumer, Producer
-from SumM3Lib import sumM3FileSeparator, sumM3FileName, sumM3AppendLine, sumM3Message
+from SumM3Lib import sumM3FileSeparator, sumM3FileName, sumM3Message
 import os
 
 def m3AnalysisAcked(err, msg):
@@ -25,10 +25,14 @@ def m3AnalysisAcked(err, msg):
 
 # check the calling argument
 if len(sys.argv) != 3:
-    print("Usage: " + sys.argv[0] + "<bootstrap.servers>  <ithi_dir>\n")
+    print("Usage: " + sys.argv[0] + " <bootstrap.servers>  <ithi_dir>\n")
     exit(1)
 base_dir = sys.argv[2]
 sep = sumM3FileSeparator(base_dir)
+base_dir = sumM3EnsureEndInSep(base_dir, sep)
+
+print("bootstrap.servers: " + sys.argv[1])
+print("ithi directory: " + base_dir)
 
 # Create Consumer instance
 c = Consumer({
@@ -36,14 +40,15 @@ c = Consumer({
     'group.id': 'sumM3Consumer'
 })
 
-# Subscribe to topic 'm3Summary'
-c.subscribe(['m3Summary'])
+# Subscribe to topic 'm3Capture'
+c.subscribe(['m3Capture'])
 
 # Create a provider instance.
 # TODO: move to a common create produce function.
-p = Producer({'bootstrap.servers': sys.argv[1]})
-if err is not None:
-    print("Failed to create producer: %s: %s" % (str(p), str(err)))
+try:
+    p = Producer({'bootstrap.servers': sys.argv[1]})
+except:
+    print("Failed to create producer : " + str(p))
     exit(1)
 
 # Process messages
@@ -54,7 +59,7 @@ try:
         if msg is None:
             # print a log message on time out.
             # maybe should also send a kafka message to 
-            print("Waiting for m3Summary message or event/error in poll()")
+            print("Waiting for m3Capture message or event/error in poll()")
             continue
         elif msg.error():
             print('error: {}'.format(msg.error()))
