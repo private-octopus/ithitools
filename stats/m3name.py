@@ -77,13 +77,17 @@ def country_from_city(city):
 class m3name:
     def __init__(self):
         self.m3_date = ""
-        self.m3_hour = ""
+        self.m3_time = ""
         self.duration = 0
         self.country_code = ""
         self.city_code = ""
         self.address_id = ""
+        self.file_id = ""
+        self.node_dns = ""
 
     def parse_file_id(self, file_id):
+        is_cbor = False
+        self.file_id = file_id
         parts = file_id.split("/")
         if len(parts) == 1:
             parts = file_id.split("\\")
@@ -95,11 +99,22 @@ class m3name:
             last_parts = file_name.split(".")
             file_name = last_parts[0] + "-" + folder[8:]
             name_parts = file_name.split("-")
+            is_cbor = True
         # now parse the file name
         if (len(name_parts) >= 5):
             self.address_id = name_parts[2]
             self.country_code = name_parts[3]
             city_parts = name_parts[4].split(".")
+            self.node_dns = self.address_id + "-" + self.country_code + "-" 
+            i_dns = 0
+            n_dns = len(city_parts)
+            if not is_cbor:
+                n_dns -= 1
+            while i_dns < n_dns:
+                if i_dns != 0:
+                    self.node_dns += "."
+                self.node_dns += city_parts[i_dns]
+                i_dns += 1
             self.city_code = city_parts[0]
             if (len(self.country_code) != 2):
                 print("Wrong Country Code in " + file_name)
@@ -117,6 +132,19 @@ class m3name:
                 self.address_id = "aa" + old_city[3:5]
                 self.city_code = old_city[0:3]
                 self.country_code = country_from_city(self.city_code)
+                old_dns = name_parts[2]
+                i_dns = 3
+                while i_dns < len(name_parts):
+                    old_dns += "-" + name_parts[i_dns]
+                    i_dns += 1
+                old_dns_p = old_dns.split(".")
+                i_dns = 0
+                n_dns = len(old_dns_p) - 1
+                while i_dns < n_dns:
+                    if i_dns != 0:
+                        self.node_dns += "."
+                    self.node_dns += old_dns_p[i_dns]
+                    i_dns += 1
         else:
             print("Wrong syntax in " + file_name)
             return -1
@@ -132,8 +160,8 @@ class m3name:
         if (len(time_parts[0]) != 6):
             print("Wrong hour in " + file_name)
             return -1
-        s_hour = time_parts[0]
-        self.m3_hour = s_hour[0:2] + ":" + s_hour[2:4] + ":" + s_hour[4:6]
+        s_time = time_parts[0]
+        self.m3_time = s_time[0:2] + ":" + s_time[2:4] + ":" + s_time[4:6]
         try:
             self.duration = int(time_parts[1],10)
         except:
@@ -183,6 +211,9 @@ def m3name_test():
     test_country_code = [ "in", "mx", "fr", "fr", "bh", "br" ]
     test_city_code = [ "bom", "mty", "par", "par", "bah", "bcl" ]
     test_address_id = ["aa01", "aa01", "aa01", "aa01", "aa01", "aa01" ]
+    test_node_dns = ["aa01-in-bom.l.dns.icann.org", "aa01-mx-mty.l.dns.icann.org",
+                     "aa01-fr-par.l.dns.icann.org", "aa01-fr-par.l.dns.icann.org",
+                     "bah01.l.root-servers.org", "aa01-br-bcl.l.dns.icann.org" ]
 
     if city_test() == 0:
         print("City test passes")
@@ -199,7 +230,7 @@ def m3name_test():
             print("Error, " + test_file[i] + ", date: " + m3n.m3_date)
             ret = -1
         if (test_hour[i] != m3n.m3_hour):
-            print("Error, " + test_file[i] + ", hour: " + m3n.m3_hour)
+            print("Error, " + test_file[i] + ", hour: " + m3n.m3_time)
             ret = -1
         if (test_duration[i] != m3n.duration):
             print("Error, " + test_file[i] + ", duration: " + str(m3n.duration))
@@ -212,6 +243,9 @@ def m3name_test():
             ret = -1
         if (test_city_code[i] != m3n.city_code):
             print("Error, " + test_file[i] + ", city_code: " + m3n.city_code)
+            ret = -1
+        if (test_node_dns[i] != m3n.node_dns):
+            print("Error, " + test_file[i] + ", node_dns: " + m3n.node_dns)
             ret = -1
         i += 1
     return ret

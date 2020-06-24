@@ -1,0 +1,31 @@
+This is a small memo on deploying a Kafka structure on windows, based on
+an online article: https://dzone.com/articles/running-apache-kafka-on-windows-os
+
+The first steps are to install the required packages: Java JRE, Zookeeper and Kafka.
+
+ZooKeeper must be running in its own command line window, listening of port 2181.
+For that, open a new command line window and type "zkserver"
+
+Then update the Kafka config file, server.properties in
+c:\kafka\kafka_2.12-2.5.0\config\. Start the server in its own commandline window
+by running this command from the Kafka installation directory:
+.\bin\windows\kafka-server-start.bat .\config\server.properties
+
+After that, need to create the required topics, using commands of the form:
+kafka-topics.bat --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic <the-topic>
+(Commands are in the bin\window directory). Do this for 3 topics:
+    m3Capture
+    m3Analysis
+    m3Thresholder
+
+Then launch each of the required agents in its own command line windows.
+This include:
+ * SumM3Analysis.py localhost:2181 <data_dir> 
+ * SumM3Thresholder.py localhost:2181 <data_dir>
+ * SumM3Graph.py localhost:2181 <data_dir>
+ * SumM3Avg.py localhost:2181 <data_dir> <nb_hours> <label> <country_code> <city_code>
+
+ This creates the processing environment for the Kafka chain.
+ At this point, in a separate window, launch the "producer" script
+ for each summary that shall be entered, for example:
+
