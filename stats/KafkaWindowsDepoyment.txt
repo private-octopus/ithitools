@@ -20,10 +20,10 @@ kafka-topics.bat --create --zookeeper localhost:2181 --replication-factor 1 --pa
 
 Then launch each of the required agents in its own command line windows.
 This include:
- * SumM3Analysis.py localhost:2181 <data_dir> 
- * SumM3Thresholder.py localhost:2181 <data_dir>
- * SumM3Graph.py localhost:2181 <data_dir>
- * SumM3Avg.py localhost:2181 <data_dir> <nb_hours> <label> <country_code> <city_code>
+ * SumM3Analysis.py localhost:9092 <data_dir> 
+ * SumM3Thresholder.py localhost:9092 <nb_hours>
+ * SumM3Graph.py localhost:9092 <data_dir>
+ * SumM3Avg.py localhost:9092 <data_dir> <nb_hours_for_pattern> <label> <country_code> <city_code>
 
  This creates the processing environment for the Kafka chain.
  At this point, in a separate window, launch the "producer" script

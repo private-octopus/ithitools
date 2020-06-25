@@ -59,7 +59,7 @@
 
 The Kafka prototype will produce identical results to the selected scripts.
 
-The scripts use implicit or explicit parallel processing in several places:
+The shell scripts use implicit or explicit parallel processing in several places:
 
 1) In stage 1, the processing of different capture files could proceed in parallel
 
@@ -84,17 +84,24 @@ possible:
    In theory, this looks like an opportunity to test processing by
    parallel clients in a "client group". Thresholding, on the other hand,
    requires accumulating all messages received during a given day, and
-   understand when the day is complete.
+   understand when the day is complete. There needs to be exactly one 
+   instance of "SumM3Thresholding.py" running in the cluster.
 
 2) Stage 3 takes one file per day and per node, and produces the corresponding
    graph in SumM3Graph.py. This, too, could be mapped to a Kafka group of
    clients.
 
-The first version of the prototype will not test this parallism.
+3) Stage 4 corresponds to the "SumM3Avg.py" script. There will be one
+   instance of that script per pattern. Each instance corresponds to its own
+   client group. All instances run in parallel.
 
-The stage 3 and 4 scripts are designed to run once per day, when all data for
-the day is ready. We could experiment with making these scripts run at more
-frequent intervals.
+With the first version of the prototype, we only tested parallism of multiple
+patterns, in stage 4. 
+
+The stage 3 and 4 shell scripts are designed to run once per day, when all data for
+the day is ready. In the Kafka implementation, the python scripts run "forever". With
+the default setup, the HTML pages are updated every 2 hours, and the "pattern"
+averages every 4 hours.
 
 
 

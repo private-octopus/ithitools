@@ -3,7 +3,7 @@
 # coding=utf-8
 #
 # This scripts tries to estimate the variance of a few M3 test metrics.
-
+import sys
 import codecs
 
 # load a line of an ITHI captue file

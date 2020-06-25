@@ -50,7 +50,7 @@ import pandas
 import numpy
 import plotly.graph_objects as go
 from plotly.offline import plot
-from SumM3Lib import sumM3FileSeparator, sumM3EnsureEndInSep, \
+from SumM3Lib import sumM3FileSeparator, sumM3EnsureEndInSep, sumM3EnsureDir, \
     sumM3Message, sumM3Pattern, sumM3DayPattern
 
 #
@@ -108,8 +108,8 @@ def sumM3DrawAverages(label, basefile, file_paths, nodenames):
     # basefile='/data/ITHI/html/'+dateCollect+'/'
     # label=arguments.pop(0)
 
-    for arg in arguments:
-        print(arg)
+    for arg in file_paths:
+        print("Loading: " + arg)
         # nodename=arg.replace('results-','').replace('.sum3','')
         df=pandas.read_csv(arg,  header=0, skipinitialspace=True)
         indexnull=df[df['queries'] == 0].index
@@ -234,10 +234,12 @@ def sumM3DrawAverages(label, basefile, file_paths, nodenames):
 
 def publish_day_report(label, basefile, day_record, sep):
     file_paths = day_record.publish()
-    if len(file_list) > 0:
-        day_report_base = basefile + day_record.bin_date.isoformat + sep
+    if len(file_paths) > 0:
+        day_report_base = basefile + day_record.bin_date.isoformat() + sep
+        sumM3EnsureDir(day_report_base)
         nodenames = day_record.node_list()
-        sumM3DrawAverages(label, basefile, file_paths, nodenames)
+        sumM3DrawAverages(label, day_report_base, file_paths, nodenames)
+        print("Updated the daily report for " + label + " in " + day_report_base)
 
 #
 # Averager: read and verify the command line arguments,
@@ -303,19 +305,13 @@ c.subscribe(['m3Thresholder'])
 # Process messages
 try:
     while True:
-        msg = c.poll(300.0)
-        if msg is None:
-            # print a log message on time out.
-            # maybe should also send a kafka message to 
-            print("Waiting for m3Thresholder message or event/error in poll()")
-            continue
-        elif msg.error():
-            print('error: {}'.format(msg.error()))
-        else:
+        try:
             pattern_in = sumM3Message()
-            if not pattern_in.parse(str(msg.value())):
-                print("Cannot parse m3Thresholder message <" + str(msg.value()) + ">")
+            pattern_in.poll_kafka(c, 300.0)
+            if pattern_in.topic == "":
+                print("No good message for 300 sec.")
             elif s3p.pattern_match(pattern_in):
+                print("Processing: " + pattern_in.to_string())
                 for day_record in s3p.days:
                     if day_record.is_too_old(pattern_in.bin_date, 1):
                         # The date has changed, the first message is now too old, will be flushed next
@@ -327,7 +323,13 @@ try:
                 # Process the day records that are ready
                 for day_record in s3p.days:
                     publish_day_report(label, basefile, day_record, sep)
-
+        except KeyboardInterrupt:
+            break
+        except Exception:
+            traceback.print_exc()
+            print("Exception processing m3 thresholding message: " + pattern_in.to_string())
+            exit_code = 1
+            break
 
 except KeyboardInterrupt:
     pass

@@ -53,38 +53,31 @@ p = Producer({'bootstrap.servers': sys.argv[1]})
 # Process messages
 try:
     while True:
-        msg = c.poll(60.0)
-        if msg is None:
-            # print a log message on time out.
-            # maybe should also send a kafka message to 
-            print("Waiting for m3Analysis message or event/error in poll()")
-            continue
-        elif msg.error():
-            print('error: {}'.format(msg.error()))
-        else:
-            try:
-                # The Kafka message should provide keys of this summary: location and date,
-                # and the name of the file.
-                # Parse the message value as sum M3 message
-                s3msg_in = sumM3Message("")
-                if not s3msg.parse(str(msg.value())):
-                    print("unexpected m3analysis message: " + str(record_value))
-                else:
-                    # Check whether this message triggers a threshold
-                    if thr.checkList(s3msg):
-                        # this message needs re-broadcasting
-                        msg = thr.node_list[s3msg.node_dns].to_string()
-                        p.produce(s3msg_out.topics, msg.encode(encoding='utf-8', errors='strict'), callback=m3ThresholderAcked)
-                        thr.update(s3msg)
-            except:
-                print("Cannot process m3analysis message: " + str(msg.value()))
+        try:
+            s3msg_in = sumM3Message()
+            s3msg_in.poll_kafka(c, 300.0)
+            if s3msg_in.topic == "":
+                print("No good message for 300 sec.")
+            else:
+                # Check whether this message triggers a threshold
+                if thr.checkList(s3msg_in):
+                    # this message needs re-broadcasting
+                    msg = thr.node_list[s3msg_in.node_dns].to_string()
+                    print("Sending: " + msg)
+                    p.produce("m3Thresholder", msg.encode(encoding='utf-8', errors='strict'), callback=m3ThresholderAcked)
+                    thr.update(s3msg_in)
+        except KeyboardInterrupt:
+            break;
+        except Exception:
+            traceback.print_exc()
+            print("Cannot process m3analysis message: " + s3msg_in.to_string())
+            break
 
 except KeyboardInterrupt:
     pass
 finally:
     # Leave group and commit final offsets
     p.flush()
-    p.close()
     c.close()
 
 
