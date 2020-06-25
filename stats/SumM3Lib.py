@@ -13,6 +13,7 @@ import datetime
 import m3name
 import m3summary
 from pathlib import Path
+from confluent_kafka import Consumer, Producer
 
 # Convert the string yyyymmdd into date object
 def sumM3Date(yyyymmdd):
@@ -86,6 +87,8 @@ class sumM3Message:
     def parse(self, msg):
         parts = msg.split(",")
         if len(parts) != 8:
+            print("Error parsing " + msg);
+            print("Expected 8 parts, got " + str(len(parts)))
             return False
         else:
             self.topic = parts[0]
@@ -99,6 +102,8 @@ class sumM3Message:
             try:
                 self.duration = int(parts[6])
             except:
+                print("Error parsing " + msg);
+                print("Expected duration, got " + parts[6])
                 self.duration = 0
                 return False
         return True
@@ -122,6 +127,27 @@ class sumM3Message:
         except:
             print("Cannot parse time: " + self.m3_date + " " + self.m3_time)
             pass
+
+    def poll_kafka(self, c, how_long):
+        time_passed = 0.0
+        self.topic = ""
+        while time_passed < how_long:
+            time_passed += 10.0 
+            msg = c.poll(10.0)
+            if not msg is None:
+                if msg.error():
+                    print('error: {}'.format(msg.error()))
+                else:
+                    # The Kafka message should provide keys of this summary: location and date,
+                    # and the name of the file.
+                    record_value = msg.value().decode('utf-8')
+                    # Parse the message value, retrieve the capture file name, 
+                    if not self.parse(record_value):
+                        print("Could not parse: " + record_value)
+                    else:
+                        print("Received: " + record_value)
+                    break
+        return
 
     # Analysis: for a given message, add line 
     # to the file <base>/<date>/results-<node_id>.sum3

@@ -8,7 +8,7 @@
 #
 # The command line arguments are:
 # - bootstrap_servers: the bootstrap servers for the Kafka deployment
-# - basefile: directory in which daily output directories will be created
+# - base_dir: directory in which daily output directories will be created
 #
 # The main program listens to the "m3Thresholder" topic.
 # The client's group-id is set to "sumM3Graph". This should allow load sharing
@@ -25,7 +25,8 @@ import pandas
 import numpy
 import plotly.graph_objects as go
 from plotly.offline import plot
-from SumM3Lib import sumM3FileSeparator, sumM3EnsureEndInSep, sumM3Message
+from SumM3Lib import sumM3FileSeparator, sumM3EnsureEndInSep, sumM3CreateDirPathDate, \
+   sumM3EnsureDir, sumM3FileName, sumM3Message
 
 #
 # This is based on Alain's script "avg.py", encapsulated as a Python
@@ -34,7 +35,7 @@ from SumM3Lib import sumM3FileSeparator, sumM3EnsureEndInSep, sumM3Message
 # - dateCollect: the day of the collection, in YYYY-MM-DD format.
 # - file: the file to be graphed.
 # The script uses the intermediate variable:
-# - basefile: the root directory for the HTML files, set by convention
+# - base_dir: the root directory for the HTML files, set by convention
 #   '/data/ITHI/html/'+dateCollect+'/'
 # - node_id: obtained by parsing the file name
 # - outfile: named after the node being graphed
@@ -92,7 +93,8 @@ def sumM3DrawGraph(file, writefile, node_dns):
     # fig.update_layout(title=outfile, yaxis_title="Queries per Second")
     fig.update_layout(title=node_dns, yaxis_title="Queries per Second")
     #fig.show()
-    # writefile='/data/ITHI/html/'+dateCollect+'/'+outfile+'.html'
+    # outfile='/data/ITHI/html/'+dateCollect+'/'+outfile+'.html'
+
     #writefile=outfile+'.html'
     print(writefile)
     plot(fig,filename=writefile, auto_open=False)
@@ -103,26 +105,26 @@ def sumM3DrawGraph(file, writefile, node_dns):
 # channel, and then process the incoming messages.
 #
 bootstrap_servers = ""
-basefile = ""
+base_dir = ""
 good_arguments = True
 if len(sys.argv) != 3:
     good_arguments = False
 else:
     bootstrap_servers = sys.argv[1]
-    basefile = sys.argv[2]
+    base_dir = sys.argv[2]
 
 if not good_arguments:
-    print("Usage: " + sys.argv[0] + " <bootstrap_servers> basefile")
+    print("Usage: " + sys.argv[0] + " <bootstrap_servers> base_dir")
     print(" - bootstrap_servers: the bootstrap servers for the Kafka deployment")
-    print(" - basefile: directory in which daily output directories will be created")
+    print(" - base_dir: directory in which daily output directories will be created")
     exit(1)
 
 # initialize the filesepator to deal with both WIndows and Unix
-sep = sumM3FileSeparator(basefile)
-basefile = sumM3EnsureEndInSep(basefile, sep)
+sep = sumM3FileSeparator(base_dir)
+base_dir = sumM3EnsureEndInSep(base_dir, sep)
 
 print("bootstrap.servers: " + bootstrap_servers)
-print("basefile: " + basefile)
+print("base_dir: " + base_dir)
 
 # Create Kafka Consumer instance
 c = Consumer({
@@ -135,21 +137,25 @@ c.subscribe(['m3Thresholder'])
 # Process messages
 try:
     while True:
-        msg = c.poll(300.0)
-        if msg is None:
-            # print a log message on time out.
-            # maybe should also send a kafka message to 
-            print("Waiting for m3Thresholder message or event/error in poll()")
-            continue
-        elif msg.error():
-            print('error: {}'.format(msg.error()))
-        else:
-            pattern_in = sumM3Message()
-            if not pattern_in.parse(str(msg.value())):
-                print("Cannot parse m3Thresholder message <" + str(msg.value()) + ">")
+        try:
+            s3msg_in = sumM3Message()
+            s3msg_in.poll_kafka(c, 300.0)
+            if s3msg_in.topic == "":
+                print("No good message for 300 sec.")
             else:
-                writefile = basefile + pattern_in.m3_date + sep
-                sumM3DrawGraph(pattern_in.fpath, writefile, pattern_in.node_dns)
+                # Add line to summary file 
+                dir_path = sumM3CreateDirPathDate(s3msg_in, base_dir, sep)
+                sumM3EnsureDir(dir_path)
+                writefile = sumM3FileName(s3msg_in, dir_path, "", ".html")
+                sumM3DrawGraph(s3msg_in.fpath, writefile, s3msg_in.node_dns)
+                print("Produced: " + writefile)
+        except KeyboardInterrupt:
+            break
+        except Exception:
+            traceback.print_exc()
+            print("Exception processing m3 thresholding message: " + s3msg_in.to_string())
+            exit_code = 1
+            break
 except KeyboardInterrupt:
     pass
 finally:
