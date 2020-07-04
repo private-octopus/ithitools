@@ -49,7 +49,6 @@ find /home/rarends/data/$PREVIOUS_DATE* | grep ".csv" > m3_previous_month.txt
 echo "Found $(wc -l m3_previous_month.txt) files in /home/rarends/data/$PREVIOUS_DATE*"
 M3F2=/home/ubuntu/ithi/input/M3/M3-$LAST_LAST_DAY-summary.csv
 echo "Creating summary file in $M3F2"
-./ithitools/ithitools -S m3_previous_month.txt -o $M3F2
 
 >m46_this_month.txt
 python ithitools/src/tlsaInput.py tlsa-data-$DATE_DASH.csv /home/viktor/data/tlsa-$DATE_DASH
@@ -57,6 +56,7 @@ echo tlsa-data-$DATE_DASH.csv >> m46_this_month.txt
 find /home/matiasf/* | grep $DATE | grep ".csv" >> m46_this_month.txt
 find /home/uccgh/data/* | grep $DATE_DASH | grep ".csv" >> m46_this_month.txt
 find /home/nawala/data/* | grep $DATE_DASH | grep ".csv" >> m46_this_month.txt
+find /home/cernet/data/* | grep $DATE_DASH | grep ".csv" >> m46_this_month.txt
 echo "Found $(wc -l m46_this_month.txt) recursive resolver reports for $DATE*"
 M46F1=/home/ubuntu/ithi/input/M46/M46-$LAST_DAY-summary.csv
 echo "Creating summary file in $M46F1"
@@ -68,6 +68,7 @@ echo tlsa-data-$PREVIOUS_DASH.csv >> m46_previous_month.txt
 find /home/matiasf/* | grep $PREVIOUS_DATE | grep ".csv" >> m46_previous_month.txt
 find /home/uccgh/data/* | grep $PREVIOUS_DASH | grep ".csv" >> m46_previous_month.txt
 find /home/nawala/data/* | grep $PREVIOUS_DASH | grep ".csv" >> m46_previous_month.txt
+find /home/cernet/data/* | grep $PREVIOUS_DASH | grep ".csv" >> m46_previous_month.txt
 echo "Found $(wc -l m46_previous_month.txt) recursive resolver reports for $PREVIOUS_DATE*"
 M46F2=/home/ubuntu/ithi/input/M46/M46-$LAST_LAST_DAY-summary.csv
 echo "Creating summary file in $M46F2"
