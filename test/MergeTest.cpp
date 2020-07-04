@@ -148,3 +148,43 @@ bool MergeListTest::DoTest()
 
     return ret;
 }
+
+char const* capture_empty_list_name = "capture_empty_list.txt";
+
+MergeEmptyListTest::MergeEmptyListTest()
+{
+}
+
+MergeEmptyListTest::~MergeEmptyListTest()
+{
+}
+
+bool MergeEmptyListTest::DoTest()
+{
+    bool ret = true;
+    FILE* F;
+    int nb_files = 0;
+    CaptureSummary cs;
+
+    /* create the capture list */
+    F = ithi_file_open(capture_empty_list_name, "w");
+    ret &= (F != NULL);
+
+    if (ret)
+    {
+        fclose(F);
+    }
+    else {
+        TEST_LOG("Cannot create empty capture file \n");
+    }
+
+    if (ret)
+    {
+        ret = cs.Merge(capture_empty_list_name);
+        if (!ret) {
+            TEST_LOG("Merge of %d capture files failed.\n", nb_files);
+        }
+    }
+
+    return ret;
+}

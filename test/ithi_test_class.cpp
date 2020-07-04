@@ -37,6 +37,7 @@ enum test_list_enum {
     test_enum_Save,
     test_enum_Merge,
     test_enum_Merge_List,
+    test_enum_Merge_Empty_List,
     test_enum_Capture,
     test_enum_CaptureNxCache,
 #ifdef PRIVACY_CONSCIOUS
@@ -102,6 +103,8 @@ char const * ithi_test_class::GetTestName(int number)
         return("merge");
     case test_enum_Merge_List:
         return("merge_list");
+    case test_enum_Merge_Empty_List:
+        return("merge_empty_list");
     case test_enum_Capture:
         return("capture");
     case test_enum_CaptureNxCache:
@@ -210,6 +213,9 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_enum_Merge_List:
         test = new MergeListTest();
+        break;
+    case test_enum_Merge_Empty_List:
+        test = new MergeEmptyListTest();
         break;
     case test_enum_Capture:
         test = new CaptureTest();
