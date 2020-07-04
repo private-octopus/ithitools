@@ -100,6 +100,14 @@ namespace ithiunit
             Assert::AreEqual(ret, true);
         }
 
+        TEST_METHOD(MergeEmptyList)
+        {
+            MergeEmptyListTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
         TEST_METHOD(Capture)
         {
             CaptureTest test;
