@@ -9,13 +9,13 @@ SET(CMAKE_C_FLAGS "-std=c99 -Wall -O2 -g ${CC_WARNING_FLAGS} ${CMAKE_C_FLAGS}")
 SET(CMAKE_C_FLAGS "-Wall -O2 -g ${CMAKE_C_FLAGS}")
 SET(CMAKE_CXX_FLAGS "-Wall -O2 -g ${CMAKE_CXX_FLAGS}")
 
-INCLUDE_DIRECTORIES(src lib test include)
+INCLUDE_DIRECTORIES(src lib test include cdns/lib)
 
 SET(ITHITOOLS_LIBRARY_FILES
    lib/AddressFilter.cpp
    lib/CaptureSummary.cpp
-   lib/cbor.cpp
-   lib/cdns.cpp
+   cdns/lib/cbor.cpp
+   cdns/lib/cdns.cpp
    lib/DnscapPlugIn.cpp
    lib/DnsStats.cpp
    lib/ithimetrics.cpp
@@ -64,8 +64,8 @@ ADD_EXECUTABLE(ithitools
    src/ithitools.cpp
    lib/AddressFilter.cpp
    lib/CaptureSummary.cpp
-   lib/cbor.cpp
-   lib/cdns.cpp
+   cdns/lib/cbor.cpp
+   cdns/lib/cdns.cpp
    lib/DnsStats.cpp
    lib/ithimetrics.cpp
    lib/ithipublisher.cpp
@@ -87,8 +87,8 @@ ADD_EXECUTABLE(ithitest
    src/ithitest.cpp 
    lib/AddressFilter.cpp
    lib/CaptureSummary.cpp
-   lib/cbor.cpp
-   lib/cdns.cpp
+   cdns/lib/cbor.cpp
+   cdns/lib/cdns.cpp
    lib/DnsStats.cpp
    lib/ithimetrics.cpp
    lib/ithipublisher.cpp
@@ -133,8 +133,8 @@ ADD_EXECUTABLE(ithitest
 ADD_LIBRARY(ithicap SHARED
    lib/AddressFilter.cpp
    lib/CaptureSummary.cpp
-   lib/cbor.cpp
-   lib/cdns.cpp
+   cdns/lib/cbor.cpp
+   cdns/lib/cdns.cpp
    lib/DnsStats.cpp
    lib/ithiutil.cpp
    lib/pcap_reader.cpp

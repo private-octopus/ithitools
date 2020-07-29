@@ -90,13 +90,13 @@
     <ClInclude Include="..\lib\Version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\cdns.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\lib\ithiutil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\lib\cbor.h">
+    <ClInclude Include="..\cdns\lib\cdns.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\cdns\lib\cbor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -155,13 +155,13 @@
     <ClCompile Include="..\lib\pcap_reader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\cdns.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\lib\ithiutil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\lib\cbor.cpp">
+    <ClCompile Include="..\cdns\lib\cbor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\cdns\lib\cdns.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
