@@ -50,7 +50,18 @@ To build ITHITOOLS on Windows, you need to:
    "Community" version will work.
 
  * Clone and compile ITHITOOLS, using the Visual Studio 2017 solution 
-   ithitoolsvs.sln included in the sources.
+   ithitoolsvs.sln included in the sources. Typical command will be:
+~~~
+   git clone --recursive https://github.com/private-octopus/ithitools/
+   cd ithitools
+   .\ithitools.sln
+~~~
+ * If you have already clones the project, typical update commands
+   will be:
+~~~
+   git submodule update
+   git pull --all
+~~~
 
  * You can use the unit tests included in the Visual Studio solution to 
    verify the port.
@@ -61,22 +72,27 @@ To build ITHITOOLS on Linux, you need to:
 
  * Clone and compile ITHITOOLS:
 ~~~
-   git clone https://github.com/private-octopus/ithitools/
+   git clone --recursive https://github.com/private-octopus/ithitools/
    cd ithitools
    cmake .
    make
 ~~~
  * Run the test program "ithitest" to verify the port.
 
+The `--recursive` option will load the submodule `cdns` from the github project
+[cdnsrdr](https://github.com/private-octopus/cdnsrdr), which implements a parser
+for CBOR encoding of DNS captures, according to [RFC8618](https://tools.ietf.org/html/rfc8618).
+
 Of course, if you want to just update to the latest release, you don't need to install
 again. You will do something like:
 ~~~
    cd ithitools
+   git submodule init
+   git submodule update
    git pull --all
    cmake .
    make
 ~~~
-
 
 ### Build dependencies on Linux
 
