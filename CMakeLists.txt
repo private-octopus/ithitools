@@ -106,8 +106,7 @@ ADD_EXECUTABLE(ithitest
    lib/OdiPublisher.cpp
    lib/getopt.c
    test/CaptureTest.cpp
-   test/CborTest.cpp
-   test/CdnsTest.cpp
+   test/CdnsCaptureTest.cpp
    test/DnsPrefixTest.cpp
    test/hashtest.cpp
    test/GetNameTest.cpp

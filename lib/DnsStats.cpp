@@ -2178,15 +2178,16 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
     bool unfiltered = false;
     cdns_query* query = &cdns_ctx->block.queries[packet_id];
     cdns_query_signature* q_sig = NULL; 
-    size_t c_address_id = (size_t)query->client_address_index - CNDS_INDEX_OFFSET;
+    size_t c_address_id = (size_t)query->client_address_index - cdns_ctx->index_offset;
+    bool is_udp;
 
-    if (query->query_signature_index >= CNDS_INDEX_OFFSET) {
-        q_sig = &cdns_ctx->block.tables.q_sigs[(size_t)query->query_signature_index - CNDS_INDEX_OFFSET];
+    if (query->query_signature_index >= cdns_ctx->index_offset) {
+        q_sig = &cdns_ctx->block.tables.q_sigs[(size_t)query->query_signature_index - cdns_ctx->index_offset];
     }
 
     if (t_start_sec == 0 && t_start_usec == 0) {
-        t_start_sec = cdns_ctx->block.preamble.earliest_time_sec;
-        t_start_usec = cdns_ctx->block.preamble.earliest_time_usec;
+        t_start_sec = (uint32_t)cdns_ctx->block.preamble.earliest_time_sec;
+        t_start_usec = (uint32_t)cdns_ctx->block.preamble.earliest_time_usec;
     }
 
     volume_53only += query->query_size;
@@ -2200,10 +2201,17 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
     unfiltered = CheckAddress(cdns_ctx->block.tables.addresses[c_address_id].v,
         cdns_ctx->block.tables.addresses[c_address_id].l);
 
-    if (unfiltered && q_sig != NULL &&
-        ((q_sig->transport_flags & 1) == 0 || (dnsstat_flags& dnsStateFlagIncludeTcpRecords) != 0))
-    {
+    if (cdns_ctx->is_old_version()) {
+        is_udp = (q_sig->qr_transport_flags & 1) == 0;
+    }
+    else {
+        is_udp = ((q_sig->qr_transport_flags >> 1)&0xF) == 0;
+    }
 
+    if (unfiltered && q_sig != NULL &&
+        ( is_udp || (dnsstat_flags& dnsStateFlagIncludeTcpRecords) != 0))
+    {
+        /* Some QSIG flags bits vary between RFC and draft, but bit 0 and bit 5 have the same meaning. */
         if ((q_sig->qr_sig_flags&0x01) != 0)
         {
             query_count++;
@@ -2252,8 +2260,8 @@ void DnsStats::SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_que
         error_flags == 0)
     {
         /* This works because parsing of OPT records sets the proper values for OPT fields */
-        size_t nid = (size_t)query->query_name_index - CNDS_INDEX_OFFSET;
-        size_t addrid = (size_t)query->client_address_index - CNDS_INDEX_OFFSET;
+        size_t nid = (size_t)query->query_name_index - cdns_ctx->index_offset;
+        size_t addrid = (size_t)query->client_address_index - cdns_ctx->index_offset;
         uint32_t name_len = (uint32_t)cdns_ctx->block.tables.name_rdata[nid].l;
         uint8_t* name = cdns_ctx->block.tables.name_rdata[nid].v;
         uint8_t null_name[] = { 0,0 };
@@ -2273,8 +2281,8 @@ void DnsStats::SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_que
 void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* r_sig)
 {
     uint32_t rcode = r_sig->response_rcode;
-    size_t s_addrid = (size_t)r_sig->server_address_index - CNDS_INDEX_OFFSET;
-    size_t c_addrid = (size_t)query->client_address_index - CNDS_INDEX_OFFSET;
+    size_t s_addrid = (size_t)r_sig->server_address_index - cdns_ctx->index_offset;
+    size_t c_addrid = (size_t)query->client_address_index - cdns_ctx->index_offset;
     uint32_t server_addr_length = (uint32_t)cdns_ctx->block.tables.addresses[s_addrid].l;
     uint8_t* server_addr = cdns_ctx->block.tables.addresses[s_addrid].v;
     uint32_t client_addr_length = (uint32_t)cdns_ctx->block.tables.addresses[c_addrid].l;
@@ -2303,8 +2311,8 @@ void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_
 
     SubmitOpcodeAndFlags(r_sig->query_opcode, cdns::get_dns_flags(r_sig->qr_dns_flags, true));
 
-    if (query->query_name_index > 0) {
-        size_t nid = (size_t)query->query_name_index - CNDS_INDEX_OFFSET;
+    if (query->query_name_index >= cdns_ctx->index_offset) {
+        size_t nid = (size_t)query->query_name_index - cdns_ctx->index_offset;
         uint8_t* q_name = cdns_ctx->block.tables.name_rdata[nid].v;
         uint32_t q_name_length = (uint32_t)cdns_ctx->block.tables.name_rdata[nid].l;
 
@@ -2364,10 +2372,10 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
     if (ext->is_filled) {
         int x_i[4] = { ext->question_index, ext->answer_index, ext->authority_index, ext->additional_index };
 
-        if (x_i[0] > 0) {
+        if (x_i[0] >= 0) {
             /* assume just one query per q_sig, but sometimes there is none. */
-            size_t cid = (size_t)q_sig->query_classtype_index - CNDS_INDEX_OFFSET;
-            size_t nid = (size_t)query->query_name_index - CNDS_INDEX_OFFSET;
+            size_t cid = (size_t)q_sig->query_classtype_index - cdns_ctx->index_offset;
+            size_t nid = (size_t)query->query_name_index - cdns_ctx->index_offset;
             SubmitQueryContent(cdns_ctx->block.tables.class_ids[cid].rr_type,
                 cdns_ctx->block.tables.class_ids[cid].rr_class,
                 cdns_ctx->block.tables.name_rdata[nid].v,
@@ -2376,13 +2384,13 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
 
         for (int i = 1; i < 4; i++) {
             if (x_i[i] >= 0) {
-                cdns_rr_list* list = &cdns_ctx->block.tables.rr_list[(size_t)x_i[i]- CNDS_INDEX_OFFSET];
+                cdns_rr_list* list = &cdns_ctx->block.tables.rr_list[(size_t)x_i[i]- cdns_ctx->index_offset];
 
                 for (size_t j = 0; j < list->rr_index.size(); j++) {
-                    cdns_rr_field * rr = &cdns_ctx->block.tables.rrs[(size_t)list->rr_index[j]- CNDS_INDEX_OFFSET];
-                    size_t cid = (size_t)rr->classtype_index - CNDS_INDEX_OFFSET;
-                    size_t rrid = (size_t) rr->rdata_index - CNDS_INDEX_OFFSET;
-                    size_t nid = (size_t)rr->name_index - CNDS_INDEX_OFFSET;
+                    cdns_rr_field * rr = &cdns_ctx->block.tables.rrs[(size_t)list->rr_index[j]- cdns_ctx->index_offset];
+                    size_t cid = (size_t)rr->classtype_index - cdns_ctx->index_offset;
+                    size_t rrid = (size_t) rr->rdata_index - cdns_ctx->index_offset;
+                    size_t nid = (size_t)rr->name_index - cdns_ctx->index_offset;
                     int rr_class = cdns_ctx->block.tables.class_ids[cid].rr_class;
                     int ttl = rr->ttl;
 
@@ -2413,7 +2421,7 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
     if (!is_response) {
         int edns_flags = cdns::get_edns_flags(q_sig->qr_dns_flags);
         if (q_sig->opt_rdata_index >= 0) {
-            size_t opt_rrid = (size_t)q_sig->opt_rdata_index - CNDS_INDEX_OFFSET;
+            size_t opt_rrid = (size_t)q_sig->opt_rdata_index - cdns_ctx->index_offset;
 
             SubmitRecordContent(DnsRtype_OPT, q_sig->udp_buf_size, edns_flags,
                 (uint32_t)cdns_ctx->block.tables.name_rdata[opt_rrid].l,
@@ -2444,14 +2452,14 @@ void DnsStats::SubmitCborRecords(cdns* cdns_ctx, cdns_query* query, cdns_query_s
     }
 
     if (is_response) {
-        size_t nid = (size_t)query->query_name_index - CNDS_INDEX_OFFSET;
+        size_t nid = (size_t)query->query_name_index - cdns_ctx->index_offset;
         if (first_rname_index >= 0) {
             if (cdns_ctx->block.tables.name_rdata[nid].l == 0) {
                 is_qname_minimized = true;
             }
             else {
-                size_t cid = (size_t)q_sig->query_classtype_index - CNDS_INDEX_OFFSET;
-                size_t rname_id = (size_t)first_rname_index - CNDS_INDEX_OFFSET;
+                size_t cid = (size_t)q_sig->query_classtype_index - cdns_ctx->index_offset;
+                size_t rname_id = (size_t)first_rname_index - cdns_ctx->index_offset;
 
                 is_qname_minimized = IsQNameMinimized(
                     1,
