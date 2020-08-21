@@ -65,10 +65,9 @@ enum test_list_enum {
     test_enum_QNameMini,
     test_enum_StatsByIp,
     test_enum_CaptureFuzz,
-    test_enum_max_number,
     test_enum_cdns_capture_draft,
     test_enum_cdns_capture_rfc,
-
+    test_enum_max_number,
 };
 
 ithi_test_class::ithi_test_class()
