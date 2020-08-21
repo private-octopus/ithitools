@@ -19,35 +19,35 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-
-#ifndef CBOR_TEST_H
-#define CBOR_TEST_H
+#ifndef CDNS_TEST_H
+#define CDNS_TEST_H
 
 #include "ithi_test_class.h"
 
-class CborTest : public ithi_test_class
+class CdnsCaptureTest
 {
 public:
-    CborTest();
-    ~CborTest();
-
-    bool DoTest() override;
-private:
-    bool DoOneDumpTest(uint8_t* in, size_t in_length, char const* expected);
-    bool DoIntTest();
-    bool DoBytesTest();
-    bool DoMapTest();
+    CdnsCaptureTest();
+    ~CdnsCaptureTest();
+    bool DoTest(char const * test_in, char const* test_out);
 };
 
-class CborSkipTest : public ithi_test_class
+class CdnsCaptureTestDraft : public ithi_test_class
 {
 public:
-    CborSkipTest();
-    ~CborSkipTest();
-
+    CdnsCaptureTestDraft();
+    ~CdnsCaptureTestDraft();
     bool DoTest() override;
-private:
-    static bool DoOneTest(uint8_t* in, size_t in_length);
 };
+
+class CdnsCaptureTestRfc : public ithi_test_class
+{
+public:
+    CdnsCaptureTestRfc();
+    ~CdnsCaptureTestRfc();
+    bool DoTest() override;
+};
+
+
 
 #endif

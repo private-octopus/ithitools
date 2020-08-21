@@ -81,10 +81,7 @@
     <ClCompile Include="..\test\capture_fuzz.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\test\CborTest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\test\CdnsTest.cpp">
+    <ClCompile Include="..\test\CdnsCaptureTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -152,10 +149,7 @@
     <ClInclude Include="..\test\capture_fuzz.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\test\CborTest.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\test\CdnsTest.h">
+    <ClInclude Include="..\test\CdnsCaptureTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

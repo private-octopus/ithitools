@@ -27,8 +27,7 @@
 #include "QNameTest.h"
 #include "StatsByIpTest.h"
 #include "capture_fuzz.h"
-#include "CborTest.h"
-#include "CdnsTest.h"
+#include "CdnsCaptureTest.h"
 
 enum test_list_enum {
     test_enum_hash = 0,
@@ -66,13 +65,9 @@ enum test_list_enum {
     test_enum_QNameMini,
     test_enum_StatsByIp,
     test_enum_CaptureFuzz,
+    test_enum_cdns_capture_draft,
+    test_enum_cdns_capture_rfc,
     test_enum_max_number,
-    test_enum_cbor,
-    test_enum_cbor_skip,
-    test_enum_cdns,
-    test_enum_cdns_dump,
-    test_enum_cdns_capture,
-
 };
 
 ithi_test_class::ithi_test_class()
@@ -159,16 +154,10 @@ char const * ithi_test_class::GetTestName(int number)
         return("StatsByIp");
     case test_enum_CaptureFuzz:
         return("CaptureFuzz");
-    case test_enum_cbor:
-        return("cbor");
-    case test_enum_cbor_skip:
-        return("cborSkip");
-    case test_enum_cdns:
-        return("cdns");
-    case test_enum_cdns_dump:
-        return("cdns_dump");
-    case test_enum_cdns_capture:
-        return("cdns_capture");
+    case test_enum_cdns_capture_draft:
+        return("cdns_capture_draft");
+    case test_enum_cdns_capture_rfc:
+        return("cdns_capture_rfc");
     default:
         break;
     }
@@ -297,20 +286,11 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
     case test_enum_CaptureFuzz:
         test = new capture_fuzz();
         break;
-    case test_enum_cbor:
-        test = new CborTest();
+    case test_enum_cdns_capture_draft:
+        test = new CdnsCaptureTestDraft();
         break;
-    case test_enum_cbor_skip:
-        test = new CborSkipTest();
-        break;
-    case test_enum_cdns:
-        test = new CdnsTest();
-        break;
-    case test_enum_cdns_dump:
-        test = new CdnsDumpTest();
-        break;
-    case test_enum_cdns_capture:
-        test = new CdnsCaptureTest();
+    case test_enum_cdns_capture_rfc:
+        test = new CdnsCaptureTestRfc();
         break;
     default:
         break;

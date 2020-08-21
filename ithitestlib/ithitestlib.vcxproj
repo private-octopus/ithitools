@@ -136,8 +136,7 @@
   <ItemGroup>
     <ClCompile Include="..\test\CaptureTest.cpp" />
     <ClCompile Include="..\test\capture_fuzz.cpp" />
-    <ClCompile Include="..\test\CborTest.cpp" />
-    <ClCompile Include="..\test\CdnsTest.cpp" />
+    <ClCompile Include="..\test\CdnsCaptureTest.cpp" />
     <ClCompile Include="..\test\CsvTest.cpp" />
     <ClCompile Include="..\test\DnsPrefixTest.cpp" />
     <ClCompile Include="..\test\GetNameTest.cpp" />
@@ -162,8 +161,7 @@
   <ItemGroup>
     <ClInclude Include="..\test\CaptureTest.h" />
     <ClInclude Include="..\test\capture_fuzz.h" />
-    <ClInclude Include="..\test\CborTest.h" />
-    <ClInclude Include="..\test\CdnsTest.h" />
+    <ClInclude Include="..\test\CdnsCaptureTest.h" />
     <ClInclude Include="..\test\CsvTest.h" />
     <ClInclude Include="..\test\DnsPrefixTest.h" />
     <ClInclude Include="..\test\GetNameTest.h" />
