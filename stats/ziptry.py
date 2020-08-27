@@ -2,6 +2,12 @@ import gzip
 import shutil
 import sys
 
-with gzip.open(sys.argv[1], 'rb') as f_gz:
-    with open(sys.argv[2], 'wb') as f_tx:
-        shutil.copyfileobj(f_gz, f_tx)
+#with gzip.open(sys.argv[1], 'rt') as f_gz:
+
+iline = 0
+for line in gzip.open(sys.argv[1], 'rt'):
+    iline += 1
+    if iline > 10:
+        break
+    print("-->" + line)
+    
