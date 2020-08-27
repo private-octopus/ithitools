@@ -123,7 +123,7 @@ class asname:
         return ret
 
     def name(self, asn):
-        n = "?"
+        n = 0
         if asn in self.table:
             n = self.table[asn]
         return n
