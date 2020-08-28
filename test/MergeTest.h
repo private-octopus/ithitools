@@ -42,5 +42,13 @@ public:
     bool DoTest() override;
 };
 
+class MergeEmptyListTest : public ithi_test_class
+{
+public:
+    MergeEmptyListTest();
+    ~MergeEmptyListTest();
+
+    bool DoTest() override;
+};
 
 #endif /* MERGE_TEST_H */

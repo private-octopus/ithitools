@@ -90,7 +90,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_WINDOWS;$(ITHI_CC_OPTIONS);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)lib;$(SolutionDir)include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)lib;$(SolutionDir)include;$(SolutionDir)cdns\lib;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
     </ClCompile>
     <Link>
@@ -106,7 +106,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_LIB;_WINDOWS;_WINDOWS64;$(ITHI_CC_OPTIONS);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)lib;$(SolutionDir)include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)lib;$(SolutionDir)include;$(SolutionDir)cdns\lib;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -126,7 +126,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_WINDOWS;$(ITHI_CC_OPTIONS);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)lib;$(SolutionDir)include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)lib;$(SolutionDir)include;$(SolutionDir)cdns\lib;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
     </ClCompile>
     <Link>
@@ -146,7 +146,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_LIB;_WINDOWS;_WINDOWS64;$(ITHI_CC_OPTIONS);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)lib;$(SolutionDir)include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)lib;$(SolutionDir)include;$(SolutionDir)cdns\lib;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile />
     </ClCompile>
     <Link>
@@ -157,10 +157,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\cdns\lib\cbor.h" />
+    <ClInclude Include="..\cdns\lib\cdns.h" />
     <ClInclude Include="..\lib\AddressFilter.h" />
     <ClInclude Include="..\lib\CaptureSummary.h" />
-    <ClInclude Include="..\lib\cbor.h" />
-    <ClInclude Include="..\lib\cdns.h" />
     <ClInclude Include="..\lib\ComputeM34.h" />
     <ClInclude Include="..\lib\ComputeM6.h" />
     <ClInclude Include="..\lib\ComputeMetric.h" />
@@ -187,10 +187,10 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\cdns\lib\cbor.cpp" />
+    <ClCompile Include="..\cdns\lib\cdns.cpp" />
     <ClCompile Include="..\lib\AddressFilter.cpp" />
     <ClCompile Include="..\lib\CaptureSummary.cpp" />
-    <ClCompile Include="..\lib\cbor.cpp" />
-    <ClCompile Include="..\lib\cdns.cpp" />
     <ClCompile Include="..\lib\ComputeM34.cpp" />
     <ClCompile Include="..\lib\ComputeM6.cpp" />
     <ClCompile Include="..\lib\ComputeMetric.cpp" />

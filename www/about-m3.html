@@ -19,7 +19,8 @@
          style="float:right;width:25%" />
     <p>
         The metric M3 tracks the structure of the traffic at root servers. This is done by analyzing samples of traffic from
-        the "L" root. The L root service use anycast addressing to direct the service to hundreds of servers distributed
+        <a href="http://www.dns.icann.org/imrs/">the ICANN Managed Root Server (IMRS)</a>.
+        IMRS use anycast addressing to direct the service to hundreds of servers distributed
         around the world. Each day, our partners process 2-minute traffic samples from each of these servers. To avoid
         time-of-day bias, the time to start each server's sampling is picked at random, using independent random draws for
         each server. Our partners then send us the summary data for each sample, which are aggregated at the end of

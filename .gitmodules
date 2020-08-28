@@ -1,0 +1,3 @@
+[submodule "cdns"]
+	path = cdns
+	url = https://github.com/private-octopus/cdnsrdr

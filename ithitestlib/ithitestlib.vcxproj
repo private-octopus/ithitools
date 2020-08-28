@@ -87,7 +87,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)test;$(SolutionDir)lib;$(SolutionDir)include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)test;$(SolutionDir)lib;$(SolutionDir)include;$(SolutionDir)cdns\lib;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;$(ITHI_CC_OPTIONS);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -97,7 +97,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)test;$(SolutionDir)lib;$(SolutionDir)include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)test;$(SolutionDir)lib;$(SolutionDir)include;$(SolutionDir)cdns\lib;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;_WINDOWS64;$(ITHI_CC_OPTIONS);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
@@ -109,7 +109,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)test;$(SolutionDir)lib;$(SolutionDir)include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)test;$(SolutionDir)lib;$(SolutionDir)include;$(SolutionDir)cdns\lib;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;$(ITHI_CC_OPTIONS);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -125,7 +125,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)test;$(SolutionDir)lib;$(SolutionDir)include;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)test;$(SolutionDir)lib;$(SolutionDir)include;$(SolutionDir)cdns\lib;$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;_WINDOWS64;$(ITHI_CC_OPTIONS);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -136,8 +136,7 @@
   <ItemGroup>
     <ClCompile Include="..\test\CaptureTest.cpp" />
     <ClCompile Include="..\test\capture_fuzz.cpp" />
-    <ClCompile Include="..\test\CborTest.cpp" />
-    <ClCompile Include="..\test\CdnsTest.cpp" />
+    <ClCompile Include="..\test\CdnsCaptureTest.cpp" />
     <ClCompile Include="..\test\CsvTest.cpp" />
     <ClCompile Include="..\test\DnsPrefixTest.cpp" />
     <ClCompile Include="..\test\GetNameTest.cpp" />
@@ -162,8 +161,7 @@
   <ItemGroup>
     <ClInclude Include="..\test\CaptureTest.h" />
     <ClInclude Include="..\test\capture_fuzz.h" />
-    <ClInclude Include="..\test\CborTest.h" />
-    <ClInclude Include="..\test\CdnsTest.h" />
+    <ClInclude Include="..\test\CdnsCaptureTest.h" />
     <ClInclude Include="..\test\CsvTest.h" />
     <ClInclude Include="..\test\DnsPrefixTest.h" />
     <ClInclude Include="..\test\GetNameTest.h" />

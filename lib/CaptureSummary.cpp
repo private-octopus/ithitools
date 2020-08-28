@@ -450,8 +450,8 @@ bool CaptureSummary::Merge(char const * list_file_name)
 
 bool CaptureSummary::Merge(size_t nb_files, char const ** file_name)
 {
-    CaptureSummary ** list = new  CaptureSummary*[nb_files];
-    CaptureSummary * baselist = new  CaptureSummary[nb_files];
+    CaptureSummary ** list = new  CaptureSummary*[nb_files + 1];
+    CaptureSummary * baselist = new  CaptureSummary[nb_files + 1];
 
     bool ret = list != NULL && baselist != NULL;
 
@@ -675,7 +675,7 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
     /* Sort and tabulate the most used 2LD. */
     if (ret) {
         std::sort(leaked_2ld.begin(), leaked_2ld.end(), CaptureLineIsLargerCount);
-        for (size_t i = 0; i < frequent_tld.size() && i < 256; i++) {
+        for (size_t i = 0; i < leaked_2ld.size() && i < 256; i++) {
             AddLine(leaked_2ld[i], true);
         }
     }

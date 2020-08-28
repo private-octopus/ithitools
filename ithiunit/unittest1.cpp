@@ -41,8 +41,7 @@
 #include "QNameTest.h"
 #include "StatsByIpTest.h"
 #include "capture_fuzz.h"
-#include "CborTest.h"
-#include "CdnsTest.h"
+#include "CdnsCaptureTest.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -95,6 +94,14 @@ namespace ithiunit
         TEST_METHOD(MergeList)
         {
             MergeListTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(MergeEmptyList)
+        {
+            MergeEmptyListTest test;
             bool ret = test.DoTest();
 
             Assert::AreEqual(ret, true);
@@ -265,33 +272,18 @@ namespace ithiunit
 
             Assert::AreEqual(ret, true);
         }
-        TEST_METHOD(Cbor)
+
+        TEST_METHOD(CdnsCaptureDraft)
         {
-            CborTest test;
+            CdnsCaptureTestDraft test;
             bool ret = test.DoTest();
 
             Assert::AreEqual(ret, true);
         }
 
-        TEST_METHOD(CborSkip)
+        TEST_METHOD(CdnsCaptureRfc)
         {
-            CborSkipTest test;
-            bool ret = test.DoTest();
-
-            Assert::AreEqual(ret, true);
-        }
-
-        TEST_METHOD(CdnsDump)
-        {
-            CdnsDumpTest test;
-            bool ret = test.DoTest();
-
-            Assert::AreEqual(ret, true);
-        }
-
-        TEST_METHOD(CdnsCapture)
-        {
-            CdnsCaptureTest test;
+            CdnsCaptureTestRfc test;
             bool ret = test.DoTest();
 
             Assert::AreEqual(ret, true);
