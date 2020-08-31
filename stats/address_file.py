@@ -46,9 +46,9 @@ class address_file_line:
         self.ip = ip
         self.asn = 0
         self.frequent = 0
+        self.nx_domain = 0
         self.arpa = 0
         self.tld = 0
-        self.nx_domain = 0
         self.tld_min_delay = -1
         self.nb_files = 0
         self.last_file = ""
@@ -78,4 +78,11 @@ class address_file_line:
             str(self.tld_min_delay) + "," + str(self.nb_files) + "\n"
         return s
     
+    def add(self, other):
+        self.nx_domain += other.nx_domain
+        self.arpa += other.arpa
+        self.tld += other.tld
+        if other.tld_min_delay > 0 and (self.tld_min_delay < 0 or self.tld_min_delay > other.tld_min_delay):
+            self.tld_min_delay = other.tld_min_delay
+        self.nb_files += other.nb_files
     
