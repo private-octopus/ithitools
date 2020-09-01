@@ -140,6 +140,7 @@ def main():
         except:
             traceback.print_exc()
             print("Abandon bucket " + str(bucket.bucket_id))
+        print("After bucket %d, %d IP, %d transactions"%(bucket.bucket_id, len(ip_dict), total_count))
     end_time = time.time()
     print("Complete in " + str(end_time - start_time))
     print("Threads took " + str(bucket_time - start_time))
