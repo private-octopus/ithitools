@@ -77,6 +77,23 @@ class address_file_line:
             str(self.nx_domain) + "," + str(self.arpa) + "," + str(self.tld) + "," + \
             str(self.tld_min_delay) + "," + str(self.nb_files) + "\n"
         return s
+
+    def from_csv(self, line):
+        csv = line.split(",")
+        try:
+            self.ip = csv[0].strip()
+            self.asn = int(csv[1].strip())
+            self.frequent = int(csv[2].strip())
+            self.nx_domain = int(csv[4].strip())
+            self.arpa = int(csv[5].strip())
+            self.tld = int(csv[6].strip())
+            self.tld_min_delay = int(csv[7].strip())
+            self.nb_files = int(csv[8].strip())
+        except:
+            if csv[0] != "ip":
+                traceback.print_exc()
+                print("Cannot parse: " + line.strip() + "\n")
+            self.ip = ""
     
     def add(self, other):
         self.nx_domain += other.nx_domain

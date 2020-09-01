@@ -26,6 +26,7 @@ class file_bucket:
         self.total_count = 0
         self.previous_ip = ""
         self.bucket_id = 0
+        self.file_path = ""
 
     def add_line(self, line, input_file):
         aline = address_line()
@@ -54,75 +55,103 @@ class file_bucket:
             print("Abandon bucket " + str(self.bucket_id))
         return True
 
+    def save(self):
+        f_out = open(self.file_path, "wt")
+        f_out.write(address_file_line.csv_head())
+        for ip_address in self.ip_dict:
+            f_out.write(self.ip_dict[ip_address].to_csv())
+        f_out.close();
+        print("Process " + str(self.bucket_id) + ": " + str(len(self.ip_dict)) + " IP addresses, " + str(self.total_count) + " transactions.")
+
+
+
 def load_bucket(bucket):
     bucket.load()
+    bucket.save()
 
 # Main loop
 
+def main():
+    if len(sys.argv) != 4:
+        print("Usage: " + sys.argv[0] + " <input-folder> <count_file.csv> <temp_prefix>\n")
+        exit(1)
 
-if len(sys.argv) != 3:
-    print("Usage: " + sys.argv[0] + " <input-folder> <count_file.csv> \n")
-    exit(1)
+    input_path = sys.argv[1]
+    count_file = sys.argv[2]
+    temp_prefix = sys.argv[3]
 
-input_path = sys.argv[1]
-count_file = sys.argv[2]
+    input_files = [f for f in listdir(input_path ) if isfile(join(input_path, f))]
 
-input_files = [f for f in listdir(input_path ) if isfile(join(input_path, f))]
+    nb_threads = os.cpu_count()
+    print("Aiming for " + str(nb_threads) + " threads")
 
-nb_threads = os.cpu_count()
-print("Aiming for " + str(nb_threads) + " threads")
+    step = int((len(input_files)+nb_threads-1)/nb_threads)
+    bucket_list = []
+    bucket_first = 0
+    bucket_id = 0
+    while bucket_first < len(input_files):
+        bucket = file_bucket()
+        bucket_next = min(bucket_first+step, len(input_files))
+        bucket.input_files = input_files[bucket_first:bucket_next]
+        bucket.input_path = input_path
+        bucket.bucket_id = bucket_id
+        bucket.file_path = temp_prefix + "_" + str(bucket.bucket_id) + ".csv"
+        bucket_list.append(bucket)
+        bucket_id += 1
+        bucket_first = bucket_next
 
-step = int((len(input_files)+nb_threads-1)/nb_threads)
-bucket_list = []
-bucket_first = 0
-bucket_id = 0
-while bucket_first < len(input_files):
-    bucket = file_bucket()
-    bucket_next = min(bucket_first+step, len(input_files))
-    bucket.input_files = input_files[bucket_first:bucket_next]
-    bucket.input_path = input_path
-    bucket.bucket_id = bucket_id
-    bucket_list.append(bucket)
-    bucket_id += 1
-    bucket_first = bucket_next
+    nb_threads = min(nb_threads, len(bucket_list))
+    print("Will use " + str(nb_threads) + " threads, " + str(len(bucket_list)) + " buckets")
+    total_files = 0
+    for bucket in bucket_list:
+        total_files += len(bucket.input_files)
+    print("%d files in %d buckets (%d .. %d), vs %d" %(total_files, len(bucket_list), len(bucket_list[0].input_files), len(bucket_list[len(bucket_list)-1].input_files), len(input_files)))
 
-nb_threads = min(nb_threads, len(bucket_list))
-print("Aiming for " + str(nb_threads) + " threads, " + str(len(bucket_list)) + " buckets")
 
-start_time = time.time()
-total_count = 0
-with concurrent.futures.ThreadPoolExecutor(max_workers = nb_threads) as executor:
-    future_to_bucket = {executor.submit(load_bucket, bucket):bucket for bucket in bucket_list }
-    for future in concurrent.futures.as_completed(future_to_bucket):
-        bucket = future_to_bucket[future]
+    start_time = time.time()
+    with concurrent.futures.ProcessPoolExecutor(max_workers = nb_threads) as executor:
+        future_to_bucket = {executor.submit(load_bucket, bucket):bucket for bucket in bucket_list }
+        for future in concurrent.futures.as_completed(future_to_bucket):
+            bucket = future_to_bucket[future]
+            try:
+                data = future.result()
+            except Exception as exc:
+                print('Bucket %d generated an exception: %s' % (bucket.bucket_id, exc))
+            #else:
+            #    print('Bucket %d has %d transactions' % (bucket.bucket_id, bucket.total_count))
+
+    bucket_time = time.time()
+
+    ip_dict = dict()
+    total_count = 0
+    for bucket in bucket_list:
+        # load the data for the bucket
         try:
-            data = future.result()
-            total_count += bucket.total_count
-        except Exception as exc:
-            print('Bucket %d generated an exception: %s' % (bucket.bucket_id, exc))
-        #else:
-        #    print('Bucket %d has %d transactions' % (bucket.bucket_id, bucket.total_count))
+            for line in open(bucket.file_path):
+                file_line = address_file_line("")
+                file_line.from_csv(line)
+                if len(file_line.ip) > 0:
+                    if file_line.ip in ip_dict:
+                        # merge the two lines
+                        ip_dict[file_line.ip].add(file_line)
+                    else:
+                        ip_dict[file_line.ip] = file_line
+                    total_count += file_line.nx_domain + file_line.arpa + file_line.tld
+        except:
+            traceback.print_exc()
+            print("Abandon bucket " + str(bucket.bucket_id))
+    end_time = time.time()
+    print("Complete in " + str(end_time - start_time))
+    print("Threads took " + str(bucket_time - start_time))
+    print("Summary took " + str(end_time - bucket_time))
 
-bucket_time = time.time()
-ip_dict = bucket_list[0].ip_dict
-for x in range(1, len(bucket_list)):
-    for ip in bucket_list[x].ip_dict:
-        if ip in ip_dict:
-            # merge the two lines
-            ip_dict[ip].add(bucket_list[x].ip_dict[ip])
-        else:
-            ip_dict[ip] = bucket_list[x].ip_dict[ip]
+    f_out = open(count_file, "wt")
+    f_out.write(address_file_line.csv_head())
+    for ip_address in ip_dict:
+        f_out.write(ip_dict[ip_address].to_csv())
+    f_out.close();
+    print("Processed " + str(len(ip_dict)) + " IP addresses, " + str(total_count) + " transactions.")
 
-end_time = time.time()
-print("Complete in " + str(end_time - start_time))
-print("Threads took " + str(bucket_time - start_time))
-print("Summary took " + str(end_time - bucket_time))
-
-
-
-f_out = open(count_file, "wt")
-f_out.write(address_file_line.csv_head())
-for ip_address in ip_dict:
-    f_out.write(ip_dict[ip_address].to_csv())
-f_out.close();
-print("Processed " + str(len(ip_dict)) + " IP addresses, " + str(total_count) + " transactions.")
+if __name__ == '__main__':
+    #freeze_support()
+    main()
