@@ -11,13 +11,6 @@
 # nodes. This means sorting by <location><time><cluster-id>, and spreading all
 # files for the same time and location to the same parallel processor. It also
 # means counting "minute slices" instead of files.
-#
-# TODO: Add AS number.
-#
-# TODO: Integrate frequent IP documentation. There are by definition 10,000 IP
-# addresses in the frequent IP list, which means that it makes more sense to just
-# loop on the list and check the list addresses one by one, rather than
-# starting with the collected IP dict and checking every address.
 
 import codecs
 import sys
@@ -31,20 +24,81 @@ import traceback
 import time
 import ipaddress
 import ip2as
+import datetime
+
+class source_file:
+    def __init__(self, folder, file_name):
+        self.folder = folder
+        self.file_name = file_name
+        self.slice = "00000000-000000"
+        self.set_time_slice()
+
+    def set_time_slice(self):
+        try:
+            # expect names in the form 20190601-000853_300.cbor.xz-results-addr.csv
+            dot_slice = self.file_name.split(".")
+            under_slice = dot_slice[0].split("_")
+            time_slice = under_slice[0].split("-")
+            duration = int(under_slice[1])
+            year = int(time_slice[0][0:4])
+            month = int(time_slice[0][4:6])
+            day = int(time_slice[0][6:])
+            hour = int(time_slice[1][0:2])
+            minute = int(time_slice[1][2:4])
+            second = int(time_slice[1][4:])
+            t = datetime.datetime(year, month, day, hour, minute, second)
+            # set time to the middle of the duration interval
+            dt = datetime.timedelta(seconds=(duration/2))
+            t += dt
+            # set minute to the start of the 5 minute interval before the middle
+            t = t.replace(minute = 5*int(t.minute / 5), second=0)
+            # get the text value of the time
+            self.slice = t.strftime("%Y%m%d-%H%M%S")
+        except:
+            traceback.print_exc()
+            print("Error, file: " + self.file_name)
+
+    def compare(self, other):
+        if (self.slice < other.slice):
+            return -1
+        elif (self.slice > other.slice):
+            return 1
+        elif (self.folder < other.folder):
+            return -1
+        elif (self.folder > other.folder):
+            return 1
+        elif (self.file_name < other.file_name):
+            return -1
+        elif (self.file_name > other.file_name):
+            return 1
+        else:
+            return 0
+    
+    def __lt__(self, other):
+        return self.compare(other) < 0
+    def __gt__(self, other):
+        return self.compare(other) > 0
+    def __eq__(self, other):
+        return self.compare(other) == 0
+    def __le__(self, other):
+        return self.compare(other) <= 0
+    def __ge__(self, other):
+        return self.compare(other) >= 0
+    def __ne__(self, other):
+        return self.compare(other) != 0
 
 
 class file_bucket:
     def __init__(self):
         self.ip_dict = dict()
         self.input_files = []
-        self.input_path = ""
         self.total_count = 0
         self.previous_ip = ""
         self.bucket_id = 0
         self.file_path = ""
         self.ip_short = "0.0.0.0"
 
-    def add_line(self, line, input_file):
+    def add_line(self, line, slice):
         aline = address_line()
         aline.file_line(line)  
         if len(aline.ip) > 0:
@@ -55,7 +109,7 @@ class file_bucket:
                 aline.ip = self.ip_short
                 if not self.ip_short in self.ip_dict:
                     self.ip_dict[self.ip_short] = address_file_line(aline.ip)
-                self.ip_dict[self.ip_short].add_file(input_file)
+                self.ip_dict[self.ip_short].add_slice(slice)
             self.ip_dict[self.ip_short].update(aline)
             self.total_count += aline.count
 
@@ -63,12 +117,13 @@ class file_bucket:
         try:
             for input_file in self.input_files:
                 self.previous_ip = ""
-                if input_file.endswith(".gz"):      
-                    for line in gzip.open(join(self.input_path,input_file), 'rt'):
-                        self.add_line(line, input_file)
+                file_path = join(input_file.folder,input_file.file_name)
+                if input_file.file_name.endswith(".gz"):      
+                    for line in gzip.open(file_path, 'rt'):
+                        self.add_line(line, input_file.slice)
                 else:    
-                    for line in open(join(self.input_path,input_file)):
-                        self.add_line(line, input_file)
+                    for line in open(file_path):
+                        self.add_line(line, input_file.slice)
         except:
             traceback.print_exc()
             print("Abandon bucket " + str(self.bucket_id))
@@ -91,8 +146,8 @@ def load_bucket(bucket):
 # Main loop
 
 def main():
-    if len(sys.argv) != 7:
-        print("Usage: " + sys.argv[0] + "<count_file.csv> <temp_prefix> <frequent-ip.csv> <ip2as.csv> <ip2asv6.csv> <input-folder> \n")
+    if len(sys.argv) < 7:
+        print("Usage: " + sys.argv[0] + "<count_file.csv> <temp_prefix> <frequent-ip.csv> <ip2as.csv> <ip2asv6.csv> <input-folder>* \n")
         exit(1)
 
     count_file = sys.argv[1]
@@ -100,30 +155,41 @@ def main():
     frequent_ip = sys.argv[3]
     ip2as_in = sys.argv[4]
     ip2asv6_in = sys.argv[5]
-    input_path = sys.argv[6]
+    input_paths = sys.argv[6:]
 
-    input_files = [f for f in listdir(input_path ) if isfile(join(input_path, f))]
+    input_files = []
+    for p in input_paths:
+        for f in listdir(p):
+            if isfile(join(p, f)):
+                sf = source_file(p, f)
+                input_files.append(sf)
+    input_files = sorted(input_files)
 
-    nb_threads = os.cpu_count()
-    print("Aiming for " + str(nb_threads) + " threads")
+    nb_process = os.cpu_count()
+    print("Aiming for " + str(nb_process) + " processes")
+    process_left = nb_process
 
-    step = int((len(input_files)+nb_threads-1)/nb_threads)
     bucket_list = []
     bucket_first = 0
     bucket_id = 0
     while bucket_first < len(input_files):
         bucket = file_bucket()
+        step = int((len(input_files) - bucket_first + process_left - 1)/process_left)
+        process_left -= 1
         bucket_next = min(bucket_first+step, len(input_files))
         bucket.input_files = input_files[bucket_first:bucket_next]
-        bucket.input_path = input_path
+        last_slice = bucket.input_files[len(bucket.input_files)-1].slice
+        while bucket_next < len(input_files) and input_files[bucket_next].slice == last_slice:
+            bucket.input_files.append(input_files[bucket_next])
+            bucket_next += 1
         bucket.bucket_id = bucket_id
         bucket.file_path = temp_prefix + "_" + str(bucket.bucket_id) + ".csv"
         bucket_list.append(bucket)
         bucket_id += 1
         bucket_first = bucket_next
 
-    nb_threads = min(nb_threads, len(bucket_list))
-    print("Will use " + str(nb_threads) + " threads, " + str(len(bucket_list)) + " buckets")
+    nb_process = min(nb_process, len(bucket_list))
+    print("Will use " + str(nb_process) + " processes, " + str(len(bucket_list)) + " buckets")
     total_files = 0
     for bucket in bucket_list:
         total_files += len(bucket.input_files)
@@ -131,7 +197,7 @@ def main():
 
 
     start_time = time.time()
-    with concurrent.futures.ProcessPoolExecutor(max_workers = nb_threads) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers = nb_process) as executor:
         future_to_bucket = {executor.submit(load_bucket, bucket):bucket for bucket in bucket_list }
         for future in concurrent.futures.as_completed(future_to_bucket):
             bucket = future_to_bucket[future]
@@ -139,8 +205,6 @@ def main():
                 data = future.result()
             except Exception as exc:
                 print('Bucket %d generated an exception: %s' % (bucket.bucket_id, exc))
-            #else:
-            #    print('Bucket %d has %d transactions' % (bucket.bucket_id, bucket.total_count))
 
     bucket_time = time.time()
 

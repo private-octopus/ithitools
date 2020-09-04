@@ -52,8 +52,8 @@ class address_file_line:
         self.com = 0
         self.tld = 0
         self.tld_min_delay = -1
-        self.nb_files = 0
-        self.last_file = ""
+        self.nb_slices = 0
+        self.last_slice = ""
 
     def update(self, aline):
         if aline.nx_domain:
@@ -71,20 +71,20 @@ class address_file_line:
             if aline.tld_min_delay > 0 and (self.tld_min_delay < 0 or self.tld_min_delay > aline.tld_min_delay):
                 self.tld_min_delay = aline.tld_min_delay
 
-    def add_file(self, last_file):
-        if last_file != self.last_file:
-            self.nb_files += 1
-            self.last_file = last_file
+    def add_slice(self, slice):
+        if slice != self.last_slice:
+            self.nb_slices += 1
+            self.last_slice = slice
 
     def csv_head():
-        return "ip,asn,frq,total,dga,nx_domain,arpa,com,tld,tld_min_delay,nb_files\n"
+        return "ip,asn,frq,total,dga,nx_domain,arpa,com,tld,tld_min_delay,nb_slices\n"
 
     def to_csv(self):
         total = self.dga + self.nx_domain + self.arpa + self.com + self.tld
         s = str(self.ip) + "," + str(self.asn) + "," + str(self.frequent) + "," + str(total) + "," + \
             str(self.dga) + "," + str(self.nx_domain) + "," + \
             str(self.arpa) + "," + str(self.com) + "," + str(self.tld) + "," + \
-            str(self.tld_min_delay) + "," + str(self.nb_files) + "\n"
+            str(self.tld_min_delay) + "," + str(self.nb_slices) + "\n"
         return s
 
     def from_csv(self, line):
@@ -99,7 +99,7 @@ class address_file_line:
             self.com = int(csv[7].strip())
             self.tld = int(csv[8].strip())
             self.tld_min_delay = int(csv[9].strip())
-            self.nb_files = int(csv[10].strip())
+            self.nb_slices = int(csv[10].strip())
         except:
             if csv[0] != "ip":
                 traceback.print_exc()
@@ -114,5 +114,5 @@ class address_file_line:
         self.tld += other.tld
         if other.tld_min_delay > 0 and (self.tld_min_delay < 0 or self.tld_min_delay > other.tld_min_delay):
             self.tld_min_delay = other.tld_min_delay
-        self.nb_files += other.nb_files
+        self.nb_slices += other.nb_slices
     
