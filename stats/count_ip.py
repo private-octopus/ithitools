@@ -114,6 +114,9 @@ class file_bucket:
             self.total_count += aline.count
 
     def load(self):
+        nb_done = 0
+        nb_step = max(int(len(self.input_files)/16), 2000)
+        nb_msg = nb_step
         try:
             for input_file in self.input_files:
                 self.previous_ip = ""
@@ -124,6 +127,10 @@ class file_bucket:
                 else:    
                     for line in open(file_path):
                         self.add_line(line, input_file.slice)
+                nb_done += 1
+                if self.bucket_id == 0 and nb_done >= nb_msg:
+                    print("Bucket 0, processed " + str(nb_done) + " files.")
+                    nb_msg += nb_step
         except:
             traceback.print_exc()
             print("Abandon bucket " + str(self.bucket_id))
