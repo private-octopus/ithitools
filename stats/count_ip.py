@@ -258,11 +258,16 @@ def main():
     ipv6table = ip2as.ip2as_table()
     ipv6table.load(ip2asv6_in)
 
-    for ip in ip_dict:
-        if ":" in ip:
-            ip_dict[ip].asn = ipv6table.get_asn(ip)
-        else:
-            ip_dict[ip].asn = ipv4table.get_asn(ip)
+    if len(ipv4table.table) == 0:
+        print("IPv4 AS table is empty!")
+    elif len(ipv6table.table) == 0:
+        print("IPv6 AS table is empty!")
+    else:
+        for ip in ip_dict:
+            if ":" in ip:
+                ip_dict[ip].asn = ipv6table.get_asn(ip)
+            else:
+                ip_dict[ip].asn = ipv4table.get_asn(ip)
 
     as_time = time.time()
     print("AS lookup took " + str(as_time - frequent_time))

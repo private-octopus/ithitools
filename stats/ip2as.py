@@ -70,24 +70,25 @@ class ip2as_table:
         i_med = 0
         i_first = 0
         i_last = len(self.table) - 1
-        try:
-            addr = ipaddress.ip_address(s)
-            if addr >= self.table[i_first].ip_first:
-                if addr >= self.table[i_last].ip_first:
-                    i_first = i_last
-                else:
-                    while i_first + 1 < i_last:
-                        i_med = int((i_first + i_last)/2)
-                        if addr >= self.table[i_med].ip_first:
-                            i_first = i_med
-                        else:
-                            i_last = i_med
-                if addr <= self.table[i_first].ip_last:
-                    asn = self.table[i_first].as_number
-        except Exception as e:
-            traceback.print_exc()
-            print("When evaluation <" + s + "> [" + str(i_first) + ","  + str(i_med) + "," + str(i_last) + "]: " + str(e))
-            pass
+        if i_last > 0:
+            try:
+                addr = ipaddress.ip_address(s)
+                if addr >= self.table[i_first].ip_first:
+                    if addr >= self.table[i_last].ip_first:
+                        i_first = i_last
+                    else:
+                        while i_first + 1 < i_last:
+                            i_med = int((i_first + i_last)/2)
+                            if addr >= self.table[i_med].ip_first:
+                                i_first = i_med
+                            else:
+                                i_last = i_med
+                    if addr <= self.table[i_first].ip_last:
+                        asn = self.table[i_first].as_number
+            except Exception as e:
+                traceback.print_exc()
+                print("When evaluation <" + s + "> [" + str(i_first) + ","  + str(i_med) + "," + str(i_last) + "]: " + str(e))
+                pass
         return asn
 
 class asname:
