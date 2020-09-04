@@ -62,10 +62,12 @@ class ip2as_table:
             traceback.print_exc()
             print("When loading <" + file_name + ">: " + str(e))
             ret = False
+        print("Loaded " + str(len(self.table)) + " address ranges from " + file_name)
         return ret
     
     def get_asn(self, s):
         asn = 0
+        i_med = 0
         i_first = 0
         i_last = len(self.table) - 1
         try:
@@ -84,7 +86,7 @@ class ip2as_table:
                     asn = self.table[i_first].as_number
         except Exception as e:
             traceback.print_exc()
-            print("When evaluation <" + s + ">: " + str(e))
+            print("When evaluation <" + s + "> [" + str(i_first) + ","  + str(i_med) + "," + str(i_last) + "]: " + str(e))
             pass
         return asn
 
