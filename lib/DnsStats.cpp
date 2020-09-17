@@ -259,7 +259,7 @@ static char const * RegisteredTldName[] = {
     "LUXE", "LUXURY", "LV", "LY", "MA", "MACYS", "MADRID", "MAIF", "MAISON", "MAKEUP", "MAN",
     "MANAGEMENT", "MANGO", "MAP", "MARKET", "MARKETING", "MARKETS", "MARRIOTT", "MARSHALLS",
     "MASERATI", "MATTEL", "MBA", "MC", "MCKINSEY", "MD", "ME", "MED", "MEDIA", "MEET",
-    "MELBOURNE", "MEME", "MEMORIAL", "MEN", "MENU", "MERCKMSD", "METLIFE", "MG", "MH",
+    "MELBOURNE", "MEME", "MEMORIAL", "MEN", "MENU", "MERCKMSD", "MG", "MH",
     "MIAMI", "MICROSOFT", "MIL", "MINI", "MINT", "MIT", "MITSUBISHI", "MK", "ML", "MLB",
     "MLS", "MM", "MMA", "MN", "MO", "MOBI", "MOBILE", "MODA", "MOE", "MOI", "MOM",
     "MONASH", "MONEY", "MONSTER", "MORMON", "MORTGAGE", "MOSCOW", "MOTO",
