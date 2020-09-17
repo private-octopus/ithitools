@@ -3,7 +3,10 @@
 # coding=utf-8
 #
 # This script takes into input a list of addresses that needs to be traced,
-# and a list of folders containing traces per five minute slice.
+# and a list of folders containing traces per five minute slice. It produces
+# for each address a csv file with one row per 5-minute slice and
+# one column per server-specific folder, showing how much traffic the node
+# sent to that server in the specified slice.
 
 import codecs
 import sys
