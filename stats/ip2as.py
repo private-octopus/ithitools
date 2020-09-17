@@ -96,34 +96,21 @@ class asname:
         self.table = dict()
 
     def load(self, file_name, test=False):
-        ret = True
-        nb_asn = 0
-        try:
-            for line in open(file_name, "rt"):
-                l = line.strip()
-                asn = 0
-                as_check = l[0:2]
-                asn_x = l[2:14].strip()
-                name = l[14:]
-                if test and nb_asn < 10:
-                    print(as_check + "//" + asn_x + "//" + name)
+        for line in open(file_name, "rt"):
+            l = line.strip()
+            parts = l.split(",")
+            if len(parts) >= 3 and parts[0] != "as_number":
                 try:
-                    asn = int(asn_x)
-                    if not asn in self.table:
-                        self.table[asn] = name
-                        nb_asn += 1
-                    elif test:
-                        print("Duplicate: " + str(asn) + ", \"" + name + "\" (\"" + self.table[asn] + "\")")
+                    asn = int(parts[0])
+                    as_id = "AS" + str(asn)
+                    as_name = parts[1] + " -- " + parts[2]
+                    if as_id in self.table:
+                        print("Duplicate: " + l)
+                    else:
+                        self.table[as_id] = as_name
                 except Exception as e:
                     traceback.print_exc()
-                    print("When parsing asn \"" + asn_x + "\": " + str(e))
-                    ret = False
-                    break
-        except Exception as e:
-            traceback.print_exc()
-            print("When loading <" + file_name + ">: " + str(e))
-            ret = False
-        return ret
+                    print("When parsing \"" + l + "\": " + str(e))
 
     def name(self, asn):
         n = 0

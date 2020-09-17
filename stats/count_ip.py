@@ -6,18 +6,18 @@
 # with one line per address in the file. The it computes a simple summary 
 # with one line per address.
 #
-# TODO: deal with clusters. The recording of the cluster nodes should be logically
-# merged, so that a given address is not counted twice if present on two cluster
-# nodes. This means sorting by <location><time><cluster-id>, and spreading all
-# files for the same time and location to the same parallel processor. It also
-# means counting "minute slices" instead of files.
+# TODO: should the frequent and ASN properties be set in the count_ip script?
+# Loading the ASN tables takes a long time, and storing each IP address
+# also takes a long time -- 48 seconds for 1.2 million address on Octo0.
+# This could be instead done in a separate script that would 'reprocess'
+# all the address summary files, loading the tables just once.
 
 import codecs
 import sys
 import os
 from os import listdir
 from os.path import isfile, join
-from address_file import address_line, address_file_line
+from address_file import address_line, address_file_line, source_file
 import gzip
 import concurrent.futures
 import traceback
@@ -25,68 +25,6 @@ import time
 import ipaddress
 import ip2as
 import datetime
-
-class source_file:
-    def __init__(self, folder, file_name):
-        self.folder = folder
-        self.file_name = file_name
-        self.slice = "00000000-000000"
-        self.set_time_slice()
-
-    def set_time_slice(self):
-        try:
-            # expect names in the form 20190601-000853_300.cbor.xz-results-addr.csv
-            dot_slice = self.file_name.split(".")
-            under_slice = dot_slice[0].split("_")
-            time_slice = under_slice[0].split("-")
-            duration = int(under_slice[1])
-            year = int(time_slice[0][0:4])
-            month = int(time_slice[0][4:6])
-            day = int(time_slice[0][6:])
-            hour = int(time_slice[1][0:2])
-            minute = int(time_slice[1][2:4])
-            second = int(time_slice[1][4:])
-            t = datetime.datetime(year, month, day, hour, minute, second)
-            # set time to the middle of the duration interval
-            dt = datetime.timedelta(seconds=(duration/2))
-            t += dt
-            # set minute to the start of the 5 minute interval before the middle
-            t = t.replace(minute = 5*int(t.minute / 5), second=0)
-            # get the text value of the time
-            self.slice = t.strftime("%Y%m%d-%H%M%S")
-        except:
-            traceback.print_exc()
-            print("Error, file: " + self.file_name)
-
-    def compare(self, other):
-        if (self.slice < other.slice):
-            return -1
-        elif (self.slice > other.slice):
-            return 1
-        elif (self.folder < other.folder):
-            return -1
-        elif (self.folder > other.folder):
-            return 1
-        elif (self.file_name < other.file_name):
-            return -1
-        elif (self.file_name > other.file_name):
-            return 1
-        else:
-            return 0
-    
-    def __lt__(self, other):
-        return self.compare(other) < 0
-    def __gt__(self, other):
-        return self.compare(other) > 0
-    def __eq__(self, other):
-        return self.compare(other) == 0
-    def __le__(self, other):
-        return self.compare(other) <= 0
-    def __ge__(self, other):
-        return self.compare(other) >= 0
-    def __ne__(self, other):
-        return self.compare(other) != 0
-
 
 class file_bucket:
     def __init__(self):
@@ -129,7 +67,7 @@ class file_bucket:
                         self.add_line(line, input_file.slice)
                 nb_done += 1
                 if self.bucket_id == 0 and nb_done >= nb_msg:
-                    print("Bucket 0, processed " + str(nb_done) + " files.")
+                    print("Process 0, processed " + str(nb_done) + " files.")
                     nb_msg += nb_step
         except:
             traceback.print_exc()
@@ -154,7 +92,7 @@ def load_bucket(bucket):
 
 def main():
     if len(sys.argv) < 7:
-        print("Usage: " + sys.argv[0] + "<count_file.csv> <temp_prefix> <frequent-ip.csv> <ip2as.csv> <ip2asv6.csv> <input-folder>* \n")
+        print("Usage: " + sys.argv[0] + " <count_file.csv> <temp_prefix> <frequent-ip.csv> <ip2as.csv> <ip2asv6.csv> <input-folder>* \n")
         exit(1)
 
     count_file = sys.argv[1]
@@ -165,11 +103,13 @@ def main():
     input_paths = sys.argv[6:]
 
     input_files = []
+    f_num = 0
     for p in input_paths:
         for f in listdir(p):
             if isfile(join(p, f)):
-                sf = source_file(p, f)
+                sf = source_file(p, f, f_num)
                 input_files.append(sf)
+        f_num += 1
     input_files = sorted(input_files)
 
     nb_process = os.cpu_count()
@@ -233,7 +173,8 @@ def main():
         except:
             traceback.print_exc()
             print("Abandon bucket " + str(bucket.bucket_id))
-        print("After bucket %d, %d IP, %d transactions"%(bucket.bucket_id, len(ip_dict), total_count))
+        if bucket.bucket_id%10 == 0 or bucket.bucket_id == len(bucket_list) - 1: 
+            print("After bucket %d, %d IP, %d transactions"%(bucket.bucket_id, len(ip_dict), total_count))
     summary_time = time.time()
     print("Threads took " + str(bucket_time - start_time))
     print("Summary took " + str(summary_time - bucket_time))
