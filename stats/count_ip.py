@@ -25,6 +25,7 @@ import time
 import ipaddress
 import ip2as
 import datetime
+import frequent_ip
 
 class file_bucket:
     def __init__(self):
@@ -78,6 +79,7 @@ class file_bucket:
         f_out = open(self.file_path, "wt")
         f_out.write(address_file_line.csv_head())
         for ip_address in self.ip_dict:
+            self.ip_dict[ip_address].min_slices = self.ip_dict[ip_address].nb_slices
             f_out.write(self.ip_dict[ip_address].to_csv())
         f_out.close();
         print("Process " + str(self.bucket_id) + ": " + str(len(self.ip_dict)) + " IP addresses, " + str(self.total_count) + " transactions.")
@@ -97,7 +99,7 @@ def main():
 
     count_file = sys.argv[1]
     temp_prefix = sys.argv[2]
-    frequent_ip = sys.argv[3]
+    frequent_ip_file = sys.argv[3]
     ip2as_in = sys.argv[4]
     ip2asv6_in = sys.argv[5]
     input_paths = sys.argv[6:]
@@ -151,6 +153,7 @@ def main():
             try:
                 data = future.result()
             except Exception as exc:
+                traceback.print_exc()
                 print('Bucket %d generated an exception: %s' % (bucket.bucket_id, exc))
 
     bucket_time = time.time()
@@ -179,16 +182,15 @@ def main():
     print("Threads took " + str(bucket_time - start_time))
     print("Summary took " + str(summary_time - bucket_time))
 
-    # document which files are "frequent"
-    for line in open(frequent_ip):
-        parts = line.split(",")
-        try:
-            ip_address = ipaddress.ip_address(parts[0].strip())
-            ip_text = str(ip_address)
-            if ip_text in ip_dict:
-                ip_dict[ip_text].frequent = 1
-        except:
-            pass
+    # Document weighted and unweighted user count.
+    fip = frequent_ip.frequent_ip()
+    fip.load(frequent_ip_file)
+    print("loaded " + str(len(fip.table)) + " addresses from APNIC frequent list.")
+    print("largest: " + str(fip.largest) + ", limit_10000: " + str(fip.limit_10000) + ", smallest:" + str(fip.smallest))
+    for ip_text in fip.table:
+        if ip_text in ip_dict:
+            ip_dict[ip_text].frequent = fip.table[ip_text].count_users_weighted
+            ip_dict[ip_text].users = fip.table[ip_text].count_users
     
     frequent_time = time.time()
     print("Frequent IP took " + str(frequent_time - summary_time))
