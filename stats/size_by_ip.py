@@ -124,7 +124,7 @@ with open(file_frq,"wt") as wf:
                     nb_frequent += 1
                     load_frequent += frqs[ip].total()
             else:
-                w.write(all_addresses[ip].to_csv())
+                wo.write(all_addresses[ip].to_csv())
                 if all_addresses[ip].total() >= 1000:
                     nb_others += 1
                     load_others += others[ip].total()
