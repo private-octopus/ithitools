@@ -115,7 +115,7 @@ with open(file_frq,"wt") as wf:
         wf.write(address_file_line.csv_head())
         wo.write(address_file_line.csv_head())
         for ip in all_addresses:
-            if frqs[ip].frequent > 0:
+            if all_addresses[ip].frequent > 0:
                 wf.write(all_addresses[ip].to_csv())
                 if all_addresses[ip].frequent > fip.limit_10000:
                     nb_top += 1
