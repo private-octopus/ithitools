@@ -48,15 +48,16 @@ import frequent_ip
 from ip_summary import subnet_string
 
 # Main loop
-if len(sys.argv) < 5:
-    print("Usage: " + sys.argv[0] + " <frequent_ip.csv>  <frequent_ip_stats.csv> <file_others.csv> <file_nets.csv> <count_file.csv>* \n")
+if len(sys.argv) < 6:
+    print("Usage: " + sys.argv[0] + " <frequent_ip.csv>  <frequent_ip_stats.csv> <file_others.csv> <file_cats.csv> <file_nets.csv> <count_file.csv>* \n")
     exit(1)
 
 frequent_ip_file = sys.argv[1]
 file_frq = sys.argv[2]
 file_others = sys.argv[3]
-file_nets = sys.argv[4]
-files_in = sys.argv[5:]
+file_cats = sys.argv[4]
+file_nets = sys.argv[5]
+files_in = sys.argv[6:]
 
 fip = frequent_ip.frequent_ip()
 fip.load(frequent_ip_file)
@@ -86,12 +87,13 @@ for f in files_in:
                 sum_n += 1
                 c = []
                 if al.ip in fip.table:
-                    al.frequent = fip.table[al.ip].count_users_weighted                   
-                    al.users = fip.table[al.ip].count_users 
                     if al.ip in frqs:
                         frqs[al.ip].add(al)
                     else:
                         frqs[al.ip] = al;
+                    # restore the counts that migt have been messed up by adding.
+                    al.frequent = fip.table[al.ip].count_users_weighted                   
+                    al.users = fip.table[al.ip].count_users 
                 elif al.ip in others:
                     others[al.ip].add(al)
                 else:
@@ -111,16 +113,46 @@ for f in files_in:
             print("Cannot parse: " + line)
             exit(1)
 
+nb_top = 0
+load_top = 0
+nb_frequent = 0
+load_frequent = 0
+nb_others = 0
+load_others = 0
+nb_tiny = 0
+load_tiny = 0
+
 with open(file_frq,"wt") as w:
     w.write(address_file_line.csv_head())
     for ip in frqs:
         w.write(frqs[ip].to_csv())
+        if frqs[ip].frequent > fip.limit_10000:
+            nb_top += 1
+            load_top += frqs[ip].total()
+        else:
+            nb_frequent += 1
+            load_frequent += frqs[ip].total()
 
 with open(file_others,"wt") as w:
     w.write(address_file_line.csv_head())
     for ip in others:
         if others[ip].total() >= 1000:
             w.write(others[ip].to_csv())
+            nb_others += 1
+            load_others += others[ip].total()
+        else:
+            nb_tiny += 1
+            load_tiny += others[ip].total()
+
+nb_total = nb_top + nb_frequent + nb_others + nb_tiny
+load_total = load_top + load_frequent + load_others + load_tiny
+with open(file_cats,"wt") as w:
+    w.write("Resolver-class,Count-IP,Count-Queries,%Queries\n")
+    w.write("Top," + str(nb_top) + "," + str(load_top) + "," + str(100.0*load_top/load_total) + "%\n")
+    w.write("Frequent," + str(nb_frequent) + "," + str(load_frequent) + "," + str(100.0*load_frequent/load_total) + "%\n")
+    w.write("Tiny," + str(nb_tiny) + "," + str(load_tiny) + "," + str(100.0*load_tiny/load_total) + "%\n")
+    w.write("Others," + str(nb_others) + "," + str(load_others) + "," + str(100.0*load_others/load_total) + "%\n")
+    w.write("Total," + str(nb_total) + "," + str(load_total) + ",100%\n")
 
 total_net_load = 0
 total_net_load_saved = 0
