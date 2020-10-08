@@ -119,18 +119,18 @@ with open(file_frq,"wt") as wf:
                 wf.write(all_addresses[ip].to_csv())
                 if all_addresses[ip].frequent > fip.limit_10000:
                     nb_top += 1
-                    load_top += frqs[ip].total()
+                    load_top += all_addresses[ip].total()
                 else:
                     nb_frequent += 1
-                    load_frequent += frqs[ip].total()
+                    load_frequent += all_addresses[ip].total()
             else:
                 wo.write(all_addresses[ip].to_csv())
                 if all_addresses[ip].total() >= 1000:
                     nb_others += 1
-                    load_others += others[ip].total()
+                    load_others += all_addresses[ip].total()
                 else:
                     nb_tiny += 1
-                    load_tiny += others[ip].total()
+                    load_tiny += all_addresses[ip].total()
             net_prefix = subnet_string(al.ip)
             if not net_prefix in nets:
                 nl = address_file_line("")
