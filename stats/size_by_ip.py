@@ -131,16 +131,16 @@ with open(file_frq,"wt") as wf:
                 else:
                     nb_tiny += 1
                     load_tiny += all_addresses[ip].total()
-            net_prefix = subnet_string(al.ip)
+            net_prefix = subnet_string(ip)
             if not net_prefix in nets:
                 nl = address_file_line("")
                 nl.ip = net_prefix
-                nl.as_name = al.as_name
-                nl.asn = al.asn
-                nl.add(al)
+                nl.as_name = all_addresses[ip].as_name
+                nl.asn = all_addresses[ip].asn
+                nl.add(all_addresses[ip])
                 nets[net_prefix] = nl
             else:
-                nets[net_prefix].add(al)
+                nets[net_prefix].add(all_addresses[ip])
 
 nb_total = nb_top + nb_frequent + nb_others + nb_tiny
 load_total = load_top + load_frequent + load_others + load_tiny
