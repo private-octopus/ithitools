@@ -64,9 +64,8 @@ fip.load(frequent_ip_file)
 print("loaded " + str(len(fip.table)) + " addresses from APNIC frequent list.")
 print("largest: " + str(fip.largest) + ", limit_10000: " + str(fip.limit_10000) + ", smallest:" + str(fip.smallest))
 
-frqs = dict()
-others = dict()
 nets = dict()
+all_addresses = dict()
 
 sum_t = 0
 sum_n = 0
@@ -81,33 +80,22 @@ for f in files_in:
             al.from_csv(line)
             if len(al.ip) > 0:
                 t = al.total()
-                # TODO: if total is very large, add to selection.
-                # TODO: if total is too small, do not include in analysis
                 sum_t += t
                 sum_n += 1
-                c = []
+                al.frequent = 0.0                  
+                al.users = 0
+                if al.ip in all_addresses:
+                    all_addresses[al.ip].add(al)
+                else:
+                    all_addresses[al.ip] = al
                 if al.ip in fip.table:
-                    if al.ip in frqs:
-                        frqs[al.ip].add(al)
-                    else:
-                        frqs[al.ip] = al;
-                    # restore the counts that migt have been messed up by adding.
-                    al.frequent = fip.table[al.ip].count_users_weighted                   
-                    al.users = fip.table[al.ip].count_users 
-                elif al.ip in others:
-                    others[al.ip].add(al)
+                    # restore the user counts.
+                    all_addresses[al.ip].frequent = fip.table[al.ip].count_users_weighted                   
+                    all_addresses[al.ip].users = fip.table[al.ip].count_users 
                 else:
-                    others[al.ip] = al
-                net_prefix = subnet_string(al.ip)
-                if not net_prefix in nets:
-                    nl = address_file_line("")
-                    nl.ip = net_prefix
-                    nl.as_name = al.as_name
-                    nl.asn = al.asn
-                    nl.add(al)
-                    nets[net_prefix] = nl
-                else:
-                    nets[net_prefix].add(al)
+                    all_addresses[al.ip].frequent = 0                   
+                    all_addresses[al.ip].users = 0                 
+                all_addresses[al.ip].nb_addresses = 1 
         except:
             traceback.print_exc()
             print("Cannot parse: " + line)
@@ -122,27 +110,37 @@ load_others = 0
 nb_tiny = 0
 load_tiny = 0
 
-with open(file_frq,"wt") as w:
-    w.write(address_file_line.csv_head())
-    for ip in frqs:
-        w.write(frqs[ip].to_csv())
-        if frqs[ip].frequent > fip.limit_10000:
-            nb_top += 1
-            load_top += frqs[ip].total()
-        else:
-            nb_frequent += 1
-            load_frequent += frqs[ip].total()
-
-with open(file_others,"wt") as w:
-    w.write(address_file_line.csv_head())
-    for ip in others:
-        if others[ip].total() >= 1000:
-            w.write(others[ip].to_csv())
-            nb_others += 1
-            load_others += others[ip].total()
-        else:
-            nb_tiny += 1
-            load_tiny += others[ip].total()
+with open(file_frq,"wt") as wf:
+    with open(file_others,"wt") as wo:
+        wf.write(address_file_line.csv_head())
+        wo.write(address_file_line.csv_head())
+        for ip in all_addresses:
+            if frqs[ip].frequent > 0:
+                wf.write(all_addresses[ip].to_csv())
+                if all_addresses[ip].frequent > fip.limit_10000:
+                    nb_top += 1
+                    load_top += frqs[ip].total()
+                else:
+                    nb_frequent += 1
+                    load_frequent += frqs[ip].total()
+            else:
+                w.write(all_addresses[ip].to_csv())
+                if all_addresses[ip].total() >= 1000:
+                    nb_others += 1
+                    load_others += others[ip].total()
+                else:
+                    nb_tiny += 1
+                    load_tiny += others[ip].total()
+            net_prefix = subnet_string(al.ip)
+            if not net_prefix in nets:
+                nl = address_file_line("")
+                nl.ip = net_prefix
+                nl.as_name = al.as_name
+                nl.asn = al.asn
+                nl.add(al)
+                nets[net_prefix] = nl
+            else:
+                nets[net_prefix].add(al)
 
 nb_total = nb_top + nb_frequent + nb_others + nb_tiny
 load_total = load_top + load_frequent + load_others + load_tiny
