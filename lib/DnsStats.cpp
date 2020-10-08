@@ -241,7 +241,7 @@ static char const * RegisteredTldName[] = {
     "HR", "HSBC", "HT", "HU", "HUGHES", "HYATT", "HYUNDAI", "IBM", "ICBC", "ICE",
     "ICU", "ID", "IE", "IEEE", "IFM", "IKANO", "IL", "IM", "IMAMAT", "IMDB", "IMMO",
     "IMMOBILIEN", "IN", "INDUSTRIES", "INFINITI", "INFO", "INC", "ING", "INK", "INSTITUTE",
-    "INSURANCE", "INSURE", "INT", "INTEL", "INTERNATIONAL", "INTUIT", "INVESTMENTS", "IO",
+    "INSURANCE", "INSURE", "INT", "INTERNATIONAL", "INTUIT", "INVESTMENTS", "IO",
     "IPIRANGA", "IQ", "IR", "IRISH", "IS", "ISMAILI", "IST", "ISTANBUL", "IT",
     "ITAU", "ITV", "IVECO", "JAGUAR", "JAVA", "JCB", "JCP", "JE", "JEEP", "JETZT",
     "JEWELRY", "JIO", "JLL", "JM", "JMP", "JNJ", "JO", "JOBS", "JOBURG", "JOT", "JOY",
