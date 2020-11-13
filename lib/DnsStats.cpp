@@ -166,6 +166,7 @@ static char const * RegistryNameById[] = {
     "TLD_AVG_DELAY_IP",
     "TLD_MIN_DELAY_LOAD",
     "ADDRESS_DELAY",
+    "NAME_PARTS_COUNT",
     "DEBUG"
 };
 
@@ -669,6 +670,7 @@ void DnsStats::SubmitOpcodeAndFlags(uint32_t opcode, uint32_t flags)
 int DnsStats::SubmitName(uint8_t * packet, uint32_t length, uint32_t start, bool should_tabulate)
 {
     uint32_t l = 0;
+    int nb_name_parts = 0;
 
     while (start < length)
     {
@@ -730,6 +732,7 @@ int DnsStats::SubmitName(uint8_t * packet, uint32_t length, uint32_t start, bool
             }
             else
             {
+                nb_name_parts++;
                 start += l + 1;
             }
         }
@@ -1192,7 +1195,68 @@ int DnsStats::GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
     *name_length = name_index;
 
     return start_next;
+}
 
+uint32_t DnsStats::CountDnsNameParts(uint8_t* packet, uint32_t length, uint32_t start)
+{
+    uint32_t l = 0;
+    uint32_t name_start = start;
+    uint32_t start_next = 0;
+    size_t name_index = 0;
+    uint32_t nb_parts = 0;
+
+    while (start < length) {
+        l = packet[start];
+
+        if (l == 0)
+        {
+            /* end of parsing*/
+            break;
+        }
+        else if ((l & 0xC0) == 0xC0)
+        {
+            if ((start + 2) > length)
+            {
+                /* error */
+                break;
+            }
+            else
+            {
+                uint32_t new_start = ((l & 63) << 8) + packet[start + 1];
+
+                if (new_start < name_start)
+                {
+                    start = new_start;
+                }
+                else {
+                    /* Basic restriction to avoid name decoding loops */
+                    break;
+                }
+            }
+        }
+        else if (l > 0x3F)
+        {
+            /* found an extension. Don't know how to parse it! */
+            break;
+        }
+        else
+        {
+            /* add a label to the name. */
+            if (start + l + 1 > length)
+            {
+                /* format error */
+                break;
+            }
+            else
+            {
+                nb_parts++;
+                start += l + 1;
+            }
+        }
+    }
+
+
+    return nb_parts;
 }
 
 int DnsStats::CompareDnsName(const uint8_t * packet, uint32_t length, uint32_t start1, uint32_t start2)
@@ -2761,6 +2825,8 @@ void DnsStats::NameLeaksAnalysis(
                         (void)queryUsage.InsertOrAdd(&key, true, &stored);
                     }
                 }
+
+                SubmitRegistryNumber(REGISTRY_DNS_NAME_PARTS_COUNT, CountDnsNameParts(packet, packet_length, name_offset));
 
 #ifdef PRIVACY_CONSCIOUS
                 /* Debug option, list all the names found in queries to the root */

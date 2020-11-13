@@ -104,6 +104,7 @@
 #define REGISTRY_DNS_TLD_AVG_DELAY_IP 60
 #define REGISTRY_DNS_TLD_MIN_DELAY_LOAD 61
 #define REGISTRY_DNS_ADDRESS_DELAY 62
+#define REGISTRY_DNS_NAME_PARTS_COUNT 63
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
 #define DNS_REGISTRY_ERROR_RRCLASS (1<<1)
@@ -376,6 +377,8 @@ public:
 
     static int GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
         uint8_t * name, size_t name_max, size_t * name_length);
+
+    uint32_t CountDnsNameParts(uint8_t* packet, uint32_t length, uint32_t start);
 
     static int CompareDnsName(const uint8_t * packet, uint32_t length, uint32_t start1, uint32_t start2);
     static int Compare2DnsNames(const uint8_t* packet1, uint32_t length1, uint32_t start1, 
