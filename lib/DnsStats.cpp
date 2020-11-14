@@ -167,6 +167,7 @@ static char const * RegistryNameById[] = {
     "TLD_MIN_DELAY_LOAD",
     "ADDRESS_DELAY",
     "NAME_PARTS_COUNT",
+    "CHROMIUM_PROBES",
     "DEBUG"
 };
 
@@ -1095,7 +1096,7 @@ char const* DnsStats::LeakTypeName(DnsStatsLeakType leakType)
     case dnsLeakFrequent:
         x = "frequent";
         break;
-    case dnsLeakDGA:
+    case dnsLeakChromiumProbe:
         x = "dga";
         break;
     case dnsLeakJumbo:
@@ -1595,15 +1596,29 @@ void DnsStats::ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id, ui
     {
         if (export_count < max_leak_count && lines[i]->tld_len < 64)
         {
-            SubmitRegistryStringAndCount(registry_id,
-                (uint32_t) lines[i]->tld_len, lines[i]->tld, lines[i]->count);
-            export_count++;
+            if (registry_id == REGISTRY_DNS_LeakedTLD && 
+                IsProbablyChromiumProbe(lines[i]->tld, lines[i]->tld_len, lines[i]->max_name_parts) &&
+                lines[i]->count < 3) {
+                SubmitRegistryNumberAndCount(REGISTRY_CHROMIUM_PROBES,
+                    (uint32_t)lines[i]->tld_len, lines[i]->count);
+            }
+            else {
+                SubmitRegistryStringAndCount(registry_id,
+                    (uint32_t)lines[i]->tld_len, lines[i]->tld, lines[i]->count);
+                export_count++;
+            }
         }
         else if (registry_id == REGISTRY_DNS_LeakedTLD)
         {
             /* Add count of leaks by length -- should replace by pattern match later */
-            SubmitRegistryNumberAndCount(REGISTRY_DNS_LeakByLength, 
-                (uint32_t) lines[i]->tld_len, lines[i]->count);
+            if (IsProbablyChromiumProbe(lines[i]->tld, lines[i]->tld_len, lines[i]->max_name_parts)) {
+                SubmitRegistryNumberAndCount(REGISTRY_CHROMIUM_PROBES,
+                    (uint32_t)lines[i]->tld_len, lines[i]->count);
+            }
+            else {
+                SubmitRegistryNumberAndCount(REGISTRY_DNS_LeakByLength,
+                    (uint32_t)lines[i]->tld_len, lines[i]->count);
+            }
         }
         else if (registry_id == REGISTRY_DNS_LEAK_2NDLEVEL)
         {
@@ -1803,9 +1818,9 @@ bool DnsStats::IsFrequentLeakTld(uint8_t * tld, size_t length)
  * and numbers "looks random", but in practice that's very hard, since
  * actual domain names are often created from acronyms and abbreviations */
 
-bool DnsStats::IsProbablyDgaTld(uint8_t * tld, size_t length)
+bool DnsStats::IsProbablyChromiumProbe(uint8_t * tld, size_t length, uint32_t nb_name_parts)
 {
-    bool is_dga = (length >= 7 && length <= 15);
+    bool is_dga = (nb_name_parts == 1 && length >= 7 && length <= 15);
 
     if (is_dga) {
         for (size_t i = 0; i < length; i++) {
@@ -2678,6 +2693,7 @@ void DnsStats::NameLeaksAnalysis(
 
     if (rootAddresses.IsInList(server_addr, server_addr_length))
     {
+        uint32_t nb_name_parts = CountDnsNameParts(packet, packet_length, name_offset);
         /* Perform statistics on root traffic */
         SubmitRegistryNumber(REGISTRY_DNS_root_QR, rcode);
 
@@ -2722,14 +2738,14 @@ void DnsStats::NameLeaksAnalysis(
                 else
                 {
                     /* Insert in leakage table */
-                    TldAsKey key(tld, tld_length);
+                    TldAsKey key(tld, tld_length, nb_name_parts);
                     bool stored = false;
-                    (void)tldLeakage.InsertOrAdd(&key, true, &stored);\
+                    (void)tldLeakage.InsertOrAdd(&key, true, &stored);
                     if (IsFrequentLeakTld(tld, tld_length)) {
                         x_type = dnsLeakFrequent;
                     }
-                    else if (IsProbablyDgaTld(tld, tld_length)) {
-                        x_type = dnsLeakDGA;
+                    else if (IsProbablyChromiumProbe(tld, tld_length, nb_name_parts)) {
+                        x_type = dnsLeakChromiumProbe;
                     }
                     else if (tld_length >= 16) {
                         x_type = dnsLeakJumbo;
@@ -2737,14 +2753,23 @@ void DnsStats::NameLeaksAnalysis(
                     else {
                         x_type = dnsLeakOther;
                     }
-                    /* TODO: If full enough, remove the LRU, and account for it in the patterns catalog */
+
+                    /* If full enough, remove the LRU, and account for it in the patterns catalog */
                     if (tldLeakage.GetCount() > max_tld_leakage_table_count)
                     {
                         TldAsKey* removed = tldLeakage.RemoveLRU();
                         if (removed != NULL)
                         {
                             /* Add count of leaks by length -- should replace by pattern match later */
-                            SubmitRegistryNumber(REGISTRY_DNS_LeakByLength, (uint32_t)removed->tld_len);
+                            /* TODO: accumulate as Chromium Probe if profile matches. */
+                            if (IsProbablyChromiumProbe(removed->tld, removed->tld_len, removed->max_name_parts)) {
+                                SubmitRegistryNumberAndCount(REGISTRY_CHROMIUM_PROBES,
+                                    (uint32_t)removed->tld_len, removed->count);
+                            }
+                            else {
+                                SubmitRegistryNumberAndCount(REGISTRY_DNS_LeakByLength,
+                                    (uint32_t)removed->tld_len, removed->count);
+                            }
 
                             delete removed;
                         }
@@ -3280,6 +3305,19 @@ TldAsKey::TldAsKey(uint8_t * tld, size_t tld_len)
     HashNext(NULL),
     MoreRecentKey(NULL),
     LessRecentKey(NULL),
+    max_name_parts(1),
+    count(1),
+    hash(0)
+{
+    CanonicCopy(this->tld, sizeof(this->tld) - 1, &this->tld_len, tld, tld_len);
+}
+
+TldAsKey::TldAsKey(uint8_t* tld, size_t tld_len, uint32_t nb_name_parts)
+    :
+    HashNext(NULL),
+    MoreRecentKey(NULL),
+    LessRecentKey(NULL),
+    max_name_parts(nb_name_parts),
     count(1),
     hash(0)
 {
@@ -3315,7 +3353,7 @@ uint32_t TldAsKey::Hash()
 
 TldAsKey * TldAsKey::CreateCopy()
 {
-    TldAsKey * ret = new TldAsKey(this->tld, this->tld_len);
+    TldAsKey * ret = new TldAsKey(this->tld, this->tld_len, this->max_name_parts);
 
     if (ret != NULL)
     {
@@ -3327,6 +3365,7 @@ TldAsKey * TldAsKey::CreateCopy()
 
 void TldAsKey::Add(TldAsKey * key)
 {
+    this->max_name_parts = max(this->max_name_parts, key->max_name_parts);
     this->count += key->count;
 }
 

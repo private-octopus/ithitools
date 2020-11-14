@@ -105,6 +105,7 @@
 #define REGISTRY_DNS_TLD_MIN_DELAY_LOAD 61
 #define REGISTRY_DNS_ADDRESS_DELAY 62
 #define REGISTRY_DNS_NAME_PARTS_COUNT 63
+#define REGISTRY_CHROMIUM_PROBES 64
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
 #define DNS_REGISTRY_ERROR_RRCLASS (1<<1)
@@ -141,7 +142,7 @@ enum DnsStatsLeakType
     dnsLeakNumeric,
     dnsLeakRfc6771,
     dnsLeakFrequent,
-    dnsLeakDGA,
+    dnsLeakChromiumProbe,
     dnsLeakJumbo,
     dnsLeakOther
 };
@@ -355,7 +356,7 @@ public:
     static bool IsInSortedList(const char ** list, size_t nb_list, uint8_t * tld, size_t length);
     static bool IsRfc6761Tld(uint8_t * tld, size_t length);
     static bool IsFrequentLeakTld(uint8_t * tld, size_t length);
-    static bool IsProbablyDgaTld(uint8_t * tld, size_t length);
+    static bool IsProbablyChromiumProbe(uint8_t * tld, size_t length, uint32_t nb_name_parts);
     static void SetToUpperCase(uint8_t * domain, size_t length);
     static void TldCheck(uint8_t * domain, size_t length, bool * is_binary, bool * is_wrong_syntax, bool * is_numeric);
 

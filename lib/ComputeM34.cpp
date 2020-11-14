@@ -350,10 +350,14 @@ bool ComputeM3::GetM33_3()
     else
     {
         std::vector<CaptureLine *> extract;
+        std::vector<CaptureLine*> extract_chp;
 
         cs.Extract(
             DnsStats::GetTableName(REGISTRY_DNS_LeakByLength), &extract);
-        m33_3.reserve(extract.size());
+        cs.Extract(
+            DnsStats::GetTableName(REGISTRY_CHROMIUM_PROBES), &extract_chp);
+
+        m33_3.reserve(extract.size() + extract_chp.size());
 
         for (size_t i = 0; i < extract.size(); i++)
         {
@@ -381,6 +385,34 @@ bool ComputeM3::GetM33_3()
             line.frequency = ((double)extract[i]->count) / ((double)nb_rootqueries);
 
             if (extract.size() < 8 || line.frequency >= 0.001)
+            {
+                m33_3.push_back(line);
+            }
+        }
+
+        for (size_t i = 0; i < extract_chp.size(); i++)
+        {
+            metric34_line_t line;
+            size_t indx = 0;
+
+            line.domain[indx++] = 'c';
+            line.domain[indx++] = 'h';
+            line.domain[indx++] = 'p';
+            line.domain[indx++] = '_';
+            /* Length is between 0 and 64, and itoa is not portable */
+            if (extract_chp[i]->key_number < 10)
+            {
+                line.domain[indx++] = '0' + extract_chp[i]->key_number;
+            }
+            else
+            {
+                line.domain[indx++] = '0' + extract_chp[i]->key_number / 10;
+                line.domain[indx++] = '0' + extract_chp[i]->key_number % 10;
+            }
+            line.domain[indx++] = 0;
+            line.frequency = ((double)extract_chp[i]->count) / ((double)nb_rootqueries);
+
+            if (extract_chp.size() < 8 || line.frequency >= 0.001)
             {
                 m33_3.push_back(line);
             }
