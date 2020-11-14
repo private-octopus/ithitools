@@ -1202,8 +1202,6 @@ uint32_t DnsStats::CountDnsNameParts(uint8_t* packet, uint32_t length, uint32_t 
 {
     uint32_t l = 0;
     uint32_t name_start = start;
-    uint32_t start_next = 0;
-    size_t name_index = 0;
     uint32_t nb_parts = 0;
 
     while (start < length) {
