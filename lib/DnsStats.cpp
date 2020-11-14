@@ -3363,7 +3363,9 @@ TldAsKey * TldAsKey::CreateCopy()
 
 void TldAsKey::Add(TldAsKey * key)
 {
-    this->max_name_parts = max(this->max_name_parts, key->max_name_parts);
+    if (this->max_name_parts < key->max_name_parts) {
+        this->max_name_parts = key->max_name_parts;
+    }
     this->count += key->count;
 }
 
