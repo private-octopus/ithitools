@@ -126,7 +126,8 @@ ComputeM3::ComputeM3()
     m33_5(0),
     m3_4_1(0),
     m3_5(0),
-    m3_6(0)
+    m3_6(0),
+    m3_8(0)
 {
 }
 
@@ -184,8 +185,8 @@ bool ComputeM3::Compute()
     ret &= GetM3_4();
     ret &= GetM3_5();
     ret &= GetM3_6();
-
     ret &= GetM3_7();
+    ret &= GetM3_8();
 
     return ret;
 }
@@ -248,6 +249,10 @@ bool ComputeM3::Write(FILE * F_out, char const* date, char const* version)
         {
             ret = fprintf(F_out, "M3.7,%s,%s, %s, %6f,\n", date, version, m3_7[i].domain, m3_7[i].frequency) > 0;
         }
+    }
+
+    if (ret && m3_8 >= 0) {
+        ret = fprintf(F_out, "M3.8,%s,%s, , %6f,\n", date, version, m3_8) > 0;
     }
 
     return ret;
@@ -490,6 +495,21 @@ bool ComputeM3::GetM3_7()
     return ret;
 }
 
+bool ComputeM3::GetM3_8()
+{
+    bool ret = true;
+    std::vector<CaptureLine*> extract;
+    cs.Extract(DnsStats::GetTableName(REGISTRY_RESOLVER_SENDING_RECURSIVE), &extract);
+
+    if (extract.size() > 0) {
+        m3_8 = scalar_metric_from_capture(&cs, REGISTRY_RESOLVER_SENDING_RECURSIVE);
+    }
+    else {
+        m3_8 = -1.0;
+    }
+
+    return ret;
+}
 ComputeM4::ComputeM4()
     :
     nb_userqueries(0),
