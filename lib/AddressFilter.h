@@ -128,8 +128,8 @@ public:
 class StatsByIP
 {
 public:
-    StatsByIP(uint8_t * addr, size_t addr_len, bool has_do, bool has_edns, 
-        bool not_qname_mini);
+    StatsByIP(const uint8_t * addr, size_t addr_len, bool has_do, bool has_edns, 
+        bool not_qname_mini, bool is_recursive_query);
     virtual ~StatsByIP();
 
     bool IsSameKey(StatsByIP* key);
@@ -151,6 +151,7 @@ public:
     uint32_t nb_do;
     uint32_t nb_edns;
     uint32_t nb_not_qname_mini;
+    uint32_t nb_recursive_queries;
     uint32_t nb_tcp_443;
     uint32_t nb_tcp_583;
 

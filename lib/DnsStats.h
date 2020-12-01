@@ -106,6 +106,7 @@
 #define REGISTRY_DNS_ADDRESS_DELAY 62
 #define REGISTRY_DNS_NAME_PARTS_COUNT 63
 #define REGISTRY_CHROMIUM_PROBES 64
+#define REGISTRY_RESOLVER_SENDING_RECURSIVE 65
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
 #define DNS_REGISTRY_ERROR_RRCLASS (1<<1)
@@ -348,6 +349,7 @@ public:
     uint8_t * edns_options;
     uint32_t edns_options_length;
     bool is_qname_minimized;
+    bool is_recursive_query;
     char const* address_report;
     char const* name_report;
     bool compress_name_and_address_reports;
@@ -368,7 +370,7 @@ public:
     void ExportDnssecUsage();
 
     void RegisterStatsByIp(uint8_t * dest_addr, size_t dest_addr_length);
-    void RegisterOptionsByIp(uint8_t * source_addr, size_t source_addr_length);
+    void RegisterOptionsByIp(const uint8_t * source_addr, size_t source_addr_length);
 
     void RegisterTcpSynByIp(uint8_t * source_addr, size_t source_addr_length, bool tcp_port_583, bool tcp_port_443);
 

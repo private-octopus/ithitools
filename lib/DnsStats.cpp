@@ -61,6 +61,7 @@ DnsStats::DnsStats()
     edns_options(NULL),
     edns_options_length(0),
     is_qname_minimized(false),
+    is_recursive_query(false),
     address_report(NULL),
     name_report(NULL),
     compress_name_and_address_reports(false)
@@ -168,6 +169,7 @@ static char const * RegistryNameById[] = {
     "ADDRESS_DELAY",
     "NAME_PARTS_COUNT",
     "CHROMIUM_PROBES",
+    "SENDING_RECURSIVE_SET",
     "DEBUG"
 };
 
@@ -666,6 +668,8 @@ void DnsStats::SubmitOpcodeAndFlags(uint32_t opcode, uint32_t flags)
             SubmitRegistryNumber(REGISTRY_DNS_Header_Flags, i);
         }
     }
+
+    is_recursive_query = ((flags & (1 << 4)) != 0);
 }
 
 int DnsStats::SubmitName(uint8_t * packet, uint32_t length, uint32_t start, bool should_tabulate)
@@ -2316,6 +2320,7 @@ void DnsStats::SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_que
     edns_options = NULL;
     edns_options_length = 0;
     is_qname_minimized = false;
+    is_recursive_query = false;
     dnssec_name_index = 0;
     dnssec_packet = NULL;
     dnssec_packet_length = 0;
@@ -2384,7 +2389,6 @@ void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_
     dnssec_packet = NULL;
     dnssec_packet_length = 0;
     error_flags = 0;
-
 
     SubmitOpcodeAndFlags(r_sig->query_opcode, cdns::get_dns_flags(r_sig->qr_dns_flags, true));
 
@@ -3777,7 +3781,7 @@ void DnsStats::ExportDnssecUsageByTable(BinHash<DnssecPrefixEntry>* dnssecTable,
 void DnsStats::RegisterStatsByIp(uint8_t * dest_addr, size_t dest_addr_length)
 {
     StatsByIP x(dest_addr, dest_addr_length, is_do_flag_set, is_using_edns,
-        !is_qname_minimized);
+        !is_qname_minimized, is_recursive_query);
     StatsByIP * y = statsByIp.Retrieve(&x);
 
     x.response_seen = true;
@@ -3796,9 +3800,9 @@ void DnsStats::RegisterStatsByIp(uint8_t * dest_addr, size_t dest_addr_length)
 
 /* This call assumes that is_using_edns and edns_options are set to
  * correct value when parsing the records */
-void DnsStats::RegisterOptionsByIp(uint8_t * source_addr, size_t source_addr_length)
+void DnsStats::RegisterOptionsByIp(const uint8_t * source_addr, size_t source_addr_length)
 {
-    StatsByIP x(source_addr, source_addr_length, false, false, false);
+    StatsByIP x(source_addr, source_addr_length, false, false, false, false);
     StatsByIP * y = statsByIp.Retrieve(&x);
 
     if (y == NULL) {
@@ -3840,7 +3844,7 @@ void DnsStats::RegisterTcpSynByIp(uint8_t * source_addr,
         return;
     }
 
-    StatsByIP x(source_addr, source_addr_length, false, false, false);
+    StatsByIP x(source_addr, source_addr_length, false, false, false, false);
     StatsByIP * y = statsByIp.Retrieve(&x);
     if (tcp_port_443) {
         x.nb_tcp_443++;
@@ -3875,6 +3879,8 @@ void DnsStats::ExportStatsByIp()
     uint32_t total_queries = 0;
     uint32_t issued_syn_583 = 0;
     uint32_t issued_syn_443 = 0;
+    uint32_t sending_recursive_count = 0;
+    uint32_t not_sending_recursive_count = 0;
 
     for (uint32_t i = 0; i < statsByIp.GetSize(); i++)
     {
@@ -3907,6 +3913,13 @@ void DnsStats::ExportStatsByIp()
                 else {
                     not_minimizing_count++;
                 }
+
+                if (sbi->nb_recursive_queries > 0) {
+                    sending_recursive_count++;
+                }
+                else {
+                    not_sending_recursive_count++;
+                }
             }
 
             if (sbi->nb_tcp_443 > 0) {
@@ -3929,6 +3942,9 @@ void DnsStats::ExportStatsByIp()
 
     SubmitRegistryNumberAndCount(REGISTRY_QNAME_MINIMIZATION_Usage, 0, not_minimizing_count);
     SubmitRegistryNumberAndCount(REGISTRY_QNAME_MINIMIZATION_Usage, 1, qname_minimizing_count);
+
+    SubmitRegistryNumberAndCount(REGISTRY_RESOLVER_SENDING_RECURSIVE, 0, not_sending_recursive_count);
+    SubmitRegistryNumberAndCount(REGISTRY_RESOLVER_SENDING_RECURSIVE, 1, sending_recursive_count);
 
     SubmitRegistryNumberAndCount(REGISTRY_EDNS_OPT_USAGE_REF, 0, total_queries);
 
