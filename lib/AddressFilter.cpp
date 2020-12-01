@@ -414,7 +414,7 @@ bool StatsByIP::IsEdnsSupported()
 
 bool StatsByIP::IsQnameMinimized()
 {
-    return (nb_not_qname_mini == 0);
+    return (nb_not_qname_mini == 0 && nb_recursive_queries == 0);
 }
 
 /* Options should be counted at most once per resolver. To
