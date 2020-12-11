@@ -189,6 +189,7 @@ bool ComputeM3::Compute()
     ret &= GetM3_7();
     ret &= GetM3_8();
     ret &= GetM3_9();
+    ret &= GetM3_10();
 
     return ret;
 }
@@ -259,6 +260,12 @@ bool ComputeM3::Write(FILE * F_out, char const* date, char const* version)
 
     if (ret && m3_9 >= 0) {
         ret = fprintf(F_out, "M3.9,%s,%s, , %6f,\n", date, version, m3_9) > 0;
+    }
+
+    if (ret && m3_10.size() > 0) {
+        for (size_t i = 0; i < m3_10.size(); i++) {
+            ret = fprintf(F_out, "M3.10,%s,%s,%zu, %6f,\n", date, version, i, m3_10[i]) > 0;
+        }
     }
 
     return ret;
@@ -541,6 +548,50 @@ bool ComputeM3::GetM3_9()
     }
 
     return ret;
+}
+
+bool ComputeM3::GetM3_10()
+{
+    bool ret = true;
+    uint64_t total = 0;
+    std::vector<CaptureLine*> extract;
+    cs.Extract(DnsStats::GetTableName(REGISTRY_DNS_NAME_PARTS_COUNT), &extract);
+
+    if (extract.size() > 0)
+    {
+        std::vector<uint64_t> counts;
+        uint64_t total = 0;
+
+        for (size_t i = 0; i <= COMPUTE_M3_10_MAX_NAME_PARTS; i++) {
+            counts.push_back(0);
+        }
+
+        for (size_t i = 0; i < extract.size(); i++)
+        {
+            int x = extract[i]->key_number;
+
+            if (x < 0 || x > COMPUTE_M3_10_MAX_NAME_PARTS) {
+                x = COMPUTE_M3_10_MAX_NAME_PARTS;
+            }
+            counts[x] += extract[i]->count;
+            total += extract[i]->count;
+        }
+
+        if (total > 0) {
+            for (size_t i = 0; i <= COMPUTE_M3_10_MAX_NAME_PARTS; i++)
+            {
+                double y = ((double)counts[i]) / ((double)total);
+                if (m3_10.size() <= i) {
+                    m3_10.push_back(y);
+                }
+                else {
+                    m3_10[i] = y;
+                }
+            }
+        }
+    }
+
+    return true;
 }
 
 ComputeM4::ComputeM4()
