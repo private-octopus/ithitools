@@ -77,15 +77,20 @@ public:
     static bool MetricFileIsEarlier(MetricFileHolder * f1, MetricFileHolder * f2);
     static bool MetricLineIsLower(MetricLine * l1, MetricLine * l2);
     static bool MetricNameLineIsBigger(MetricNameLine l1, MetricNameLine l2);
+    static bool MetricNumberIsLower(MetricNameLine l1, MetricNameLine l2);
 
     /* Get the nb_months values of a specific metric */
     bool GetVector(char const * metric_name, char const * key_value, std::vector<double> * metric);
     bool GetCurrent(char const * metric_name, char const * key_value, double * current);
     bool GetAverageAndCurrent(char const * metric_name, char const * key_value, double * average, double * current);
+    bool GetNameOrNumberList(char const* metric_name, std::vector<MetricNameLine>* name_list, bool is_number);
     bool GetNameList(char const * metric_name, std::vector<MetricNameLine> * name_list);
+    bool GetNumberList(char const* metric_name, std::vector<MetricNameLine>* number_list);
 
     bool PrintVector(FILE * F, std::vector<double> * vx, double mult);
+    bool PrintNameOrNumberVectorMetric(FILE* F, char const* sub_met_name, char const* metric_name, double mult, bool is_number);
     bool PrintNameVectorMetric(FILE * F, char const * sub_met_name, char const * metric_name, double mult);
+    bool PrintNumberVectorMetric(FILE* F, char const* sub_met_name, char const* metric_name, double mult);
     bool PrintNameList(FILE * F, std::vector<MetricNameLine> * name_list, double mult);
 
     /* Metric specific publishers */
