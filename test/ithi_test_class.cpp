@@ -359,7 +359,7 @@ bool ithi_test_class::CompareCS(CaptureSummary* x, CaptureSummary * y)
         }
         else if (x->summary[i]->count != y->summary[i]->count)
         {
-            TEST_LOG("Summary %d differ, count = %d vs %d\n", i, x->summary[i], y->summary[i]);
+            TEST_LOG("Summary %d differ, count = %d vs %d\n", i, x->summary[i]->count, y->summary[i]->count);
             ret = false;
         }
     }

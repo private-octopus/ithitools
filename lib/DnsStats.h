@@ -107,6 +107,7 @@
 #define REGISTRY_DNS_NAME_PARTS_COUNT 63
 #define REGISTRY_CHROMIUM_PROBES 64
 #define REGISTRY_RESOLVER_SENDING_RECURSIVE 65
+#define REGISTRY_CHROMIUM_LEAK_REF 66
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
 #define DNS_REGISTRY_ERROR_RRCLASS (1<<1)
@@ -468,6 +469,8 @@ private:
     int CheckForUnderline(uint8_t * packet, uint32_t length, uint32_t start);
 
     bool IsNumericDomain(uint8_t * tld, uint32_t length);
+
+    uint64_t GetLeaksRef();
 
     void ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id, uint32_t max_leak_count);
     void ExportLeakedDomains();

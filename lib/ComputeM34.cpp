@@ -527,24 +527,31 @@ bool ComputeM3::GetM3_8()
 bool ComputeM3::GetM3_9()
 {
     bool ret = true;
-    uint64_t total = 0;
+    uint64_t total_chr = 0;
+    uint64_t total_ref = 0;
     std::vector<CaptureLine*> extract;
+    std::vector<CaptureLine*> ref_extract;
     cs.Extract(DnsStats::GetTableName(REGISTRY_CHROMIUM_PROBES), &extract);
+    cs.Extract(DnsStats::GetTableName(REGISTRY_CHROMIUM_LEAK_REF), &ref_extract);
+
+    if (ref_extract.size() == 1 && ref_extract[0]->key_number == 0) {
+        total_ref = ref_extract[0]->count;
+    }
 
     if (extract.size() > 0) {
         for (size_t i = 0; i < extract.size(); i++) {
-            total += extract[i]->count;
+            total_chr += extract[i]->count;
         }
 
-        if (total > 0 && nb_rootqueries > 0) {
-            m3_9 = ((double)total)/((double)nb_rootqueries);
+        if (total_chr > 0 && total_ref > 0) {
+            m3_9 = ((double)total_chr)/((double)total_ref);
         }
         else {
             m3_9 = 0.0;
         }
     }
     else {
-        m3_8 = -1.0;
+        m3_9 = -1.0;
     }
 
     return ret;
@@ -573,6 +580,7 @@ bool ComputeM3::GetM3_10()
             if (x < 0 || x > COMPUTE_M3_10_MAX_NAME_PARTS) {
                 x = COMPUTE_M3_10_MAX_NAME_PARTS;
             }
+
             counts[x] += extract[i]->count;
             total += extract[i]->count;
         }

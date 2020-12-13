@@ -170,6 +170,7 @@ static char const * RegistryNameById[] = {
     "NAME_PARTS_COUNT",
     "CHROMIUM_PROBES",
     "SENDING_RECURSIVE_SET",
+    "CHROMIUM_LEAK_REF",
     "DEBUG"
 };
 
@@ -1570,6 +1571,30 @@ bool DnsStats::IsNumericDomain(uint8_t * tld, uint32_t length)
     }
 
     return ret;
+}
+
+uint64_t DnsStats::GetLeaksRef()
+{
+    DnsHashEntry key;
+    DnsHashEntry * r_key;
+    uint64_t leaks_ref = 0;
+    const uint32_t rcode[2] = { DNS_RCODE_NXDOMAIN, DNS_RCODE_NOERROR };
+
+    for (int i = 0; i < 2; i++) {
+        key.count = 0;
+        key.hash = 0;
+        key.registry_id = REGISTRY_DNS_root_QR;
+        key.key_length = sizeof(uint32_t);
+        key.key_type = 0; /* number */
+        key.key_number = rcode[i];
+
+        r_key = (DnsHashEntry*)hashTable.Retrieve(&key);
+        if (r_key != NULL) {
+            leaks_ref += r_key->count;
+        }
+    }
+
+    return leaks_ref;
 }
 
 void DnsStats::ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id, uint32_t max_leak_count)
@@ -3202,6 +3227,10 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
 {
     DnsHashEntry *entry;
     CaptureLine line;
+
+    /* Add the leaks references to the exported list */
+    SubmitRegistryNumberAndCount(REGISTRY_CHROMIUM_LEAK_REF,
+        0, DnsStats::GetLeaksRef());
 
     /* Export the duration if not already done */
     if (t_start_sec != 0 && t_start_usec != 0) {
