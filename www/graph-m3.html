@@ -113,9 +113,16 @@
             fillNamePartsTable("tabM3NamePart", M3Data.M3_10, M3Data);
         }
 
-        // Plot the M3.7 table 
+        // Plot the M3.7 table. Remove the "others" and "none" category for usability
         if ("M37" in M3Data) {
-            fillMetricTableNew("Frequent 2nd level strings", "m37Table", M3Data.M37, M3Data);
+            var list2ld = [];
+            for (i = 0; i < M3Data.M37.length; i++) {
+                var lineSet = M3Data.M37[i];
+                if (lineSet[0] != "-- NONE --" && lineSet[0] != "-- OTHERS --") {
+                    list2ld.push(lineSet);
+                }
+            }
+            fillMetricTableNew("Frequent 2nd level strings", "m37Table", list2ld, M3Data);
         }
 
         // Add the EDNs metrics, etc.
@@ -448,7 +455,7 @@
         <a href="about-m3.html">(?)</a>
     </h2>
     <p>
-        In the following table, the <em>current value</em> is the fraction of queries to the root
+        In the following table, the <em>current value</em> is the fraction of NX Domain queries to the root
         in which specific 2nd level name parts were found in the current month.
         The table also provides the average value over the 3 previous months,
         and the "historical" minimum and maximum observed since the beginning of the measurements.
