@@ -126,7 +126,9 @@ ComputeM3::ComputeM3()
     m33_5(0),
     m3_4_1(0),
     m3_5(0),
-    m3_6(0)
+    m3_6(0),
+    m3_8(0),
+    m3_9(0)
 {
 }
 
@@ -184,8 +186,10 @@ bool ComputeM3::Compute()
     ret &= GetM3_4();
     ret &= GetM3_5();
     ret &= GetM3_6();
-
     ret &= GetM3_7();
+    ret &= GetM3_8();
+    ret &= GetM3_9();
+    ret &= GetM3_10();
 
     return ret;
 }
@@ -247,6 +251,20 @@ bool ComputeM3::Write(FILE * F_out, char const* date, char const* version)
         for (size_t i = 0; ret && i < m3_7.size(); i++)
         {
             ret = fprintf(F_out, "M3.7,%s,%s, %s, %6f,\n", date, version, m3_7[i].domain, m3_7[i].frequency) > 0;
+        }
+    }
+
+    if (ret && m3_8 >= 0) {
+        ret = fprintf(F_out, "M3.8,%s,%s, , %6f,\n", date, version, m3_8) > 0;
+    }
+
+    if (ret && m3_9 >= 0) {
+        ret = fprintf(F_out, "M3.9,%s,%s, , %6f,\n", date, version, m3_9) > 0;
+    }
+
+    if (ret && m3_10.size() > 0) {
+        for (size_t i = 0; i < m3_10.size(); i++) {
+            ret = fprintf(F_out, "M3.10,%s,%s,%zu, %6f,\n", date, version, i, m3_10[i]) > 0;
         }
     }
 
@@ -350,10 +368,14 @@ bool ComputeM3::GetM33_3()
     else
     {
         std::vector<CaptureLine *> extract;
+        std::vector<CaptureLine*> extract_chr;
 
         cs.Extract(
             DnsStats::GetTableName(REGISTRY_DNS_LeakByLength), &extract);
-        m33_3.reserve(extract.size());
+        cs.Extract(
+            DnsStats::GetTableName(REGISTRY_CHROMIUM_PROBES), &extract_chr);
+
+        m33_3.reserve(extract.size() + extract_chr.size());
 
         for (size_t i = 0; i < extract.size(); i++)
         {
@@ -381,6 +403,34 @@ bool ComputeM3::GetM33_3()
             line.frequency = ((double)extract[i]->count) / ((double)nb_rootqueries);
 
             if (extract.size() < 8 || line.frequency >= 0.001)
+            {
+                m33_3.push_back(line);
+            }
+        }
+
+        for (size_t i = 0; i < extract_chr.size(); i++)
+        {
+            metric34_line_t line;
+            size_t indx = 0;
+
+            line.domain[indx++] = 'c';
+            line.domain[indx++] = 'h';
+            line.domain[indx++] = 'r';
+            line.domain[indx++] = '_';
+            /* Length is between 0 and 64, and itoa is not portable */
+            if (extract_chr[i]->key_number < 10)
+            {
+                line.domain[indx++] = '0' + extract_chr[i]->key_number;
+            }
+            else
+            {
+                line.domain[indx++] = '0' + extract_chr[i]->key_number / 10;
+                line.domain[indx++] = '0' + extract_chr[i]->key_number % 10;
+            }
+            line.domain[indx++] = 0;
+            line.frequency = ((double)extract_chr[i]->count) / ((double)nb_rootqueries);
+
+            if (extract_chr.size() < 8 || line.frequency >= 0.001)
             {
                 m33_3.push_back(line);
             }
@@ -456,6 +506,100 @@ bool ComputeM3::GetM3_7()
     GetM3_X(REGISTRY_DNS_LEAK_2NDLEVEL, &m3_7, 0.001);
 
     return ret;
+}
+
+bool ComputeM3::GetM3_8()
+{
+    bool ret = true;
+    std::vector<CaptureLine*> extract;
+    cs.Extract(DnsStats::GetTableName(REGISTRY_RESOLVER_SENDING_RECURSIVE), &extract);
+
+    if (extract.size() > 0) {
+        m3_8 = scalar_metric_from_capture(&cs, REGISTRY_RESOLVER_SENDING_RECURSIVE);
+    }
+    else {
+        m3_8 = -1.0;
+    }
+
+    return ret;
+}
+
+bool ComputeM3::GetM3_9()
+{
+    bool ret = true;
+    uint64_t total_chr = 0;
+    uint64_t total_ref = 0;
+    std::vector<CaptureLine*> extract;
+    std::vector<CaptureLine*> ref_extract;
+    cs.Extract(DnsStats::GetTableName(REGISTRY_CHROMIUM_PROBES), &extract);
+    cs.Extract(DnsStats::GetTableName(REGISTRY_CHROMIUM_LEAK_REF), &ref_extract);
+
+    if (ref_extract.size() == 1 && ref_extract[0]->key_number == 0) {
+        total_ref = ref_extract[0]->count;
+    }
+
+    if (extract.size() > 0) {
+        for (size_t i = 0; i < extract.size(); i++) {
+            total_chr += extract[i]->count;
+        }
+
+        if (total_chr > 0 && total_ref > 0) {
+            m3_9 = ((double)total_chr)/((double)total_ref);
+        }
+        else {
+            m3_9 = 0.0;
+        }
+    }
+    else {
+        m3_9 = -1.0;
+    }
+
+    return ret;
+}
+
+bool ComputeM3::GetM3_10()
+{
+    bool ret = true;
+    uint64_t total = 0;
+    std::vector<CaptureLine*> extract;
+    cs.Extract(DnsStats::GetTableName(REGISTRY_DNS_NAME_PARTS_COUNT), &extract);
+
+    if (extract.size() > 0)
+    {
+        std::vector<uint64_t> counts;
+        uint64_t total = 0;
+
+        for (size_t i = 0; i <= COMPUTE_M3_10_MAX_NAME_PARTS; i++) {
+            counts.push_back(0);
+        }
+
+        for (size_t i = 0; i < extract.size(); i++)
+        {
+            int x = extract[i]->key_number;
+
+            if (x < 0 || x > COMPUTE_M3_10_MAX_NAME_PARTS) {
+                x = COMPUTE_M3_10_MAX_NAME_PARTS;
+            }
+
+            counts[x] += extract[i]->count;
+            total += extract[i]->count;
+        }
+
+        if (total > 0) {
+            for (size_t i = 0; i <= COMPUTE_M3_10_MAX_NAME_PARTS; i++)
+            {
+                double y = ((double)counts[i]) / ((double)total);
+                if (m3_10.size() <= i) {
+                    m3_10.push_back(y);
+                }
+                else {
+                    m3_10[i] = y;
+                }
+            }
+        }
+    }
+
+    return true;
 }
 
 ComputeM4::ComputeM4()

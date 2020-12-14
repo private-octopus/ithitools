@@ -293,6 +293,19 @@ bool ithipublisher::MetricNameLineIsBigger(MetricNameLine l1, MetricNameLine l2)
     return ret;
 }
 
+bool ithipublisher::MetricNumberIsLower(MetricNameLine l1, MetricNameLine l2)
+{
+    bool ret = false;
+    int x1 = atoi(l1.name);
+    int x2 = atoi(l2.name);
+
+    if (x1 < x2)
+    {
+        ret = true;
+    }
+
+    return ret;
+}
 bool ithipublisher::Publish(char const * web_folder)
 {
     /* Create file name for the metric */
@@ -462,7 +475,7 @@ bool ithipublisher::GetAverageAndCurrent(char const * metric_name, char const * 
     return ret;
 }
 
-bool ithipublisher::GetNameList(char const * metric_name, std::vector<MetricNameLine>* name_list)
+bool ithipublisher::GetNameOrNumberList(char const * metric_name, std::vector<MetricNameLine>* name_list, bool is_number)
 {
     size_t line_index = 0;
     double sum = 0;
@@ -523,10 +536,25 @@ bool ithipublisher::GetNameList(char const * metric_name, std::vector<MetricName
         name_list->push_back(current_name);
     }
 
-    /* Sort from bigger to lower */
-    std::sort(name_list->begin(), name_list->end(), ithipublisher::MetricNameLineIsBigger);
+    if (is_number) {
+        /* Sort by increasing metric number */
+        std::sort(name_list->begin(), name_list->end(), ithipublisher::MetricNumberIsLower);
+    } else {
+        /* Sort from bigger to lower */
+        std::sort(name_list->begin(), name_list->end(), ithipublisher::MetricNameLineIsBigger);
+    }
 
     return true;
+}
+
+bool ithipublisher::GetNameList(char const* metric_name, std::vector<MetricNameLine>* name_list)
+{
+    return GetNameOrNumberList(metric_name, name_list, false);
+}
+
+bool ithipublisher::GetNumberList(char const* metric_name, std::vector<MetricNameLine>* number_list)
+{
+    return GetNameOrNumberList(metric_name, number_list, true);
 }
 
 bool ithipublisher::PrintVector(FILE * F, std::vector<double> * vx, double mult)
@@ -547,11 +575,11 @@ bool ithipublisher::PrintVector(FILE * F, std::vector<double> * vx, double mult)
     return ret;
 }
 
-bool ithipublisher::PrintNameVectorMetric(FILE * F, char const * sub_met_name, char const * metric_name, double mult)
+bool ithipublisher::PrintNameOrNumberVectorMetric(FILE * F, char const * sub_met_name, char const * metric_name, double mult, bool is_number)
 {
     std::vector<double>  mvec;
     std::vector<MetricNameLine> name_list;
-    bool ret = GetNameList(sub_met_name, &name_list);
+    bool ret = GetNameOrNumberList(sub_met_name, &name_list, is_number);
 
 
     ret &= fprintf(F, "\"%s\" : [", metric_name) > 0;
@@ -562,7 +590,12 @@ bool ithipublisher::PrintNameVectorMetric(FILE * F, char const * sub_met_name, c
         } else {
             ret = fprintf(F, ",\n") > 0;
         }
-        ret &= (fprintf(F, "[\"%s\", ", name_list[i].name) > 0);
+        if (is_number) {
+            ret &= (fprintf(F, "[ %s, ", name_list[i].name) > 0);
+        }
+        else {
+            ret &= (fprintf(F, "[\"%s\", ", name_list[i].name) > 0);
+        }
 
         if (ret)
         {
@@ -579,6 +612,16 @@ bool ithipublisher::PrintNameVectorMetric(FILE * F, char const * sub_met_name, c
     ret &= fprintf(F, "],\n") > 0;
 
     return ret;
+}
+
+bool ithipublisher::PrintNameVectorMetric(FILE* F, char const* sub_met_name, char const* metric_name, double mult)
+{
+    return PrintNameOrNumberVectorMetric(F, sub_met_name, metric_name, mult, false);
+}
+
+bool ithipublisher::PrintNumberVectorMetric(FILE* F, char const* sub_met_name, char const* metric_name, double mult)
+{
+    return PrintNameOrNumberVectorMetric(F, sub_met_name, metric_name, mult, true);
 }
 
 bool ithipublisher::PrintNameList(FILE * F, std::vector<MetricNameLine>* name_list, double mult)
@@ -678,8 +721,8 @@ bool ithipublisher::PublishDataM2(FILE * F)
 bool ithipublisher::PublishDataM3(FILE * F)
 {
     bool ret = true;
-    const char * sub_met[8] = { "M3.1", "M3.2", "M3.3.1", "M3.3.2", "M3.3.3", "M3.4", "M3.5", "M3.6" };
-    const char * met_data_name[8] = { "M31", "M32", "m331Set", "m332Set", "m333Set", "M34", "M35", "M36" };
+    const char * sub_met[12] = { "M3.1", "M3.2", "M3.3.1", "M3.3.2", "M3.3.3", "M3.4", "M3.5", "M3.6", "M3.7", "M3.8", "M3.9", "M3.10" };
+    const char * met_data_name[12] = { "M31", "M32", "m331Set", "m332Set", "m333Set", "M34", "M35", "M36", "M37", "M38", "M39", "M3_10" };
     std::vector<double> m31, m32, mvec;
     
     ret = fprintf(F, "\"%s\" : ", met_data_name[0]) > 0;
@@ -740,7 +783,25 @@ bool ithipublisher::PublishDataM3(FILE * F)
         ret &= fprintf(F, "\"%s\" : ", met_data_name[m]) > 0;
         ret &= PrintVector(F, &mvec, 100.0);
     }
-    ret &= fprintf(F, "\n") > 0;
+    ret &= fprintf(F, ",\n") > 0;
+
+    /* Add M3.7, list of most used 2nd level domains */
+    ret &= PrintNameVectorMetric(F, sub_met[8], met_data_name[8], 100.0);
+
+    /* Add M3.8 and M3.9 */
+    for (int m = 9; ret && m < 11; m++)
+    {
+        ret &= GetVector(sub_met[m], NULL, &mvec);
+        ret &= fprintf(F, "\"%s\" : ", met_data_name[m]) > 0;
+        ret &= PrintVector(F, &mvec, 100.0);
+        ret &= fprintf(F, ",\n") > 0;
+    }
+
+    /* Add M3.10, frequencies by name parts */
+    ret &= PrintNumberVectorMetric(F, sub_met[11], met_data_name[11], 100.0);
+
+    /* Close the list */
+    ret &= fprintf(F, "\"M3_last\" : 0\n") > 0;
 
     return ret;
 }

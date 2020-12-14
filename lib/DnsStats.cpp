@@ -61,6 +61,7 @@ DnsStats::DnsStats()
     edns_options(NULL),
     edns_options_length(0),
     is_qname_minimized(false),
+    is_recursive_query(false),
     address_report(NULL),
     name_report(NULL),
     compress_name_and_address_reports(false)
@@ -166,6 +167,10 @@ static char const * RegistryNameById[] = {
     "TLD_AVG_DELAY_IP",
     "TLD_MIN_DELAY_LOAD",
     "ADDRESS_DELAY",
+    "NAME_PARTS_COUNT",
+    "CHROMIUM_PROBES",
+    "SENDING_RECURSIVE_SET",
+    "CHROMIUM_LEAK_REF",
     "DEBUG"
 };
 
@@ -664,11 +669,14 @@ void DnsStats::SubmitOpcodeAndFlags(uint32_t opcode, uint32_t flags)
             SubmitRegistryNumber(REGISTRY_DNS_Header_Flags, i);
         }
     }
+
+    is_recursive_query = ((flags & (1 << 4)) != 0);
 }
 
 int DnsStats::SubmitName(uint8_t * packet, uint32_t length, uint32_t start, bool should_tabulate)
 {
     uint32_t l = 0;
+    int nb_name_parts = 0;
 
     while (start < length)
     {
@@ -730,6 +738,7 @@ int DnsStats::SubmitName(uint8_t * packet, uint32_t length, uint32_t start, bool
             }
             else
             {
+                nb_name_parts++;
                 start += l + 1;
             }
         }
@@ -1092,7 +1101,7 @@ char const* DnsStats::LeakTypeName(DnsStatsLeakType leakType)
     case dnsLeakFrequent:
         x = "frequent";
         break;
-    case dnsLeakDGA:
+    case dnsLeakChromiumProbe:
         x = "dga";
         break;
     case dnsLeakJumbo:
@@ -1192,7 +1201,66 @@ int DnsStats::GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
     *name_length = name_index;
 
     return start_next;
+}
 
+uint32_t DnsStats::CountDnsNameParts(uint8_t* packet, uint32_t length, uint32_t start)
+{
+    uint32_t l = 0;
+    uint32_t name_start = start;
+    uint32_t nb_parts = 0;
+
+    while (start < length) {
+        l = packet[start];
+
+        if (l == 0)
+        {
+            /* end of parsing*/
+            break;
+        }
+        else if ((l & 0xC0) == 0xC0)
+        {
+            if ((start + 2) > length)
+            {
+                /* error */
+                break;
+            }
+            else
+            {
+                uint32_t new_start = ((l & 63) << 8) + packet[start + 1];
+
+                if (new_start < name_start)
+                {
+                    start = new_start;
+                }
+                else {
+                    /* Basic restriction to avoid name decoding loops */
+                    break;
+                }
+            }
+        }
+        else if (l > 0x3F)
+        {
+            /* found an extension. Don't know how to parse it! */
+            break;
+        }
+        else
+        {
+            /* add a label to the name. */
+            if (start + l + 1 > length)
+            {
+                /* format error */
+                break;
+            }
+            else
+            {
+                nb_parts++;
+                start += l + 1;
+            }
+        }
+    }
+
+
+    return nb_parts;
 }
 
 int DnsStats::CompareDnsName(const uint8_t * packet, uint32_t length, uint32_t start1, uint32_t start2)
@@ -1505,6 +1573,30 @@ bool DnsStats::IsNumericDomain(uint8_t * tld, uint32_t length)
     return ret;
 }
 
+uint64_t DnsStats::GetLeaksRef()
+{
+    DnsHashEntry key;
+    DnsHashEntry * r_key;
+    uint64_t leaks_ref = 0;
+    const uint32_t rcode[2] = { DNS_RCODE_NXDOMAIN, DNS_RCODE_NOERROR };
+
+    for (int i = 0; i < 2; i++) {
+        key.count = 0;
+        key.hash = 0;
+        key.registry_id = REGISTRY_DNS_root_QR;
+        key.key_length = sizeof(uint32_t);
+        key.key_type = 0; /* number */
+        key.key_number = rcode[i];
+
+        r_key = (DnsHashEntry*)hashTable.Retrieve(&key);
+        if (r_key != NULL) {
+            leaks_ref += r_key->count;
+        }
+    }
+
+    return leaks_ref;
+}
+
 void DnsStats::ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id, uint32_t max_leak_count)
 {
     TldAsKey *tld_entry;
@@ -1531,15 +1623,29 @@ void DnsStats::ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id, ui
     {
         if (export_count < max_leak_count && lines[i]->tld_len < 64)
         {
-            SubmitRegistryStringAndCount(registry_id,
-                (uint32_t) lines[i]->tld_len, lines[i]->tld, lines[i]->count);
-            export_count++;
+            if (registry_id == REGISTRY_DNS_LeakedTLD && 
+                IsProbablyChromiumProbe(lines[i]->tld, lines[i]->tld_len, lines[i]->max_name_parts) &&
+                lines[i]->count < 3) {
+                SubmitRegistryNumberAndCount(REGISTRY_CHROMIUM_PROBES,
+                    (uint32_t)lines[i]->tld_len, lines[i]->count);
+            }
+            else {
+                SubmitRegistryStringAndCount(registry_id,
+                    (uint32_t)lines[i]->tld_len, lines[i]->tld, lines[i]->count);
+                export_count++;
+            }
         }
         else if (registry_id == REGISTRY_DNS_LeakedTLD)
         {
             /* Add count of leaks by length -- should replace by pattern match later */
-            SubmitRegistryNumberAndCount(REGISTRY_DNS_LeakByLength, 
-                (uint32_t) lines[i]->tld_len, lines[i]->count);
+            if (IsProbablyChromiumProbe(lines[i]->tld, lines[i]->tld_len, lines[i]->max_name_parts)) {
+                SubmitRegistryNumberAndCount(REGISTRY_CHROMIUM_PROBES,
+                    (uint32_t)lines[i]->tld_len, lines[i]->count);
+            }
+            else {
+                SubmitRegistryNumberAndCount(REGISTRY_DNS_LeakByLength,
+                    (uint32_t)lines[i]->tld_len, lines[i]->count);
+            }
         }
         else if (registry_id == REGISTRY_DNS_LEAK_2NDLEVEL)
         {
@@ -1739,9 +1845,9 @@ bool DnsStats::IsFrequentLeakTld(uint8_t * tld, size_t length)
  * and numbers "looks random", but in practice that's very hard, since
  * actual domain names are often created from acronyms and abbreviations */
 
-bool DnsStats::IsProbablyDgaTld(uint8_t * tld, size_t length)
+bool DnsStats::IsProbablyChromiumProbe(uint8_t * tld, size_t length, uint32_t nb_name_parts)
 {
-    bool is_dga = (length >= 7 && length <= 15);
+    bool is_dga = (nb_name_parts == 1 && length >= 7 && length <= 15);
 
     if (is_dga) {
         for (size_t i = 0; i < length; i++) {
@@ -2239,6 +2345,7 @@ void DnsStats::SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_que
     edns_options = NULL;
     edns_options_length = 0;
     is_qname_minimized = false;
+    is_recursive_query = false;
     dnssec_name_index = 0;
     dnssec_packet = NULL;
     dnssec_packet_length = 0;
@@ -2307,7 +2414,6 @@ void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_
     dnssec_packet = NULL;
     dnssec_packet_length = 0;
     error_flags = 0;
-
 
     SubmitOpcodeAndFlags(r_sig->query_opcode, cdns::get_dns_flags(r_sig->qr_dns_flags, true));
 
@@ -2614,6 +2720,7 @@ void DnsStats::NameLeaksAnalysis(
 
     if (rootAddresses.IsInList(server_addr, server_addr_length))
     {
+        uint32_t nb_name_parts = CountDnsNameParts(packet, packet_length, name_offset);
         /* Perform statistics on root traffic */
         SubmitRegistryNumber(REGISTRY_DNS_root_QR, rcode);
 
@@ -2658,14 +2765,14 @@ void DnsStats::NameLeaksAnalysis(
                 else
                 {
                     /* Insert in leakage table */
-                    TldAsKey key(tld, tld_length);
+                    TldAsKey key(tld, tld_length, nb_name_parts);
                     bool stored = false;
-                    (void)tldLeakage.InsertOrAdd(&key, true, &stored);\
+                    (void)tldLeakage.InsertOrAdd(&key, true, &stored);
                     if (IsFrequentLeakTld(tld, tld_length)) {
                         x_type = dnsLeakFrequent;
                     }
-                    else if (IsProbablyDgaTld(tld, tld_length)) {
-                        x_type = dnsLeakDGA;
+                    else if (IsProbablyChromiumProbe(tld, tld_length, nb_name_parts)) {
+                        x_type = dnsLeakChromiumProbe;
                     }
                     else if (tld_length >= 16) {
                         x_type = dnsLeakJumbo;
@@ -2673,14 +2780,23 @@ void DnsStats::NameLeaksAnalysis(
                     else {
                         x_type = dnsLeakOther;
                     }
-                    /* TODO: If full enough, remove the LRU, and account for it in the patterns catalog */
+
+                    /* If full enough, remove the LRU, and account for it in the patterns catalog */
                     if (tldLeakage.GetCount() > max_tld_leakage_table_count)
                     {
                         TldAsKey* removed = tldLeakage.RemoveLRU();
                         if (removed != NULL)
                         {
                             /* Add count of leaks by length -- should replace by pattern match later */
-                            SubmitRegistryNumber(REGISTRY_DNS_LeakByLength, (uint32_t)removed->tld_len);
+                            /* TODO: accumulate as Chromium Probe if profile matches. */
+                            if (IsProbablyChromiumProbe(removed->tld, removed->tld_len, removed->max_name_parts)) {
+                                SubmitRegistryNumberAndCount(REGISTRY_CHROMIUM_PROBES,
+                                    (uint32_t)removed->tld_len, removed->count);
+                            }
+                            else {
+                                SubmitRegistryNumberAndCount(REGISTRY_DNS_LeakByLength,
+                                    (uint32_t)removed->tld_len, removed->count);
+                            }
 
                             delete removed;
                         }
@@ -2761,6 +2877,8 @@ void DnsStats::NameLeaksAnalysis(
                         (void)queryUsage.InsertOrAdd(&key, true, &stored);
                     }
                 }
+
+                SubmitRegistryNumber(REGISTRY_DNS_NAME_PARTS_COUNT, CountDnsNameParts(packet, packet_length, name_offset));
 
 #ifdef PRIVACY_CONSCIOUS
                 /* Debug option, list all the names found in queries to the root */
@@ -3110,6 +3228,10 @@ bool DnsStats::ExportToCaptureSummary(CaptureSummary * cs)
     DnsHashEntry *entry;
     CaptureLine line;
 
+    /* Add the leaks references to the exported list */
+    SubmitRegistryNumberAndCount(REGISTRY_CHROMIUM_LEAK_REF,
+        0, DnsStats::GetLeaksRef());
+
     /* Export the duration if not already done */
     if (t_start_sec != 0 && t_start_usec != 0) {
         SubmitRegistryNumberAndCount(REGISTRY_VOLUME_53ONLY, 0, volume_53only);
@@ -3214,6 +3336,19 @@ TldAsKey::TldAsKey(uint8_t * tld, size_t tld_len)
     HashNext(NULL),
     MoreRecentKey(NULL),
     LessRecentKey(NULL),
+    max_name_parts(1),
+    count(1),
+    hash(0)
+{
+    CanonicCopy(this->tld, sizeof(this->tld) - 1, &this->tld_len, tld, tld_len);
+}
+
+TldAsKey::TldAsKey(uint8_t* tld, size_t tld_len, uint32_t nb_name_parts)
+    :
+    HashNext(NULL),
+    MoreRecentKey(NULL),
+    LessRecentKey(NULL),
+    max_name_parts(nb_name_parts),
     count(1),
     hash(0)
 {
@@ -3249,7 +3384,7 @@ uint32_t TldAsKey::Hash()
 
 TldAsKey * TldAsKey::CreateCopy()
 {
-    TldAsKey * ret = new TldAsKey(this->tld, this->tld_len);
+    TldAsKey * ret = new TldAsKey(this->tld, this->tld_len, this->max_name_parts);
 
     if (ret != NULL)
     {
@@ -3261,6 +3396,9 @@ TldAsKey * TldAsKey::CreateCopy()
 
 void TldAsKey::Add(TldAsKey * key)
 {
+    if (this->max_name_parts < key->max_name_parts) {
+        this->max_name_parts = key->max_name_parts;
+    }
     this->count += key->count;
 }
 
@@ -3672,7 +3810,7 @@ void DnsStats::ExportDnssecUsageByTable(BinHash<DnssecPrefixEntry>* dnssecTable,
 void DnsStats::RegisterStatsByIp(uint8_t * dest_addr, size_t dest_addr_length)
 {
     StatsByIP x(dest_addr, dest_addr_length, is_do_flag_set, is_using_edns,
-        !is_qname_minimized);
+        !is_qname_minimized, is_recursive_query);
     StatsByIP * y = statsByIp.Retrieve(&x);
 
     x.response_seen = true;
@@ -3691,9 +3829,9 @@ void DnsStats::RegisterStatsByIp(uint8_t * dest_addr, size_t dest_addr_length)
 
 /* This call assumes that is_using_edns and edns_options are set to
  * correct value when parsing the records */
-void DnsStats::RegisterOptionsByIp(uint8_t * source_addr, size_t source_addr_length)
+void DnsStats::RegisterOptionsByIp(const uint8_t * source_addr, size_t source_addr_length)
 {
-    StatsByIP x(source_addr, source_addr_length, false, false, false);
+    StatsByIP x(source_addr, source_addr_length, false, false, false, false);
     StatsByIP * y = statsByIp.Retrieve(&x);
 
     if (y == NULL) {
@@ -3735,7 +3873,7 @@ void DnsStats::RegisterTcpSynByIp(uint8_t * source_addr,
         return;
     }
 
-    StatsByIP x(source_addr, source_addr_length, false, false, false);
+    StatsByIP x(source_addr, source_addr_length, false, false, false, false);
     StatsByIP * y = statsByIp.Retrieve(&x);
     if (tcp_port_443) {
         x.nb_tcp_443++;
@@ -3770,6 +3908,8 @@ void DnsStats::ExportStatsByIp()
     uint32_t total_queries = 0;
     uint32_t issued_syn_583 = 0;
     uint32_t issued_syn_443 = 0;
+    uint32_t sending_recursive_count = 0;
+    uint32_t not_sending_recursive_count = 0;
 
     for (uint32_t i = 0; i < statsByIp.GetSize(); i++)
     {
@@ -3802,6 +3942,13 @@ void DnsStats::ExportStatsByIp()
                 else {
                     not_minimizing_count++;
                 }
+
+                if (sbi->nb_recursive_queries > 0) {
+                    sending_recursive_count++;
+                }
+                else {
+                    not_sending_recursive_count++;
+                }
             }
 
             if (sbi->nb_tcp_443 > 0) {
@@ -3824,6 +3971,9 @@ void DnsStats::ExportStatsByIp()
 
     SubmitRegistryNumberAndCount(REGISTRY_QNAME_MINIMIZATION_Usage, 0, not_minimizing_count);
     SubmitRegistryNumberAndCount(REGISTRY_QNAME_MINIMIZATION_Usage, 1, qname_minimizing_count);
+
+    SubmitRegistryNumberAndCount(REGISTRY_RESOLVER_SENDING_RECURSIVE, 0, not_sending_recursive_count);
+    SubmitRegistryNumberAndCount(REGISTRY_RESOLVER_SENDING_RECURSIVE, 1, sending_recursive_count);
 
     SubmitRegistryNumberAndCount(REGISTRY_EDNS_OPT_USAGE_REF, 0, total_queries);
 

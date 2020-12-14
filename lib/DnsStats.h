@@ -104,6 +104,10 @@
 #define REGISTRY_DNS_TLD_AVG_DELAY_IP 60
 #define REGISTRY_DNS_TLD_MIN_DELAY_LOAD 61
 #define REGISTRY_DNS_ADDRESS_DELAY 62
+#define REGISTRY_DNS_NAME_PARTS_COUNT 63
+#define REGISTRY_CHROMIUM_PROBES 64
+#define REGISTRY_RESOLVER_SENDING_RECURSIVE 65
+#define REGISTRY_CHROMIUM_LEAK_REF 66
 
 #define DNS_REGISTRY_ERROR_RRTYPE (1<<0)
 #define DNS_REGISTRY_ERROR_RRCLASS (1<<1)
@@ -140,7 +144,7 @@ enum DnsStatsLeakType
     dnsLeakNumeric,
     dnsLeakRfc6771,
     dnsLeakFrequent,
-    dnsLeakDGA,
+    dnsLeakChromiumProbe,
     dnsLeakJumbo,
     dnsLeakOther
 };
@@ -346,6 +350,7 @@ public:
     uint8_t * edns_options;
     uint32_t edns_options_length;
     bool is_qname_minimized;
+    bool is_recursive_query;
     char const* address_report;
     char const* name_report;
     bool compress_name_and_address_reports;
@@ -354,7 +359,7 @@ public:
     static bool IsInSortedList(const char ** list, size_t nb_list, uint8_t * tld, size_t length);
     static bool IsRfc6761Tld(uint8_t * tld, size_t length);
     static bool IsFrequentLeakTld(uint8_t * tld, size_t length);
-    static bool IsProbablyDgaTld(uint8_t * tld, size_t length);
+    static bool IsProbablyChromiumProbe(uint8_t * tld, size_t length, uint32_t nb_name_parts);
     static void SetToUpperCase(uint8_t * domain, size_t length);
     static void TldCheck(uint8_t * domain, size_t length, bool * is_binary, bool * is_wrong_syntax, bool * is_numeric);
 
@@ -366,7 +371,7 @@ public:
     void ExportDnssecUsage();
 
     void RegisterStatsByIp(uint8_t * dest_addr, size_t dest_addr_length);
-    void RegisterOptionsByIp(uint8_t * source_addr, size_t source_addr_length);
+    void RegisterOptionsByIp(const uint8_t * source_addr, size_t source_addr_length);
 
     void RegisterTcpSynByIp(uint8_t * source_addr, size_t source_addr_length, bool tcp_port_583, bool tcp_port_443);
 
@@ -376,6 +381,8 @@ public:
 
     static int GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
         uint8_t * name, size_t name_max, size_t * name_length);
+
+    uint32_t CountDnsNameParts(uint8_t* packet, uint32_t length, uint32_t start);
 
     static int CompareDnsName(const uint8_t * packet, uint32_t length, uint32_t start1, uint32_t start2);
     static int Compare2DnsNames(const uint8_t* packet1, uint32_t length1, uint32_t start1, 
@@ -462,6 +469,8 @@ private:
     int CheckForUnderline(uint8_t * packet, uint32_t length, uint32_t start);
 
     bool IsNumericDomain(uint8_t * tld, uint32_t length);
+
+    uint64_t GetLeaksRef();
 
     void ExportDomains(LruHash<TldAsKey> * table, uint32_t registry_id, uint32_t max_leak_count);
     void ExportLeakedDomains();

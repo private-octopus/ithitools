@@ -34,7 +34,7 @@
         /* Set the date */
         setDateElement(M3Data.date);
 
-        fillCurrentDateFields(["currentId1", "currentId2"], M3Data);
+        fillCurrentDateFields(["currentId1", "currentId2", "currentIdM39"], M3Data);
 
         /* Compute the metrics values and average based on tables */
         var i = 0;
@@ -88,7 +88,7 @@
 
         plotPieChart("pieChartM33", M33Set, colorSet);
 
-        // Plot the graph
+        // Plot the M31/M32 graph
 
         var firstMonth = 1;
         if ("month" in M3Data) {
@@ -101,11 +101,40 @@
         fillMetricTableNew("Frequently used string", "m332Table", M3Data.m332Set, M3Data);
         fillMetricTableNew("Frequent pattern", "m333Table", M3Data.m333Set, M3Data);
 
-        // Add the EDNs metrics, etc.
-        var resolverMetricNames = ["M3.4", "M3.5", "M3.6"];
-        var metricHelpNames = ["about-m3.html#M3Res", "about-m3.html#M3Res", "about-m3.html#M3Res"];
+        // Plot the M3.9 table
+        if ("M39" in M3Data) {
+            pilotM39 = ["valM39", "averageM39", "minM39", "maxM39"];
+            fillValueAverageMinMax(pilotM39, M3Data.M39, format);
+        }
 
-        fillEdnsDoQname(resolverMetricNames, metricHelpNames, M3Data.M34, M3Data.M35, M3Data.M36, M3Data);
+        // Plot the M3.10 table
+        if ("M3_10" in M3Data) {
+            setStringElement("tabM3NamePart", "Start table");
+            fillNamePartsTable("tabM3NamePart", M3Data.M3_10, M3Data);
+        }
+
+        // Plot the M3.7 table. Remove the "others" and "none" category for usability
+        if ("M37" in M3Data) {
+            var list2ld = [];
+            for (i = 0; i < M3Data.M37.length; i++) {
+                var lineSet = M3Data.M37[i];
+                if (lineSet[0] != "-- NONE --" && lineSet[0] != "-- OTHERS --") {
+                    list2ld.push(lineSet);
+                }
+            }
+            fillMetricTableNew("Frequent 2nd level strings", "m37Table", list2ld, M3Data);
+        }
+
+        // Add the EDNs metrics, etc.
+        var resolverMetricNames = ["M3.4", "M3.5", "M3.6", "M3.8" ];
+        var metricHelpNames = ["about-m3.html#M3Res", "about-m3.html#M3Res", "about-m3.html#M3Res", "about-m3.html#M3Res"];
+        var vRDbit = [];
+
+        if ("M38" in M3Data) {
+            vRDbit = M3Data.M38;
+        }
+
+        fillEdnsDoQname(resolverMetricNames, metricHelpNames, M3Data.M34, M3Data.M35, M3Data.M36, vRDbit, M3Data);
     }
     
 </script>
@@ -126,8 +155,11 @@
         that would not have been necessary if the DNS resolvers cached
         the previous replies (M3.2).
         The number of requests that would be necessary in any case is given
-        by the difference: 100% - M3.1 - M3.2. The causes for "name leaks" is further 
+        by the difference: 100% - M3.1 - M3.2. The causes for "name leaks" is further
         explained by <a href="#MetricM33">metrics M3.3</a>.
+        The patterns of 2nd level names in queries are tracked by metric M3.7.
+        The relative importance of Chromioids is tracked by metric M3.9.
+        The number of name parts in queries is tracked by <a href="#nbNameParts">metric M3.10</a>.
         In addition, the characteristics
         such as usage of EDNS, DNSSEC or QNAME minimizations are
         tracked by <a href="#rootResolverStats">metrics M3.4, M3.5 and M3.6</a>.
@@ -372,16 +404,74 @@
     </p>
     <div id="m333Table">Table M333 not found</div>
 
-    <h2 id="rootResolverStats">Characteristics of resolvers seen at the root</h2>
-<p>
-Additional metrics characterize the options found in queries sent to the root, such as whether resolvers use extended DNS (M3.4.1),
-what EDNS options they use (M3.4.2), whether they set the DNSSEC OK bit in queries (M3.5), and whether they appear to
-enforce QName Minimization (M3.6)
-</p>
+    <h2 id="chromioids">Fraction of Chromioids in root queries</h2>
+    <p>
+        The metric M3.9 tracks the fraction of queries that are sent to names dynamically generated
+        using the algorithm implemented in Chromium browser:
+    </p>
+    <ul>
+        <li>Exactly one name part,</li>
+        <li>Name composed of 7 to 15 alphabetic characters that do not match any string frequently used in NX domain queries.</li>
+    </ul>
 
-<div id="tableEdnsDoQname">
-Table M3.4, M3.5 and M3.6 was not initialized.
-</div>
+    <table class="metrics">
+        <tr>
+            <th> Metric </th>
+            <th class="number" id="currentIdM39">Current Value</th>
+            <th class="number">Past 3 months</th>
+            <th class="number">Historic Low</th>
+            <th class="number">Historic High</th>
+        </tr>
+        <tr>
+            <td>
+                <a href="#M39">M3.9 (% Queries to Chromiods)</a>
+                <a href="about-m3.html">(?)</a>
+            </td>
+            <td class="number" id="valM39">
+                <b>-</b>
+            </td>
+            <td class="number" id="averageM39">
+                <b>-</b>
+            </td>
+            <td class="number" id="minM39">
+                -
+            </td>
+            <td class="number" id="maxM39">
+                -
+            </td>
+        </tr>
+    </table>
+
+    <h2 id="nbNameParts">Number of name parts in queries</h2>
+    <p>
+        The metric M3.10 tracks classifies the queries seen at the root
+        by the number of name parts in the target name of the query. For each number of name parts,
+        the metric tracks the fraction of of queries with target names having that number of parts.
+    </p>
+    <div id="tabM3NamePart">Table M3_10 not found</div>
+
+    <h2 id="M37">
+        Second level name strings frequently found in queries
+        <a href="about-m3.html">(?)</a>
+    </h2>
+    <p>
+        In the following table, the <em>current value</em> is the fraction of NX Domain queries to the root
+        in which specific 2nd level name parts were found in the current month.
+        The table also provides the average value over the 3 previous months,
+        and the "historical" minimum and maximum observed since the beginning of the measurements.
+    </p>
+    <div id="m37Table">Table M3.7 not found</div>
+
+    <h2 id="rootResolverStats">Characteristics of resolvers seen at the root</h2>
+    <p>
+        Additional metrics characterize the options found in queries sent to the root, such as whether resolvers use extended DNS (M3.4.1),
+        what EDNS options they use (M3.4.2), whether they set the DNSSEC OK bit in queries (M3.5), and whether they appear to
+        enforce QName Minimization (M3.6)
+    </p>
+
+    <div id="tableEdnsDoQname">
+        Table M3.4, M3.5, M3.6 and M3.8 was not initialized.
+    </div>
 
 </body>
 </html>

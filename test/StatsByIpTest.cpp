@@ -52,53 +52,54 @@ typedef struct st_stats_by_ip_test_in_t {
     bool mini_qname;
     bool is_new;
     bool add_query;
+    bool is_recursive_query;
 } stats_by_ip_test_in_t;
 
 static const stats_by_ip_test_in_t stats_by_ip_test_input[] = {
-    { ip1, sizeof(ip1), false, false, false, false, true },
-    { ip2, sizeof(ip2), false, false, true, true, false },
-    { ip3, sizeof(ip3), false, true, false, false, true },
-    { ip4, sizeof(ip4), false, true, true, true, false },
-    { ip5, sizeof(ip5), true, false, false, false, true },
-    { ip6, sizeof(ip6), true, false, true, true, false },
-    { ip7, sizeof(ip7), true, true, false, false, true },
-    { ip8, sizeof(ip8), true, true, true, true, false },
-    { ip1, sizeof(ip1), false, false, false, false, true },
-    { ip2, sizeof(ip2), false, false, true, false, false },
-    { ip3, sizeof(ip3), false, true, false, false, true },
-    { ip4, sizeof(ip4), false, true, true, false, false },
-    { ip5, sizeof(ip5), true, false, false, false, true },
-    { ip6, sizeof(ip6), true, false, true, false, false },
-    { ip7, sizeof(ip7), true, true, false, false, false },
-    { ip1, sizeof(ip1), false, false, false, false, false },
-    { ip2, sizeof(ip2), false, false, true, false, false },
-    { ip3, sizeof(ip3), false, true, false, false, false },
-    { ip4, sizeof(ip4), false, true, true, false, false },
-    { ip5, sizeof(ip5), true, false, false, false, false },
-    { ip6, sizeof(ip6), true, false, true, false, false },
-    { ip1, sizeof(ip1), false, false, false, false, false },
-    { ip2, sizeof(ip2), false, false, true, false, false },
-    { ip3, sizeof(ip3), false, true, false, false, false },
-    { ip4, sizeof(ip4), false, true, true, false, false },
-    { ip5, sizeof(ip5), true, false, false, false, false },
-    { ip1, sizeof(ip1), false, false, false, false, false },
-    { ip2, sizeof(ip2), false, false, true, false, false },
-    { ip3, sizeof(ip3), false, true, false, false, false },
-    { ip4, sizeof(ip4), false, true, true, false, false },
-    { ip1, sizeof(ip1), false, false, false, false, false },
-    { ip2, sizeof(ip2), false, false, true, false, false },
-    { ip3, sizeof(ip3), false, true, false, false, false },
-    { ip1, sizeof(ip1), false, false, false, false, false },
-    { ip2, sizeof(ip2), false, false, true, false, false },
-    { ip1, sizeof(ip1), false, false, false, false, false },
-    { ip9, sizeof(ip9), false, false, false, false, true },
-    { ip9, sizeof(ip9), false, false, true, false, false },
-    { ip9, sizeof(ip9), false, true, false, false, false },
-    { ip9, sizeof(ip9), false, true, true, false, false },
-    { ip9, sizeof(ip9), true, false, false, false, false },
-    { ip9, sizeof(ip9), true, false, true, false, false },
-    { ip9, sizeof(ip9), true, true, false, false, false },
-    { ip9, sizeof(ip9), true, true, true, false, false }
+    { ip1, sizeof(ip1), false, false, false, false, true, false },
+    { ip2, sizeof(ip2), false, false, true, true, false, false },
+    { ip3, sizeof(ip3), false, true, false, false, true, false },
+    { ip4, sizeof(ip4), false, true, true, true, false, false },
+    { ip5, sizeof(ip5), true, false, false, false, true, false },
+    { ip6, sizeof(ip6), true, false, true, true, false, false },
+    { ip7, sizeof(ip7), true, true, false, false, true, false },
+    { ip8, sizeof(ip8), true, true, true, true, false, false },
+    { ip1, sizeof(ip1), false, false, false, false, true, false },
+    { ip2, sizeof(ip2), false, false, true, false, false, false },
+    { ip3, sizeof(ip3), false, true, false, false, true, false },
+    { ip4, sizeof(ip4), false, true, true, false, false, false },
+    { ip5, sizeof(ip5), true, false, false, false, true, false },
+    { ip6, sizeof(ip6), true, false, true, false, false, false },
+    { ip7, sizeof(ip7), true, true, false, false, false, false },
+    { ip1, sizeof(ip1), false, false, false, false, false, false },
+    { ip2, sizeof(ip2), false, false, true, false, false, false },
+    { ip3, sizeof(ip3), false, true, false, false, false, false },
+    { ip4, sizeof(ip4), false, true, true, false, false, false },
+    { ip5, sizeof(ip5), true, false, false, false, false, false },
+    { ip6, sizeof(ip6), true, false, true, false, false, false },
+    { ip1, sizeof(ip1), false, false, false, false, false, false },
+    { ip2, sizeof(ip2), false, false, true, false, false, false },
+    { ip3, sizeof(ip3), false, true, false, false, false, false },
+    { ip4, sizeof(ip4), false, true, true, false, false, false },
+    { ip5, sizeof(ip5), true, false, false, false, false, false },
+    { ip1, sizeof(ip1), false, false, false, false, false, false },
+    { ip2, sizeof(ip2), false, false, true, false, false, false },
+    { ip3, sizeof(ip3), false, true, false, false, false, false },
+    { ip4, sizeof(ip4), false, true, true, false, false, false },
+    { ip1, sizeof(ip1), false, false, false, false, false, false },
+    { ip2, sizeof(ip2), false, false, true, false, false, false },
+    { ip3, sizeof(ip3), false, true, false, false, false, false },
+    { ip1, sizeof(ip1), false, false, false, false, false, false },
+    { ip2, sizeof(ip2), false, false, true, false, false, false },
+    { ip1, sizeof(ip1), false, false, false, false, false, false },
+    { ip9, sizeof(ip9), false, false, false, false, true, true },
+    { ip9, sizeof(ip9), false, false, true, false, false, true },
+    { ip9, sizeof(ip9), false, true, false, false, false, false },
+    { ip9, sizeof(ip9), false, true, true, false, false, false },
+    { ip9, sizeof(ip9), true, false, false, false, false, false },
+    { ip9, sizeof(ip9), true, false, true, false, false, false },
+    { ip9, sizeof(ip9), true, true, false, false, false, true },
+    { ip9, sizeof(ip9), true, true, true, false, false, true }
 };
 
 static const size_t nb_stats_by_ip_test_input = sizeof(stats_by_ip_test_input) / sizeof(stats_by_ip_test_in_t);
@@ -113,18 +114,19 @@ typedef struct st_stats_by_ip_test_out_t {
     bool is_do_used;
     bool is_edns_supported;
     bool is_qname_minimized;
+    uint32_t nb_recursive_queries;
 } stats_by_ip_test_out_t;
 
 static const stats_by_ip_test_out_t stats_by_ip_test_output[] = {
-    { ip1, sizeof(ip1), 9, 0, 0, 8, false, false, false },
-    { ip2, sizeof(ip2), 7, 0, 0, 0, false, false, true },
-    { ip3, sizeof(ip3), 7, 0, 6, 6, false, true, false },
-    { ip4, sizeof(ip4), 5, 0, 5, 0, false, true, true },
-    { ip5, sizeof(ip5), 5, 4, 0, 4, true, false, false },
-    { ip6, sizeof(ip6), 3, 3, 0, 0, true, false, true },
-    { ip7, sizeof(ip7), 3, 2, 2, 2, true, true, false },
-    { ip8, sizeof(ip8), 1, 1, 1, 0, true, true, true },
-    { ip9, sizeof(ip9), 9, 4, 4, 4, true, true, false }
+    { ip1, sizeof(ip1), 9, 0, 0, 8, false, false, false, 0 },
+    { ip2, sizeof(ip2), 7, 0, 0, 0, false, false, true, 0 },
+    { ip3, sizeof(ip3), 7, 0, 6, 6, false, true, false, 0 },
+    { ip4, sizeof(ip4), 5, 0, 5, 0, false, true, true, 0 },
+    { ip5, sizeof(ip5), 5, 4, 0, 4, true, false, false, 0 },
+    { ip6, sizeof(ip6), 3, 3, 0, 0, true, false, true, 0 },
+    { ip7, sizeof(ip7), 3, 2, 2, 2, true, true, false, 0 },
+    { ip8, sizeof(ip8), 1, 1, 1, 0, true, true, true, 0 },
+    { ip9, sizeof(ip9), 9, 4, 4, 4, true, true, false, 4 }
 };
 
 
@@ -144,12 +146,14 @@ bool StatsByIpTest::DoTest()
             stats_by_ip_test_input[i].addr_len,
             stats_by_ip_test_input[i].has_do,
             stats_by_ip_test_input[i].has_edns,
-            !stats_by_ip_test_input[i].mini_qname);
+            !stats_by_ip_test_input[i].mini_qname,
+            stats_by_ip_test_input[i].is_recursive_query);
         x.response_seen = true;
         if (stats_by_ip_test_input[i].add_query) {
             StatsByIP q (
                 stats_by_ip_test_input[i].addr,
                 stats_by_ip_test_input[i].addr_len,
+                false,
                 false,
                 false,
                 false);
@@ -185,7 +189,7 @@ bool StatsByIpTest::DoTest()
         StatsByIP x(
             stats_by_ip_test_output[i].addr,
             stats_by_ip_test_output[i].addr_len,
-            false, false, false);
+            false, false, false, false);
         
         y = stats.Retrieve(&x);
 
@@ -228,6 +232,11 @@ bool StatsByIpTest::DoTest()
                 y->IsQnameMinimized(), stats_by_ip_test_output[i].is_qname_minimized);
             ret = false;
         }
+        else if (y->nb_recursive_queries != stats_by_ip_test_output[i].nb_recursive_queries) {
+            TEST_LOG("Output case #%d, nb_recursive_queries = %d instead of %d\n", (int)i,
+                y->nb_recursive_queries, stats_by_ip_test_output[i].nb_recursive_queries);
+            ret = false;
+        }
     }
 
     if (ret) {
@@ -252,7 +261,8 @@ bool StatsByIpTest::OptionHashTest()
         stats_by_ip_test_input[0].addr_len,
         stats_by_ip_test_input[0].has_do,
         stats_by_ip_test_input[0].has_edns,
-        !stats_by_ip_test_input[0].mini_qname);
+        !stats_by_ip_test_input[0].mini_qname,
+        stats_by_ip_test_input[0].is_recursive_query);
 
     for (size_t i = 0; ret && i < nb_option_test_cases; i++) {
         if (!x.RegisterNewOption(option_test_cases[i])) {

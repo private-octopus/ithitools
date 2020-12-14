@@ -318,14 +318,15 @@ IPAsKeyLRU * IPAsKeyLRU::CreateCopy()
 }
 
 
-StatsByIP::StatsByIP(uint8_t * addr, size_t addr_len, bool has_do, bool has_edns, 
-    bool not_qname_mini) :
+StatsByIP::StatsByIP(const uint8_t* addr, size_t addr_len, bool has_do, bool has_edns,
+    bool not_qname_mini, bool is_recursive_query) :
     HashNext(NULL),
     count(1),
     hash(0),
-    nb_do((has_do)?1:0),
-    nb_edns((has_edns)?1:0),
+    nb_do((has_do) ? 1 : 0),
+    nb_edns((has_edns) ? 1 : 0),
     nb_not_qname_mini((not_qname_mini) ? 1 : 0),
+    nb_recursive_queries((is_recursive_query) ? 1 : 0),
     nb_tcp_443(0),
     nb_tcp_583(0),
     query_seen(false),
@@ -368,7 +369,7 @@ uint32_t StatsByIP::Hash()
 
 StatsByIP * StatsByIP::CreateCopy()
 {
-    StatsByIP * x = new StatsByIP(addr, addr_len, false, false, false);
+    StatsByIP * x = new StatsByIP(addr, addr_len, false, false, false, false);
 
     if (x != NULL)
     {
@@ -376,6 +377,7 @@ StatsByIP * StatsByIP::CreateCopy()
         x->nb_do = nb_do;
         x->nb_edns = nb_edns;
         x->nb_not_qname_mini = nb_not_qname_mini;
+        x->nb_recursive_queries = nb_recursive_queries;
         x->nb_tcp_443 = nb_tcp_443;
         x->nb_tcp_583 = nb_tcp_583;
         x->query_seen = query_seen;
@@ -392,6 +394,7 @@ void StatsByIP::Add(StatsByIP * key)
     nb_do += key->nb_do;
     nb_edns += key->nb_edns;
     nb_not_qname_mini += key->nb_not_qname_mini;
+    nb_recursive_queries += key->nb_recursive_queries;
     nb_tcp_443 += key->nb_tcp_443;
     nb_tcp_583 += key->nb_tcp_583;
     query_seen |= key->query_seen;
@@ -411,7 +414,7 @@ bool StatsByIP::IsEdnsSupported()
 
 bool StatsByIP::IsQnameMinimized()
 {
-    return (nb_not_qname_mini == 0);
+    return (nb_not_qname_mini == 0 && nb_recursive_queries == 0);
 }
 
 /* Options should be counted at most once per resolver. To

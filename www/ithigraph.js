@@ -435,7 +435,7 @@ function fillMetricTableNew(tableName, tableId, dataSet, MData) {
     tableElem.innerHTML = tableText;
 }
 
-function fillEdnsDoQname(rowNames, helpNames, vEdns, vDo, vQname, MData) {
+function fillEdnsDoQname(rowNames, helpNames, vEdns, vDo, vQname, vRDbit, MData) {
     var i = 0;
     var tableElem = document.getElementById("tableEdnsDoQname");
     var tableText = "<table  class=\"metrics\">";
@@ -520,6 +520,60 @@ function fillEdnsDoQname(rowNames, helpNames, vEdns, vDo, vQname, MData) {
     tableText += "<td class=\"number\">" + vMin.toFixed(3) + "%</td>";
     tableText += "<td class=\"number\">" + vMax.toFixed(3) + "%</td></tr>\n";
 
+    // RD Bit line
+    current = getLastElement(vRDbit);
+    average = getAverageLastNSkip0(vRDbit, 3);
+    vMin = getMinElementSkip0(vRDbit);
+    vMax = getMaxElement(vRDbit);
+
+    tableText += "<tr><td>" + rowNames[3] + "<a href=\"" + helpNames[3] + "\">(?)</a></td><td>%resolvers setting RD bit </td>";
+    tableText += "<td class=\"number\">" + current.toFixed(3) + "%</td>";
+    tableText += "<td class=\"number\">" + average.toFixed(3) + "%</td>\n";
+    tableText += "<td class=\"number\">" + vMin.toFixed(3) + "%</td>";
+    tableText += "<td class=\"number\">" + vMax.toFixed(3) + "%</td></tr>\n";
+
+    tableText += "</table>\n";
+    tableElem.innerHTML = tableText;
+}
+
+function fillNamePartsTable(tableId, namePartsList, MData) {
+    var i = 0;
+    var tableElem = document.getElementById(tableId);
+    var tableText = "<table  class=\"metrics\">";
+    var current = 0;
+    var average = 0;
+    var vMin = 0;
+    var vMax = 0;
+
+    tableElem.innerHTML = "x parts";
+
+    tableText += "<tr><th>Nb Name parts</th><th class=\"number\">";
+
+    if ("year" in MData && "month" in MData) {
+        tableText += "As of " + getMonthId(MData.month) + " " + MData.year;
+    } else {
+        tableText += "Current Value";
+    }
+
+    tableText += "</th><th class=\"number\">Past 3 months</th>";
+    tableText += "<th class=\"number\">Historic Low</th>";
+    tableText += "<th class=\"number\">Historic High</th></tr>\n";
+
+    // Set each row
+    for (i = 0; i < namePartsList.length; i++) {
+        var lineSet = namePartsList[i];
+        current = getLastElement(lineSet[1]);
+        average = getAverageLastNSkip0(lineSet[1], 3);
+        vMin = getMinElementSkip0(lineSet[1]);
+        vMax = getMaxElement(lineSet[1]);
+        if (current > 0 || average > 0 || vMax > 0) {
+            tableText += "<tr><td> " + lineSet[0].toString() + " </td>";
+            tableText += "<td class=\"number\">" + current.toFixed(3) + "%</td>";
+            tableText += "<td class=\"number\">" + average.toFixed(3) + "%</td>\n";
+            tableText += "<td class=\"number\">" + vMin.toFixed(3) + "%</td>";
+            tableText += "<td class=\"number\">" + vMax.toFixed(3) + "%</td></tr>\n";
+        }
+    }
 
     tableText += "</table>\n";
     tableElem.innerHTML = tableText;

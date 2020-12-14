@@ -4,7 +4,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 222.246.129.94,"COM",0,tld,-1,1
 222.246.129.93,"DD9A09E0",1,other,-1,1
 222.246.129.93,"COM808080808080808080808080",1,jumbo,-1,1
-222.246.129.93,"AIRDREAM",1,dga,-1,1
+222.246.129.93,"AIRDREAM",1,other,-1,1
 222.222.222.249,"ZHMFERVPACXVJ",1,dga,-1,1
 222.222.202.165,"WORKGROUP",1,frequent,-1,1
 222.217.39.113,"COM",0,tld,21558,5
@@ -151,7 +151,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 218.75.3.179,"",0,root,109081,2
 218.75.3.178,"NET",0,tld,-1,1
 218.75.3.178,"DHCP HOST",1,bad_syntax,-1,1
-218.75.3.178,"COMQIUBAI",1,dga,-1,1
+218.75.3.178,"COMQIUBAI",1,other,-1,1
 218.75.3.178,"COM",0,tld,247,6
 218.75.3.178,"",0,root,66594,3
 218.74.122.146,"COM",0,tld,-1,1
@@ -608,7 +608,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 202.103.207.116,"HRUNUMB",1,dga,-1,1
 202.103.207.116,"DHCP HOST",1,bad_syntax,184420,2
 202.103.207.116,"",0,root,-1,1
-202.102.224.251,"TENDAAP",1,dga,-1,1
+202.102.224.251,"TENDAAP",1,other,-1,1
 202.101.224.70,"DNBNHBIAXHN",1,dga,-1,1
 202.101.224.70,"DHCP HOST",1,bad_syntax,26103,2
 202.101.224.70,"B1DB391F",1,other,-1,1
@@ -752,7 +752,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 200.45.191.46,"CORP",1,frequent,-1,1
 200.45.191.46,"BMKWFGMLDNGG",1,dga,-1,1
 200.43.29.130,"340",1,numeric,-1,1
-200.35.192.12,"CONNECTIFY",1,dga,-1,1
+200.35.192.12,"CONNECTIFY",1,other,-1,1
 200.33.148.201,"WMCCXPXLATXYD",1,dga,-1,1
 200.33.148.201,"IP",1,other,5446,2
 200.33.148.193,"SCSZXQIMWAQJL",1,dga,-1,1
@@ -853,14 +853,14 @@ Address, TLD, nx_domain, name_type, min_delay, count
 199.59.150.203,"MX",0,tld,-1,1
 199.59.150.203,"LCOM",1,other,-1,1
 199.59.150.203,"INFO",0,tld,-1,1
-199.59.150.203,"FYZEREZ",1,dga,-1,1
+199.59.150.203,"FYZEREZ",1,other,-1,1
 199.59.150.203,"EDU",0,tld,204,2
 199.59.150.203,"COM",0,tld,1340,4
 199.59.150.203,"CL",0,tld,-1,1
 199.59.150.203,"BR",0,tld,-1,1
 199.59.150.200,"US",0,tld,631,2
 199.59.150.200,"LT",0,tld,-1,1
-199.59.150.200,"FYZRZER",1,dga,-1,1
+199.59.150.200,"FYZRZER",1,other,-1,1
 199.59.150.200,"EH",1,other,-1,1
 199.59.150.200,"DR",1,other,-1,1
 199.59.150.200,"COM",0,tld,10,5
@@ -935,7 +935,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 195.114.161.61,"ORG",0,tld,-1,1
 195.114.161.61,"COM",0,tld,-1,1
 195.97.252.6,"NET",0,tld,-1,1
-195.39.226.66,"NIXSPAM",1,dga,-1,1
+195.39.226.66,"NIXSPAM",1,other,-1,1
 195.7.137.237,"COM",0,tld,-1,1
 194.177.233.59,"IO",0,tld,-1,1
 194.165.98.214,"",0,root,-1,1
@@ -946,7 +946,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 193.181.7.153,"TW",0,tld,-1,1
 193.145.205.220,"ORG",0,tld,-1,1
 193.109.72.180,"\208T\238\002\168\030\244",1,binary,48,2
-193.75.110.130,"STEINBELSNES",1,dga,-1,1
+193.75.110.130,"STEINBELSNES",1,other,-1,1
 193.67.53.235,"\196",1,binary,11330,2
 193.42.150.52,"COM",0,tld,-1,1
 193.41.63.181,"ZBQQSTASTDLBS",1,dga,-1,1
@@ -968,7 +968,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 192.221.151.7,"LOCALDOMAIN",1,frequent,-1,1
 192.221.151.7,"LOCAL",1,rfc6771,-1,1
 192.221.151.4,"LOCALDOMAIN",1,frequent,-1,1
-192.221.150.134,"FEELEYLAW",1,dga,-1,1
+192.221.150.134,"FEELEYLAW",1,other,-1,1
 192.221.142.14,"IND",1,other,-1,1
 192.221.142.6,"LOCAL",1,rfc6771,-1,1
 192.221.142.2,"CNZYLMBFUH",1,dga,-1,1
@@ -1340,7 +1340,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 173.244.109.49,"NET",0,tld,-1,1
 173.239.232.166,"BE",0,tld,-1,1
 173.230.196.10,"NET",0,tld,100,2
-173.224.161.180,"PAYPALCORP",1,dga,-1,1
+173.224.161.180,"PAYPALCORP",1,other,-1,1
 173.224.161.180,"KRISH5-2-7084",1,other,-1,1
 173.224.161.180,"",0,root,47074,2
 173.196.225.2,"NET",0,tld,991,2
@@ -1350,7 +1350,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 173.194.171.3,"\032",1,bad_syntax,-1,1
 173.194.103.4,"XCYKLRGMXOPROG",1,dga,-1,1
 173.194.103.4,"DF1-NEXMARK-STREAMING-LOA-05222023-F996-HARNESS-W7XQ",1,jumbo,-1,1
-173.194.90.20,"FJVPDMW",1,dga,-1,1
+173.194.90.20,"FJVPDMW",1,other,-1,1
 173.46.78.186,"ZSPSDXPQQ",1,dga,-1,1
 173.46.78.186,"XEZHQGNEQXEH",1,dga,-1,1
 173.46.78.186,"KNBYHNR",1,dga,-1,1
@@ -1611,7 +1611,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 123.125.71.89,"COMAUP0TW",1,other,-1,1
 123.125.71.72,"COMYL8CDR",1,other,-1,1
 123.125.71.47,"COMK8O2W7",1,other,-1,1
-123.125.71.38,"COMEWPVFE",1,dga,-1,1
+123.125.71.38,"COMEWPVFE",1,other,-1,1
 123.125.71.31,"CC-658",1,other,-1,1
 123.63.202.106,"RU",0,tld,-1,1
 122.234.10.63,"COM",0,tld,-1,1
@@ -1722,7 +1722,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 112.110.240.199,"HDNJTBDADOIX",1,dga,-1,1
 112.110.240.199,"GOD",1,other,-1,1
 112.110.240.199,"FVHMODDPSSS",1,dga,-1,1
-112.65.184.232,"TENDAAP",1,dga,-1,1
+112.65.184.232,"TENDAAP",1,other,-1,1
 112.65.184.232,"LOCAL",1,rfc6771,24904,2
 112.65.184.232,"LAN",1,frequent,-1,1
 112.65.184.232,"JS",1,frequent,-1,1
@@ -1832,7 +1832,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 103.245.79.2,"COM",0,tld,126820,2
 103.245.79.2,"",0,root,-1,1
 103.233.88.89,"PRNEEWZHWCBK",1,dga,-1,1
-103.215.192.15,"LAILAIHOTEL",1,dga,-1,1
+103.215.192.15,"LAILAIHOTEL",1,other,-1,1
 103.212.120.121,"RANDOMTLD",1,dga,-1,1
 103.71.192.19,"COM",0,tld,-1,1
 103.60.217.1,"\032B\163\006",1,binary,-1,1
@@ -2019,7 +2019,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 77.73.176.139,"BR",0,tld,-1,1
 77.65.77.69,"077",1,numeric,-1,1
 76.96.15.81,"CORP",1,frequent,-1,1
-76.96.15.81,"ABOVENET",1,dga,-1,1
+76.96.15.81,"ABOVENET",1,other,-1,1
 76.96.15.81,"1DU-U6098452F-C233-S1495509889-I00000000-APNIC-TEST",1,jumbo,-1,1
 76.96.15.69,"YGXJAYQKPXA",1,dga,-1,1
 76.96.15.69,"JULIWPEVWMQ",1,dga,-1,1
@@ -2035,8 +2035,8 @@ Address, TLD, nx_domain, name_type, min_delay, count
 75.114.82.3,"INVALID",1,rfc6771,-1,1
 75.76.84.102,"MUMAYFGN",1,dga,-1,1
 74.125.183.80,"IMMO",0,tld,-1,1
-74.125.183.67,"HHSMINQECX",1,dga,-1,1
-74.125.183.36,"AIDZRIYQQN",1,dga,-1,1
+74.125.183.67,"HHSMINQECX",1,other,-1,1
+74.125.183.36,"AIDZRIYQQN",1,other,-1,1
 74.125.181.8,"\232\194\183\002\024\179\185\002",1,binary,-1,1
 74.125.80.11,"ZXYKFQRELTPR",1,dga,-1,1
 74.125.80.8,"ARRIS",1,other,-1,1
@@ -2160,7 +2160,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 68.105.28.43,"WZOFFVKIBPFG",1,dga,-1,1
 68.105.28.43,"LBQPEJSGACQ",1,dga,-1,1
 68.105.28.43,"JPDGWYAWUNBIS",1,dga,-1,1
-68.105.28.43,"GILMORE",1,dga,-1,1
+68.105.28.43,"GILMORE",1,other,-1,1
 68.105.28.43,"BELKIN",1,frequent,6998,4
 68.28.169.137,"CWSDWRDGGICGCNH",1,dga,-1,1
 68.28.168.137,"AADRZRLZJ",1,dga,-1,1
@@ -2198,7 +2198,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 67.215.80.18,"@\024\019\002\208\234\018\002\001",1,binary,-1,1
 67.215.80.17,"TORNEGYQDP",1,dga,-1,1
 67.215.80.15,"IHOJEUZJPXK",1,dga,-1,1
-67.215.80.14,"ENTERPRISE",1,dga,-1,1
+67.215.80.14,"ENTERPRISE",1,other,-1,1
 67.215.80.11,"LAN",1,frequent,-1,1
 67.215.21.202,"BELKIN",1,frequent,-1,1
 67.213.225.100,"HOME",1,frequent,-1,1
@@ -2286,7 +2286,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 65.121.159.105,"COM",0,tld,2739,3
 65.121.159.105,"",0,root,-1,1
 65.55.37.40,"COMTODO-LISTO-PARA-MODA-MEXICANA",1,jumbo,-1,1
-65.55.37.40,"BLOGSPAT",1,dga,-1,1
+65.55.37.40,"BLOGSPAT",1,other,-1,1
 65.55.37.39,"HTML",1,frequent,-1,1
 65.55.37.38,"0X005A28",1,other,-1,1
 65.55.37.36,"HTM",1,frequent,-1,1
@@ -2413,13 +2413,13 @@ Address, TLD, nx_domain, name_type, min_delay, count
 61.188.16.138,"ZHAOYISIMANAI",1,dga,-1,1
 61.188.16.138,"DHCP",1,frequent,-1,1
 61.188.16.138,"BLINKAP",1,frequent,-1,1
-61.188.16.102,"CHANGHONG",1,dga,-1,1
+61.188.16.102,"CHANGHONG",1,other,-1,1
 61.188.16.98,"DHCP HOST",1,bad_syntax,-1,1
 61.188.16.94,"HOME",1,frequent,-1,1
 61.188.16.94,"DHCP HOST",1,bad_syntax,119409,2
 61.188.16.90,"HOME",1,frequent,60654,2
 61.188.16.90,"DHCP HOST",1,bad_syntax,127041,2
-61.188.16.90,"CHANGHONGAP",1,dga,-1,1
+61.188.16.90,"CHANGHONGAP",1,other,-1,1
 61.184.90.167,"NET",0,tld,-1,1
 61.178.16.79,"COM",0,tld,-1,1
 61.164.7.73,"COM",0,tld,116599,2
@@ -2444,7 +2444,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 61.163.252.130,"DHCP HOST",1,bad_syntax,-1,1
 61.163.252.38,"WORKGROUP",1,frequent,-1,1
 61.163.252.38,"LOCALDOMAIN",1,frequent,5241,2
-61.163.252.38,"GAOKEAP",1,dga,-1,1
+61.163.252.38,"GAOKEAP",1,other,-1,1
 61.163.252.38,"DHCP HOST",1,bad_syntax,-1,1
 61.163.252.38,"DHCP",1,frequent,3893,2
 61.154.39.225,"COM",0,tld,-1,1
@@ -2470,7 +2470,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 61.140.11.166,"WORKGROUP",1,frequent,-1,1
 61.140.11.166,"URRHDHB",1,dga,-1,1
 61.140.11.166,"IUMBMHEV",1,dga,-1,1
-61.139.113.166,"SICHUANXINHUA",1,dga,-1,1
+61.139.113.166,"SICHUANXINHUA",1,other,-1,1
 61.139.113.158,"DHCP HOST",1,bad_syntax,-1,1
 61.139.113.102,"ENRSMBUV",1,dga,-1,1
 61.139.113.98,"DHCP HOST",1,bad_syntax,-1,1
@@ -2497,9 +2497,9 @@ Address, TLD, nx_domain, name_type, min_delay, count
 59.61.86.18,"COM",0,tld,-1,1
 59.61.86.18,"",0,root,-1,1
 59.51.78.236,"ZHOULEIDE-IPAD",1,other,-1,1
-59.51.78.236,"DISKLESSDOMAIN",1,dga,-1,1
+59.51.78.236,"DISKLESSDOMAIN",1,other,-1,1
 59.51.78.236,"DHCP",1,frequent,-1,1
-59.51.78.236,"BAICAIO",1,dga,-1,1
+59.51.78.236,"BAICAIO",1,other,-1,1
 59.49.49.66,"ARPA",0,tld,-1,1
 59.45.87.195,"COM",0,tld,9,8
 59.45.87.195,"CN",0,tld,193,2
@@ -2526,7 +2526,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 54.71.67.227,"KE",0,tld,-1,1
 54.68.123.193,"ES",0,tld,-1,1
 52.192.75.82,"COM",0,tld,-1,1
-52.192.69.185,"SUBSTRATE",1,dga,-1,1
+52.192.69.185,"SUBSTRATE",1,other,-1,1
 52.190.136.21,"Z",1,other,-1,1
 52.190.136.15,"Z",1,other,-1,1
 52.182.128.26,"Z",1,other,142925,2
@@ -2540,7 +2540,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 52.43.18.40,"NSA",1,other,153,2
 52.41.30.202,"INTERNAL",1,frequent,-1,1
 52.36.158.33,"COM",0,tld,-1,1
-52.27.255.205,"COMPOUPOUSSE",1,dga,-1,1
+52.27.255.205,"COMPOUPOUSSE",1,other,-1,1
 52.15.201.251,"ROI6HC2F1ICFZSGGMO7EICR6YDQ46MKM",1,jumbo,-1,1
 52.14.242.106,"ZYSZ67OA2RUZFMPA5GDCX5IDWOFK9BCB",1,jumbo,-1,1
 50.206.99.3,"ORG",0,tld,154,2
@@ -2879,7 +2879,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 24.25.2.109,"LOCAL",1,rfc6771,-1,1
 24.25.2.109,"GXNZRPINTJS",1,dga,-1,1
 24.25.2.106,"C5-TOUCHPANEL-000FFF174476",1,jumbo,-1,1
-24.25.2.103,"ACCESSCARE",1,dga,-1,1
+24.25.2.103,"ACCESSCARE",1,other,-1,1
 24.25.2.102,"BHUCPOPS",1,dga,-1,1
 24.24.56.134,"UMNXVPYARY",1,dga,-1,1
 24.24.56.133,"KPGZHAQYELONS",1,dga,-1,1
@@ -2974,7 +2974,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 8.0.16.132,"194",1,numeric,-1,1
 8.0.16.132,"133",1,numeric,-1,1
 8.0.16.132,"100",1,numeric,-1,1
-8.0.16.131,"PARSIJOO",1,dga,-1,1
+8.0.16.131,"PARSIJOO",1,other,-1,1
 8.0.16.130,"311",1,numeric,-1,1
 8.0.16.130,"153",1,numeric,-1,1
 8.0.16.130,"110",1,numeric,-1,1

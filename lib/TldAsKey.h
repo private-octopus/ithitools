@@ -25,6 +25,7 @@ class TldAsKey
 {
 public:
     TldAsKey(uint8_t * tld, size_t tld_len);
+    TldAsKey(uint8_t* tld, size_t tld_len, uint32_t nb_name_parts);
     ~TldAsKey();
 
     bool IsSameKey(TldAsKey* key);
@@ -38,6 +39,7 @@ public:
 
     size_t tld_len;
     uint8_t tld[65];
+    uint32_t max_name_parts;
     uint32_t count;
     uint32_t hash;
 
