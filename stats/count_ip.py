@@ -82,7 +82,7 @@ class file_bucket:
             self.ip_dict[ip_address].min_slices = self.ip_dict[ip_address].nb_slices
             f_out.write(self.ip_dict[ip_address].to_csv())
         f_out.close();
-        print("Process " + str(self.bucket_id) + ": " + str(len(self.ip_dict)) + " IP addresses, " + str(self.total_count) + " transactions.")
+        # print("Process " + str(self.bucket_id) + ": " + str(len(self.ip_dict)) + " IP addresses, " + str(self.total_count) + " transactions.")
 
 
 
@@ -115,7 +115,7 @@ def main():
     input_files = sorted(input_files)
 
     nb_process = os.cpu_count()
-    print("Aiming for " + str(nb_process) + " processes")
+    # print("Aiming for " + str(nb_process) + " processes")
     process_left = nb_process
 
     bucket_list = []
@@ -138,11 +138,11 @@ def main():
         bucket_first = bucket_next
 
     nb_process = min(nb_process, len(bucket_list))
-    print("Will use " + str(nb_process) + " processes, " + str(len(bucket_list)) + " buckets")
+    # print("Will use " + str(nb_process) + " processes, " + str(len(bucket_list)) + " buckets")
     total_files = 0
     for bucket in bucket_list:
         total_files += len(bucket.input_files)
-    print("%d files in %d buckets (%d .. %d), vs %d" %(total_files, len(bucket_list), len(bucket_list[0].input_files), len(bucket_list[len(bucket_list)-1].input_files), len(input_files)))
+    # print("%d files in %d buckets (%d .. %d), vs %d" %(total_files, len(bucket_list), len(bucket_list[0].input_files), len(bucket_list[len(bucket_list)-1].input_files), len(input_files)))
 
 
     start_time = time.time()
@@ -176,7 +176,7 @@ def main():
         except:
             traceback.print_exc()
             print("Abandon bucket " + str(bucket.bucket_id))
-        if bucket.bucket_id%10 == 0 or bucket.bucket_id == len(bucket_list) - 1: 
+        if bucket.bucket_id%50 == 0 or bucket.bucket_id == len(bucket_list) - 1: 
             print("After bucket %d, %d IP, %d transactions"%(bucket.bucket_id, len(ip_dict), total_count))
     summary_time = time.time()
     print("Threads took " + str(bucket_time - start_time))
@@ -185,15 +185,15 @@ def main():
     # Document weighted and unweighted user count.
     fip = frequent_ip.frequent_ip()
     fip.load(frequent_ip_file)
-    print("loaded " + str(len(fip.table)) + " addresses from APNIC frequent list.")
-    print("largest: " + str(fip.largest) + ", limit_10000: " + str(fip.limit_10000) + ", smallest:" + str(fip.smallest))
+    # print("loaded " + str(len(fip.table)) + " addresses from APNIC frequent list.")
+    # print("largest: " + str(fip.largest) + ", limit_10000: " + str(fip.limit_10000) + ", smallest:" + str(fip.smallest))
     for ip_text in fip.table:
         if ip_text in ip_dict:
             ip_dict[ip_text].frequent = fip.table[ip_text].count_users_weighted
             ip_dict[ip_text].users = fip.table[ip_text].count_users
     
     frequent_time = time.time()
-    print("Frequent IP took " + str(frequent_time - summary_time))
+    # print("Frequent IP took " + str(frequent_time - summary_time))
 
     # document the AS number
     ipv4table = ip2as.ip2as_table()
@@ -213,7 +213,7 @@ def main():
                 ip_dict[ip].asn = ipv4table.get_asn(ip)
 
     as_time = time.time()
-    print("AS lookup took " + str(as_time - frequent_time))
+    # print("AS lookup took " + str(as_time - frequent_time))
 
 
     f_out = open(count_file, "wt")
