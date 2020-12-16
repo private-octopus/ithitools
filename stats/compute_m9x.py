@@ -124,7 +124,7 @@ class collect_m94:
 
     def add_resolver(self, queries, nx_queries, users):
         if queries > 0:
-            nx_ratio = double(nx_queries)/double(queries)
+            nx_ratio = float(nx_queries)/float(queries)
             i = min(int(nx_ratio/self.step), len(self.load)-1)
             self.user_count[i] += users
             self.resolver_count[i] += 1
