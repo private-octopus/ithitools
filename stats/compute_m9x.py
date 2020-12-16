@@ -151,8 +151,8 @@ all_addresses = dict()
 sum_t = 0
 sum_n = 0
 
-for f in listdir(p):
-    pf = join(p, f)
+for f in listdir(folder_in):
+    pf = join(folder_in, f)
     if isfile(pf):
         for line in open(pf, "rt"):
             try:
