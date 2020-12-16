@@ -100,7 +100,7 @@ class collect_m93:
     def add_resolver(self, queries, users):
         i = 0
         while i < len(self.limits) - 1:
-            if query_load < self.limits[i]:
+            if queries < self.limits[i]:
                 break;
             i += 1
         self.user_count[i] += users
