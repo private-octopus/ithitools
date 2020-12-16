@@ -54,8 +54,9 @@ import frequent_ip
 from ip_summary import subnet_string
 
 class collect_m92:
-    def __init__(self, apnic_top_limit, tiny_limit, nx_ratio):
+    def __init__(self, apnic_top_limit, tiny_limit, positive_min, nx_ratio):
         self.apnic_top_limit = apnic_top_limit
+        self.positive_min = positive_min
         self.tiny_limit = tiny_limit
         self.nx_ratio = nx_ratio
         self.class_names = [ "apnic-top", "apnic-others", "non-apnic-tiny", "non-apnic-positive", "non-apnic-others"]
@@ -73,12 +74,10 @@ class collect_m92:
             i_cat = 1
         elif queries < self.tiny_limit:
             i_cat = 2
+        elif queries >= self.positive_min and queries*self.nx_ratio > nx_queries:
+            i_cat = 3
         else:
-            nx_threshold = queries*nx_ratio
-            if nx_threshold > nx_queries:
-                i_cat = 3
-            else:
-                i_cat = 4
+            i_cat = 4
         self.resolver_count[i_cat] += 1
         self.load[i_cat] += queries
         return i_cat
