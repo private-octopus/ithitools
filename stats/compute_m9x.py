@@ -199,23 +199,23 @@ for ip in all_addresses:
       
 # Now, we compose the m9 output file 
 with open(m9_file,"wt") as w:
-    w.write("M9.1," + m9_date + ",v2.00, ," + str(m91))
+    w.write("M9.1," + m9_date + ",v2.00, ," + str(m91) + "\n")
     for i in range(len(m92.class_names)):
-        w.write("M9.2.1," + m9_date + ",v2.00,\"", m92.class_names[i] + "\"," + str(m92.load[i]))
+        w.write("M9.2.1," + m9_date + ",v2.00,\"" + m92.class_names[i] + "\"," + str(m92.load[i]) + "\n")
     for i in range(len(m92.class_names)):
-        w.write("M9.2.2," + m9_date + ",v2.00,\"", m92.class_names[i] + "\"," + str(m92.resolver_count[i]))
+        w.write("M9.2.2," + m9_date + ",v2.00,\"" + m92.class_names[i] + "\"," + str(m92.resolver_count[i]) + "\n")
     for i in range(len(m93.limits)):
-        w.write("M9.3.1," + m9_date + ",v2.00,", m93.limits[i] + "," + str(m93.load[i]))
+        w.write("M9.3.1," + m9_date + ",v2.00," + m93.limits[i] + "," + str(m93.load[i]) + "\n")
     for i in range(len(m93.limits)):
-        w.write("M9.3.2," + m9_date + ",v2.00,", m93.limits[i] + "," + str(m93.resolver_count[i]))
+        w.write("M9.3.2," + m9_date + ",v2.00," + m93.limits[i] + "," + str(m93.resolver_count[i]) + "\n")
     for i in range(len(m93.limits)):
-        w.write("M9.3.3," + m9_date + ",v2.00,", m93.limits[i] + "," + str(m93.user_count[i]))
+        w.write("M9.3.3," + m9_date + ",v2.00," + m93.limits[i] + "," + str(m93.user_count[i]) + "\n")
     for i in range(len(m94.step_max)):
-        w.write("M9.4.1," + m9_date + ",v2.00,", str(m94.step_max[i]) + "," + str(m94.load[i]))
+        w.write("M9.4.1," + m9_date + ",v2.00," + str(m94.step_max[i]) + "," + str(m94.load[i]) + "\n")
     for i in range(len(m94.step_max)):
-        w.write("M9.4.2," + m9_date + ",v2.00,", str(m94.step_max[i]) + "," + str(m94.resolver_count[i]))
+        w.write("M9.4.2," + m9_date + ",v2.00," + str(m94.step_max[i]) + "," + str(m94.resolver_count[i]) + "\n")
     for i in range(len(m94.step_max)):
-        w.write("M9.4.3," + m9_date + ",v2.00,", str(m94.step_max[i]) + "," + str(m94.user_count[i]))
+        w.write("M9.4.3," + m9_date + ",v2.00," + str(m94.step_max[i]) + "," + str(m94.user_count[i]) + "\n")
 
 print("Found " + str(len(all_addresses)) + " in " + str(sum_n) + " lines for " + str(sum_t) + " queries.");
 
