@@ -93,8 +93,6 @@ class frequent_ip:
 
     def set_10000_limit(self):
         v = sorted(self.table.values(), reverse=True)
-        for i in range(0,10):
-            print("FRQ: " + v[i].ip + "," + str(v[i].count_users_weighted))
         self.largest = v[1].count_users_weighted
         self.smallest = v[len(v)-1].count_users_weighted
         if len(self.table) > 10001:

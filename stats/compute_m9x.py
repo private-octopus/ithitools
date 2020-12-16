@@ -185,7 +185,7 @@ for f in listdir(folder_in):
 # We can compute the metrics M9 using a set of helpers
 print("Found " + str(len(all_addresses)) + " in " + str(sum_n) + " lines for " + str(sum_t) + " queries.");
 m91 = 0
-m92 = collect_m92(fip.limit_1000, 1000, 0.1)
+m92 = collect_m92(fip.limit_10000, 1000, 0.1)
 m93 = collect_m93()
 m94 = collect_m94()
 
