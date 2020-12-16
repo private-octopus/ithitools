@@ -205,11 +205,11 @@ with open(m9_file,"wt") as w:
     for i in range(len(m92.class_names)):
         w.write("M9.2.2," + m9_date + ",v2.00,\"" + m92.class_names[i] + "\"," + str(m92.resolver_count[i]) + "\n")
     for i in range(len(m93.limits)):
-        w.write("M9.3.1," + m9_date + ",v2.00," + m93.limits[i] + "," + str(m93.load[i]) + "\n")
+        w.write("M9.3.1," + m9_date + ",v2.00," +str(m93.limits[i]) + "," + str(m93.load[i]) + "\n")
     for i in range(len(m93.limits)):
-        w.write("M9.3.2," + m9_date + ",v2.00," + m93.limits[i] + "," + str(m93.resolver_count[i]) + "\n")
+        w.write("M9.3.2," + m9_date + ",v2.00," + str(m93.limits[i]) + "," + str(m93.resolver_count[i]) + "\n")
     for i in range(len(m93.limits)):
-        w.write("M9.3.3," + m9_date + ",v2.00," + m93.limits[i] + "," + str(m93.user_count[i]) + "\n")
+        w.write("M9.3.3," + m9_date + ",v2.00," + str(m93.limits[i]) + "," + str(m93.user_count[i]) + "\n")
     for i in range(len(m94.step_max)):
         w.write("M9.4.1," + m9_date + ",v2.00," + str(m94.step_max[i]) + "," + str(m94.load[i]) + "\n")
     for i in range(len(m94.step_max)):
