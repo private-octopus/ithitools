@@ -105,7 +105,7 @@ class collect_m93:
             i += 1
         self.user_count[i] += users
         self.resolver_count[i] += 1
-        self.load[i] += queries
+        self.load[i] += com_queries
 
 class collect_m94:
     def __init__(self):
