@@ -97,10 +97,10 @@ class collect_m93:
             self.load.append(0)
             limit *= 10
 
-    def add_resolver(self, queries, users):
+    def add_resolver(self, com_queries, users):
         i = 0
         while i < len(self.limits) - 1:
-            if queries < self.limits[i]:
+            if com_queries < self.limits[i]:
                 break;
             i += 1
         self.user_count[i] += users
@@ -192,7 +192,7 @@ for ip in all_addresses:
     nb_queries = all_addresses[ip].total()
     nb_nx = all_addresses[ip].nx()
     m91 += nb_queries
-    i_cat = m92.add_resolver(nb_queries, all_addresses[ip].frequent, nb_nx)
+    i_cat = m92.add_resolver(all_addresses[ip].com, all_addresses[ip].frequent, nb_nx)
     if i_cat == 0:
         m93.add_resolver(nb_queries, all_addresses[ip].frequent)
         m94.add_resolver(nb_queries, nb_nx, all_addresses[ip].frequent)
@@ -217,5 +217,5 @@ with open(m9_file,"wt") as w:
     for i in range(len(m94.step_max)):
         w.write("M9.4.3," + m9_date + ",v2.00," + str(m94.step_max[i]) + "," + str(m94.user_count[i]) + "\n")
 
-print("Found " + str(len(all_addresses)) + " in " + str(sum_n) + " lines for " + str(sum_t) + " queries.");
+print("Metrics M9 for " + m9_date + " computed in " + m9_file);
 
