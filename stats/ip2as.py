@@ -113,7 +113,14 @@ class asname:
                     print("When parsing \"" + l + "\": " + str(e))
 
     def name(self, asn):
-        n = 0
+        n = ""
         if asn in self.table:
             n = self.table[asn]
         return n
+    
+    def cc(self, asn):
+        c = "ZZ"
+        if asn in self.table:
+            n = self.table[asn]
+            c = n[-2:]
+        return c
