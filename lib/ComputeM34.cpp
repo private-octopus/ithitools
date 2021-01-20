@@ -560,7 +560,6 @@ bool ComputeM3::GetM3_9()
 bool ComputeM3::GetM3_10()
 {
     bool ret = true;
-    uint64_t total = 0;
     std::vector<CaptureLine*> extract;
     cs.Extract(DnsStats::GetTableName(REGISTRY_DNS_NAME_PARTS_COUNT), &extract);
 
@@ -599,7 +598,7 @@ bool ComputeM3::GetM3_10()
         }
     }
 
-    return true;
+    return ret;
 }
 
 ComputeM4::ComputeM4()
