@@ -36,4 +36,5 @@ jobs:
 
       - name: Run Valgrind
         run: |
+            sudo apt-get install -y valgrind
             valgrind -v --error-exitcode=1 ./ithitest
