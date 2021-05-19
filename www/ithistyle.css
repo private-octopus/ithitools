@@ -1,12 +1,37 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans&display=swap');
+
 html {
-    font-family: Verdana;
+    font-family: 'Noto Sans', Verdana;
+    max-width:75rem;
+    margin:0 auto;
+    padding:0 1rem;
+}
+
+a {
+  color: #047bc1;
+  font-weight:400;
+}
+
+h1 {
+  color:#002b49;
 }
 
 table {
-    font-family: arial, sans-serif;
+  font-family: 'Noto Sans', arial, sans-serif;
     border-collapse: collapse;
     width: 100%;
+    font-size:.875rem;
+}
+
+tr:nth-child(1) {
+  background: #002b49;
+  color: #f1f1f1;
+  font-size:.875rem;
+}
+
+tr:nth-child(1) a {
+  color:white;
 }
 
 td, th {
@@ -16,7 +41,7 @@ td, th {
 }
 
 tr:nth-child(even) {
-    background-color: #dddddd;
+    background-color: #f2fafd;
 }
 
 table.metrics td.number {
@@ -27,37 +52,46 @@ table.metrics th.number {
     text-align: right;
 }
 
-table.metrics .title {
-    background-color: #f2f2f2;
-}
-
 table.metrics .mainTitle {
     font-weight: bold;
-    font-size: x-large;
+    font-size: .875rem;
+}
+
+
+.lockup img{
+  max-height: 8rem;
+}
+
+.lockup {
+  border-bottom:1px solid #ccc;
 }
 
 
  /* Navbar container */
 .navbar {
   overflow: hidden;
-  background-color: #333;
   font-family: Verdana;
+  display: flex;
+  width:85%;
+  justify-content: space-between;
+  height:65px;
 }
 
 /* Links inside the navbar */
 .navbar a {
     float: left;
-    color: #f2f2f2;
+    color: #002b49;
     text-align: center;
-    padding: 14px 16px;
+    padding: 24px 0;
     text-decoration: none;
-    font-size: 20px;
+    text-transform: uppercase;
+    font-size: 16px;
+    font-weight:700;
 }
 
 /* Change the color of links on hover */
 .navbar a:hover {
-    background-color: #ddd;
-    color: black;
+    color: #036aa6;
 }
 
 /* The dropdown container */
@@ -78,17 +112,11 @@ table.metrics .mainTitle {
   margin: 0; /* Important for vertical align on mobile phones */
 }
 
-/* Add a gray background color to navbar links on hover */
-.navbar a:hover, .dropdown:hover .dropbtn {
-  background-color: #F0F0F0;
-}
-
 /* Dropdown content (hidden by default) */
 .dropdown-content {
   display: none;
   position: absolute;
   background-color: #f9f9f9;
-  min-width: 160px;
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
   z-index: 1;
 }
@@ -112,3 +140,27 @@ table.metrics .mainTitle {
 .dropdown:hover .dropdown-content {
   display: block;
 } 
+
+
+/* Footer */
+.footer {
+  width:100%;
+  clear:both;
+  font-size:14px;
+  border-top: 1px solid #ccc;
+  margin: 25px 0;
+  padding-top:35px;
+  height:40px;
+}
+
+.footer span{
+  float:left;
+}
+
+.footer div{
+  float:right;
+}
+
+.footer div a {
+  padding:0 20px;
+}
