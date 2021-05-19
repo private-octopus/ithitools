@@ -166,7 +166,7 @@ bool OdiPublisher::CopyUpdateJsonFile(int metric_id, const char * dest_file_name
     bool updated = false;
     char updated_time[256];
     char source_file_name[512];
-    char line[512];
+    char line[512] = { 0 };
     FILE * F_in = NULL;
     FILE * F_out = NULL;
 
