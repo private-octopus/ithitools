@@ -25,9 +25,6 @@ jobs:
 
       - name: Run cmake
         run: |
-            echo $CC
-            echo $CXX
-            $CC --version
             CXXFLAGS="-Wall -Wextra -Wpedantic -Werror"
             CFLAGS="-Wall -Wextra -Wpedantic -Werror"
             cmake .

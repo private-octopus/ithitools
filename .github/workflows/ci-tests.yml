@@ -25,11 +25,15 @@ jobs:
 
       - name: Run cmake
         run: |
-            CXXFLAGS="-Wall -Wextra -Wpedantic -Werror"
-            CFLAGS="-Wall -Wextra -Wpedantic -Werror"
+            CXXFLAGS="-Wall -Wextra -Wpedantic -Werror -g"
+            CFLAGS="-Wall -Wextra -Wpedantic -Werror -g"
             cmake .
             make -j 4
 
       - name: Perform Unit Tests
         run: |
             ./ithitest
+
+      - name: Run Valgrind
+        run: |
+            valgrind -v --error-exitcode=1 ./ithitest
