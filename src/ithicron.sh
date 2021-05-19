@@ -51,7 +51,7 @@ M3F2=/home/ubuntu/ithi/input/M3/M3-$LAST_LAST_DAY-summary.csv
 echo "Creating summary file in $M3F2"
 
 >m46_this_month.txt
-python ithitools/src/tlsaInput.py tlsa-data-$DATE_DASH.csv /home/viktor/data/tlsa-$DATE_DASH
+python3 ithitools/src/tlsaInput.py tlsa-data-$DATE_DASH.csv /home/viktor/data/tlsa-$DATE_DASH
 echo tlsa-data-$DATE_DASH.csv >> m46_this_month.txt
 find /home/matiasf/* | grep $DATE | grep ".csv" >> m46_this_month.txt
 find /home/uccgh/data/* | grep $DATE_DASH | grep ".csv" >> m46_this_month.txt
@@ -63,7 +63,7 @@ echo "Creating summary file in $M46F1"
 ./ithitools/ithitools -S m46_this_month.txt -o $M46F1
 
 >m46_previous_month.txt
-python ithitools/src/tlsaInput.py tlsa-data-$PREVIOUS_DASH.csv /home/viktor/data/tlsa-$PREVIOUS_DASH
+python3 ithitools/src/tlsaInput.py tlsa-data-$PREVIOUS_DASH.csv /home/viktor/data/tlsa-$PREVIOUS_DASH
 echo tlsa-data-$PREVIOUS_DASH.csv >> m46_previous_month.txt
 find /home/matiasf/* | grep $PREVIOUS_DATE | grep ".csv" >> m46_previous_month.txt
 find /home/uccgh/data/* | grep $PREVIOUS_DASH | grep ".csv" >> m46_previous_month.txt
@@ -100,10 +100,10 @@ echo "Computing metrics for $LAST_DAY"
 ./ithitools/ithitools -i /home/ubuntu/ithi -d $LAST_DAY -m
 
 echo "Ingesting M5 for $LAST_LAST_DAY"
-python ithitools/src/m5ingest.py /home/gih/data/$PREVIOUS_YEAR/$PREVIOUS_MM/ /home/ubuntu/ithi/M5/M5-$LAST_LAST_DAY.csv $LAST_LAST_DAY
+python3 ithitools/src/m5ingest.py /home/gih/data/$PREVIOUS_YEAR/$PREVIOUS_MM/ /home/ubuntu/ithi/M5/M5-$LAST_LAST_DAY.csv $LAST_LAST_DAY
 
 echo "Ingesting M5 for $LAST_DAY"
-python ithitools/src/m5ingest.py /home/gih/data/$YEAR/$MM/ /home/ubuntu/ithi/M5/M5-$LAST_DAY.csv $LAST_DAY
+python3 ithitools/src/m5ingest.py /home/gih/data/$YEAR/$MM/ /home/ubuntu/ithi/M5/M5-$LAST_DAY.csv $LAST_DAY
 
 echo "Computing JSON Data for publication"
 ./ithitools/ithitools -i /home/ubuntu/ithi -w /var/www/html -p
@@ -115,6 +115,6 @@ echo "Computing the pages of partners"
 ./ithitools/src/ithi-m8-partner.sh kaznic
 ./ithitools/src/ithi-m8-partner.sh twnic
 
-python ithitools/src/partnercheck.py /home/ubuntu /home/ubuntu/ithi /var/www/html/check/partnercheck.txt
+python3 ithitools/src/partnercheck.py /home/ubuntu /home/ubuntu/ithi /var/www/html/check/partnercheck.txt
 
 
