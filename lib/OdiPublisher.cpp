@@ -73,7 +73,7 @@ bool OdiPublisher::PublishMetricFile(const char * metric_file_name, char const *
 
     /* Get the JSON file name and copy it */
     if (ret) {
-        ret = snprintf(json_file_name, sizeof(json_file_name), "%s-metadata.json", odi_file_name);
+        ret = (snprintf(json_file_name, sizeof(json_file_name), "%s-metadata.json", odi_file_name) > 0);
 
         if (ret) {
             ret = CopyUpdateJsonFile(metric_id, json_file_name, data_dir, current_time);
@@ -199,7 +199,7 @@ bool OdiPublisher::CopyUpdateJsonFile(int metric_id, const char * dest_file_name
     }
 
     while (ret) {
-        if (fgets(line, sizeof(line), F_in)) {
+        if (fgets(line, sizeof(line), F_in) != NULL) {
             if (!updated) {
                 if (strncmp(line, ithi_json_modified_header, strlen(ithi_json_modified_header)) == 0) {
                     ret = fprintf(F_out, "%s : \"%s\",\n", ithi_json_modified_header, updated_time) > 0;
