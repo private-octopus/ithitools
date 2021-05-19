@@ -22,12 +22,14 @@ jobs:
           # a pull request then we can checkout the head.
           fetch-depth: 2
           submodules: 'recursive'
+
       - name: Run cmake
         run: |
             CXXFLAGS="-Wall -Wextra -Wpedantic -Werror"
             CFLAGS="-Wall -Wextra -Wpedantic -Werror"
             cmake .
             make -j 4
+
       - name: Perform Unit Tests
         run: |
             ./ithitest
