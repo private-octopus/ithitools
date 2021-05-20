@@ -42,6 +42,7 @@ jobs:
       - name: Run Analysis
         run: |
              sudo apt-get install -y clang-tools
+             pwd
              mkdir analysis
              ( cd analysis
                echo "gitdir: ../.git" > .git
@@ -51,10 +52,13 @@ jobs:
                scan-build cmake .
                mkdir -p /tmp/ithipages/analysis
                scan-build -o /tmp/ithipages/analysis --status-bugs make
+               cd ..
              )
+             pwd
                    
       - name: Run Coverage
         run: |
+             pwd
              if [ ! -z "$encrypted_e845a59f36e1_key" -a ! -z "$encrypted_e845a59f36e1_iv" ] ; then
                 geninfo .  -o ithitest.info
                 lcov --remove ithitest.info '/usr/include/*' -o ithi.info
@@ -66,6 +70,7 @@ jobs:
                    
       - name: Run Doxygen
         run: |
+             pwd
              sudo apt-get install -y doxygen
              doxygen travis/Doxyfile
                    
