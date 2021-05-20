@@ -41,3 +41,8 @@ jobs:
       - name: Perform Unit Tests
         run: |
             ./ithitest
+
+      - name: Run Valgrind
+        run: |
+            sudo apt-get install -y valgrind
+            valgrind -v --error-exitcode=1  --track-origins=yes ./ithitest
