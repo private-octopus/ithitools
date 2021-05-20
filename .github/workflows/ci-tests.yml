@@ -74,5 +74,6 @@ jobs:
                    [ -d doxygen  ] && git add doxygen
                    git commit -a -m "update from travis at `date`" \
                    && git push
+                   )
                 )
              fi
