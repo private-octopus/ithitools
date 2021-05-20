@@ -60,6 +60,8 @@ jobs:
                 lcov --remove ithitest.info '/usr/include/*' -o ithi.info
                 mkdir -p /tmp/ithipages/coverage/master
                 genhtml ithi.info --output-directory /tmp/ithipages/coverage/master
+             else
+                echo "Keys are not available"
              fi
                    
       - name: Run Doxygen
@@ -80,4 +82,6 @@ jobs:
                    && git push
                    )
                 )
+             else
+                echo "Keys are not available"
              fi
