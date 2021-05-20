@@ -64,6 +64,7 @@ jobs:
                    
       - name: Run Doxygen
         run: |
+             sudo apt-get install -y doxygen
              doxygen travis/Doxyfile
                    
       - name: Post scripts
