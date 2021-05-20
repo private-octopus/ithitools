@@ -2308,10 +2308,10 @@ void DnsStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
         cdns_ctx->block.tables.addresses[c_address_id].l);
 
     if (cdns_ctx->is_old_version()) {
-        is_udp = (q_sig->qr_transport_flags & 1) == 0;
+        is_udp = (q_sig == NULL) || (q_sig->qr_transport_flags & 1) == 0;
     }
     else {
-        is_udp = ((q_sig->qr_transport_flags >> 1)&0xF) == 0;
+        is_udp = (q_sig == NULL) || ((q_sig->qr_transport_flags >> 1)&0xF) == 0;
     }
 
     if (unfiltered && q_sig != NULL &&

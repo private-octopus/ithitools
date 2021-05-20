@@ -46,6 +46,8 @@ jobs:
              ( cd analysis
                echo "gitdir: ../.git" > .git
                git reset --hard
+               git submodule init
+               git submodule update
                scan-build cmake .
                mkdir -p /tmp/ithipages/analysis
                scan-build -o /tmp/ithipages/analysis --status-bugs make
