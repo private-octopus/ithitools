@@ -13,6 +13,9 @@ function initnavL1(level) {
     }
 
     document.getElementById("navMenu").innerHTML =
+        '<div class="lockup">' +
+        '<img src="' + levelString + 'lockup.png" />' +
+        '</div>' +
         '<div class="navbar">' +
         '<a href="' + levelString + 'index.html">Home</a>' +
         '<div class="dropdown">' +
@@ -67,4 +70,17 @@ function initnavL1(level) {
         '</div>' +
 
         '</div>';
+
+        var footer = document.createElement("div");
+
+        footer.classList.add("footer");
+
+        footer.innerHTML = '<span>© Internet Corporation for Assigned Names and Numbers</span>' +
+        '<div>' +
+        '<a href="https://www.icann.org/privacy/policy">Privacy Policy</a>' +
+        '<a href="https://www.icann.org/privacy/tos">Terms of Service</a>' +
+        '<a href="https://www.icann.org/privacy/cookies">Cookie Policy</a>' +
+        '</div>';
+
+        document.body.appendChild(footer);
 }

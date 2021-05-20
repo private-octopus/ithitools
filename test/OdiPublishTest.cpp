@@ -134,8 +134,8 @@ bool OdiPublishTest::UpdatePublishTestOne(int test_id)
 
     /* Compose the input file name */
     if (ret) {
-        ret = snprintf(input_file_name, sizeof(input_file_name), "%s%s%s",
-            ITHI_DEFAULT_DATA_FOLDER, ITHI_FILE_PATH_SEP, odi_publish_test[test_id].metric_file_in);
+        ret = (snprintf(input_file_name, sizeof(input_file_name), "%s%s%s",
+            ITHI_DEFAULT_DATA_FOLDER, ITHI_FILE_PATH_SEP, odi_publish_test[test_id].metric_file_in) > 0);
     }
     /* Publish at test time */
     if (ret) {
