@@ -29,12 +29,11 @@ jobs:
       - name: Run cmake
         run: |
             sudo apt-get install clangd
-            sudo apt-get install -y libssl-dev
             echo $CC
             echo $CXX
             $CC --version
-            CXXFLAGS="-Wall -Wextra -Wpedantic -Werror"
-            CFLAGS="-Wall -Wextra -Wpedantic -Werror"
+            CXXFLAGS="-Wall -Wextra -Wpedantic -Werror -g"
+            CFLAGS="-Wall -Wextra -Wpedantic -Werror -g"
             cmake .
             make -j 4
 
