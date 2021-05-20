@@ -1,0 +1,39 @@
+---
+name: "CITestsScanBuild"
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  citests:
+    name: CI-Tests-Scan-Build
+    runs-on: ubuntu-latest
+    env:
+        CC: clang
+        CXX: clang++
+  
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          # We must fetch at least the immediate parents so that if this is
+          # a pull request then we can checkout the head.
+          fetch-depth: 2
+          submodules: 'recursive'
+
+      - name: Run cmake and scan
+        run: |
+            sudo apt-get install clangd
+            sudo apt-get install -y clang-tools
+            echo $CC
+            echo $CXX
+            $CC --version
+            CXXFLAGS="-Wall -Wextra -Wpedantic -Werror"
+            CFLAGS="-Wall -Wextra -Wpedantic -Werror"
+            scan-build cmake .
+            scan-build --status-bugs make -j 4
