@@ -521,16 +521,18 @@ function fillEdnsDoQname(rowNames, helpNames, vEdns, vDo, vQname, vRDbit, MData)
     tableText += "<td class=\"number\">" + vMax.toFixed(3) + "%</td></tr>\n";
 
     // RD Bit line
-    current = getLastElement(vRDbit);
-    average = getAverageLastNSkip0(vRDbit, 3);
-    vMin = getMinElementSkip0(vRDbit);
-    vMax = getMaxElement(vRDbit);
+    if (rowNames.length > 3) {
+        current = getLastElement(vRDbit);
+        average = getAverageLastNSkip0(vRDbit, 3);
+        vMin = getMinElementSkip0(vRDbit);
+        vMax = getMaxElement(vRDbit);
 
-    tableText += "<tr><td>" + rowNames[3] + "<a href=\"" + helpNames[3] + "\">(?)</a></td><td>%resolvers setting RD bit </td>";
-    tableText += "<td class=\"number\">" + current.toFixed(3) + "%</td>";
-    tableText += "<td class=\"number\">" + average.toFixed(3) + "%</td>\n";
-    tableText += "<td class=\"number\">" + vMin.toFixed(3) + "%</td>";
-    tableText += "<td class=\"number\">" + vMax.toFixed(3) + "%</td></tr>\n";
+        tableText += "<tr><td>" + rowNames[3] + "<a href=\"" + helpNames[3] + "\">(?)</a></td><td>%resolvers setting RD bit </td>";
+        tableText += "<td class=\"number\">" + current.toFixed(3) + "%</td>";
+        tableText += "<td class=\"number\">" + average.toFixed(3) + "%</td>\n";
+        tableText += "<td class=\"number\">" + vMin.toFixed(3) + "%</td>";
+        tableText += "<td class=\"number\">" + vMax.toFixed(3) + "%</td></tr>\n";
+    }
 
     tableText += "</table>\n";
     tableElem.innerHTML = tableText;
