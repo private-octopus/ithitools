@@ -38,3 +38,41 @@ jobs:
         run: |
             sudo apt-get install -y valgrind
             valgrind -v --error-exitcode=1  --track-origins=yes ./ithitest
+            
+      - name: Run Analysis
+        run: | 
+             mkdir analysis
+             ( cd analysis
+               echo "gitdir: ../.git" > .git
+               git reset --hard
+               scan-build cmake .
+               mkdir -p /tmp/ithipages/analysis
+               scan-build -o /tmp/ithipages/analysis --status-bugs make
+             )
+                   
+      - name: Run Coverage
+        run: |
+             if [ ! -z "$encrypted_e845a59f36e1_key" -a ! -z "$encrypted_e845a59f36e1_iv" ] ; then
+                geninfo .  -o ithitest.info
+                lcov --remove ithitest.info '/usr/include/*' -o ithi.info
+                mkdir -p /tmp/ithipages/coverage/master
+                genhtml ithi.info --output-directory /tmp/ithipages/coverage/master
+             fi
+                   
+      - name: Run Doxygen
+        run: |
+             doxygen travis/Doxyfile
+                   
+      - name: Post scripts
+        run: |
+             if [ ! -z "$encrypted_e845a59f36e1_key" -a ! -z "$encrypted_e845a59f36e1_iv" ] ; then
+                 cp README.md /tmp/ithipages/README.md.orig
+                ( cd /tmp/ithipages
+                  ./mkreadme.sh && (
+                   [ -d analysis ] && git add analysis
+                   [ -d coverage ] && git add coverage
+                   [ -d doxygen  ] && git add doxygen
+                   git commit -a -m "update from travis at `date`" \
+                   && git push
+                )
+             fi
