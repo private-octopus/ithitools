@@ -833,7 +833,7 @@ bool ComputeM8::Compute()
 
 bool ComputeM8::Write(FILE * F_out, char const* date, char const* version)
 {
-    bool ret = fprintf(F_out, "M8.1,%s,%s, %6f,\n", date, version, m8_1) > 0;
+    bool ret = fprintf(F_out, "M8.1,%s,%s, , %6f,\n", date, version, m8_1) > 0;
 
     if (ret) {
         ret = fprintf(F_out, "M8.2.1,%s,%s, , %6f,\n", date, version, m8_2_1) > 0;
