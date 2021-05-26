@@ -1,5 +1,5 @@
 ---
-name: "CITests"
+name: "CITestsPrivacy"
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
 
 jobs:
   citests:
-    name: CI-Tests
+    name: CI-Tests-Privacy
     runs-on: ubuntu-latest
   
     steps:
