@@ -31,7 +31,7 @@ FILE* ithi_file_open(char const* file_name, char const* flags);
 
 FILE* ithi_reopen_stdin(int* last_err);
 
-FILE* ithi_pipe_open(char const* command, char const* flags, int* last_err);
+FILE* ithi_pipe_open(char const* command, bool pipe_write, int* last_err);
 
 FILE* ithi_gzip_compress_open(char const* file_name, int* last_err);
 
