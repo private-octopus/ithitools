@@ -27,7 +27,7 @@ jobs:
         run: |
             CXXFLAGS="-Wall -Wextra -Wpedantic -Werror -g"
             CFLAGS="-Wall -Wextra -Wpedantic -Werror -g"
-            cmake -DPRIVACY_CONSCIOUS .
+            cmake -DPRIVACY_CONSCIOUS=ON .
             make -j 4
 
       - name: test privacy conscious extension is present
