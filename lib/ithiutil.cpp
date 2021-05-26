@@ -82,17 +82,17 @@ FILE* ithi_reopen_stdin(int* last_err)
     return F;
 }
 
-FILE* ithi_pipe_open(char const* command, char const* flags, int* last_err)
+FILE* ithi_pipe_open(char const* command, bool pipe_write, int* last_err)
 {
     FILE* F;
 
 #ifdef _WINDOWS
-    F = _popen(command, flags);
+    F = _popen(command, (pipe_write)?"wb":"rb");
     if (F == NULL) {
         *last_err = -1;
     }
 #else
-    F = popen(command, flags);
+    F = popen(command, (pipe_write) ? "w" : "r");
     if (F == NULL && last_err != NULL) {
         *last_err = errno;
     }
@@ -124,7 +124,7 @@ FILE* ithi_gzip_compress_open(char const* file_name, int* last_err)
         *last_err = -1;
     }
     else {
-        F = ithi_pipe_open(command, "wb", last_err);
+        F = ithi_pipe_open(command, true, last_err);
     }
 
     return F;

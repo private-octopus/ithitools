@@ -1,0 +1,44 @@
+---
+name: "CITestsPrivacy"
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  citests:
+    name: CI-Tests-Privacy
+    runs-on: ubuntu-latest
+  
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          # We must fetch at least the immediate parents so that if this is
+          # a pull request then we can checkout the head.
+          fetch-depth: 2
+          submodules: 'recursive'
+
+      - name: Run cmake
+        run: |
+            CXXFLAGS="-Wall -Wextra -Wpedantic -Werror -g"
+            CFLAGS="-Wall -Wextra -Wpedantic -Werror -g"
+            cmake -DPRIVACY_CONSCIOUS=ON .
+            make -j 4
+
+      - name: test privacy conscious extension is present
+        run: |
+            ./ithitest CaptureNames
+
+      - name: Perform Unit Tests
+        run: |
+            ./ithitest
+
+      - name: Run Valgrind
+        run: |
+            sudo apt-get install -y valgrind
+            valgrind -v --error-exitcode=1  --track-origins=yes ./ithitest

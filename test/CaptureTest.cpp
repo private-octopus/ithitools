@@ -228,7 +228,7 @@ bool CompressedNamesTest::RemoveGz(char const* file_name)
 #ifdef _WINDOWS
     nbchars = sprintf_s(command, sizeof(command), "del %s*", file_name);
 #else
-    nbchars = sprintf(command, "rm %s*", file_name);
+    nbchars = sprintf(command, "rm -f %s*", file_name);
 #endif
     if (nbchars > 0) {
         sys_ret = system(command);

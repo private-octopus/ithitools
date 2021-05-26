@@ -3052,7 +3052,7 @@ void DnsStats::ExportQueryUsage()
         /* Optional detailed data */
         if (F != NULL) {
             char safe_tld[512];
-            size_t safe_tld_len = ithi_copy_to_safe_text(safe_tld, sizeof(safe_tld), lines[i]->tld, lines[i]->tld_len);
+           (void)ithi_copy_to_safe_text(safe_tld, sizeof(safe_tld), lines[i]->tld, lines[i]->tld_len);
 
 
             if (lines[i]->addr_len == 4) {
