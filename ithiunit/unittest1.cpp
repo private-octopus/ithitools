@@ -115,6 +115,14 @@ namespace ithiunit
             Assert::AreEqual(ret, true);
         }
 
+        TEST_METHOD(CaptureCbor)
+        {
+            CaptureCborTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
         TEST_METHOD(Metric)
         {
             MetricTest test;

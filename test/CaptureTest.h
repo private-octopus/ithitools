@@ -38,6 +38,13 @@ public:
     bool DoTest() override;
 };
 
+class CaptureCborTest : public ithi_test_class
+{
+public:
+    CaptureCborTest();
+    ~CaptureCborTest();
+    bool DoTest() override;
+};
 class CaptureNxCacheTest : public ithi_test_class
 {
 public:

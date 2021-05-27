@@ -30,18 +30,25 @@
 #ifndef _WINDOWS64
 static char const * pcap_input_test = "..\\data\\tiny-capture.pcap";
 static char const * pcap_test_output = "..\\data\\tiny-capture-tcp.csv";
+static char const* cbor_input_test = "..\\cdns\\test\\data\\gold.cbor";
+static char const* cbor_test_output = "..\\..\\data\\capture_gold.csv";
 static char const* pcap_test_output_nx = "..\\data\\tiny-capture-nx.csv";
 #else
 static char const * pcap_input_test = "..\\..\\data\\tiny-capture.pcap";
 static char const * pcap_test_output = "..\\..\\data\\tiny-capture-tcp.csv";
+static char const* cbor_input_test = "..\\..\\cdns\\test\\data\\gold.cbor";
+static char const* cbor_test_output = "..\\..\\data\\capture_gold.csv";
 static char const* pcap_test_output_nx = "..\\..\\data\\tiny-capture-nx.csv";
 #endif
 #else
 static char const * pcap_input_test = "data/tiny-capture.pcap";
 static char const * pcap_test_output = "data/tiny-capture-tcp.csv";
+static char const* cbor_input_test = "cdns/test/data/gold.cbor";
+static char const* cbor_test_output = "data/capture_gold.csv";
 static char const* pcap_test_output_nx = "data/tiny-capture-nx.csv";
 #endif
 static char const* pcap_test_debug = "tiny-capture-out.csv";
+static char const* cbor_test_debug = "gold-cbor-out.csv";
 static char const* pcap_test_debug_nx = "tiny-capture-nx.csv";
 
 #ifdef PRIVACY_CONSCIOUS
@@ -103,6 +110,50 @@ bool CaptureTest::DoTest()
                 if (!ret)
                 {
                     cs.Save(pcap_test_debug);
+                }
+            }
+        }
+    }
+
+    return ret;
+}
+
+CaptureCborTest::CaptureCborTest()
+{
+}
+
+
+CaptureCborTest::~CaptureCborTest()
+{
+}
+
+bool CaptureCborTest::DoTest()
+{
+    DnsStats capture;
+    CaptureSummary cs;
+    char const* list[1] = { cbor_input_test };
+    bool ret = capture.LoadCborFiles(1, list);
+
+    if (ret)
+    {
+        ret = capture.ExportToCaptureSummary(&cs);
+
+        if (ret)
+        {
+            CaptureSummary tcs;
+
+            ret = tcs.Load(cbor_test_output);
+
+            if (ret)
+            {
+                cs.Sort();
+                tcs.Sort();
+
+                ret = ithi_test_class::CompareCS(&cs, &tcs);
+
+                if (!ret)
+                {
+                    cs.Save(cbor_test_debug);
                 }
             }
         }
