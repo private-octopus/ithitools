@@ -38,6 +38,7 @@ enum test_list_enum {
     test_enum_Merge_List,
     test_enum_Merge_Empty_List,
     test_enum_Capture,
+    test_enum_CaptureCbor,
     test_enum_CaptureNxCache,
 #ifdef PRIVACY_CONSCIOUS
     test_enum_Capture_Addresses,
@@ -102,6 +103,8 @@ char const * ithi_test_class::GetTestName(int number)
         return("merge_empty_list");
     case test_enum_Capture:
         return("capture");
+    case test_enum_CaptureCbor:
+        return("CaptureCbor");
     case test_enum_CaptureNxCache:
         return("CaptureNxCache");
 #ifdef PRIVACY_CONSCIOUS
@@ -208,6 +211,9 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_enum_Capture:
         test = new CaptureTest();
+        break;
+    case test_enum_CaptureCbor:
+        test = new CaptureCborTest();
         break;
     case test_enum_CaptureNxCache:
         test = new CaptureNxCacheTest();
