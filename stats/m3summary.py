@@ -509,6 +509,13 @@ class m3summary_line():
         self.dga = 0
         for l in [7, 8, 9, 10, 11, 12, 13, 14, 15]:
             self.dga += capture.find("CHROMIUM_PROBES", 0, l, "")
+        if self.dga == 0:
+            # This is either because there are noDGA, or the summary is old format
+            nb_chromium_ref = capture.find("CHROMIUM_LEAK_REF", 0, 0, "")
+            if nb_chromium_leak_ref == 0:
+                # This has to be an old version
+                for l in [7, 8, 9, 10, 11, 12, 13, 14, 15]:
+                    self.dga += capture.find("LeakByLength", 0, l, "")
         self.jumbo = 0
         l = 16
         while l < 65:
