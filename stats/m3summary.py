@@ -508,7 +508,7 @@ class m3summary_line():
         self.nb_mail = capture.find("LeakedTLD", 1, 0, "MAIL")
         self.dga = 0
         for l in [7, 8, 9, 10, 11, 12, 13, 14, 15]:
-            self.dga += capture.find("LeakByLength", 0, l, "")
+            self.dga += capture.find("CHROMIUM_PROBES", 0, l, "")
         self.jumbo = 0
         l = 16
         while l < 65:
