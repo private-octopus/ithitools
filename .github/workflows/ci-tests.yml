@@ -34,6 +34,10 @@ jobs:
         run: |
             ./ithitest
 
+      - name: Check sum3 scripts
+        run: |
+            ./stages/stage-test.sh
+
       - name: Run Valgrind
         run: |
             sudo apt-get install -y valgrind
