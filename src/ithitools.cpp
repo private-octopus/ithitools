@@ -83,7 +83,7 @@ static int usage()
     fprintf(stderr, "  -X                 Include TCP records in CBOR files.\n");
 #ifdef PRIVACY_CONSCIOUS
     fprintf(stderr, "  -A                 List all IP addresses and their usage in the report.\n");
-    fprintf(stderr, "  -E                 List all erroneous DNS names and their usage in the report.\n");
+    fprintf(stderr, "  -E                 List all DNS names found and their usage in the report.\n");
     fprintf(stderr, "                     Options A and E are rather slow, and have privacy issues.\n");
     fprintf(stderr, "                     No such traces enabled by default.\n");
     fprintf(stderr, " -g                  Compress addresses and names files using gzip (default: don't).\n");
