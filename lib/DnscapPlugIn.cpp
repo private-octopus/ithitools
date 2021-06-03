@@ -101,7 +101,7 @@ extern "C"
         fprintf(stderr, "  -u tld-file.txt	  Text file containing special usage TLD (RFC6761).\n");
 #ifdef PRIVACY_CONSCIOUS
         fprintf(stderr, "  -A addr_list.txt   List all IP addresses and their usage in specified file.\n");
-        fprintf(stderr, "  -E name_list.txt   List all erroneous DNS names and their usage in specified file.\n");
+        fprintf(stderr, "  -E name_list.txt   List all DNS names found and their usage in specified file.\n");
         fprintf(stderr, "                     Options A and E are rather slow, and have privacy issues.\n");
         fprintf(stderr, "                     No such traces enabled by default.\n");
         fprintf(stderr, "  -g                 Compress addresses and names files using gzip (default: don't).\n");

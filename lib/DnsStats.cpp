@@ -4199,6 +4199,7 @@ DnsNameEntry* DnsNameEntry::CreateCopy()
                 memcpy(key->name, name, name_len);
                 key->name[name_len] = 0;
                 key->count = count;
+                key->is_nx = is_nx;
                 key->leakType = leakType;
             }
         }
