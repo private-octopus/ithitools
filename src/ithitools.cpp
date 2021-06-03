@@ -86,7 +86,8 @@ static int usage()
     fprintf(stderr, "  -E                 List all erroneous DNS names and their usage in the report.\n");
     fprintf(stderr, "                     Options A and E are rather slow, and have privacy issues.\n");
     fprintf(stderr, "                     No such traces enabled by default.\n");
-    fprintf(stderr, " -g                  Compress addresses and names files using gzip (default: don't).\n");
+    fprintf(stderr, "  -G                 Add names in successful queries to report (default: don't).\n");
+    fprintf(stderr, "  -g                 Compress addresses and names files using gzip (default: don't).\n");
 #endif
     fprintf(stderr, "\n");
     fprintf(stderr, "Options used in summary mode:\n");
@@ -193,7 +194,7 @@ int main(int argc, char ** argv)
 
     /* Get the parameters */
     int opt;
-    while (exit_code == 0 && (opt = getopt(argc, argv, "a:b:cd:efghi:k:l:mn:o:pr:st:u:vw:x:y:z:A:B:D:E:O:P:M:N:S:TV:WXY1:2:3:4:5:6:7:?")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "a:b:cd:efghi:k:l:mn:o:pr:st:u:vw:x:y:z:A:B:D:E:GO:P:M:N:S:TV:WXY1:2:3:4:5:6:7:?")) != -1)
     {
         switch (opt)
         {
@@ -288,6 +289,9 @@ int main(int argc, char ** argv)
             break;
         case 'E':
             stats.name_report = optarg;
+            break;
+        case 'G':
+            stats.add_queried_names_to_report = true;
             break;
         case 'g':
             stats.compress_name_and_address_reports = true;

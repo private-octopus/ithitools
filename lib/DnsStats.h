@@ -354,6 +354,7 @@ public:
     char const* address_report;
     char const* name_report;
     bool compress_name_and_address_reports;
+    bool add_queried_names_to_report;
 
     static bool IsValidTldSyntax(uint8_t * tld, size_t length);
     static bool IsInSortedList(const char ** list, size_t nb_list, uint8_t * tld, size_t length);

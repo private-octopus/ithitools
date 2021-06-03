@@ -64,7 +64,8 @@ DnsStats::DnsStats()
     is_recursive_query(false),
     address_report(NULL),
     name_report(NULL),
-    compress_name_and_address_reports(false)
+    compress_name_and_address_reports(false),
+    add_queried_names_to_report(false)
 {
 }
 
@@ -2879,10 +2880,11 @@ void DnsStats::NameLeaksAnalysis(
                 }
 
                 SubmitRegistryNumber(REGISTRY_DNS_NAME_PARTS_COUNT, CountDnsNameParts(packet, packet_length, name_offset));
-
+            }
 #ifdef PRIVACY_CONSCIOUS
                 /* Debug option, list all the names found in queries to the root */
-                if (name_report != NULL) {
+                if (name_report != NULL &&
+                    is_nx >= 0 || add_queried_names_to_report) {
                     uint8_t name[1024];
                     size_t name_len = 0;
 
@@ -2906,7 +2908,7 @@ void DnsStats::NameLeaksAnalysis(
                     }
                 }
 #endif
-            }
+
         }
     }
     else if (gotTld)

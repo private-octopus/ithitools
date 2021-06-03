@@ -59,6 +59,15 @@ class CaptureNamesTest : public ithi_test_class
 public:
     CaptureNamesTest();
     ~CaptureNamesTest();
+    bool DoOneTest(char const* name_debug, char const* name_ref, bool addNamesToReport);
+    bool DoTest() override;
+};
+
+class CaptureQueriedNamesTest : public ithi_test_class
+{
+public:
+    CaptureQueriedNamesTest();
+    ~CaptureQueriedNamesTest();
     bool DoTest() override;
 };
 

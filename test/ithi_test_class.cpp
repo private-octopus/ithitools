@@ -43,6 +43,7 @@ enum test_list_enum {
 #ifdef PRIVACY_CONSCIOUS
     test_enum_Capture_Addresses,
     test_enum_Capture_Names,
+    test_enum_Capture_Queried_Names,
     test_enum_Compressed_Addresses,
     test_enum_Compressed_Names,
 #endif
@@ -112,6 +113,8 @@ char const * ithi_test_class::GetTestName(int number)
         return("CaptureAddresses");
     case test_enum_Capture_Names:
         return("CaptureNames");
+    case test_enum_Capture_Queried_Names:
+        return("CaptureQueriedNames");
     case test_enum_Compressed_Addresses:
         return("CompressedAddresses");
     case test_enum_Compressed_Names:
@@ -224,6 +227,9 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_enum_Capture_Names:
         test = new CaptureNamesTest();
+        break;
+    case test_enum_Capture_Queried_Names:
+        test = new CaptureQueriedNamesTest();
         break;
     case test_enum_Compressed_Addresses:
         test = new CompressedAddressesTest();

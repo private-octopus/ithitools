@@ -55,19 +55,23 @@ static char const* pcap_test_debug_nx = "tiny-capture-nx.csv";
 #ifdef _WINDOWS
 #ifndef _WINDOWS64
 static char const* pcap_names_output = "..\\data\\tiny-capture-names.csv";
+static char const* pcap_queried_names_output = "..\\data\\tiny-capture-queried-names.csv";
 static char const* pcap_addresses_output = "..\\data\\tiny-capture-addresses.csv";
 #else
 static char const* pcap_names_output = "..\\..\\data\\tiny-capture-names.csv";
+static char const* pcap_queried_names_output = "..\\..\\data\\tiny-capture-queried-names.csv";
 static char const* pcap_addresses_output = "..\\..\\data\\tiny-capture-addresses.csv";
 static char const* gzip_names_output = "..\\..\\data\\tiny-compressed-names.csv";
 static char const* gzip_addresses_output = "..\\..\\data\\tiny-compressed-addresses.csv";
 #endif
 #else
 static char const* pcap_names_output = "data/tiny-capture-names.csv";
+static char const* pcap_queried_names_output = "data/tiny-capture-queried-names.csv";
 static char const* pcap_addresses_output = "data/tiny-capture-addresses.csv";
 #endif
 
 static char const* pcap_names_debug = "tiny-capture-names.csv";
+static char const* pcap_queried_names_debug = "tiny-capture-queried-names.csv";
 static char const* pcap_addresses_debug = "tiny-capture-addresses.csv";
 static char const* compressed_names_debug = "tiny-gzip-names.csv";
 static char const* compressed_addresses_debug = "tiny-gzip-addresses.csv";
@@ -217,14 +221,18 @@ CaptureNamesTest::~CaptureNamesTest()
 {
 }
 
-bool CaptureNamesTest::DoTest()
+bool CaptureNamesTest::DoOneTest(
+    char const * name_debug,
+    char const * name_ref,
+    bool addNamesToReport)
 {
     DnsStats capture;
     CaptureSummary cs;
     char const* list[1] = { pcap_input_test };
     bool ret = true;
 
-    capture.name_report = pcap_names_debug;
+    capture.name_report = name_debug;
+    capture.add_queried_names_to_report = addNamesToReport;
     
     ret = capture.LoadPcapFiles(1, list);
 
@@ -253,12 +261,17 @@ bool CaptureNamesTest::DoTest()
 
             if (ret)
             {
-                ret = MetricTest::compare_files(pcap_names_debug, pcap_names_output);
+                ret = MetricTest::compare_files(name_debug, name_ref);
             }
         }
     }
 
     return ret;
+}
+
+bool CaptureNamesTest::DoTest()
+{
+    return DoOneTest(pcap_names_debug, pcap_names_output, false);
 }
 
 CompressedNamesTest::CompressedNamesTest()
@@ -369,6 +382,8 @@ bool CompressedNamesTest::DoTest()
     return ret;
 }
 
+
+
 CaptureAddressesTest::CaptureAddressesTest()
 {
 }
@@ -476,5 +491,20 @@ bool CompressedAddressesTest::DoTest()
     }
 
     return ret;
+}
+
+CaptureQueriedNamesTest::CaptureQueriedNamesTest()
+{
+}
+
+CaptureQueriedNamesTest::~CaptureQueriedNamesTest()
+{
+}
+
+bool CaptureQueriedNamesTest::DoTest()
+{
+    CaptureNamesTest ctn;
+
+    return ctn.DoOneTest(pcap_queried_names_debug, pcap_queried_names_output, true);
 }
 #endif
