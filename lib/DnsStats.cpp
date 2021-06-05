@@ -1110,6 +1110,9 @@ char const* DnsStats::LeakTypeName(DnsStatsLeakType leakType)
     case dnsLeakOther:
         x = "other";
         break;
+    case dnsLeakChaos:
+        x = "chaos";
+        break;
     default:
         break;
     }
@@ -1201,6 +1204,58 @@ int DnsStats::GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
     *name_length = name_index;
 
     return start_next;
+}
+
+uint32_t DnsStats::SkipDnsName(uint8_t* packet, uint32_t length, uint32_t start)
+{
+    uint32_t l = 0;
+
+    while (start < length) {
+        l = packet[start];
+
+        if (l == 0)
+        {
+            /* end of parsing*/
+            start++;
+            break;
+        }
+        else if ((l & 0xC0) == 0xC0)
+        {
+            if ((start + 2) > length)
+            {
+                /* error */
+                start = length;
+                break;
+            }
+            else
+            {
+                start += 2;
+                break;
+            }
+        }
+        else if (l > 0x3F)
+        {
+            /* found an extension. Don't know how to parse it! */
+            start = length;
+            break;
+        }
+        else
+        {
+            /* add a label to the name. */
+            if (start + l + 1 > length)
+            {
+                /* format error */
+                start = length;
+                break;
+            }
+            else
+            {
+                start += l + 1;
+            }
+        }
+    }
+
+    return start;
 }
 
 uint32_t DnsStats::CountDnsNameParts(uint8_t* packet, uint32_t length, uint32_t start)
@@ -2207,9 +2262,18 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
         SubmitOpcodeAndFlags(opcode, flags);
 
         if (is_response && opcode == DNS_OPCODE_QUERY) {
+            /* Find qr_class, so leak analysis can distinguish between Internet and Chaos,
+             * when the response code does not indicate an error */
+            int qr_class = 0;
+            if (rcode == DNS_RCODE_NOERROR) {
+                uint32_t after_name = SkipDnsName(packet, length, 12);
+                if (after_name + 4 <= length) {
+                    qr_class = ((packet[after_name + 2]) << 8) + packet[after_name + 3];
+                }
+            }
 
             NameLeaksAnalysis(source_addr, source_addr_length, dest_addr, dest_addr_length,
-                rcode, packet, length, 12, ts, ancount > 0 || nscount > 0);
+                rcode, qr_class, packet, length, 12, ts, ancount > 0 || nscount > 0);
         }
 
         parse_index = 12;
@@ -2429,8 +2493,17 @@ void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_
 
         if (r_sig->query_opcode == DNS_OPCODE_QUERY)
         {
+            /* Find qr_class, so leak analysis can distinguish between Internet and Chaos */
+            int qr_class = 0;
+            if (r_sig != NULL) {
+                if (r_sig->query_classtype_index >= cdns_ctx->index_offset) {
+                    size_t cid = (size_t)r_sig->query_classtype_index - cdns_ctx->index_offset;
+                    qr_class = cdns_ctx->block.tables.class_ids[cid].rr_class;
+                }
+            }
+
             NameLeaksAnalysis(server_addr, server_addr_length, client_addr, client_addr_length,
-                r_sig->response_rcode, q_name, q_name_length, 0, ts, 
+                r_sig->response_rcode, qr_class, q_name, q_name_length, 0, ts, 
                 (r_sig->query_an_count > 0 || r_sig->query_ns_count > 0 ||
                     query->r_extended.answer_index >= 0 || query->r_extended.authority_index >= 0));
         }
@@ -2694,6 +2767,7 @@ void DnsStats::NameLeaksAnalysis(
     uint8_t* client_addr,
     size_t client_addr_length,
     int rcode,
+    int qr_class,
     uint8_t * packet,
     uint32_t packet_length,
     uint32_t name_offset,
@@ -2844,6 +2918,9 @@ void DnsStats::NameLeaksAnalysis(
                 is_nx = 0;
                 if (tld_length == 0) {
                     x_type = dnsLeakRoot;
+                }
+                else if (qr_class == DNS_CLASS_CHAOS) {
+                    x_type = dnsLeakChaos;
                 }
 
                 /* Analysis of traffic per TLD */

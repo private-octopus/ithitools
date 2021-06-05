@@ -1315,7 +1315,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 178.251.212.45,"BQROAQNUS",1,dga,-1,1
 178.251.212.45,"AYBIVEE",1,dga,-1,1
 178.251.212.45,"223",1,numeric,-1,1
-178.238.159.23,"BIND",0,tld,-1,1
+178.238.159.23,"BIND",0,chaos,-1,1
 178.238.159.23,"",0,root,-1,1
 178.155.104.214,"NET",0,tld,-1,1
 177.246.148.168,"",0,root,-1,1
@@ -1889,7 +1889,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 93.115.110.65,"ARPA",0,tld,30408,3
 93.115.110.64,"ARPA",0,tld,-1,1
 93.95.82.158,"PVT",1,frequent,-1,1
-92.223.116.166,"BIND",0,tld,-1,1
+92.223.116.166,"BIND",0,chaos,-1,1
 92.123.224.86,"MO",0,tld,4544,2
 92.123.224.86,"",0,root,-1,1
 92.123.192.168,"",0,root,-1,1
@@ -1928,10 +1928,10 @@ Address, TLD, nx_domain, name_type, min_delay, count
 85.26.158.185,"JESDPLFZFIGYVXO",1,dga,-1,1
 85.26.158.185,"ELJUJRMNSI",1,dga,-1,1
 85.14.158.231,"INFO",0,tld,-1,1
-84.148.135.43,"BIND",0,tld,-1,1
+84.148.135.43,"BIND",0,chaos,-1,1
 84.106.83.5,"ARPA",0,tld,-1,1
 84.2.227.133,"ZTYVACZPNEMXZEW",1,dga,-1,1
-83.236.157.10,"BIND",0,tld,-1,1
+83.236.157.10,"BIND",0,chaos,-1,1
 83.174.193.182,"HOME",1,frequent,7692,2
 83.174.193.182,"DLINK",1,frequent,1154,3
 83.170.113.210,"MK",0,tld,-1,1
@@ -2395,7 +2395,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 62.112.98.58,"BFWLICKZMMYF",1,dga,-1,1
 62.112.98.58,"AKZOFLHMWOJ",1,dga,-1,1
 62.112.98.58,"",0,root,-1,1
-62.106.13.177,"BIND",0,tld,-1,1
+62.106.13.177,"BIND",0,chaos,-1,1
 61.220.10.216,"",0,root,-1,1
 61.220.9.186,"NET",0,tld,44,8
 61.220.9.186,"JGQYHVFZPL",1,dga,-1,1
@@ -2546,7 +2546,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 50.206.99.3,"ORG",0,tld,154,2
 50.198.89.37,"",0,root,-1,1
 50.83.21.39,"ORG",0,tld,-1,1
-50.64.124.252,"BIND",0,tld,-1,1
+50.64.124.252,"BIND",0,chaos,-1,1
 49.158.22.29,"COM",0,tld,-1,1
 49.106.193.92,"COM",0,tld,-1,1
 49.104.254.159,"YXQWBSSQP",1,dga,-1,1
@@ -2778,7 +2778,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 45.5.36.20,"131",1,numeric,-1,1
 42.120.74.37,"\131",1,binary,101,4
 42.110.139.148,"",0,root,-1,1
-41.180.4.82,"BIND",0,tld,-1,1
+41.180.4.82,"BIND",0,chaos,-1,1
 41.100.46.253,"COM",0,tld,-1,1
 41.66.193.149,"HFWUDUZR",1,dga,-1,1
 40.122.184.12,"Z",1,other,-1,1
@@ -2994,7 +2994,7 @@ Address, TLD, nx_domain, name_type, min_delay, count
 5.153.254.174,"COM",0,tld,-1,1
 5.101.158.129,"PRO",0,tld,-1,1
 5.101.158.129,"ORG",0,tld,-1,1
-5.51.214.230,"BIND",0,tld,-1,1
+5.51.214.230,"BIND",0,chaos,-1,1
 4.31.108.209,"DS",1,frequent,-1,1
 4.14.157.98,"COM",0,tld,-1,1
 2.188.21.132,"GZIWYQJEVEJSGXQ",1,dga,-1,1
