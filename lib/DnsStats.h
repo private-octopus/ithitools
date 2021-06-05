@@ -123,6 +123,10 @@
 #define DNS_RCODE_NOERROR 0
 #define DNS_RCODE_NXDOMAIN 3
 
+#define DNS_CLASS_ZERO 0
+#define DNS_CLASS_IN 1
+#define DNS_CLASS_CHAOS 3
+
 
 enum DnsStatsFlags
 {
@@ -146,7 +150,8 @@ enum DnsStatsLeakType
     dnsLeakFrequent,
     dnsLeakChromiumProbe,
     dnsLeakJumbo,
-    dnsLeakOther
+    dnsLeakOther,
+    dnsLeakChaos
 };
 
 class DnsHashEntry {
@@ -382,6 +387,8 @@ public:
     static int GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
         uint8_t * name, size_t name_max, size_t * name_length);
 
+    uint32_t SkipDnsName(uint8_t* packet, uint32_t length, uint32_t start);
+
     uint32_t CountDnsNameParts(uint8_t* packet, uint32_t length, uint32_t start);
 
     static int CompareDnsName(const uint8_t * packet, uint32_t length, uint32_t start1, uint32_t start2);
@@ -457,6 +464,7 @@ private:
         uint8_t* client_addr,
         size_t client_addr_length,
         int rcode,
+        int qr_class,
         uint8_t* packet,
         uint32_t packet_length,
         uint32_t name_offset,
