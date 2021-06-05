@@ -1209,9 +1209,6 @@ int DnsStats::GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
 uint32_t DnsStats::SkipDnsName(uint8_t* packet, uint32_t length, uint32_t start)
 {
     uint32_t l = 0;
-    uint32_t name_start = start;
-    uint32_t start_next = 0;
-    size_t name_index = 0;
 
     while (start < length) {
         l = packet[start];
@@ -1227,7 +1224,7 @@ uint32_t DnsStats::SkipDnsName(uint8_t* packet, uint32_t length, uint32_t start)
             if ((start + 2) > length)
             {
                 /* error */
-                start_next = length;
+                start = length;
                 break;
             }
             else
