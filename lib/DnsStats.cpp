@@ -2502,10 +2502,15 @@ void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_
                 }
             }
 
+
             NameLeaksAnalysis(server_addr, server_addr_length, client_addr, client_addr_length,
-                r_sig->response_rcode, qr_class, q_name, q_name_length, 0, ts, 
+                r_sig->response_rcode, qr_class, q_name, q_name_length, 0, ts,
+#if 1
+                true);
+#else
                 (r_sig->query_an_count > 0 || r_sig->query_ns_count > 0 ||
                     query->r_extended.answer_index >= 0 || query->r_extended.authority_index >= 0));
+#endif
         }
 
         SubmitCborRecords(cdns_ctx, query, r_sig, &query->r_extended, true);
