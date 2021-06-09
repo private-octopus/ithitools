@@ -36,3 +36,5 @@ x64
 */__pycache__
 /kafkapy
 /data/frequent-resolvers.xlsx
+/stage-tmp/results/results-aa01-in-bom.l.dns.icann.org
+/stage-tmp

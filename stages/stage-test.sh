@@ -9,6 +9,7 @@ if diff -q stage-tmp/sum3_test.sum3 data/sum3_test_ref.sum3; then
     echo "Sum3 test passes."
 else
     echo "Sum3 test does not produce the expected result."
+    cat stage-tmp/sum3_test.sum3
     exit 1
 fi
 
