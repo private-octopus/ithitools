@@ -1,4 +1,3 @@
-
 #!/usr/bin/python
 # coding=utf-8
 #
@@ -657,9 +656,53 @@ class m3summary_line():
             return -1
         elif (self.nb_nx_domains > other.nb_nx_domains):
             return 1
+        elif (self.nb_useful< other.nb_useful):
+            return -1
+        elif (self.nb_useful > other.nb_useful):
+            return 1
+        elif (self.nb_useless< other.nb_useless):
+            return -1
+        elif (self.nb_useless > other.nb_useless):
+            return 1
+        elif (self.dga < other.dga):
+            return -1
+        elif (self.dga > other.dga):
+            return 1
+        elif (self.nb_nx_others < other.nb_nx_others):
+            return -1
+        elif (self.nb_nx_others > other.nb_nx_others):
+            return 1
+        elif (self.nb_local < other.nb_local):
+            return -1
+        elif (self.nb_local > other.nb_local):
+            return 1
+        elif (self.nb_localhost < other.nb_localhost):
+            return -1
+        elif (self.nb_localhost > other.nb_localhost):
+            return 1
+        elif (self.nb_rfc6761 < other.nb_rfc6761):
+            return -1
+        elif (self.nb_rfc6761 > other.nb_rfc6761):
+            return 1
         elif (self.nb_home < other.nb_home):
             return -1
         elif (self.nb_home > other.nb_home):
+            return 1
+        elif (self.nb_lan < other.nb_lan):
+            return -1
+        elif (self.nb_lan > other.nb_lan):
+            return 1
+        elif (self.nb_internal < other.nb_internal):
+            return -1
+        elif (self.nb_internal > other.nb_internal):
+            return 1
+        elif (self.nb_ip < other.nb_ip):
+            return -1
+        elif (self.nb_ip > other.nb_ip):
+            return 1
+        elif (self.nb_localdomain < other.nb_localdomain):
+            return -1
+        elif (self.nb_localdomain > other.nb_localdomain):
             return 1
         elif (self.nb_corp < other.nb_corp):
             return -1
@@ -668,6 +711,14 @@ class m3summary_line():
         elif (self.nb_mail < other.nb_mail):
             return -1
         elif (self.nb_mail > other.nb_mail):
+            return 1
+        elif (self.nb_other_names < other.nb_other_names):
+            return -1
+        elif (self.nb_other_names > other.nb_other_names):
+            return 1
+        elif (self.jumbo < other.jumbo):
+            return -1
+        elif (self.jumbo > other.jumbo):
             return 1
         else:
             return 0
