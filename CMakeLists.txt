@@ -150,7 +150,7 @@ ADD_LIBRARY(ithicap SHARED
 )
 
 SET_TARGET_PROPERTIES(ithicap PROPERTIES
-                              VERSION 2.00
+                              VERSION 2.01
                               PUBLIC_HEADER include/ithicap.h)
 
 SET_TARGET_PROPERTIES(ithitools PROPERTIES VERSION 2.00)
