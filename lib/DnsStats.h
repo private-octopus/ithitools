@@ -218,6 +218,8 @@ public:
     uint64_t count;
     int is_nx;
     DnsStatsLeakType leakType;
+    size_t addr_len;
+    uint8_t addr[16];
 };
 
 class DnssecPrefixEntry {

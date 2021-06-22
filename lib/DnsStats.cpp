@@ -2974,6 +2974,13 @@ void DnsStats::NameLeaksAnalysis(
                         key.is_nx = is_nx;
                         key.leakType = x_type;
                         key.count = 1;
+                        if (client_addr_length == 4 || client_addr_length == 16) {
+                            memcpy(key.addr, client_addr, client_addr_length);
+                            key.addr_len = client_addr_length;
+                        }
+                        else {
+                            key.addr_len = 0;
+                        }
 
                         (void)nameList.InsertOrAdd(&key, true, &stored);
                         key.name = NULL;
@@ -3269,7 +3276,7 @@ void DnsStats::ExportNameReport()
     if (F != NULL) {
         bool ret = true;
 
-        if (fprintf(F, "Name, nx_domain, name_type, count\n") <= 0) {
+        if (fprintf(F, "Name, nx_domain, name_type, count, IP\n") <= 0) {
             ret = false;
             fprintf(stderr, "Cannot write header line to <%s>\n", name_report);
         }
@@ -3278,16 +3285,36 @@ void DnsStats::ExportNameReport()
         {
             name_entry = nameList.GetEntry(i);
 
-            while (name_entry != NULL)
+            while (ret && name_entry != NULL)
             {
                 char safe_name[1024];
 
                 if (ithi_copy_to_safe_text(safe_name, sizeof(safe_name), name_entry->name, name_entry->name_len) <= 0) {
                     fprintf(stderr, "Cannot sanitize name entry #%d (%s) for <%s>\n", i, name_entry->name, name_report);
                     ret = false;
-                } else if (fprintf(F, "%s,%d,%s,%llu\n", safe_name, name_entry->is_nx, LeakTypeName(name_entry->leakType), (unsigned long long)name_entry->count) <= 0){
+                } else if (fprintf(F, "%s,%d,%s,%llu,", safe_name, name_entry->is_nx, LeakTypeName(name_entry->leakType), (unsigned long long)name_entry->count) <= 0){
                     ret = false;
                     fprintf(stderr, "Cannot export entry #%d (%s) to <%s>\n", i, name_entry->name, name_report);
+                } else if (name_entry->addr_len == 4) {
+                    if (fprintf(F, "%d.%d.%d.%d\n", name_entry->addr[0], name_entry->addr[1], name_entry->addr[2], name_entry->addr[3]) <= 0) {
+                        ret = false;
+                        fprintf(stderr, "Cannot export IP address for entry #%d/\n", i);
+                    }
+                }
+                else if (name_entry->addr_len == 16) {
+                    if (fprintf(F,
+                        "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x\n",
+                        name_entry->addr[0], name_entry->addr[1], name_entry->addr[2], name_entry->addr[3],
+                        name_entry->addr[4], name_entry->addr[5], name_entry->addr[6], name_entry->addr[7],
+                        name_entry->addr[8], name_entry->addr[9], name_entry->addr[10], name_entry->addr[11],
+                        name_entry->addr[12], name_entry->addr[13], name_entry->addr[14], name_entry->addr[15]) <= 0) {
+                        ret = false;
+                        fprintf(stderr, "Cannot export IP address for entry #%d/\n", i);
+                    }
+                }
+                else if (fprintf(F,"\n") <= 0){
+                    ret = false;
+                    fprintf(stderr, "Cannot export end of line for entry #%d/\n", i);
                 }
                 name_entry = name_entry->HashNext;
             }
@@ -4217,7 +4244,8 @@ DnsNameEntry::DnsNameEntry():
     name(NULL),
     count(0),
     is_nx(0),
-    leakType(dnsLeakNoLeak)
+    leakType(dnsLeakNoLeak),
+    addr_len(0)
 {
 }
 
@@ -4276,6 +4304,8 @@ DnsNameEntry* DnsNameEntry::CreateCopy()
                 key->count = count;
                 key->is_nx = is_nx;
                 key->leakType = leakType;
+                memcpy(key->addr, addr, addr_len);
+                key->addr_len = addr_len;
             }
         }
     }
