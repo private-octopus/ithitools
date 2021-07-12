@@ -1,153 +1,25 @@
 <html>
 <head>
-<title>ITHI Metric M1</title>
+    <title>ITHI Metric M1</title>
 
-<link rel="stylesheet" type="text/css" href="ithistyle.css">
+    <link rel="stylesheet" type="text/css" href="ithistyle.css">
 
-<script src="ithinav.js"></script>
-<script src="ithigraph.js"></script>
-<script type="text/javascript">
-    var M1Data;
-
-    function init() {
-        initnav();
-        loadDoc();
-    }
-
-    function loadDoc() {
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-                M1Data = JSON.parse(this.responseText);
-                draw_page();
-            }
-        };
-        xhttp.open("GET", "M1Data.txt", true);
-        xhttp.send();
-    }
-
-    function draw_page() {
-        var pilot = [
-            ["valM11", "averageM11", "minM11", "maxM11"],
-            ["valM12", "averageM12", "minM12", "maxM12"],
-            ["valM13", "averageM13", "minM13", "maxM13"]
-        ];
-
-        var formats = [
-            [1, 1, 1, 1],
-            [0, 2, 0, 0],
-            [0, 2, 0, 0]
-        ];
-
-        // Set the text values that depend on the current data
-        setDateElement(M1Data.date);
-
-        fillCurrentDateFields(["currentId"], M1Data);
-
-        setStringElement("NbRegistrars", "The metrics incorporate data from <strong>" + M1Data.NbRegistrars + " registrars.</strong>");
-
-        if (M1Data.m1Val.length >= 3) {
-            for (i = 0; i < 3; i++) {
-                fillValueAverageMinMax(pilot[i], M1Data.m1Val[i], formats[i]);
-            }
-
-            var maxElement = getMaxElement(M1Data.m1Val[0]);
-            var firstMonth = 1;
-
-            if ("month" in M1Data) {
-                firstMonth = getFirstMonthIndex(M1Data.month, M1Data.m1Val[0].length);
-            }
-
-            plotGraph("graphM11", M1Data.m1Val[0], getMaxRange(maxElement), firstMonth, "#404040C0", "");
+    <script src="ithinav.js"></script>
+    <script type="text/javascript">
+        function init() {
+            initnav();
         }
-    }
-
-</script>
+    </script>
 </head>
-
 <body onload="init()">
     <nav id="navMenu"></nav>
 
     <h1>ITHI Metric M1,  Inaccuracy of Whois Data </h1>
-    <h2 id="dateHeading">-</h2>
     <p>
-        The metric M1 tracks the Inaccuracy of Whois Data, by measuring the number of
-        complaints validated in a given month. The compliance department of ICANN
-        receives a number of complaints every month. Out of that number, some will
-        be closed immediately, and some will be validated. When a complaint is validated,
-        ICANN will send a notice to the registrar for the domain. We track the number
-        of validated complaints by counting the notices sent each month. Since the
-        number of complaints is expected to be proportional to the number of domains,
-        the first sub metric is defined as:
+        The metric M1 tracked the Inaccuracy of Whois Data, by measuring the number of
+        complaints validated in a given month. It is not published anymore.
     </p>
-    <ul>
-        <li>M1.1: number of validated complaints per 1,000,000 domains.</li>
-    </ul>
-    <p>
-        For privacy reasons, we do not disclose the number of complaints per registrar.
-        However, we measure the distribution by assessing two key points in the
-        distribution of the data:
-    </p>
-    <ul>
-        <li>M1.2 = Smallest number of registrars explaining 50% of complaints.</li>
-        <li>M1.3 = Smallest number of registrars explaining 90% of complaints.</li>
-    </ul>
-    <div id="NbRegistrars">
-    The metrics incoprorate reports from many registrars.
-    </div>
-    <p>
-        The following table provides the value observed for these
-        metrics in the current month, as well as the average value over the
-        3 months preceeding this one, and the lowest and highest values
-        observed since the start of the measurement.
-    </p>
-    <table class="metrics">
-        <tr>
-            <th>M1 metric name</th>
-            <th class="number" id="currentId">Current value</th>
-            <th class="number">Last 3 months</th>
-            <th class="number">Historic Min</th>
-            <th class="number">Historic Max</th>
-        </tr>
-        <tr>
-            <td><a href="#M11">M1.1: Number of “validated complaints” per million registrations.</a> 
-            <a href="about-m1.html">(?)</a>
-            </td>
-            <td class="number" id="valM11">-</td>
-            <td class="number" id="averageM11">-</td>
-            <td class="number" id="minM11">-</td>
-            <td class="number" id="maxM11">-</td>
-        </tr>
-        <tr>
-            <td>
-                M1.2: Smallest number of registrars explaining 50% of complaints.
-                <a href="about-m1.html">(?)</a>
-            </td>
-            <td class="number" id="valM12">-</td>
-            <td class="number" id="averageM12">-</td>
-            <td class="number" id="minM12">-</td>
-            <td class="number" id="maxM12">-</td>
-        </tr>
-        <tr>
-            <td>
-                M1.3: Smallest number of registrars explaining 90% of complaints.
-                <a href="about-m1.html">(?)</a>
-            </td>
-            <td class="number" id="valM13">-</td>
-            <td class="number" id="averageM13">-</td>
-            <td class="number" id="minM13">-</td>
-            <td class="number" id="maxM13">-</td>
-        </tr>
-    </table>
-
-    <h3 id="M11">M1.1 = Number of “validated complaints” per million registrations</h3>
-    <p>
-        The following graph shows the evolution of the Inaccuracy of Whois Data metric M1.1
-        <a href="about-m1.html">Whois Data metric M1.1</a> over time.
-        This metric is measured on a set of registrars.
-    </p>
-
-    <canvas id="graphM11" height="400" width="650"></canvas>
 
 </body>
+
 </html>
