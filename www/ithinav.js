@@ -75,7 +75,7 @@ function initnavL1(level) {
 
         footer.classList.add("footer");
 
-        footer.innerHTML = '<span>© Internet Corporation for Assigned Names and Numbers</span>' +
+        footer.innerHTML = '<span>Copyright &#169 2021, Internet Corporation for Assigned Names and Numbers</span>' +
         '<div>' +
         '<a href="https://www.icann.org/privacy/policy">Privacy Policy</a>' +
         '<a href="https://www.icann.org/privacy/tos">Terms of Service</a>' +
