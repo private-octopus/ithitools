@@ -22,7 +22,6 @@ function initnavL1(level) {
         '<a href="' + levelString + 'metrics.html">Metrics</a>' +
         '<div class="dropdown-content">' +
         '<a href="' + levelString + 'metrics.html">ITHI Metrics</a>' +
-        '<a href="' + levelString + 'graph-m1.html">M1: Whois</a>' +
         '<a href="' + levelString + 'graph-m2.html">M2: Abuses</a>' +
         '<a href="' + levelString + 'graph-m3.html">M3: Root Servers</a>' +
         '<a href="' + levelString + 'graph-m4.html">M4: Recursive Servers</a>' +
