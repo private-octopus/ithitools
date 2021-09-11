@@ -2939,12 +2939,14 @@ void DnsStats::NameLeaksAnalysis(
             if (is_nx >= 0) {
                 if (is_nx == 0 || capture_cache_ratio_nx_domain || address_report != NULL) {
                     /* Analysis of useless traffic to the root */
-                    TldAddressAsKey key(client_addr, client_addr_length, tld, tld_length, ts, is_nx, x_type);
+                    TldAddressAsKey key(client_addr, client_addr_length, tld, tld_length, ts, is_nx, x_type, flags);
                     TldAddressAsKey* present = queryUsage.Retrieve(&key);
 
                     if (present != NULL) {
                         /* keep statistics about this address */
                         present->count++;
+                        /* Accumulate the DNS flags observed for this address and TLD */
+                        present->flags |= flags;
                         /* Compute the delay between this and the previous view, and update */
                         int64_t delay = DeltaUsec(ts.tv_sec, ts.tv_usec, present->ts.tv_sec, present->ts.tv_usec);
 
@@ -3114,7 +3116,7 @@ void DnsStats::ExportQueryUsage()
 #endif
 
         if (F != NULL) {
-            fprintf(F, "Address, TLD, nx_domain, name_type, min_delay, count\n");
+            fprintf(F, "Address, TLD, nx_domain, name_type, min_delay, count, flags\n");
         }
     }
 
@@ -3148,18 +3150,21 @@ void DnsStats::ExportQueryUsage()
 
 
             if (lines[i]->addr_len == 4) {
-                fprintf(F, "%d.%d.%d.%d,\"%s\",%d,%s,%lld,%llu\n",
+                fprintf(F, "%d.%d.%d.%d,\"%s\",%d,%s,%lld,%llu,%d\n",
                     lines[i]->addr[0], lines[i]->addr[1], lines[i]->addr[2], lines[i]->addr[3],
-                    safe_tld, lines[i]->is_nx, LeakTypeName(lines[i]->leakType), (long long)lines[i]->tld_min_delay, (unsigned long long)lines[i]->count);
+                    safe_tld, lines[i]->is_nx, LeakTypeName(lines[i]->leakType), 
+                    (long long)lines[i]->tld_min_delay, (unsigned long long)lines[i]->count,
+                    lines[i]->flags);
             }
             else if (lines[i]->addr_len == 16) {
                 fprintf(F,
-                    "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x,\"%s\",%d,%s,%lld,%llu\n",
+                    "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x,\"%s\",%d,%s,%lld,%llu,%d\n",
                     lines[i]->addr[0], lines[i]->addr[1], lines[i]->addr[2], lines[i]->addr[3],
                     lines[i]->addr[4], lines[i]->addr[5], lines[i]->addr[6], lines[i]->addr[7],
                     lines[i]->addr[8], lines[i]->addr[9], lines[i]->addr[10], lines[i]->addr[11],
                     lines[i]->addr[12], lines[i]->addr[13], lines[i]->addr[14], lines[i]->addr[15],
-                    safe_tld, lines[i]->is_nx, LeakTypeName(lines[i]->leakType), (long long)lines[i]->tld_min_delay, (unsigned long long)lines[i]->count);
+                    safe_tld, lines[i]->is_nx, LeakTypeName(lines[i]->leakType), (long long)lines[i]->tld_min_delay, 
+                    (unsigned long long)lines[i]->count, lines[i]->flags);
             }
         }
 #endif
@@ -3542,14 +3547,15 @@ void TldAsKey::CanonicCopy(uint8_t * tldDest, size_t tldDestMax, size_t * tldDes
 }
 
 
-TldAddressAsKey::TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len, my_bpftimeval ts, int is_nx, DnsStatsLeakType leakType)
+TldAddressAsKey::TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len, my_bpftimeval ts, int is_nx, DnsStatsLeakType leakType, int flags)
     :
     HashNext(NULL),
     count(1),
     hash(0),
     tld_min_delay(-1),
     is_nx(is_nx),
-    leakType(leakType)
+    leakType(leakType),
+    flags(flags)
 {
     if (addr_len > 16)
     {
@@ -3604,7 +3610,7 @@ uint32_t TldAddressAsKey::Hash()
 
 TldAddressAsKey * TldAddressAsKey::CreateCopy()
 {
-    TldAddressAsKey* ret = new TldAddressAsKey(addr, addr_len, tld, tld_len, ts, is_nx, leakType);
+    TldAddressAsKey* ret = new TldAddressAsKey(addr, addr_len, tld, tld_len, ts, is_nx, leakType, flags);
 
     if (ret != NULL)
     {
@@ -3620,6 +3626,7 @@ TldAddressAsKey * TldAddressAsKey::CreateCopy()
 void TldAddressAsKey::Add(TldAddressAsKey * key)
 {
     this->count += key->count;
+    this->flags |= key->flags;
 }
 
 bool TldAddressAsKey::CompareByAddressAndTld(TldAddressAsKey * x, TldAddressAsKey * y)

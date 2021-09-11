@@ -265,7 +265,7 @@ public:
 class TldAddressAsKey
 {
 public:
-    TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len, my_bpftimeval ts, int is_nx, DnsStatsLeakType leakType);
+    TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len, my_bpftimeval ts, int is_nx, DnsStatsLeakType leakType, int flags);
     ~TldAddressAsKey();
 
     bool IsSameKey(TldAddressAsKey* key);
@@ -288,6 +288,7 @@ public:
     int64_t tld_min_delay;
     int is_nx;
     DnsStatsLeakType leakType;
+    int flags;
 };
 
 class DnsStats
