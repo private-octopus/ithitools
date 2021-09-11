@@ -99,6 +99,7 @@ class address_line:
         self.name_type = ""
         self.tld_min_delay = -1
         self.count = 0
+        self.flags = 0
 
     def file_line(self, line):
         csv = line.split(",")
@@ -107,6 +108,9 @@ class address_line:
             nx = int(csv[2])
             min_d = int(csv[4])
             count = int(csv[5])
+            flags = 0
+            if len(csv) > 6:
+                flags = int(csv[6])
             # the assignment will only happen if the line was correct
             self.ip = csv[0].strip()
             qtld = csv[1].strip()
@@ -116,6 +120,7 @@ class address_line:
             self.name_type = csv[3].strip()
             self.tld_min_delay = min_d
             self.count = count
+            self.flags = flags
         except:
             if csv[0] != "Address":
                 traceback.print_exc()

@@ -2192,6 +2192,7 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     bool is_response = false;
 
     bool has_header = true;
+    int query_id = 0;
     uint32_t flags = 0;
     uint32_t opcode = 0;
     uint32_t rcode = 0;
@@ -2250,7 +2251,6 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
         {
             query_count++;
         }
-
         flags = ((packet[2] & 7) << 4) | ((packet[3] & 15) >> 4);
         opcode = (packet[2] >> 3) & 15;
         rcode = (packet[3] & 15);
@@ -2265,15 +2265,18 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
             /* Find qr_class, so leak analysis can distinguish between Internet and Chaos,
              * when the response code does not indicate an error */
             int qr_class = 0;
+            int qr_type = 0;
             if (rcode == DNS_RCODE_NOERROR) {
                 uint32_t after_name = SkipDnsName(packet, length, 12);
                 if (after_name + 4 <= length) {
+                    qr_type = ((packet[after_name]) << 8) + packet[after_name + 1];
                     qr_class = ((packet[after_name + 2]) << 8) + packet[after_name + 3];
                 }
             }
 
             NameLeaksAnalysis(source_addr, source_addr_length, dest_addr, dest_addr_length,
-                rcode, qr_class, packet, length, 12, ts, ancount > 0 || nscount > 0);
+                rcode, qr_class, qr_type, packet, length, 12, ts, ancount > 0 || nscount > 0,
+                flags);
         }
 
         parse_index = 12;
@@ -2495,15 +2498,18 @@ void DnsStats::SubmitCborPacketResponse(cdns* cdns_ctx, cdns_query* query, cdns_
         {
             /* Find qr_class, so leak analysis can distinguish between Internet and Chaos */
             int qr_class = 0;
+            int qr_type = 0;
             if (r_sig != NULL) {
                 if (r_sig->query_classtype_index >= cdns_ctx->index_offset) {
                     size_t cid = (size_t)r_sig->query_classtype_index - cdns_ctx->index_offset;
                     qr_class = cdns_ctx->block.tables.class_ids[cid].rr_class;
+                    qr_type = cdns_ctx->block.tables.class_ids[cid].rr_type;
                 }
             }
 
             NameLeaksAnalysis(server_addr, server_addr_length, client_addr, client_addr_length,
-                r_sig->response_rcode, qr_class, q_name, q_name_length, 0, ts, true);
+                r_sig->response_rcode, qr_class, qr_type, q_name, q_name_length, 0, ts, true,
+                cdns::get_dns_flags(r_sig->qr_dns_flags, true));
         }
 
         SubmitCborRecords(cdns_ctx, query, r_sig, &query->r_extended, true);
@@ -2766,11 +2772,13 @@ void DnsStats::NameLeaksAnalysis(
     size_t client_addr_length,
     int rcode,
     int qr_class,
+    int qr_type,
     uint8_t * packet,
     uint32_t packet_length,
     uint32_t name_offset,
     my_bpftimeval ts,
-    bool is_not_empty_response
+    bool is_not_empty_response,
+    int flags
     )
 {
 
@@ -2931,12 +2939,14 @@ void DnsStats::NameLeaksAnalysis(
             if (is_nx >= 0) {
                 if (is_nx == 0 || capture_cache_ratio_nx_domain || address_report != NULL) {
                     /* Analysis of useless traffic to the root */
-                    TldAddressAsKey key(client_addr, client_addr_length, tld, tld_length, ts, is_nx, x_type);
+                    TldAddressAsKey key(client_addr, client_addr_length, tld, tld_length, ts, is_nx, x_type, flags);
                     TldAddressAsKey* present = queryUsage.Retrieve(&key);
 
                     if (present != NULL) {
                         /* keep statistics about this address */
                         present->count++;
+                        /* Accumulate the DNS flags observed for this address and TLD */
+                        present->flags |= flags;
                         /* Compute the delay between this and the previous view, and update */
                         int64_t delay = DeltaUsec(ts.tv_sec, ts.tv_usec, present->ts.tv_sec, present->ts.tv_usec);
 
@@ -2981,6 +2991,8 @@ void DnsStats::NameLeaksAnalysis(
                         else {
                             key.addr_len = 0;
                         }
+                        key.rr_type = qr_type;
+                        key.flags = flags;
 
                         (void)nameList.InsertOrAdd(&key, true, &stored);
                         key.name = NULL;
@@ -3104,7 +3116,7 @@ void DnsStats::ExportQueryUsage()
 #endif
 
         if (F != NULL) {
-            fprintf(F, "Address, TLD, nx_domain, name_type, min_delay, count\n");
+            fprintf(F, "Address, TLD, nx_domain, name_type, min_delay, count, flags\n");
         }
     }
 
@@ -3138,18 +3150,21 @@ void DnsStats::ExportQueryUsage()
 
 
             if (lines[i]->addr_len == 4) {
-                fprintf(F, "%d.%d.%d.%d,\"%s\",%d,%s,%lld,%llu\n",
+                fprintf(F, "%d.%d.%d.%d,\"%s\",%d,%s,%lld,%llu,%d\n",
                     lines[i]->addr[0], lines[i]->addr[1], lines[i]->addr[2], lines[i]->addr[3],
-                    safe_tld, lines[i]->is_nx, LeakTypeName(lines[i]->leakType), (long long)lines[i]->tld_min_delay, (unsigned long long)lines[i]->count);
+                    safe_tld, lines[i]->is_nx, LeakTypeName(lines[i]->leakType), 
+                    (long long)lines[i]->tld_min_delay, (unsigned long long)lines[i]->count,
+                    lines[i]->flags);
             }
             else if (lines[i]->addr_len == 16) {
                 fprintf(F,
-                    "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x,\"%s\",%d,%s,%lld,%llu\n",
+                    "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x,\"%s\",%d,%s,%lld,%llu,%d\n",
                     lines[i]->addr[0], lines[i]->addr[1], lines[i]->addr[2], lines[i]->addr[3],
                     lines[i]->addr[4], lines[i]->addr[5], lines[i]->addr[6], lines[i]->addr[7],
                     lines[i]->addr[8], lines[i]->addr[9], lines[i]->addr[10], lines[i]->addr[11],
                     lines[i]->addr[12], lines[i]->addr[13], lines[i]->addr[14], lines[i]->addr[15],
-                    safe_tld, lines[i]->is_nx, LeakTypeName(lines[i]->leakType), (long long)lines[i]->tld_min_delay, (unsigned long long)lines[i]->count);
+                    safe_tld, lines[i]->is_nx, LeakTypeName(lines[i]->leakType), (long long)lines[i]->tld_min_delay, 
+                    (unsigned long long)lines[i]->count, lines[i]->flags);
             }
         }
 #endif
@@ -3276,7 +3291,7 @@ void DnsStats::ExportNameReport()
     if (F != NULL) {
         bool ret = true;
 
-        if (fprintf(F, "Name, nx_domain, name_type, count, IP\n") <= 0) {
+        if (fprintf(F, "Name, nx_domain, name_type, count, IP, RR, flags\n") <= 0) {
             ret = false;
             fprintf(stderr, "Cannot write header line to <%s>\n", name_report);
         }
@@ -3296,14 +3311,14 @@ void DnsStats::ExportNameReport()
                     ret = false;
                     fprintf(stderr, "Cannot export entry #%d (%s) to <%s>\n", i, name_entry->name, name_report);
                 } else if (name_entry->addr_len == 4) {
-                    if (fprintf(F, "%d.%d.%d.%d\n", name_entry->addr[0], name_entry->addr[1], name_entry->addr[2], name_entry->addr[3]) <= 0) {
+                    if (fprintf(F, "%d.%d.%d.%d", name_entry->addr[0], name_entry->addr[1], name_entry->addr[2], name_entry->addr[3]) <= 0) {
                         ret = false;
                         fprintf(stderr, "Cannot export IP address for entry #%d/\n", i);
                     }
                 }
                 else if (name_entry->addr_len == 16) {
                     if (fprintf(F,
-                        "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x\n",
+                        "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x",
                         name_entry->addr[0], name_entry->addr[1], name_entry->addr[2], name_entry->addr[3],
                         name_entry->addr[4], name_entry->addr[5], name_entry->addr[6], name_entry->addr[7],
                         name_entry->addr[8], name_entry->addr[9], name_entry->addr[10], name_entry->addr[11],
@@ -3312,7 +3327,12 @@ void DnsStats::ExportNameReport()
                         fprintf(stderr, "Cannot export IP address for entry #%d/\n", i);
                     }
                 }
-                else if (fprintf(F,"\n") <= 0){
+                else if (fprintf(F, "::0") <= 0) {
+                    fprintf(stderr, "Cannot export NULL IP address for entry #%d/\n", i);
+                }
+                
+                if (ret && 
+                    fprintf(F,",%d,%d\n", name_entry->rr_type, name_entry->flags) <= 0){
                     ret = false;
                     fprintf(stderr, "Cannot export end of line for entry #%d/\n", i);
                 }
@@ -3527,14 +3547,15 @@ void TldAsKey::CanonicCopy(uint8_t * tldDest, size_t tldDestMax, size_t * tldDes
 }
 
 
-TldAddressAsKey::TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len, my_bpftimeval ts, int is_nx, DnsStatsLeakType leakType)
+TldAddressAsKey::TldAddressAsKey(uint8_t * addr, size_t addr_len, uint8_t * tld, size_t tld_len, my_bpftimeval ts, int is_nx, DnsStatsLeakType leakType, int flags)
     :
     HashNext(NULL),
     count(1),
     hash(0),
     tld_min_delay(-1),
     is_nx(is_nx),
-    leakType(leakType)
+    leakType(leakType),
+    flags(flags)
 {
     if (addr_len > 16)
     {
@@ -3589,7 +3610,7 @@ uint32_t TldAddressAsKey::Hash()
 
 TldAddressAsKey * TldAddressAsKey::CreateCopy()
 {
-    TldAddressAsKey* ret = new TldAddressAsKey(addr, addr_len, tld, tld_len, ts, is_nx, leakType);
+    TldAddressAsKey* ret = new TldAddressAsKey(addr, addr_len, tld, tld_len, ts, is_nx, leakType, flags);
 
     if (ret != NULL)
     {
@@ -3605,6 +3626,7 @@ TldAddressAsKey * TldAddressAsKey::CreateCopy()
 void TldAddressAsKey::Add(TldAddressAsKey * key)
 {
     this->count += key->count;
+    this->flags |= key->flags;
 }
 
 bool TldAddressAsKey::CompareByAddressAndTld(TldAddressAsKey * x, TldAddressAsKey * y)
@@ -4245,7 +4267,9 @@ DnsNameEntry::DnsNameEntry():
     count(0),
     is_nx(0),
     leakType(dnsLeakNoLeak),
-    addr_len(0)
+    addr_len(0),
+    rr_type(0),
+    flags(0)
 {
 }
 
@@ -4306,6 +4330,8 @@ DnsNameEntry* DnsNameEntry::CreateCopy()
                 key->leakType = leakType;
                 memcpy(key->addr, addr, addr_len);
                 key->addr_len = addr_len;
+                key->rr_type = rr_type;
+                key->flags = flags;
             }
         }
     }
