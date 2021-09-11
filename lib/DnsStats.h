@@ -220,6 +220,8 @@ public:
     DnsStatsLeakType leakType;
     size_t addr_len;
     uint8_t addr[16];
+    int rr_type;
+    int flags;
 };
 
 class DnssecPrefixEntry {
@@ -467,11 +469,13 @@ private:
         size_t client_addr_length,
         int rcode,
         int qr_class,
+        int qr_type,
         uint8_t* packet,
         uint32_t packet_length,
         uint32_t name_offset,
         my_bpftimeval ts,
-        bool is_not_empty_response
+        bool is_not_empty_response,
+        int flags
     );
 
 
