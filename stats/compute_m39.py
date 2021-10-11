@@ -58,6 +58,7 @@ for x in os.listdir(in_dir):
         z = join(out_dir,x)
         with open(z,"wt") as f:
             v_m39 = -v_average
+            m39_date = ""
             computed =  x >= jan31csv
             for line in open(y, "rt"):
                 # Example: M3.3.3,2020-12-31,v2.00, length_10, 0.038009,
@@ -65,8 +66,10 @@ for x in os.listdir(in_dir):
                     parts = line.split(",")
                     p0 = parts[0].strip();
                     mp = p0.split(".")
-                    if mp[0].strip() == "M3" and len(mp) > 2:
+                    if mp[0].strip() == "M3" and len(mp) >= 2:
                         sub_met = int(mp[1])
+                        if m39_date == "":
+                            m39_date = parts[1].strip()
                         if p0 == m333:
                             p3 = parts[3].strip();
                             p4 = parts[4].strip();
@@ -77,6 +80,11 @@ for x in os.listdir(in_dir):
                         elif sub_met > 9:
                             f.write("M3.9,2020-10-31,v2.02,," + "{:8.6f}".format(v_m39) + ",\n")
                             print("For " + x + ", inserted M3.9 = " + "{:8.6f}".format(v_m39))
+                            computed = True
+                        elif sub_met == 9:
+                            print("For " + x + ", found M3.9 (" + m39_date + ") = " + line.strip())
+                            line = parts[0] + "," + m39_date + "," + parts[2] + ",," + parts[4] + ",\n"
+                            print("Replace by: " + line.strip())
                             computed = True
                 f.write(line)
             if not computed:
