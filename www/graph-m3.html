@@ -105,6 +105,8 @@
         if ("M39" in M3Data) {
             pilotM39 = ["valM39", "averageM39", "minM39", "maxM39"];
             fillValueAverageMinMax(pilotM39, M3Data.M39, format);
+
+            plotGraph("graphM39", M3Data.M39, 100, firstMonth, "#404040C0", "%");
         }
 
         // Plot the M3.10 table
@@ -441,6 +443,15 @@
             </td>
         </tr>
     </table>
+
+    <p>
+        The following graph shows the evolution of the fraction of
+        Chromioids in root queries over time.
+    </p>
+
+    <canvas id="graphM39" height="400" width="650">
+        No M3.9 data available
+    </canvas>
 
     <h2 id="nbNameParts">Number of name parts in queries</h2>
     <p>
