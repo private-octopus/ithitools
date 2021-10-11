@@ -2192,7 +2192,6 @@ void DnsStats::SubmitPacket(uint8_t * packet, uint32_t length,
     bool is_response = false;
 
     bool has_header = true;
-    int query_id = 0;
     uint32_t flags = 0;
     uint32_t opcode = 0;
     uint32_t rcode = 0;
