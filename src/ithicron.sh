@@ -30,6 +30,7 @@ FIRST_DAY=$(date -d $YEAR-$MM-01 +%Y-%m-%d)
 DAY_AFTER_MONTH=$(date -d "$FIRST_DAY +1 months" +%Y-%m-01)
 LAST_DAY=$(date -d "$DAY_AFTER_MONTH -1 day" +%Y-%m-%d)
 LAST_LAST_DAY=$(date -d "$FIRST_DAY -1 day"  +%Y-%m-%d)
+M4LIST=`cat /home/ubuntu/data/m4list`
 echo "Current: $DATE_CURRENT"
 echo "Previous: $DATE_PREVIOUS"
 echo "First day: $FIRST_DAY"
@@ -53,10 +54,9 @@ echo "Creating summary file in $M3F2"
 >m46_this_month.txt
 python3 ithitools/src/tlsaInput.py tlsa-data-$DATE_DASH.csv /home/viktor/data/tlsa-$DATE_DASH
 echo tlsa-data-$DATE_DASH.csv >> m46_this_month.txt
-find /home/matiasf/* | grep $DATE | grep ".csv" >> m46_this_month.txt
-find /home/uccgh/data/* | grep $DATE_DASH | grep ".csv" >> m46_this_month.txt
-find /home/nawala/data/* | grep $DATE_DASH | grep ".csv" >> m46_this_month.txt
-find /home/cernet/data/* | grep $DATE_DASH | grep ".csv" >> m46_this_month.txt
+for $M4P in $M4LIST; do
+	find /home/$M4P/data/* | grep $DATE_DASH | grep ".csv" >> m46_this_month.txt
+done
 echo "Found $(wc -l m46_this_month.txt) recursive resolver reports for $DATE*"
 M46F1=/home/ubuntu/ithi/input/M46/M46-$LAST_DAY-summary.csv
 echo "Creating summary file in $M46F1"
@@ -65,10 +65,9 @@ echo "Creating summary file in $M46F1"
 >m46_previous_month.txt
 python3 ithitools/src/tlsaInput.py tlsa-data-$PREVIOUS_DASH.csv /home/viktor/data/tlsa-$PREVIOUS_DASH
 echo tlsa-data-$PREVIOUS_DASH.csv >> m46_previous_month.txt
-find /home/matiasf/* | grep $PREVIOUS_DATE | grep ".csv" >> m46_previous_month.txt
-find /home/uccgh/data/* | grep $PREVIOUS_DASH | grep ".csv" >> m46_previous_month.txt
-find /home/nawala/data/* | grep $PREVIOUS_DASH | grep ".csv" >> m46_previous_month.txt
-find /home/cernet/data/* | grep $PREVIOUS_DASH | grep ".csv" >> m46_previous_month.txt
+for $M4P in $M4LIST; do
+    find /home/$M4P/data/* | grep $PREVIOUS_DASH | grep ".csv" >> m46_previous_month.txt
+done
 echo "Found $(wc -l m46_previous_month.txt) recursive resolver reports for $PREVIOUS_DATE*"
 M46F2=/home/ubuntu/ithi/input/M46/M46-$LAST_LAST_DAY-summary.csv
 echo "Creating summary file in $M46F2"
