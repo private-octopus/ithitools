@@ -54,7 +54,7 @@ echo "Creating summary file in $M3F2"
 >m46_this_month.txt
 python3 ithitools/src/tlsaInput.py tlsa-data-$DATE_DASH.csv /home/viktor/data/tlsa-$DATE_DASH
 echo tlsa-data-$DATE_DASH.csv >> m46_this_month.txt
-for $M4P in $M4LIST; do
+for M4P in $M4LIST; do
 	find /home/$M4P/data/* | grep $DATE_DASH | grep ".csv" >> m46_this_month.txt
 done
 echo "Found $(wc -l m46_this_month.txt) recursive resolver reports for $DATE*"
@@ -65,7 +65,7 @@ echo "Creating summary file in $M46F1"
 >m46_previous_month.txt
 python3 ithitools/src/tlsaInput.py tlsa-data-$PREVIOUS_DASH.csv /home/viktor/data/tlsa-$PREVIOUS_DASH
 echo tlsa-data-$PREVIOUS_DASH.csv >> m46_previous_month.txt
-for $M4P in $M4LIST; do
+for M4P in $M4LIST; do
     find /home/$M4P/data/* | grep $PREVIOUS_DASH | grep ".csv" >> m46_previous_month.txt
 done
 echo "Found $(wc -l m46_previous_month.txt) recursive resolver reports for $PREVIOUS_DATE*"
