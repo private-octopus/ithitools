@@ -21,9 +21,9 @@ echo "Last day of this month: $LAST_DAY"
 >m46_one_month.txt
 python ithitools/src/tlsaInput.py tlsa-data-$DATE_DASH.csv /home/viktor/data/tlsa-$DATE_DASH
 echo tlsa-data-$DATE_DASH.csv >> m46_one_month.txt
-find /home/matiasf/* | grep $DATE | grep ".csv" >> m46_one_month.txt
-find /home/uccgh/data/* | grep $DATE_DASH | grep ".csv" >> m46_one_month.txt
-find /home/nawala/data/* | grep $DATE_DASH | grep ".csv" >> m46_one_month.txt
+for M4P in `cat /home/ubuntu/data/m4list`; do
+find /home/$M4P/data/* | grep $DATE_DASH | grep ".csv" >> m46_one_month.txt
+done
 echo "Found $(wc -l m46_this_month.txt) recursive resolver reports for $DATE*"
 M46F1=/home/ubuntu/ithi/input/M46/M46-$LAST_DAY-summary.csv
 echo "Creating summary file in $M46F1"
