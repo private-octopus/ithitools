@@ -6,7 +6,7 @@ function initnav()
 function initnavL1(level) {
     var levelString;
 
-    if (level == 0) {
+    if (level === 0) {
         levelString = "./";
     } else {
         levelString = "../";

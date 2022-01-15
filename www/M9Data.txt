@@ -2,15 +2,6 @@
 "date" : "February 2017 (Fictitious data, for test and illustration only)",
 "year" : 2017,
 "month" : 2,
-"top": [
-"domaincontrol.com",
-"cloudflare.com",
-"awsdns-??.com",
-"google.com",
-"akam.net",
-"nsone.net",
-"wikimedia.org",
-"dynect.net" ],
 "slices" : [
 ["M91", 1.20479, 8, 29,[
 ["google.com",0.12296564195298372],
@@ -86,6 +77,15 @@
 ["nsone.net",0.010570061317643608],
 ["awsdns-??.com",0.009488390709732161]
 ]]
-]
+],
+"top": [
+"domaincontrol.com",
+"cloudflare.com",
+"awsdns-??.com",
+"google.com",
+"akam.net",
+"nsone.net",
+"wikimedia.org",
+"dynect.net" ]
 
 }
