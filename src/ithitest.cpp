@@ -97,6 +97,7 @@ int main(int argc, char ** argv)
     int nb_fails = 0;
 
     SET_LOG_FILE(stderr);
+    TEST_LOG("%s", "Log will be available here.\n");
 
     if (argc < 2)
     {
