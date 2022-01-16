@@ -137,6 +137,7 @@ static char const * publish_test_target_m8 = "./M8Data.txt";
 static char const * publish_test_m81 = "./data/M8-2017-01-31.csv";
 static char const * publish_test_m82 = "./data/M8-2017-02-28.csv";
 static char const * publish_ref_m8 = "./data/M8Data-test-ref.txt";
+static char const* publish_test_target_m9 = "./M9Data.txt";
 static char const* publish_test_m91 = "./data/M9-2017-01-31.csv";
 static char const* publish_test_m92 = "./data/M9-2017-02-28.csv";
 static char const* publish_ref_m9 = "./data/M9Data-test-ref.txt";
