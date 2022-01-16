@@ -1,0 +1,88 @@
+<html>
+<head>
+    <title>About ICANN’s ITHI Metric M9</title>
+
+    <link rel="stylesheet" type="text/css" href="ithistyle.css">
+
+    <script src="ithinav.js"></script>
+    <script type="text/javascript">
+        function init() {
+            initnav();
+        }
+    </script>
+</head>
+
+<body onLoad="init()">
+
+    <nav id="navMenu"></nav>
+    <p>
+        The M9 metrics analyze the concentration of the authoritative DNS
+        server market. We want to estimate the relative share of companies
+        providing DNS servers to independent domain owners. We ave observed
+        that the answer varies depending on which domains are
+        considered. We extract from the <a xref="http://downloads.majestic.com/majestic_million.csv">
+            "majestic million"
+        </a> list a set of five categories:
+    </p>
+    <ol>
+        <li> Top 100 domains,</li>
+        <li> Next 900 domains,</li>
+        <li> Next 9000 domains,</li>
+        <li> Next 90000 domains,</li>
+        <li> Next 900000 domains.</li>
+    </ol>
+    <p>
+        To estimate the market for small domains not in the majectic million list,
+        we analyze the domains listed in the COM Zone. This give us a total of
+        six metric categories, identified as:
+    </p>
+    <table>
+        <tr>
+            <th>Submetric</th>
+            <th>Category</th>
+        </tr>
+        <tr><td>M9.1</td><td> Top 100 domains,</td></tr>
+        <tr><td>M9.2</td><td> Next 900 domains,</td></tr>
+        <tr><td>M9.3</td><td> Next 9000 domains,</td></tr>
+        <tr><td>M9.4</td><td> Next 90000 domains,</td></tr>
+        <tr><td>M9.5</td><td> Next 900000 domains.</td></tr>
+        <tr><td>M9.6</td><td> Domains in COM zone</td></tr>
+    </table>
+    <p>
+        In each of these categories, we count the number of "services" that provide
+        servers for the selected domain. For that, we start by getting the NS records for the
+        domain, and we try to recognize the "service" to which that record belongs.
+        In many cases, this is just the apex name, but we also use tables of "equivalent
+        names" to recognize big services like cloudflare or AWS. There are very often multiple
+        NS records for a domain, which very often point to a single service but sometimes
+        point to several different services. We adopt a couple of simple convention:
+    </p>
+    <ul>
+        <li>We define a service reference as the existence for the domain of one
+        or several NS records pointing to a given service.</li>
+        <li>There can be multiple name server records per domain name,
+        pointing to different services, but we consider at most one reference from a given domain
+        to a specific service.</li>
+        <li>We define market share of a service as the sum of references pointing to a
+        this service, divided by the total number of references.</li>
+    </ul>
+    <p>
+        We get 4 submetrics:
+    </p>
+    <table>
+        <tr>
+            <th>Submetric</th>
+            <th>Key</th>
+            <th>Definition</th>
+        </tr>
+        <tr><td>M9.x.1</td><td></td><td> Average number of services references for a domain,</td></tr>
+        <tr><td>M9.x.2</td><td></td><td> Smallest number of services accounting for 50% references,</td></tr>
+        <tr><td>M9.x.3</td><td></td><td> Smallest number of services accounting for 90% references,</td></tr>
+        <tr><td>M9.x.4</td><td>service name</td><td> Top services and their relative share of references.</td></tr>
+    </table>
+    <p>
+        The <a href="./graph-m9.html">M9 web page</a> displays a subset of these
+        statistics.
+    </p>
+</body>
+</html>
