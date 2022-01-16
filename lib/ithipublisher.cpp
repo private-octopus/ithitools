@@ -1168,6 +1168,10 @@ bool ithipublisher::PublishDataM9(FILE* F)
             m9xx[5] = '4';
             ret &= fprintf(F, "[") > 0;
             ret &= GetNameOrNumberList(m9xx, &name_list, false);
+            if (ret) {
+                /* Sort the name list from bigger to lower */
+                std::sort(name_list.begin(), name_list.end(), ithipublisher::MetricNameLineIsBigger);
+            }
             while (ret && name_index < name_list.size())
             {
                 ret = fprintf(F, "%s\n[\"%s\",%f]", 
