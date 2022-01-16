@@ -288,6 +288,12 @@ bool ithipublisher::MetricNameLineIsBigger(MetricNameLine l1, MetricNameLine l2)
         {
             ret = true;
         }
+        else if (l1.average == l2.average) {
+            /* Define "bigger" as before in alphabetic order */
+            if (strcmp(l1.name, l2.name) < 0) {
+                ret = true;
+            }
+        }
     }
 
     return ret;
@@ -948,11 +954,17 @@ bool ithipublisher::PublishDataM6(FILE * F)
 
             ret = snprintf(subMetX, sizeof(subMetX), "%s.3", subMet[m]) > 0;
 
+
             ret &= fprintf(F, ",[") > 0;
 
             if (ret)
             {
                 ret = GetNameList(subMetX, &name_list);
+            }
+
+            if (ret) {
+                /* Sort the name list from bigger to lower */
+                std::sort(name_list.begin(), name_list.end(), ithipublisher::MetricNameLineIsBigger);
             }
 
             for (size_t l = 0; ret && l < name_list.size(); l++)
