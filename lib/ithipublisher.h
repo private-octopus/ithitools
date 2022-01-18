@@ -103,6 +103,7 @@ public:
     bool PublishDataM7(FILE * F);
     bool PublishOptTable(FILE * F, char const * metricId);
     bool PublishDataM8(FILE * F);
+    bool PublishDataM9(FILE* F);
 };
 
 class ithiIndexPublisher

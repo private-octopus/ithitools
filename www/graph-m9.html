@@ -1,0 +1,143 @@
+<html>
+<head>
+
+<title>ITHI Metric M9</title>
+
+<link rel="stylesheet" type="text/css" href="ithistyle.css">
+
+<script src="ithinav.js"></script>
+
+<script src="ithigraph.js"></script>
+
+<script type="text/javascript">
+
+    var M9Data; // Will be obtained from the web server.
+
+    function init() {
+        initnav();
+        loadDoc();
+    }
+
+    function loadDoc() {
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                M9Data = JSON.parse(this.responseText);
+                draw_page();
+            }
+        };
+        xhttp.open("GET", "M9Data.txt", true);
+        xhttp.send();
+    }
+
+    function draw_page() {
+        var slice_names = ["top 100", "next 900", "next 9000",
+            "next 90000", "next 900000", "COM zone"];
+
+        setDateElement(M9Data.date);
+        draw_M9_top_services("M9Top", M9Data, M9Data.top, M9Data.slices, slice_names);
+        draw_M9_global_stats("M9Stats", M9Data, M9Data.slices, slice_names);
+    }
+
+    function draw_M9_global_stats(table_id, MData, slices, slice_names) {
+        var headerText = ["",
+            "Average Nb. services per domain",
+            "Nb services for 50% of domains",
+            "Nb services for 90% of domains"];
+        var j = 0;
+        var tableElem = document.getElementById(table_id);
+        var tableText = draw_M9_global_header("Statistics", MData, slice_names);
+        var len = slices.length;
+        var ppx = [ 0, 2, 0, 0 ];
+        for (j = 1; j < 4; j++) {
+            var i = 0;
+            tableText += "<tr><td>" + headerText[j] + "</td>";
+            for (i = 0; i < len; i++) {
+                slice = slices[i];
+                tableText += "<td class=\"number\">" + slice[j].toFixed(ppx[j]) + "</td>";
+            }
+            tableText += "<tr>\n"
+        }
+        tableText += "</table>\n";
+
+        tableElem.innerHTML = tableText;
+    }
+    function draw_M9_top_services(table_id, MData, top, slices, slice_names) {
+        var i = 0;
+        var len = slices.length;
+        var tableElem = document.getElementById(table_id);
+        tableElem.innerHTML = "Drawing";
+        var tableText = draw_M9_global_header("Share", MData, slice_names);
+        for (i = 0; i < top.length; i++) {
+            tableText += "<tr><td>" + top[i] + "</td>\n";
+            var j = 0;
+            for (j = 0; j < len; j++) {
+                slice = slices[j];
+                var x = get_service_element_share(top[i], slice[4]);
+                tableText += "<td class=\"number\">"
+                tableText += (100 * x).toFixed(1);
+                tableText += "% </td>";
+            }
+            tableText += "</tr>\n";
+        }
+
+        tableText += "</table>\n";
+        tableElem.innerHTML = tableText;
+    }
+
+    function draw_M9_global_header(title, MData, slice_names) {
+        var tableText = "<table class=\"metrics\"><tr><th>" + title + ", ";
+        if ("year" in MData && "month" in MData) {
+            tableText += "as of " + getMonthId(MData.month) + " " + MData.year;
+        } else {
+            tableText += "current value";
+        }
+        tableText += "</th>";
+        var len = slice_names.length;
+        for (i = 0; i < len; i++) {
+            tableText += "</th><th class=\"number\">" + slice_names[i] + "</th>";
+        }
+        tableText += "</th></tr>\n";
+        return tableText;
+    }
+
+    function get_service_element_share(topName, shareSet){
+        var x = 0;
+        var i = 0;
+
+        for (i = 0; i < shareSet.length; i++) {
+            var nameData = shareSet[i];
+            if (nameData[0] == topName) {
+                x = nameData[1];
+                break;
+            }
+        }
+        return x;
+    }
+</script>
+</head>
+
+<body onLoad="init()">
+
+    <nav id="navMenu"></nav>
+
+    <h1>M9: Concentration of Authoritative Services</h1>
+    <h2 id="dateHeading">-</h2>
+    <p>
+        The M9 metrics analyze the Concentration of Authoritative Services,
+        across 6 categories: top 100, 1000, 10000, 100000 and 1M domains
+        in the "Majectic Million" list, and names in the COM zone (See
+        <a href="./about-m9.html">About M9 page</a> for details.) The
+        fist table shows the most frequent servers across all categories:
+    </p>
+    <div id="M9Top">Table M9 top not found</div>
+    <p>
+        The next yable provides a summary view of concentration in each category:
+        how many services are used on average per domain, and how many services
+        account for 50% or 90% of the market.
+    </p>
+    <div id="M9Stats">Table M9 stats not found</div>
+
+</body>
+</html>
