@@ -26,10 +26,10 @@
     </p>
     <ol>
         <li> Top 100 domains,</li>
-        <li> Next 900 domains,</li>
-        <li> Next 9000 domains,</li>
-        <li> Next 90000 domains,</li>
-        <li> Next 900000 domains.</li>
+        <li> Next 900 domains, i.e. top 1,000 minus top 100</li>
+        <li> Next 9000 domains, i.e. top 10,000 minus top 1,000</li>
+        <li> Next 90000 domains, i.e. top 100,000 minus top 10,000</li>
+        <li> Next 900000 domains. i.e. top 1M minus top 100,000</li>
     </ol>
     <p>
         To estimate the market for small domains not in the majectic million list,
@@ -42,10 +42,10 @@
             <th>Category</th>
         </tr>
         <tr><td>M9.1</td><td> Top 100 domains,</td></tr>
-        <tr><td>M9.2</td><td> Next 900 domains,</td></tr>
-        <tr><td>M9.3</td><td> Next 9000 domains,</td></tr>
-        <tr><td>M9.4</td><td> Next 90000 domains,</td></tr>
-        <tr><td>M9.5</td><td> Next 900000 domains.</td></tr>
+        <tr><td>M9.2</td><td> Domains 101 to 1,000,</td></tr>
+        <tr><td>M9.3</td><td> Domains 1,001 to 10,000,</td></tr>
+        <tr><td>M9.4</td><td> Domains 10,001 to 100,000,</td></tr>
+        <tr><td>M9.5</td><td> Domains 100,001 to 1M.</td></tr>
         <tr><td>M9.6</td><td> Domains in COM zone</td></tr>
     </table>
     <p>
@@ -75,7 +75,7 @@
             <th>Key</th>
             <th>Definition</th>
         </tr>
-        <tr><td>M9.x.1</td><td></td><td> Average number of services references for a domain,</td></tr>
+        <tr><td>M9.x.1</td><td></td><td> Average number of service references for a domain,</td></tr>
         <tr><td>M9.x.2</td><td></td><td> Smallest number of services accounting for 50% references,</td></tr>
         <tr><td>M9.x.3</td><td></td><td> Smallest number of services accounting for 90% references,</td></tr>
         <tr><td>M9.x.4</td><td>service name</td><td> Top services and their relative share of references.</td></tr>
@@ -83,6 +83,23 @@
     <p>
         The <a href="./graph-m9.html">M9 web page</a> displays a subset of these
         statistics.
+    </p>
+    <h2>Aggregations</h2>
+    <p>
+        Our goal is to measure the concentration of services. The process start with the
+        enumeration of name server records, which identify specific servers. A given service
+        will include several servers. Google, for example, uses servers like "ns1.google.com",
+        "ns2.google.com.", or "ns4.google.com". As a first rule, we look at patterns
+        described in the <a href="https://publicsuffix.org/">Public Suffix List</a> to
+        group all name servers name servers sharing a public suffix under that suffix.
+        </p>
+    <p>
+        In a few cases, we find services that use multiple names. AWS, for example, has a
+        long list of server domains such as "awsdns-21.net", "awsdns-08.com", or
+        "awsdns-43.co.uk". Services like Azure DNS, Ultra DNS, DNS UI and many others
+        use similar patterns. The code uses a combination of pattern matches and tables
+        to map these multiple names to just one entry per service. That's why, for example,
+        we present all results for AWS under the name "awsdns-??.com".
     </p>
 </body>
 </html>
