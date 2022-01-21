@@ -69,7 +69,12 @@ for (dirpath, dirnames, filenames) in walk(mypath):
 print("Found " + str(summary.i_count) + " summaries.")
 summary.average()
 i = 0
+checkNull = True
 while i < len(summary.key_list) :
-    print("m5[" + summary.key_list[i] + "] = " + str(summary.total[i]))
+    if summary.total[i] > 0:
+        checkNull = False
+        break
     i += 1
+if checkNull:
+    print("All values of metric M5 are NULL!")
 summary.save_as_csv(sys.argv[2], sys.argv[3])

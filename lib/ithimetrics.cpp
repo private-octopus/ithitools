@@ -438,7 +438,7 @@ bool ithimetrics::SaveMetricFiles()
     bool ret = true;
     char version[128];
     char buffer[512];
-    ComputeMetric * cm[ITHI_NUMBER_OF_METRICS] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7, &cm8 };
+    ComputeMetric * cm[ITHI_NUMBER_OF_METRICS] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7, &cm8, NULL };
 
     /* Set the version number */
     if (ret)
@@ -493,7 +493,7 @@ bool ithimetrics::SaveMetricFiles()
 
 bool ithimetrics::Save(char const * file_name)
 {
-    ComputeMetric * cm[ITHI_NUMBER_OF_METRICS] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7, &cm8 };
+    ComputeMetric * cm[ITHI_NUMBER_OF_METRICS] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7, &cm8, NULL };
     FILE* F;
     char version[128];
     bool ret = true;
