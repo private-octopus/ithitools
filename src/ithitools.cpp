@@ -573,7 +573,7 @@ int main(int argc, char ** argv)
             web_root = ITHI_DEFAULT_FOLDER;
         }
 
-        for (int metric_id = 1; ret && metric_id <= 8; metric_id++) {
+        for (int metric_id = 1; ret && metric_id <= ITHI_NUMBER_OF_METRICS; metric_id++) {
             ithipublisher pub(ithi_folder, metric_id);
             ret = pub.CollectMetricFiles();
 

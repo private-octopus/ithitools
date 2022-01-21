@@ -47,7 +47,7 @@
 #endif
 #endif
 
-#define ITHI_NUMBER_OF_METRICS 8
+#define ITHI_NUMBER_OF_METRICS 9
 
 class ithimetrics
 {
