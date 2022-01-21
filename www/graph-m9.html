@@ -32,12 +32,16 @@
     }
 
     function draw_page() {
-        var slice_names = ["top 100", "next 900", "next 9000",
-            "next 90000", "next 900000", "COM zone"];
+        var slice_names = ["top 100", "101 to 1000", "1001 to 10,000",
+            "10001 to 100,000", "100,001 to 1M", "COM zone"];
+        var short_names = ["100", "1000", "10K",
+            "100K", "1M", "COM"];
 
         setDateElement(M9Data.date);
+        var top_slices = gather_M9_top_services(M9Data.top, M9Data.slices);
         draw_M9_top_services("M9Top", M9Data, M9Data.top, M9Data.slices, slice_names);
         draw_M9_global_stats("M9Stats", M9Data, M9Data.slices, slice_names);
+        var graph = plotBarGraph("barGraphM9", top_slices, short_names, M9Data.top);
     }
 
     function draw_M9_global_stats(table_id, MData, slices, slice_names) {
@@ -63,21 +67,27 @@
 
         tableElem.innerHTML = tableText;
     }
+
     function draw_M9_top_services(table_id, MData, top, slices, slice_names) {
         var i = 0;
         var len = slices.length;
         var tableElem = document.getElementById(table_id);
         tableElem.innerHTML = "Drawing";
         var tableText = draw_M9_global_header("Share", MData, slice_names);
+        var top_slices = gather_M9_top_services(top, slices);
         for (i = 0; i < top.length; i++) {
-            tableText += "<tr><td>" + top[i] + "</td>\n";
             var j = 0;
+            tableText += "<tr><td>" + top[i] + "</td>\n";
             for (j = 0; j < len; j++) {
-                slice = slices[j];
-                var x = get_service_element_share(top[i], slice[4]);
-                tableText += "<td class=\"number\">"
-                tableText += (100 * x).toFixed(1);
-                tableText += "% </td>";
+                top_slice = top_slices[j];
+                var x = top_slice[i];
+                tableText += "<td class=\"number\">";
+                if (x > 0.001) {
+                    tableText += (100 * x).toFixed(1) + "%";
+                } else {
+                    tableText += "&lt 0.1%";
+                }
+                tableText += "</td>";
             }
             tableText += "</tr>\n";
         }
@@ -115,6 +125,155 @@
         }
         return x;
     }
+
+    function gather_M9_top_services(top, slices) {
+        var i = 0;
+        var j = 0;
+        var len = slices.length;
+        var top_slices = [];
+        for (j = 0; j < len; j++) {
+            var top_slice = [];
+            var slice = slices[j];
+            for (i = 0; i < top.length; i++) {
+                var x = get_service_element_share(top[i], slice[4]);
+                top_slice.push(x);
+            }
+            top_slices.push(top_slice);
+        }
+        return top_slices;
+    }
+
+    function plotBarGraph(canvasId, mat, names, top) {
+        var nb_names = names.length;
+        var nb_bars = mat.length;
+        var v_min = 0;
+        var v_max = 1.0;
+        var stepSize = v_max / 10;
+        var columnSize = 50;
+        var rowSize = 50;
+        var margin = 10;
+        var graph = new Object();
+        var i = 0;
+        var x = 0;
+        var y = 0;
+        var colorSet = ["#4040FFFF", "#40FF40FF", "#FF4040FF",
+            "#FFFF40FF", "#40FFFFFF", "#FF40FFFF",
+            "#8080C0FF", "#80C080FF", "#C08080FF",
+            "#C0C080FF", "#80C0C0FF", "#C080C0FF"];
+        var color0 = ["#EFEFEFFF"]
+        var nb_colors = colorSet.length;
+
+        graph.canvas = document.getElementById(canvasId);
+        graph.context = graph.canvas.getContext("2d");
+        graph.context.fillStyle = "#000000";
+        graph.context.font = "20px sans-serif";
+
+        graph.yScale = (graph.canvas.height - columnSize - margin) / (v_max - v_min);
+        graph.xScale = (graph.canvas.width - rowSize) / (nb_bars + 4);
+
+        graph.context.strokeStyle = "#555555"; // color of grid lines
+        graph.context.beginPath();
+        // print Parameters on X axis, and grid lines on the graph
+        for (i = 0; i < nb_names; i++) {
+            x = rowSize + i * graph.xScale;
+            if (i < nb_names) {
+                graph.context.fillText(names[i], x, columnSize - margin);
+            }
+        }
+        // print row header and draw horizontal grid lines
+        var count = 0;
+        var scale = 0;
+        var dw = graph.xScale / 4.0;
+        var bar_width = rowSize + nb_names * graph.xScale;
+        graph.context.font = "12px sans-serif";
+        for (scale = v_max; scale >= v_min; scale = scale - stepSize) {
+            y = columnSize + graph.yScale * count * stepSize;
+            var fscale = (100.0 * scale).toFixed(0);
+            graph.context.fillText(fscale + "%", margin, y + margin);
+            if (scale < v_max) {
+                graph.context.moveTo(rowSize, y + margin);
+                graph.context.lineTo(bar_width - dw, y + margin);
+            }
+            count++;
+        }
+        graph.context.stroke();
+
+        /* Print the legend */
+        graph.context.font = "20px sans-serif";
+        graph.context.beginPath();
+        x = rowSize + nb_names * graph.xScale + margin;
+        var nb_top = top.length;
+        var n_h = graph.canvas.height / (nb_top + 3);
+        y = n_h;
+        var b_h = 20;
+        var b_w = 20;
+        var b_color = 0;
+
+        for (j = 0; j < nb_top; j++) {
+            y += n_h;
+            graph.context.fillStyle = "#000000";
+            graph.context.fillText(top[j], x + b_w + margin, y);
+            graph.context.fillStyle = colorSet[b_color];
+            graph.context.fillRect(x, y - b_h, b_w, b_h);
+            graph.context.beginPath();
+            graph.context.rect(x, y - b_h, b_w, b_h);
+            graph.context.stroke();
+            b_color++;
+            if (b_color > nb_colors) {
+                b_color = 0;
+            }
+        }
+        y += n_h;
+        graph.context.fillStyle = color0;
+        graph.context.fillRect(x, y - b_h, b_w, b_h);
+        graph.context.beginPath();
+        graph.context.rect(x, y - b_h, b_w, b_h);
+        graph.context.stroke();
+        graph.context.fillStyle = "#000000";
+        graph.context.fillText("Others", x + b_w + margin, y);
+
+
+        // Print each bar
+        var barSize = graph.yScale * 10 * stepSize;
+        var bottom = columnSize + barSize + margin;
+        var w = 3.0 * graph.xScale / 4.0;
+        var h = 0;
+
+        for (i = 0; i <= nb_names; i++) {
+            var i_color = 0;
+            var slice = mat[i];
+            x = rowSize + i * graph.xScale;
+            y = bottom;
+
+            for (j = 0; j < slice.length; j++) {
+                var v = slice[j];
+                h = barSize * v;
+                y -= h;
+
+                graph.context.fillStyle = colorSet[i_color];
+                graph.context.fillRect(x, y, w, h);
+                graph.context.beginPath();
+                graph.context.rect(x, y, w, h);
+                graph.context.stroke();
+                i_color++;
+                if (i_color > nb_colors) {
+                    i_color = 0;
+                }
+            }
+
+            h = y - columnSize - margin;
+            y -= h;
+            graph.context.fillStyle = color0;
+            graph.context.fillRect(x, y, w, h);
+            graph.context.beginPath();
+            graph.context.rect(x, y, w, h);
+            graph.context.stroke();
+        }
+
+
+        return graph;
+    }
+
 </script>
 </head>
 
@@ -126,18 +285,30 @@
     <h2 id="dateHeading">-</h2>
     <p>
         The M9 metrics analyze the Concentration of Authoritative Services,
-        across 6 categories: top 100, 1000, 10000, 100000 and 1M domains
+        across 6 categories: top 100, 101 to 1,000, 1,001 to 10,000,
+        10,001 to 100000, and 100,001 to 1M domains
         in the "Majectic Million" list, and names in the COM zone (See
         <a href="./about-m9.html">About M9 page</a> for details.) The
-        fist table shows the most frequent servers across all categories:
+        following graph shows the share of most frequent services across
+        all categories. A tabulated version of the same data is
+        <a href="#M9Top">available here</a>.
     </p>
-    <div id="M9Top">Table M9 top not found</div>
     <p>
-        The next yable provides a summary view of concentration in each category:
+        <canvas display="inline" id="barGraphM9" height="400" width="720"></canvas>
+    </p>
+    <h2>Concentration indices</h2>
+    <p>
+        The following table provides a summary view of concentration in each category:
         how many services are used on average per domain, and how many services
         account for 50% or 90% of the market.
     </p>
     <div id="M9Stats">Table M9 stats not found</div>
+    <h2>Top services</h2>
+    The following table shows the data underlying <a href="#barGraphM9">
+        the graph
+        at the top of this page
+    </a>:
+    <div id="M9Top">Table M9 top not found</div>
 
 </body>
 </html>
