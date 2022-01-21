@@ -44,7 +44,8 @@
 ["dnsimple.com",0.005093],
 ["o365filtering.com",0.005093],
 ["sina.com.cn",0.005093],
-["yahoo.com",0.005093]]],
+["yahoo.com",0.005093],
+["domaincontrol.com",0.002501]]],
 ["M93",1.169824,13,1751,[
 ["cloudflare.com",0.165028],
 ["awsdns-??.com",0.151533],
@@ -60,7 +61,8 @@
 ["cscdns.net",0.007519],
 ["alidns.com",0.005495],
 ["worldnic.com",0.005109],
-["gandi.net",0.005013]]],
+["gandi.net",0.005013],
+["wikimedia.org",0.001206]]],
 ["M94",1.105841,19,2434,[
 ["cloudflare.com",0.223233],
 ["awsdns-??.com",0.105015],
@@ -77,7 +79,8 @@
 ["registrar.eu",0.006499],
 ["dynect.net",0.006020],
 ["gandi.net",0.005952],
-["registrar-servers.com",0.005473]]],
+["registrar-servers.com",0.005473],
+["dns.com",0.001835]]],
 ["M95",1.025916,33,1248,[
 ["cloudflare.com",0.155197],
 ["domaincontrol.com",0.074913],
@@ -96,7 +99,9 @@
 ["antagus.de",0.005372],
 ["dnspod.net",0.005372],
 ["gandi.net",0.005226],
-["ultradns.net",0.005081]]],
+["ultradns.net",0.005081],
+["akam.net",0.004938],
+["nsone.net",0.004799]]],
 ["M96",1.043799,12,728,[
 ["domaincontrol.com",0.239017],
 ["dns.com",0.038015],
