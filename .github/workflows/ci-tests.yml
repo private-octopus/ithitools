@@ -40,6 +40,6 @@ jobs:
 
       - name: Run Valgrind
         run: |
-            usdo apt-get update
+            sudo apt-get update
             sudo apt-get install -y valgrind
             valgrind -v --error-exitcode=1  --track-origins=yes ./ithitest
