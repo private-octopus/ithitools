@@ -77,7 +77,8 @@
         var top_slices = gather_M9_top_services(top, slices);
         for (i = 0; i < top.length; i++) {
             var j = 0;
-            tableText += "<tr><td>" + top[i] + "</td>\n";
+            var sv = get_service_name(top[i])
+            tableText += "<tr><td>" + sv + "</td>\n";
             for (j = 0; j < len; j++) {
                 top_slice = top_slices[j];
                 var x = top_slice[i];
@@ -212,7 +213,7 @@
         for (j = 0; j < nb_top; j++) {
             y += n_h;
             graph.context.fillStyle = "#000000";
-            graph.context.fillText(top[j], x + b_w + margin, y);
+            graph.context.fillText(get_service_name(top[j]), x + b_w + margin, y);
             graph.context.fillStyle = colorSet[b_color];
             graph.context.fillRect(x, y - b_h, b_w, b_h);
             graph.context.beginPath();
@@ -272,6 +273,29 @@
 
 
         return graph;
+    }
+
+    function get_service_name(d_name) {
+        var service_names = [
+            ["domaincontrol.com", "GoDaddy"],
+            ["cloudflare.com", "CloudFlare"],
+            ["awsdns-??.com", "Amazon AWS DNS"],
+            ["wikimedia.org", "wikimedia"],
+            ["nsone.net", "NS1"],
+            ["akam.net", "Akamai"],
+            ["dynect.net", "Oracle Dyn"]
+        ];
+        var s_name = d_name;
+
+        for (i = 0; i < service_names.length; i++) {
+            var x = service_names[i];
+            if (x[0] == d_name) {
+                s_name = x[1];
+                break;
+            }
+        }
+
+        return s_name;
     }
 
 </script>
