@@ -12,7 +12,7 @@ on:
 jobs:
   citests:
     name: CI-Tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
   
     steps:
       - name: Checkout repository
@@ -40,5 +40,6 @@ jobs:
 
       - name: Run Valgrind
         run: |
+            usdo apt-get update
             sudo apt-get install -y valgrind
             valgrind -v --error-exitcode=1  --track-origins=yes ./ithitest
