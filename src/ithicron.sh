@@ -93,6 +93,9 @@ M7F1=/home/ubuntu/ithi/input/M7/M7-$LAST_DAY.zone
 echo "Copying root zone file to $M7F1"
 wget https://www.internic.net/domain/root.zone -O $M7F1
 
+echo "Copying M9 metrics from octo0"
+rsync -av /home/octo0/data/M9 /home/ubuntu/ithi/
+
 echo "Computing metrics for $LAST_LAST_DAY"
 ./ithitools/ithitools -i /home/ubuntu/ithi -d $LAST_LAST_DAY -m
 echo "Computing metrics for $LAST_DAY"
