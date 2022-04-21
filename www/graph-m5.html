@@ -37,7 +37,11 @@
         ["valM5613", "averageM5613", "minM5613", "maxM5613"],
         ["valM5614", "averageM5614", "minM5614", "maxM5614"],
         ["valM5615", "averageM5615", "minM5615", "maxM5615"],
-        ["valM5616", "averageM5616", "minM5616", "maxM5616"]
+        ["valM5616", "averageM5616", "minM5616", "maxM5616"],
+        ["valM571", "averageM571", "minM571", "maxM571"],
+        ["valM572", "averageM572", "minM572", "maxM572"],
+        ["valM579", "averageM579", "minM579", "maxM579"],
+        ["valM5710", "averageM5710", "minM5710", "maxM5710"]
     ];
 
     var format1 = [1, 1, 1, 1];
@@ -77,7 +81,7 @@
         for (; i < 13; i++) {
             fillValueAverageMinMaxSkip0(pilot[i], M5Data.M5[i].v, format1);
         }
-        // metrics for row 13 to 29 (M5.5 to M5.6.16) are straight values
+        // metrics for row 13 to 37 (M5.5 to M5.7.12) are straight values
         fillValueAverageMinMaxSkip0(pilot[i], M5Data.M5[i].v, format2);
         i++;
         for (; i < pilot.length; i++) {
@@ -108,7 +112,7 @@ that we track. We also provide an estimate of the fraction of the global populat
 behind the 10000 largest resolvers.
 </p>
 <p>
-There are five components in the M5 metric:
+There are seven components in the M5 metric:
 </p>
 <ul>
     <li>
@@ -140,7 +144,7 @@ There are five components in the M5 metric:
         the 10,000 largest visible recursive resolvers.
     </li>
     <li>
-        The metrics M5.6 measure the concentration of the resolver services by tracking the number
+        The metrics M5.6 and 5.7 measure the concentration of the resolver services by tracking the number
         of resolvers required to serve 50% or 90% of the number of clients. 
     </li>
 </ul>
@@ -153,6 +157,11 @@ There are five components in the M5 metric:
     in parallel use multiple resolvers. For that reason, be use four different methods
     for computing concentration, leading to four different submetrics. The details
     of grouping and computation are explained in <a href="about-m5.html">the "about M5" page</a>.
+</p>
+<p>
+    The metric M5.7 presents a simplified view of the M5.6 measurements. When a client
+    request triggers multiple query arrivals at the test server, we only retain the
+    first one, the "initial" query.
 </p>
 <p>
     The following table provides the value observed for the
@@ -510,7 +519,7 @@ There are five components in the M5 metric:
     </tr>
     <tr>
         <th colspan=2>
-            M5.6 (Concentration of the resolver services)
+            M5.6 AND M5.7 (Concentration of the resolver services)
         </th>
         <th class="number" id="currentId6">Current Value</th>
         <th class="number">Past 3 months</th>
@@ -852,6 +861,90 @@ There are five components in the M5 metric:
             -
         </td>
         <td class="number" id="maxM5616">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.7.1
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            Number of initial resolvers (subnet granularity) seen by 50% of users
+        </td>
+        <td class="number" id="valM571">
+            -
+        </td>
+        <td class="number" id="averageM571">
+            -
+        </td>
+        <td class="number" id="minM571">
+            -
+        </td>
+        <td class="number" id="maxM571">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.7.2
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            Number of initial resolvers (subnet granularity) seen by 90% of users
+        </td>
+        <td class="number" id="valM572">
+            -
+        </td>
+        <td class="number" id="averageM572">
+            -
+        </td>
+        <td class="number" id="minM572">
+            -
+        </td>
+        <td class="number" id="maxM572">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.7.9
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            Number of initial resolvers (AS granularity) seen by 50% of users
+        </td>
+        <td class="number" id="valM579">
+            -
+        </td>
+        <td class="number" id="averageM579">
+            -
+        </td>
+        <td class="number" id="minM579">
+            -
+        </td>
+        <td class="number" id="maxM579">
+            -
+        </td>
+    </tr>
+    <tr>
+        <td class="number">
+            M5.7.10
+            <a href="about-m5.html">(?)</a>
+        </td>
+        <td>
+            Number of initial resolvers (AS granularity) seen by 90% of users
+        </td>
+        <td class="number" id="valM5710">
+            -
+        </td>
+        <td class="number" id="averageM5710">
+            -
+        </td>
+        <td class="number" id="minM5710">
+            -
+        </td>
+        <td class="number" id="maxM5710">
             -
         </td>
     </tr>
