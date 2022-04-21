@@ -25,7 +25,7 @@
         <li>The Metric M5.3 measures the % of visible recursive resolvers that set the DO (DNSSEC OK) bit in their queries, as well as the fraction of users using resolvers that set the DO bit in queries.</li>
         <li>The Metric M5.4 measures the % of visible recursive resolvers that perform DNSSEC validation of responses, as well as the fraction of users using resolvers that perform DNSSEC validation of responses.</li>
         <li>The metric M5.5 provide a distribution of the estimated client size of the 10,000 largest visible recursive resolvers.</li>
-        <li>The metric M5.6 estimates the concentration of the resolver services.</li>
+        <li>The metrics M5.6 and M5.7 estimates the concentration of the resolver services.</li>
     </ul>
     <h3>The APNIC polling process</h3>
     <p>
@@ -93,7 +93,7 @@
         from there the cache refresh strategies used by the resolvers.
     </p>
     <p>
-        The metrics M5.6 measure the concentration of the resolver services by tracking the number
+        The metrics M5.6 and M5.7 measure the concentration of the resolver services by tracking the number
         of resolvers required to serve 50% or 90% of the number of clients.
         It turns out that the
         link between clients and resolvers is a bit fuzzy for two reasons:
@@ -110,7 +110,9 @@
             larger set resolvers that includes all the resolvers that a client "uses".
         </li>
     </ul>
-    This results in several variants of the M5.6 metrics:
+    <p>
+        This results in several variants of the M5.6 metrics:
+    </p>
     <ul>
         <li>
             Metrics M5.6.1 and M5.6.2 measure the number of first use resolvers "seen" by 50% of
@@ -166,6 +168,23 @@
     <p>
         The computation of the metrics M5.6 follows the same logic, but instead of measuring the set that serves "every" client, we look at the minimal sets that are seen or used by 50% or 90% of clients.
     </p>
+    <p>
+        The metric M5.7 tries to simplify the approach by considering only the first
+        query to arrive at the test server after a client resolution request. If that request
+        triggered several parallel queries, only the first to arrive ot "initial" query
+        is considered, and the other are ignored.
+    </p>
+    <ul>
+        <li>
+            Metrics M5.7.1 and M5.7.2 measure the number of resolvers accounting by 50% of
+            users (M5.7.1) or 90% of users (M5.7.2), considering only "initial" queries.
+        </li>
+        <li>
+            Metrics M5.7.9 and M5.7.10 measure the same numbers as M5.7.1 and M5.7.2, but
+            apply a grouping "per AS" instead of the grouping "per subnet" used in the
+            previous metrics.
+        </li>
+    </ul>
     <h3>Complete list of M5 metrics</h3>
     <p>
         The complete list of M5 metrics is listed in the following table:
@@ -394,6 +413,23 @@
             </td>
             <td>
                 Number of resolvers used by 90% of users
+            </td>
+        </tr>
+        <tr>
+            <td class="number">
+                M5.7.1
+            </td>
+            <td>
+                Number of initial resolvers seen by 50% of users
+            </td>
+        </tr>
+
+        <tr>
+            <td class="number">
+                M5.7.2
+            </td>
+            <td>
+                Number of initial resolvers seen by 90% of users
             </td>
         </tr>
 
