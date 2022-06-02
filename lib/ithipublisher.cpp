@@ -349,6 +349,12 @@ bool ithipublisher::Publish(char const * web_folder)
     bool ret = snprintf(file_name, sizeof(file_name), "%s%sM%dData.txt", 
         web_folder, ITHI_FILE_PATH_SEP, metric_id) > 0;
 
+#if 1
+    if (ret && metric_id == 10) {
+        printf("Publishing %s\n", file_name);
+    }
+#endif
+
     if (ret)
     {
         /* Create the file */
