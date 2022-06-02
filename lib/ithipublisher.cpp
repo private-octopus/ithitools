@@ -365,6 +365,9 @@ bool ithipublisher::Publish(char const * web_folder)
             case 9:
                 ret = PublishDataM9(F);
                 break;
+            case 10:
+                ret = PublishDataM10(F);
+                break;
             default:
                 ret = fprintf(F, "\"error\" : \"No data yet for metric M%d\"\n", metric_id) > 0;
                 break;
@@ -1242,6 +1245,100 @@ bool ithipublisher::PublishDataM9(FILE* F)
         }
         ret &= fprintf(F, "]\n") > 0;
     }
+    return ret;
+}
+
+bool ithipublisher::FinishCCdataM10(FILE* F, bool is_svc_list_open, bool sub_metric_found[5], char const * sub_met_name[5])
+{
+    bool ret = true;
+    if (is_svc_list_open)
+    {
+        if (is_svc_list_open) {
+            ret &= fprintf(F, "]") > 0;
+        }
+        sub_metric_found[3] = true;
+    }
+    for (int i = 0; i < 5; i++) {
+        if (sub_metric_found[i]) {
+            continue;
+        }
+        ret &= fprintf(F, ",\n\"%s\": %s", sub_met_name[i], (i == 3) ? "[]" : "0") > 0;
+    }
+    ret &= fprintf(F, "}") > 0;
+    return ret;
+}
+
+bool ithipublisher::PublishDataM10(FILE* F)
+{
+    /* Find the list of countries from reading the metric file */
+    char cc_current[3] = { 0, 0, 0 };
+    bool ret = true;
+    bool is_svc_list_open = false;
+    bool sub_metric_found[5] = { false, false, false, false, false };
+    char const* sub_met_name[5] = { "allopnrvrs", "samecc", "diffcc", "svc", "count" };
+    /* Open the ccdata element */
+    ret &= fprintf(F, "\"ccdata\":[") > 0;
+    for (int i = 0; ret && i < line_list.size(); i++) {
+        if (line_list[i]->year != last_year || line_list[i]->month != last_month) {
+            continue;
+        }
+        else {
+            char* metric_name = line_list[i]->metric_name;
+            int sub_met_id = 0;
+            if (cc_current[0] != metric_name[4] ||
+                cc_current[1] != metric_name[5]) {
+                /* This is the first line for the next country code */
+                if (cc_current[0] != 0) {
+                    /* Need to close the previous country code data set */
+                    ret &= FinishCCdataM10(F, is_svc_list_open, sub_metric_found, sub_met_name);
+                    ret &= fprintf(F, ",\n") > 0;
+                }
+                /* Open the list for the new country code */
+                cc_current[0] = metric_name[4];
+                cc_current[1] = metric_name[5];
+                is_svc_list_open = false;
+                for (int s = 0; s < 5; s++) {
+                    sub_metric_found[s] = false;
+                }
+                ret &= fprintf(F, "{ \"cc\": \"%s\"", cc_current) > 0;
+            }
+            sub_met_id = metric_name[7] - '1';
+            if (sub_met_id < 0 || sub_met_id >= 5) {
+                ret = false;
+            }
+            else {
+                sub_metric_found[sub_met_id] = true;
+                if (sub_met_id == 3 ) {
+                    if (!is_svc_list_open) {
+                        ret &= fprintf(F, ",\n\"%s\": [\n", sub_met_name[sub_met_id]) > 0;
+                        is_svc_list_open = true;
+                    }
+                    else {
+                        ret &= fprintf(F, ",\n") > 0;
+                    }
+                    ret &= fprintf(F, "[\"%s\",%6.4f]", line_list[i]->key_value, line_list[i]->frequency) > 0;
+                }
+                else {
+                    if (is_svc_list_open) {
+                        ret &= fprintf(F, "]") > 0;
+                        is_svc_list_open = false;
+                    }
+                    if (sub_met_id == 4) {
+                        ret &= fprintf(F, ",\n\"%s\": %llu", sub_met_name[sub_met_id], (unsigned long long)line_list[i]->frequency) > 0;
+                    }
+                    else {
+                        ret &= fprintf(F, ",\n\"%s\": %6.4f", sub_met_name[sub_met_id], line_list[i]->frequency) > 0;
+                    }
+                }
+            }
+        }
+    }
+    if (ret && cc_current[0] != 0) {
+        /* Need to close the previous country code data set */
+        ret &= FinishCCdataM10(F, is_svc_list_open, sub_metric_found, sub_met_name);
+    }
+    /* Close the ccdata array */
+    ret &= fprintf(F, "]\n") > 0;
     return ret;
 }
 
