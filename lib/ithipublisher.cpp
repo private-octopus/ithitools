@@ -137,6 +137,12 @@ bool ithipublisher::CollectMetricFiles()
                         }
                     }
                 }
+
+#if 1
+                else if (metric_id == 10) {
+                    printf("Could not parse %s in %s\n", file_ent->d_name, dir_met_name);
+                }
+#endif
             }
 
             closedir(dir_met);
@@ -147,6 +153,12 @@ bool ithipublisher::CollectMetricFiles()
 
     if (ret)
     {
+
+#if 1
+        if (metric_id == 10) {
+            printf("Processing %zu files for metric M10.\n", file_list.size());
+        }
+#endif
         /* Sort the file list from earlier to last */
         std::sort(file_list.begin(), file_list.end(), ithipublisher::MetricFileIsEarlier);
 
@@ -170,6 +182,11 @@ bool ithipublisher::CollectMetricFiles()
         {
             std::sort(line_list.begin(), line_list.end(), MetricLineIsLower);
         }
+#if 1
+        if (metric_id == 10) {
+            printf("Found %zu lines for metric M10.\n", line_list.size());
+        }
+#endif
     }
 
     return ret;
