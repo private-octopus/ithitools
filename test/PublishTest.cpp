@@ -36,6 +36,7 @@ static char const * publish_test_target_m6 = ".\\M6Data.txt";
 static char const * publish_test_target_m7 = ".\\M7Data.txt";
 static char const * publish_test_target_m8 = ".\\M8Data.txt";
 static char const * publish_test_target_m9 = ".\\M9Data.txt";
+static char const * publish_test_target_m10 = ".\\M10Data.txt";
 static char const * publish_test_target_index = ".\\IndexData.txt";
 #ifndef ITHI_FILE_PATH_SEP
 #define ITHI_FILE_PATH_SEP "\\"
@@ -69,6 +70,9 @@ static char const * publish_ref_m8 = "..\\..\\data\\M8Data-test-ref.txt";
 static char const* publish_test_m91 = "..\\..\\data\\M9-2017-01-31.csv";
 static char const* publish_test_m92 = "..\\..\\data\\M9-2017-02-28.csv";
 static char const* publish_ref_m9 = "..\\..\\data\\M9Data-test-ref.txt";
+static char const* publish_test_m101 = "..\\..\\data\\M10-2017-01-31.csv";
+static char const* publish_test_m102 = "..\\..\\data\\M10-2017-02-28.csv";
+static char const* publish_ref_m10 = "..\\..\\data\\M10Data-test-ref.txt";
 static char const * publish_ref_index = "..\\..\\data\\IndexData-test-ref.txt";
 #else
 static char const * publish_test_m11 = "..\\data\\M1-2017-01-31.csv";
@@ -99,6 +103,9 @@ static char const * publish_ref_m8 = "..\\data\\M8Data-test-ref.txt";
 static char const* publish_test_m91 = "..\\data\\M9-2017-01-31.csv";
 static char const* publish_test_m92 = "..\\data\\M9-2017-02-28.csv";
 static char const* publish_ref_m9 = "..\\data\\M9Data-test-ref.txt";
+static char const* publish_test_m101 = "..\\data\\M10-2017-01-31.csv";
+static char const* publish_test_m102 = "..\\data\\M10-2017-02-28.csv";
+static char const* publish_ref_m10 = "..\\data\\M10Data-test-ref.txt";
 static char const * publish_ref_index = "..\\data\\IndexData-test-ref.txt";
 #endif
 #else
@@ -141,7 +148,11 @@ static char const* publish_test_target_m9 = "./M9Data.txt";
 static char const* publish_test_m91 = "./data/M9-2017-01-31.csv";
 static char const* publish_test_m92 = "./data/M9-2017-02-28.csv";
 static char const* publish_ref_m9 = "./data/M9Data-test-ref.txt";
-static char const * publish_test_target_index = "./IndexData.txt";
+static char const* publish_test_target_m10 = "./M10Data.txt";
+static char const* publish_test_m101 = "./data/M10-2017-01-31.csv";
+static char const* publish_test_m102 = "./data/M10-2017-02-28.csv";
+static char const* publish_ref_m10 = "./data/M10Data-test-ref.txt";
+static char const* publish_test_target_index = "./IndexData.txt";
 static char const * publish_ref_index = "./data/IndexData-test-ref.txt";
 #ifndef ITHI_FILE_PATH_SEP
 #define ITHI_FILE_PATH_SEP "/"
@@ -284,6 +295,14 @@ bool PublishTest::DoTest()
     if (ret)
     {
         ret = DoOneTest(9, m9_files, 2, publish_test_target_m9, publish_ref_m9);
+    }
+
+    /* M10 test */
+    char const* m10_files[2] = { publish_test_m101, publish_test_m102 };
+
+    if (ret)
+    {
+        ret = DoOneTest(10, m10_files, 2, publish_test_target_m10, publish_ref_m10);
     }
 
     return ret;

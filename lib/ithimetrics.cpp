@@ -438,7 +438,7 @@ bool ithimetrics::SaveMetricFiles()
     bool ret = true;
     char version[128];
     char buffer[512];
-    ComputeMetric * cm[ITHI_NUMBER_OF_METRICS] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7, &cm8, NULL };
+    ComputeMetric * cm[ITHI_NUMBER_OF_METRICS] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7, &cm8, NULL, NULL };
 
     /* Set the version number */
     if (ret)
@@ -493,7 +493,7 @@ bool ithimetrics::SaveMetricFiles()
 
 bool ithimetrics::Save(char const * file_name)
 {
-    ComputeMetric * cm[ITHI_NUMBER_OF_METRICS] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7, &cm8, NULL };
+    ComputeMetric * cm[ITHI_NUMBER_OF_METRICS] = { &cm1, &cm2, &cm3, &cm4, NULL, &cm6, &cm7, &cm8, NULL, NULL };
     FILE* F;
     char version[128];
     bool ret = true;
@@ -552,33 +552,42 @@ bool ithimetrics::ParseMetricFileName(const char * name, int * metric_id, int * 
 
     if (ret)
     {
+        /* Look for position of separators:
+         * '-' after metric name
+         * '-' after year
+         * '-' after month
+         * '.' after day
+         */
+        char sep_expect[4] = { '-', '-', '-', '.' };
+        int sep_found[4] = { 0, 0, 0, 0 };
+        int current = char_after_sep_index;
+        int nb_found = 0;
+        int current_val = 0;
 
-        ret = name[char_after_sep_index] == 'M' &&
-            name[char_after_sep_index + 2] == '-' &&
-            name[char_after_sep_index + 7] == '-' &&
-            name[char_after_sep_index + 10] == '-' &&
-            name[char_after_sep_index + 13] == '.' &&
-            name[char_after_sep_index + 14] == 'c' &&
-            name[char_after_sep_index + 15] == 's' &&
-            name[char_after_sep_index + 16] == 'v' &&
-            name[char_after_sep_index + 17] == 0;
-    }
-
-    if (ret)
-    {
-        char digits[5];
-        const int delta[4] = { 1, 3, 8, 11 };
-        const int len[4] = { 1, 4, 2, 2 };
-
-        for (int i = 0; i < 4; i++)
-        {
-            for (int j = 0; j < len[i]; j++)
-            {
-                digits[j] = name[char_after_sep_index + delta[i] + j];
-                ret &= (isdigit(digits[j]) != 0);
+        ret &= name[current] == 'M';
+        if (ret) {
+            current++;
+            while (nb_found < 4 && current < name_len) {
+                if (name[current] == sep_expect[nb_found]) {
+                    val[nb_found] = current_val;
+                    sep_found[nb_found] = current;
+                    current_val = 0;
+                    nb_found++;
+                }
+                else if (name[current] >= '0' && name[current] <= '9') {
+                    current_val *= 10;
+                    current_val += name[current] - '0';
+                }
+                else {
+                    ret = false;
+                    break;
+                }
+                current++;
             }
-            digits[len[i]] = 0;
-            val[i] = atoi(digits);
+            if (nb_found < 4 || current + 3 != name_len ||
+                name[current] != 'c' || name[current + 1] != 's' || name[current + 2] != 'v') {
+                ret = false;
+            }
         }
     }
 
