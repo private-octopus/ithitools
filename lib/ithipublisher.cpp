@@ -74,10 +74,6 @@ bool ithipublisher::CollectMetricFiles()
     char dir_met_name[512];
     bool ret = snprintf(dir_met_name, sizeof(dir_met_name), "%s%sM%d%s", ithi_folder, ITHI_FILE_PATH_SEP, metric_id, ITHI_FILE_PATH_SEP) > 0;
 
-#if 1
-    printf("Collecting files for metric %d\n", metric_id);
-#endif
-
     if (ret)
     {
         DIR *dir_met;
@@ -85,9 +81,6 @@ bool ithipublisher::CollectMetricFiles()
         dir_met = opendir(dir_met_name);
         if (dir_met == NULL)
         {
-#if 1
-            printf("Cannot open directory %s\n", dir_met_name);
-#endif
             ret = false;
         }
         else
@@ -97,11 +90,6 @@ bool ithipublisher::CollectMetricFiles()
             while (ret && (file_ent = readdir(dir_met)) != NULL)
             {
                 MetricFileHolder met_file;
-#if 1
-                if (metric_id == 10) {
-                    printf("found %s in %s\n", file_ent->d_name, dir_met_name);
-                }
-#endif
 
                 if (ParseFileName(&met_file, file_ent->d_name, metric_id))
                 {
@@ -137,12 +125,6 @@ bool ithipublisher::CollectMetricFiles()
                         }
                     }
                 }
-
-#if 1
-                else if (metric_id == 10) {
-                    printf("Could not parse %s in %s\n", file_ent->d_name, dir_met_name);
-                }
-#endif
             }
 
             closedir(dir_met);
@@ -153,12 +135,6 @@ bool ithipublisher::CollectMetricFiles()
 
     if (ret)
     {
-
-#if 1
-        if (metric_id == 10) {
-            printf("Processing %zu files for metric M10.\n", file_list.size());
-        }
-#endif
         /* Sort the file list from earlier to last */
         std::sort(file_list.begin(), file_list.end(), ithipublisher::MetricFileIsEarlier);
 
@@ -182,11 +158,6 @@ bool ithipublisher::CollectMetricFiles()
         {
             std::sort(line_list.begin(), line_list.end(), MetricLineIsLower);
         }
-#if 1
-        if (metric_id == 10) {
-            printf("Found %zu lines for metric M10.\n", line_list.size());
-        }
-#endif
     }
 
     return ret;
@@ -348,12 +319,6 @@ bool ithipublisher::Publish(char const * web_folder)
     char file_name[512];
     bool ret = snprintf(file_name, sizeof(file_name), "%s%sM%dData.txt", 
         web_folder, ITHI_FILE_PATH_SEP, metric_id) > 0;
-
-#if 1
-    if (ret && metric_id == 10) {
-        printf("Publishing %s\n", file_name);
-    }
-#endif
 
     if (ret)
     {
@@ -1197,11 +1162,6 @@ bool ithipublisher::PublishDataM9(FILE* F)
             double d=0;
             m9xx[5] = '0' + sm;
             ret = GetCurrent(m9xx, NULL, &d);
-#if 1
-            if (d == 0) {
-                d = 0;
-            }
-#endif
             if (ret){
                 if (sm == 1) {
                     ret = fprintf(F, "%f,", d) > 0;
