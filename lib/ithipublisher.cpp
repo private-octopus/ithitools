@@ -75,7 +75,7 @@ bool ithipublisher::CollectMetricFiles()
     bool ret = snprintf(dir_met_name, sizeof(dir_met_name), "%s%sM%d%s", ithi_folder, ITHI_FILE_PATH_SEP, metric_id, ITHI_FILE_PATH_SEP) > 0;
 
 #if 1
-    printf("Collecting files for metric %d\n", metric_id);
+    printf("Collecting files for metric %s\n", metric_id);
 #endif
 
     if (ret)
@@ -86,7 +86,7 @@ bool ithipublisher::CollectMetricFiles()
         if (dir_met == NULL)
         {
 #if 1
-            printf("Cannot open directory %d\n", dir_met_name);
+            printf("Cannot open directory %s\n", dir_met_name);
 #endif
             ret = false;
         }
