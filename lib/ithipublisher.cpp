@@ -1162,11 +1162,6 @@ bool ithipublisher::PublishDataM9(FILE* F)
             double d=0;
             m9xx[5] = '0' + sm;
             ret = GetCurrent(m9xx, NULL, &d);
-#if 1
-            if (d == 0) {
-                d = 0;
-            }
-#endif
             if (ret){
                 if (sm == 1) {
                     ret = fprintf(F, "%f,", d) > 0;
