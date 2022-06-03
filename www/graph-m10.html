@@ -1,0 +1,168 @@
+<html>
+<head>
+<title>ITHI Metric M10</title>
+
+<link rel="stylesheet" type="text/css" href="ithistyle.css">
+
+<script src="ithinav.js"></script>
+<script src="ithigraph.js"></script>
+    
+<script type="text/javascript">
+
+    var canvas ;
+    var context ;
+    var Val_max;
+    var Val_min;
+    var sections;
+    var xScale;
+    var yScale;
+    var colorSet = ["#F0F0F0C0", "#808080C0", "#C0C0C0C0", "#404040C0"];
+    var M10Data;
+    var ccSelectId = "ccSelectId";
+
+    function init() {
+        initnav();
+        loadDoc();
+    }
+
+    function loadDoc() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                M10Data = JSON.parse(this.responseText);
+                draw_page();
+            }
+        };
+        xhttp.open("GET", "M10Data.txt", true);
+        xhttp.send();
+    }
+
+    function draw_page() {
+        // Set the text values that depend on the current data
+        setDateElement(M10Data.date);
+        // Fill the option table
+        fillOptionList();
+        // Set the focus data to ZZ by default.
+        ccFocusDrawFunc("ZZ");
+        // Prepare the summary
+        m10SummaryDraw();
+    }
+
+    function fillOptionList() {
+        var i = 0;
+        var optionElem = document.getElementById("M10Option");
+        var ccdata = M10Data.ccdata;
+        var nbcc = ccdata.length;
+        var optionText = "<select id=\"" + ccSelectId + "\" onchange=\"ccFocusFunc()\" onload=\"ccFocusFunc()\">\n";
+
+        for (i = 0; i < nbcc; i++) {
+            var thisccdata = ccdata[i];
+            optionText += "<option value=\"" + thisccdata.cc + "\">" + thisccdata.cc + "</option>\n";
+        }
+        optionText += "</select>\n";
+
+        optionElem.innerHTML = optionText;
+    }
+
+    function ccFocusFunc() {
+        var obj = document.getElementById(ccSelectId);
+        ccFocusDrawFunc(obj.options[obj.selectedIndex].value);
+    }
+
+    function ccFocusDrawFunc(cc) {
+        var h2Obj = document.getElementById("M10FocusHeader");
+        var h2Text = "Concentration of DNS Resolver services in " + cc;
+        h2Obj.innerHTML = h2Text;
+        var tableObj = document.getElementById("M10FocusTable");
+        var focusTableText = "<table  class=\"metrics\">\n";
+        focusTableText += "<tr><th>Class of service in " + cc + "</th><th>Share</th><th>Open Resolver</th><th>Share</th></tr>\n";
+        var ccdata = M10Data.ccdata;
+        var nbcc = ccdata.length;
+        var i = 0;
+        var j = 0;
+        for (i = 0; i < nbcc; i++) {
+            var thisccdata = ccdata[i];
+            if (thisccdata.cc == cc) {
+                focusTableText += "<tr><td>Resolvers in same CC</td><td class=\"number\">" + (thisccdata.samecc * 100).toFixed(2) + "%</td><td colspan=2></td></tr>\n";
+                focusTableText += "<tr><td>Resolvers in different CC</td><td class=\"number\">" + (thisccdata.diffcc * 100).toFixed(2) + "%</td><td colspan=2></td></tr>\n";
+                focusTableText += "<tr><td>Open DNS resolvers</td><td class=\"number\">" + (thisccdata.allopnrvrs * 100).toFixed(2) + "%</td><td colspan=2></td></tr>\n";
+                svclist = thisccdata.svc;
+                for (j = 0; j < svclist.length; j++) {
+                    svcdata = svclist[j];
+                    focusTableText += "<tr><td></td><td></td><td>" + svcdata[0] + "</td ><td class=\"number\">" + (svcdata[1] * 100).toFixed(2) + "%</td></tr>\n";
+                }
+                focusTableText += "<tr><td>Sample count</td><td class=\"number\">" + String(thisccdata.count) + "</td><td colspan=2></td></tr>\n";
+                break;
+            }
+        }
+        focusTableText += "</table>\n";
+        tableObj.innerHTML = focusTableText;
+    }
+
+    function m10SummaryDraw() {
+        var tableObj = document.getElementById("M10Summary");
+        var ccdata = M10Data.ccdata;
+        var nbcc = ccdata.length;
+        var i = 0;
+        var summaryTableText = "<table  class=\"metrics\">\n";
+        summaryTableText += "<tr><th>CC</th><th>Same CCShare</th><th>Diff. CC Share</th><th>Open Resolvers Share</th><th>Count</th></tr>\n";
+        for (i = 0; i < nbcc; i++) {
+            var thisccdata = ccdata[i];
+            summaryTableText += "<tr><td>" + thisccdata.cc + "</td>";
+            summaryTableText += "<td class=\"number\">" + + (thisccdata.samecc * 100).toFixed(2) + "%</td>";
+            summaryTableText += "<td class=\"number\">" + (thisccdata.diffcc * 100).toFixed(2) + "%</td>";
+            summaryTableText += "<td class=\"number\">" + (thisccdata.allopnrvrs * 100).toFixed(2) + "%</td>\n";
+            summaryTableText += "<td class=\"number\">" + String(thisccdata.count) + "</td></tr>\n";
+        }
+        summaryTableText += "</table>\n";
+        tableObj.innerHTML = summaryTableText;
+    }
+
+</script>
+</head>
+
+<body onLoad="init()">
+
+    <nav id="navMenu"></nav>
+
+    <h1>M10: Concentration of DNS Resolver services</h1>
+
+    <h2 id="dateHeading"> - </h2>
+
+    <p>
+        The M10 metrics analyze the concentration of DNS Resolver services. It defines a submetric
+        per country, using the code "M10.XX.*" for the country
+        code "XX". In addition to providing data for actual countries such as "DE" or "US",
+        the metric also includes aggregate worlwide data using the pseudo country code "ZZ".
+        (See <a href="./about-m10.html">the About M10 page</a> for details.)
+        For each country, the following data are provided:
+    </p>
+    <ul>
+        <li>
+            M10.XX.1: share of DNS queries served by Open DNS services,
+        </li>
+        <li>
+            M10.XX.2: share of DNS queries served DNS services in the same country, excluding Open DNS services,
+        </li>
+        <li>
+            M10.XX.3: share of DNS queries served DNS services in a different country, excluding Open DNS services,
+        </li>
+        <li>
+            M10.XX.4: share of DNS queries served by specific Open DNS services, with one entry per service.
+        </li>
+        <li>
+            M10.XX.5: number of query samples collected when evaluating country code "XX"
+        </li>
+    </ul>
+    <p>
+        The <a href="#M10Data">Summary Data section</a> lists the key data for all country codes.
+        The <a href="#M10Focus">Focus section</a> provides details on the country selected via
+        the following option list.
+    </p>
+    <div id="M10Option">M9 options not found</div>
+    <h2 id="M10FocusHeader">Focus not set yet</h2>
+    <div id="M10FocusTable">Table M10 focus not found</div>
+    <h2 id="M10data">Summary data for all countries</h2>
+    <div id="M10Summary">Table M9 top not found</div>
+</body>
+</html>
