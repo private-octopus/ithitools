@@ -1,0 +1,153 @@
+<html>
+<head>
+<title>About ICANN’s ITHI Metric M10</title>
+
+<link rel="stylesheet" type="text/css" href="ithistyle.css">
+
+<script src="ithinav.js"></script>
+<script type="text/javascript">
+    function init() {
+        initnav();
+    }
+</script>
+</head>
+
+<body onload="init()">
+    <nav id="navMenu"></nav>
+    <h1>ITHI M10: Concentration of DNS Resolver Services</h1>
+
+    <p>
+        The M10 metrics analyze the concentration of DNS Resolver services. It defines a submetric
+        per country, using the code "M10.XX.*" for the country
+        code "XX". In addition to providing data for actual countries such as "DE" or "US",
+        the metric also includes aggregate worlwide data using the pseudo country code "ZZ".
+        For each country, the following data are provided:
+    </p>
+    <ul>
+        <li>
+            M10.XX.1: share of DNS queries served by Open DNS services,
+        </li>
+        <li>
+            M10.XX.2: share of DNS queries served DNS services in the same country, excluding Open DNS services,
+        </li>
+        <li>
+            M10.XX.3: share of DNS queries served DNS services in a different country, excluding Open DNS services,
+        </li>
+        <li>
+            M10.XX.4: share of DNS queries served by specific Open DNS services, with one entry per service.
+        </li>
+        <li>
+            M10.XX.5: number of query samples collected when evaluating country code "XX"
+        </li>
+    </ul>
+    <p>
+        The values of M10.XX.1, M10.XX.2 and M10.XX.3 sum to 1, except for possible rounding errors. The values of all entries in M10.XX.4 sum to the value of M10.XX.1, except for possible rounding errors.
+    </p>
+
+    <h2>Data collection</h2>
+    <p>
+        The data is collected by APNIC using the same process as <a href="./about-m5.html">metric M5</a>. The process
+        involves buying Google ads to generate a large number of "impressions" every day. The count varies from day to day,
+        as explained <a href="https://stats.labs.apnic.net/about/">here</a>. Each impression may cause several
+        queries to arrive at the APNIC DNS servers, as well as one HTTP connection to the APNIC web server.
+        The data collection retains the IP address from which the first DNS query was received, i.e., the DNS
+        Resolver Address, and the IP address from which the HTTP request was received, i.e., the client address.
+        Those two addresses are used as follow:
+    </p>
+    <ul>
+        <li>
+            The country code is derived from the client address using geolocation database,
+        </li>
+        <li>
+            The source AS is derived from the client address using BG Data,
+        </li>
+        <li>
+            The open DNS resolver identity is derived from the DNS resolver address,
+            if it is recognized. If not, the query is assumed to not be served by an open DNS resolver.
+        </li>
+        <li>
+            For queries not served by an open DNS resolver,
+            if the resolver AS is the same as the AS of the source address, or if the resolver
+            address geolocates to the same country as the source address, the query is
+            considered "served in the same country".
+        </li>
+        <li>
+            Queries not served by an open DNS resolver or in the same country are considered
+            "served in a different country".
+        </li>
+     </ul>
+
+    <h2>Potential sources of error</h2>
+    <p>
+        The collection method uses a very large number of samples every month. In theory,
+        large numbers would limit statistical uncertainty and make for reliable measurements.
+        But we are aware that the sampling process is imperfect, and that the attribution of
+        samples to AS and countries could sometimes be erroneous.
+    </p>
+    <h3>Different sampling rate for different countries</h3>
+    <p>
+        In theory, the ads that trigger the queries should be distributed randomly accross the
+        world. In practice, we see that the number of samples per inhabitant was 2.4 times larger
+        for Indonesia than for the US in May 2022. It was 7.8 times smaller for China than for
+        the US. For Russia, it was more than 300 times smaller. These differences are
+        probably due to a combination of Google market penetration, and also to business practices:
+    </p>
+    <p>
+        The undersampling of Russia is easy to understand. Russia was on the US sanction list in May
+        2022. The Russian government also limited access to web sites outside Russia. Very few
+        residents of Russia would access web pages that displayed Google ads. The same undersampling
+        affects other countries on the US sanction list, such as Cuba, Iran or North Korea.
+    </p>
+    <p>
+        The undersampling of China derives from the same kind of business conditions. Google only
+        does a limited amount of business in China, and has a much smaller share of the Chinese
+        market than Chinese companies. Japan was also undersampled, almost in the same proportion
+        as China, maybe because the Japanese market is dominated by Japanese companies.
+    </p>
+    <p>
+        We are not sure why a country like Indonesia is oversampled compared to the US. Maybe
+        that the APNIC faced fewer competition for advertisement spots there than in richer countries,
+        and was more likely to win the "ad auctions" conducted by the Google Ads platform. We
+        see that Malaysia, Sri Lanka and Bangladesh were also oversampled, but that Pakistan
+        or India were not.
+    </p>
+    <p>
+        The different sampling rate may or may not introduce bias of the traffic share of different
+        open DNS resolver services. For the countries on the US sanction list, it is likely that
+        the sampling only catches the small fraction of the population that somehow evades sanctions
+        or firewalls, and it is not clear that this small fraction is representative of the country
+        as a whole. The same issue may affect countries like China or Japan in which the market share
+        of Google Ads is limited: the population that sees Google Ads may or may not be using
+        DNS services in the same way as the rest of the population.
+    </p>
+    <p>
+        The oversampling of countries like Indonesia or Bangladesh probably does not affect the
+        results for these countries. However, it does gives these countries an increased weight
+        when computing global averages, like we do in our world wide summary. Researchers
+        may want to experiment with different aggregation methods, based perhaps on
+        population or Internet user counts instead of sample counts.
+    </p>
+    <h3> Errors in Geolocation and BGP Databases  </h3>
+    <p>
+        The system uses geolocation databases to derive country codes from IP addresses. These
+        databases mostly provide the right answers, but not always. Empirically, we observe
+        that results for small locales can be very biased. For example, we sometimes saw
+        addresses and ASes allocated to countries in which the ASes do not actually operate.
+        For some addresses, there is just no entry in these databases. We also sometime see
+        addresses that cannot be mapped to an AS number through the BGP tables.
+    </p>
+    <p>
+        We implement filters to try limit the impact of such errors in the statistics:
+    </p>
+    <ul>
+        <li>
+            We ignore samples for which either the Country Code or the AS number is not assessed.
+        </li>
+        <li>
+            If we see fewer than 100 samples for a given combination of Country Code
+            and AS number in a daily report, we ignore these samples.
+        </li>
+    </ul>
+
+</body>
+</html>
