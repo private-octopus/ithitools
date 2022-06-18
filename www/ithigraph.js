@@ -337,27 +337,10 @@ function setColorBlob(canvasId, colorValue) {
     ctx.fillRect(0, 0, w, h);
 }
 
-function plotPieChart(canvasPieId, dataSet, colorSet) {
-    var c = document.getElementById(canvasPieId);
-    var ctx = c.getContext("2d");
+function plotOnePieChart(ctx, xc, yc, radius, dataSet, colorSet, alphaRad0) {
     var colorIndex = 0;
-    var alphaRad0 = 1.5;
-    var alpha = 1.5;
+    var alpha = alphaRad0;
     var alpha2 = 0;
-    var xc = c.width / 2;
-    var yc = c.height / 2;
-    var margin = 10;
-    var radius = yc;
-    if (radius > xc) {
-        radius = xc;
-    }
-
-    if (radius > margin) {
-        radius -= margin;
-    }
-    else {
-        radius /= 2;
-    }
 
     for (i = 0; i < dataSet.length; i++) {
         ctx.fillStyle = colorSet[colorIndex];
@@ -372,6 +355,26 @@ function plotPieChart(canvasPieId, dataSet, colorSet) {
             colorIndex = 0;
         }
     }
+}
+
+function plotPieChart(canvasPieId, dataSet, colorSet) {
+    var c = document.getElementById(canvasPieId);
+    var ctx = c.getContext("2d");
+    var xc = c.width / 2;
+    var yc = c.height / 2;
+    var alphaRad0 = 1.5;
+    var margin = 10;
+    var radius = yc;
+    if (radius > xc) {
+        radius = xc;
+    }
+    if (radius > margin) {
+        radius -= margin;
+    }
+    else {
+        radius /= 2;
+    }
+    plotOnePieChart(ctx, xc, yc, radius, dataSet, colorSet, alphaRad0);
 }
 
 function fillMetricTable(tableName, tableId, dataSet) {
