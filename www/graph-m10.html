@@ -1,124 +1,286 @@
 <html>
 <head>
-<title>ITHI Metric M10</title>
+    <title>ITHI Metric M10</title>
 
-<link rel="stylesheet" type="text/css" href="ithistyle.css">
+    <link rel="stylesheet" type="text/css" href="ithistyle.css">
 
-<script src="ithinav.js"></script>
-<script src="ithigraph.js"></script>
-    
-<script type="text/javascript">
+    <script src="ithinav.js"></script>
+    <script src="ithigraph.js"></script>
+    <script src="ithicc.js"></script>
 
-    var canvas ;
-    var context ;
-    var Val_max;
-    var Val_min;
-    var sections;
-    var xScale;
-    var yScale;
-    var colorSet = ["#F0F0F0C0", "#808080C0", "#C0C0C0C0", "#404040C0"];
-    var M10Data;
-    var ccSelectId = "ccSelectId";
+    <script type="text/javascript">
 
-    function init() {
-        initnav();
-        loadDoc();
-    }
+        var canvas;
+        var context;
+        var Val_max;
+        var Val_min;
+        var sections;
+        var xScale;
+        var yScale;
+        var colorSet = ["#F0F0F0C0", "#808080C0", "#C0C0C0C0", "#404040C0"];
+        var M10Data;
+        var ccSelectId = "ccSelectId";
 
-    function loadDoc() {
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-                M10Data = JSON.parse(this.responseText);
-                draw_page();
-            }
-        };
-        xhttp.open("GET", "M10Data.txt", true);
-        xhttp.send();
-    }
-
-    function draw_page() {
-        // Set the text values that depend on the current data
-        setDateElement(M10Data.date);
-        // Fill the option table
-        fillOptionList();
-        // Set the focus data to ZZ by default.
-        ccFocusDrawFunc("ZZ");
-        // Prepare the summary
-        m10SummaryDraw();
-    }
-
-    function fillOptionList() {
-        var i = 0;
-        var optionElem = document.getElementById("M10Option");
-        var ccdata = M10Data.ccdata;
-        var nbcc = ccdata.length;
-        var optionText = "<select id=\"" + ccSelectId + "\" onchange=\"ccFocusFunc()\" onload=\"ccFocusFunc()\">\n";
-
-        for (i = 0; i < nbcc; i++) {
-            var thisccdata = ccdata[i];
-            optionText += "<option value=\"" + thisccdata.cc + "\">" + thisccdata.cc + "</option>\n";
+        function init() {
+            initnav();
+            loadDoc();
         }
-        optionText += "</select>\n";
 
-        optionElem.innerHTML = optionText;
-    }
-
-    function ccFocusFunc() {
-        var obj = document.getElementById(ccSelectId);
-        ccFocusDrawFunc(obj.options[obj.selectedIndex].value);
-    }
-
-    function ccFocusDrawFunc(cc) {
-        var h2Obj = document.getElementById("M10FocusHeader");
-        var h2Text = "Concentration of DNS Resolver services in " + cc;
-        h2Obj.innerHTML = h2Text;
-        var tableObj = document.getElementById("M10FocusTable");
-        var focusTableText = "<table  class=\"metrics\">\n";
-        focusTableText += "<tr><th>Class of service in " + cc + "</th><th>Share</th><th>Open Resolver</th><th>Share</th></tr>\n";
-        var ccdata = M10Data.ccdata;
-        var nbcc = ccdata.length;
-        var i = 0;
-        var j = 0;
-        for (i = 0; i < nbcc; i++) {
-            var thisccdata = ccdata[i];
-            if (thisccdata.cc == cc) {
-                focusTableText += "<tr><td>Resolvers in same CC</td><td class=\"number\">" + (thisccdata.samecc * 100).toFixed(2) + "%</td><td colspan=2></td></tr>\n";
-                focusTableText += "<tr><td>Resolvers in different CC</td><td class=\"number\">" + (thisccdata.diffcc * 100).toFixed(2) + "%</td><td colspan=2></td></tr>\n";
-                focusTableText += "<tr><td>Open DNS resolvers</td><td class=\"number\">" + (thisccdata.allopnrvrs * 100).toFixed(2) + "%</td><td colspan=2></td></tr>\n";
-                svclist = thisccdata.svc;
-                for (j = 0; j < svclist.length; j++) {
-                    svcdata = svclist[j];
-                    focusTableText += "<tr><td></td><td></td><td>" + svcdata[0] + "</td ><td class=\"number\">" + (svcdata[1] * 100).toFixed(2) + "%</td></tr>\n";
+        function loadDoc() {
+            var xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    M10Data = JSON.parse(this.responseText);
+                    draw_page();
                 }
-                focusTableText += "<tr><td>Sample count</td><td class=\"number\">" + String(thisccdata.count) + "</td><td colspan=2></td></tr>\n";
-                break;
+            };
+            xhttp.open("GET", "M10Data.txt", true);
+            xhttp.send();
+        }
+
+        function draw_page() {
+            // Set the text values that depend on the current data
+            setDateElement(M10Data.date);
+            // Fill the option table
+            fillOptionList();
+            // Prepare the summary
+            m10SummaryDraw();
+            // Set the focus data to ZZ by default.
+            ccFocusDrawFunc("ZZ");
+        }
+
+        function fillOptionList() {
+            var i = 0;
+            var optionElem = document.getElementById("M10Option");
+            var ccdata = M10Data.ccdata;
+            var nbcc = ccdata.length;
+
+            var optionText = "<label for=\"" + ccSelectId + "\">Choose a different country: </label>";
+            optionText += "<select id=\"" + ccSelectId + "\" onchange=\"ccFocusFunc()\" onload=\"ccFocusFunc()\">\n";
+
+            for (i = 0; i < nbcc; i++) {
+                var thisccdata = ccdata[i];
+                var cc_name = get_name_from_cc(thisccdata.cc) + " (" + thisccdata.cc + ")";
+                optionText += "<option value=\"" + thisccdata.cc + "\">" + cc_name + "</option>\n";
+            }
+            optionText += "</select>\n";
+
+            optionElem.innerHTML = optionText;
+        }
+
+        function ccFocusFunc() {
+            var obj = document.getElementById(ccSelectId);
+            ccFocusDrawFunc(obj.options[obj.selectedIndex].value);
+        }
+
+        function ccFocusDrawFunc(cc) {
+            // Document country name and code in header
+            var h2Obj = document.getElementById("M10FocusHeader");
+            var country_name = get_name_from_cc(cc);
+            var h2Text = "Concentration of DNS Resolver services in " + country_name + " (" + cc + ")";
+            h2Obj.innerHTML = h2Text;
+            // Write country specific first paragraph
+            var ppObj = document.getElementById("M10FocusText");
+            var ppText = "The following two pie charts describe the relative share of several classes of resolvers in ";
+            ppText += country_name;
+            ppText += ".\nThe leftmost chart describes the relative shares of: resolvers in ";
+            if (cc === "ZZ") {
+                ppText += "same country";
+            } else {
+                ppText += country_name;
+            }
+            ppText += ";\nresolvers in another country; and, open resolvers. The second pie chart describes\n";
+            ppText += "the relative shares of the most frequently found open DNS resolvers.\n"
+            ppObj.innerHTML = ppText;
+            var tableObj = document.getElementById("M10FocusTable");
+            var focusTableText = "<table  class=\"metrics\">\n";
+            focusTableText += "<tr><th>Class of service in " + country_name;
+            focusTableText += " (" + cc + ")</th><th>Share</th><th>Open Resolver</th><th>Share</th></tr>\n";
+
+            // Prepare the legends
+            var ccdata = M10Data.ccdata;
+            var nbcc = ccdata.length;
+            var i = 0;
+            var j = 0;
+            for (i = 0; i < nbcc; i++) {
+                var thisccdata = ccdata[i];
+                if (thisccdata.cc == cc) {
+                    var insideText = "Resolvers in same country";
+                    if (cc != "ZZ") {
+                        insideText = "Resolvers in " + country_name ;
+                    }
+                    insideText += " (" + thisccdata.cc + ")";
+                    focusTableText += "<td>" + insideText + "</td><td class=\"number\">" + (thisccdata.samecc * 100).toFixed(2) + "%</td><td colspan=2></td></tr>\n";
+                    focusTableText += "<tr><td>Resolvers in different country</td><td class=\"number\">" + (thisccdata.diffcc * 100).toFixed(2) + "%</td><td colspan=2></td></tr>\n";
+                    focusTableText += "<tr><td>Open DNS resolvers</td><td class=\"number\">" + (thisccdata.allopnrvrs * 100).toFixed(2) + "%</td><td colspan=2></td></tr>\n";
+                    svclist = thisccdata.svc;
+                    for (j = 0; j < svclist.length; j++) {
+                        svcdata = svclist[j];
+                        focusTableText += "<tr><td></td><td></td><td>" + svcdata[0] + "</td ><td class=\"number\">" + (svcdata[1] * 100).toFixed(2) + "%</td></tr>\n";
+                    }
+                    focusTableText += "<tr><td>Sample count</td><td class=\"number\">" + String(thisccdata.count) + "</td><td colspan=2></td></tr>\n";
+                    break;
+                }
+            }
+            focusTableText += "</table>\n";
+            tableObj.innerHTML = focusTableText;
+            // End of table text, now look at pie chart 
+            if (i < nbcc) {
+                var thisccdata = ccdata[i];
+                m10PiesDraw("focusPiesM10", thisccdata, country_name);
             }
         }
-        focusTableText += "</table>\n";
-        tableObj.innerHTML = focusTableText;
-    }
 
-    function m10SummaryDraw() {
-        var tableObj = document.getElementById("M10Summary");
-        var ccdata = M10Data.ccdata;
-        var nbcc = ccdata.length;
-        var i = 0;
-        var summaryTableText = "<table  class=\"metrics\">\n";
-        summaryTableText += "<tr><th>CC</th><th>Same CCShare</th><th>Diff. CC Share</th><th>Open Resolvers Share</th><th>Count</th></tr>\n";
-        for (i = 0; i < nbcc; i++) {
-            var thisccdata = ccdata[i];
-            summaryTableText += "<tr><td>" + thisccdata.cc + "</td>";
-            summaryTableText += "<td class=\"number\">" + + (thisccdata.samecc * 100).toFixed(2) + "%</td>";
-            summaryTableText += "<td class=\"number\">" + (thisccdata.diffcc * 100).toFixed(2) + "%</td>";
-            summaryTableText += "<td class=\"number\">" + (thisccdata.allopnrvrs * 100).toFixed(2) + "%</td>\n";
-            summaryTableText += "<td class=\"number\">" + String(thisccdata.count) + "</td></tr>\n";
+
+        function m10PiesDraw(canvasPieId, thisccdata, countryName) {
+            // We will draw two pie charts in the canvas.
+            // The left 1/3rd of the canvas is used for drawing the legend.
+            // The first will be a large one, diameter D1, normally set to height - 2*margin
+            // -- if height < 2*margin, then D1 = height/2, margin = height/4
+            // -- if width/3 > D1 + 2*margin, then D1 = width/6
+            // The second one will be a smaller one, diameter D2, normally set to D1 * share of open resolvers
+            // The circle D1 is centered at width/6, height/2
+            // The circle D2 is centered at width/2, height/2
+
+            var legendObj = document.getElementById("M10Legend");
+            legendObj.innerHTML = "legend found";
+            var colorSet = ["#4040FFFF", "#40FF40FF", "#FF4040FF",
+                "#FFFF40FF", "#40FFFFFF", "#FF40FFFF",
+                "#8080C0FF", "#80C080FF", "#C08080FF",
+                "#C0C080FF", "#80C0C0FF", "#C080C0FF"];
+            var M10CcSet = [thisccdata.samecc * 100, thisccdata.diffcc * 100, thisccdata.allopnrvrs * 100];
+            var M10SrvSet = [];
+            var M10SrvColor = [];
+            var insideText = "Inside " + countryName;
+            if (thisccdata.cc === "ZZ") {
+                insideText = "Same country";
+            }
+            var M10LegendText = [insideText, "Different Country", "Open Resolvers"];
+            var M10LegendData = [thisccdata.samecc * 100, thisccdata.diffcc * 100, thisccdata.allopnrvrs * 100];
+
+            legendObj.innerHTML = "legend started";
+
+            // Extract the significant services
+            var j = 0;
+            var colorIndex = 3;
+            var svclist = thisccdata.svc;
+            var svcsum = 0.0
+            legendObj.innerHTML = "Computing services";
+            var divider = thisccdata.allopnrvrs;
+            if (divider == 0) {
+                divider = 1;
+            }
+
+            for (j = 0; j < svclist.length; j++) {
+                var svcdata = svclist[j];
+                if (svcdata[1] >= 0.01) {
+                    svcsum += svcdata[1];
+                    M10SrvSet.push(svcdata[1] * 100 / divider);
+                    M10LegendText.push(svcdata[0]);
+                    M10LegendData.push(svcdata[1] * 100);
+                    M10SrvColor.push(colorSet[colorIndex]);
+                    colorIndex += 1
+                    if (colorIndex >= colorSet.length) {
+                        colorIndex = 0;
+                    }
+                }
+            }
+            var otherResShare = (thisccdata.allopnrvrs - svcsum) * 100;
+            M10SrvSet.push(otherResShare / divider);
+            M10LegendText.push("Other open resolvers");
+            M10LegendData.push(otherResShare);
+            M10SrvColor.push(colorSet[colorIndex]);
+
+            legendObj.innerHTML = "Computed service list"
+
+            // Draw the table of references
+            var legendText = "<table class=\"metrics\"><tr><th>Pie Charts</th><th colspan=2>Category</th><th>Share</th></tr>\n";
+            var nb_legends = M10LegendText.length;
+
+            for (j = 0; j < nb_legends; j++) {
+                legendObj.innerHTML = legendText + "</table>"
+                legendText += "<tr>";
+                if (j == 0) {
+                    legendText += "<td rowspan=" + nb_legends.toString() +" ><canvas id=\"M10PieCharts\" width=\"480\" height=\"240\"></canvas></td>";
+                }
+                legendText += "<td><canvas id=\"M10LegendBlob" + j.toString() + "\" width=\"20\" height=\"20\"></canvas></td>";
+                legendText += "<td>" + M10LegendText[j] + "</td><td class=\"number\">" + M10LegendData[j].toFixed(2) + "%</td></tr>\n";
+            }
+            legendText += "</table>";
+            legendObj.innerHTML = legendText;
+
+            colorIndex = 0;
+            for (j = 0; j < nb_legends; j++) {
+                var elemId = "M10LegendBlob" + j.toString();
+                var elemC = document.getElementById(elemId);
+                var ctx = elemC.getContext("2d");
+                ctx.fillStyle = colorSet[colorIndex];
+                ctx.fillRect(0, 0, elemC.width, elemC.height);
+                ctx.fillStyle = "#000000";
+                ctx.beginPath();
+                ctx.rect(0, 0, elemC.width, elemC.height);
+                ctx.stroke();
+                colorIndex += 1
+                if (colorIndex >= colorSet.length) {
+                    colorIndex = 0;
+                }
+            }
+
+            // Draw the pies inside the table
+            var pc = document.getElementById("M10PieCharts");
+            var pctx = pc.getContext("2d");
+            var pmargin = 10;
+
+            // Compute the diameters
+            var pd1 = pc.height - 2 * pmargin;
+            if (pd1 < 2 * pmargin) {
+                pd1 = pc.height / 2;
+            }
+            var p_reserve_width = 2 * pd1 + 4 * pmargin;
+            if (p_reserve_width > pc.width) {
+                var size_factor = pc.width / p_reserve_width;
+                pd1 *= size_factor;
+            }
+            var pd2 = pd1 * Math.sqrt(thisccdata.allopnrvrs);
+
+            // Clear the canvas
+            pctx.clearRect(0, 0, pc.width, pc.height);
+
+            // Draw the first circle
+            var pxc = pc.width / 4;
+            var pyc = pc.height / 2;
+            var pradius = pd1 / 2;
+            var palphaRad0 = thisccdata.allopnrvrs;
+            plotOnePieChart(pctx, pxc, pyc, pradius, M10CcSet, colorSet, palphaRad0);
+
+            // Draw the second circle
+            pxc = 3*pc.width / 4;
+            pyc = pc.height / 2;
+            pradius = pd2 / 2;
+            alphaRad0 = 1.5;
+            plotOnePieChart(pctx, pxc, pyc, pradius, M10SrvSet, M10SrvColor, 1.5);
         }
-        summaryTableText += "</table>\n";
-        tableObj.innerHTML = summaryTableText;
-    }
 
-</script>
+        function m10SummaryDraw() {
+            var tableObj = document.getElementById("M10Summary");
+            var ccdata = M10Data.ccdata;
+            var nbcc = ccdata.length;
+            var i = 0;
+            var summaryTableText = "<table  class=\"metrics\">\n";
+            summaryTableText += "<tr><th>CC</th><th>Country</th><th>Same CCShare</th><th>Diff. CC Share</th><th>Open Resolvers Share</th><th>Count</th></tr>\n";
+            for (i = 0; i < nbcc; i++) {
+                var thisccdata = ccdata[i];
+                summaryTableText += "<tr><td>" + thisccdata.cc + "</td><td>" + get_name_from_cc(thisccdata.cc) + "</td>";
+                summaryTableText += "<td class=\"number\">" + + (thisccdata.samecc * 100).toFixed(2) + "%</td>";
+                summaryTableText += "<td class=\"number\">" + (thisccdata.diffcc * 100).toFixed(2) + "%</td>";
+                summaryTableText += "<td class=\"number\">" + (thisccdata.allopnrvrs * 100).toFixed(2) + "%</td>\n";
+                summaryTableText += "<td class=\"number\">" + String(thisccdata.count) + "</td></tr>\n";
+            }
+            summaryTableText += "</table>\n";
+            tableObj.innerHTML = summaryTableText;
+        }
+
+    </script>
 </head>
 
 <body onLoad="init()">
@@ -159,10 +321,14 @@
         The <a href="#M10Focus">Focus section</a> provides details on the country selected via
         the following option list.
     </p>
-    <div id="M10Option">M9 options not found</div>
     <h2 id="M10FocusHeader">Focus not set yet</h2>
+    <p id="M10FocusText">Blah, blah.</p>
+    <div id="M10Legend"> --- </div>
+    <p></p>
+    <div id="M10Option"> --- </div>
+    <h3 id="M10FocusTableH3">Details</h3>
     <div id="M10FocusTable">Table M10 focus not found</div>
     <h2 id="M10data">Summary data for all countries</h2>
-    <div id="M10Summary">Table M9 top not found</div>
+    <div id="M10Summary">Table M10 summary not found</div>
 </body>
 </html>
