@@ -114,6 +114,7 @@ echo "Computing the pages of partners"
 ./ithitools/src/ithi-m4-partner.sh uccgh uccgh
 ./ithitools/src/ithi-m4-partner.sh unlp matiasf
 ./ithitools/src/ithi-m4-partner.sh nawala nawala
+./ithitools/src/ithi-m4-partner.sh iifon iifon
 ./ithitools/src/ithi-m8-partner.sh kaznic
 ./ithitools/src/ithi-m8-partner.sh twnic
 
