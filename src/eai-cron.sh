@@ -9,11 +9,11 @@ eai_www_dir="/var/www/html/eai_results"
 rsync -av "$eai_input_dir/" "$eai_www_dir/"
 
 eai_first=""
-link_target="$ithi_www_dir/eai-latest.csv"
+link_target="$ithi_www_dir/eai_results/eai-latest.csv"
 for i in `ls -c $eai_www_dir`; do
     if [ "$eai_first" = "" ]; then
         eai_first="$eai_www_dir/$i"
-        ln $eai_first $link_target
+        ln -f $eai_first $link_target
         break;
     fi
     echo $i;
