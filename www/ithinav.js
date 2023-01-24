@@ -31,6 +31,7 @@ function initnavL1(level) {
         '<a href="' + levelString + 'graph-m8.html">M8: Authoritative</a>' +
         '<a href="' + levelString + 'graph-m9.html">M9: Concentration of Authoritative  Services</a>' +
         '<a href="' + levelString + 'graph-m10.html">M10: Concentration of DNS Resolver Services' +
+    '<a href="' + levelString + 'graph-eai.html">EAI: Email Address Internationalization support in  mail servers' +
         '</div>' +
         '</div>' +
 
@@ -68,6 +69,7 @@ function initnavL1(level) {
         '<a href="' + levelString + 'about-m8.html">About M8</a>' +
         '<a href="' + levelString + 'about-m9.html">About M9</a>' +
         '<a href="' + levelString + 'about-m10.html">About M10</a>' +
+        '<a href="' + levelString + 'about-eai.html">About EAI</a>' +
         '<a href="https://ithi.research.icann.org/cgi-bin/awstats.pl?config=ithi.research.icann.org">Analytics</a>' +
         '</div>' +
         '</div>' +
