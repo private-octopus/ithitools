@@ -11,7 +11,8 @@
 
 <script type="text/javascript">
 
-    var EAIData; // Will be obtained from the web server.
+    var EAIData = []; // Will be obtained from the web server.
+    var EAISummary = [];
     var selectSortOption = "selectSortOption";
     var selectFocusOption = "selectFocusOption";
     var previousSortMode = "TLD";
@@ -30,7 +31,22 @@
 
         xhttp.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
-                EAIData = eai_parse(this.responseText);
+                var all_rows;
+                var i = 0;
+                var k = 0;
+                all_rows = eai_parse(this.responseText);
+                for (i = 0; i < all_rows.length; i++) {
+                    row = all_rows[i]
+                    if (EAISummary.length == 0 && row[1] == "") {
+                        summary_found = 1;
+                        EAISummary[0] = row;
+                    }
+                    else {
+                        EAIData[k] = row;
+                        k += 1;
+                    }
+                }
+                
                 draw_page();
             }
         };
@@ -42,6 +58,10 @@
         if (EAIData.length > 0) {
             row1 = EAIData[0];
             setDateElement(row1[0]);
+        }
+
+        if (EAISummary.length > 0) {
+            draw_EAI_TLD("EAISummary", EAISummary, EAISummary.length, 0);
         }
 
         sort_tld_table(EAIData, EAIData.length, "TLD");
@@ -93,9 +113,7 @@
             previousSortMode = sortMode;
         }
         startIndex = setStartPoint(EAIData, nbTld, startPoint);
-        draw_EAI_TLD("EAITld", EAIData, nbTld);
-        // draw_EAI_MX("EAIMX", EAIData, nbTld);
-        // draw_EAI_IP("EAIIP", EAIData, nbTld);
+        draw_EAI_TLD("EAITld", EAIData, nbTld, startIndex);
     }
 
     function setStartPoint(tldData, nbTld, v) {
@@ -166,14 +184,14 @@
         optionElem.innerHTML = optionText;
     }
 
-    function draw_EAI_TLD(table_id, tldData, nbTld) {
+    function draw_EAI_TLD(table_id, tldData, nbTld, tableStartIndex) {
         var headerText = ["TLD", "MX total", "MX full EAI support", "MX partial EAI support", "MX no EAI support", "IP total", "Unique IPs EAI passed", "Unique IPs EAI failed", "Unique IPs EAI not tested"];
         var tableElem = document.getElementById(table_id);
         tableElem.innerHTML = "Drawing";
 
         var tableText = draw_EAI_global_header(headerText);
         tableElem.innerHTML = tableText + "</table>";
-        for (i = startIndex; i < nbTld && i < startIndex + linesPerTable; i++) {
+        for (i = tableStartIndex; i < nbTld && i < tableStartIndex + linesPerTable; i++) {
             tdata = tldData[i];
             tableText += "<tr>";
             /* Column 0: "SURVEY_DATE" */
@@ -187,59 +205,6 @@
             tableText += "<td class=\"number\">" + tdata[4].toString() + "</td>";
             /* Column 5: "MX_EAI_NONE"*/
             tableText += "<td class=\"number\">" + tdata[5].toString() + "</td>";
-            /* Column 6: "IP_TOTAL"*/
-            tableText += "<td class=\"number\">" + tdata[6].toString() + "</td>";
-            /* Column 7: "IP_EAI_PASSED"*/
-            tableText += "<td class=\"number\">" + tdata[7].toString() + "</td>";
-            /* Column 8: "IP_EAI_FAILED"*/
-            tableText += "<td class=\"number\">" + tdata[8].toString() + "</td>";
-            /* Column 9:  "IP_NOT_TESTED" */
-            tableText += "<td class=\"number\">" + tdata[9].toString() + "</td>";
-            tableText += "</tr>\n";
-        }
-        tableElem.innerHTML = tableText + "</table>\n";
-    }
-
-    function draw_EAI_MX(table_id, tldData, nbTld) {
-        var headerText = ["TLD", "MX total", "MX full EAI support","MX partial EAI support","MX no EAI support"];
-        var tableElem = document.getElementById(table_id);
-        tableElem.innerHTML = "Drawing";
-        var tableText = draw_EAI_global_header(headerText);
-        tableElem.innerHTML = tableText + "</table>";
-        var i = 0;
-        for (i = startIndex; i < nbTld && i < startIndex + linesPerTable; i++) {
-            tdata = tldData[i];
-            tableText += "<tr>";
-            /* Column 1: "TLD"*/
-            tableText += "<td>" + tdata[1] + "</td>";
-            /* Column 2: "MX_TOTAL"*/
-            tableText += "<td class=\"number\">" + tdata[2].toString() + "</td>";
-            /* Column 3: "MX_EAI_FULL"*/
-            tableText += "<td class=\"number\">" + tdata[3].toString() + "</td>";
-            /* Column 4: "MX_EAI_PARTIAL"*/
-            tableText += "<td class=\"number\">" + tdata[4].toString() + "</td>";
-            /* Column 5: "MX_EAI_NONE"*/
-            tableText += "<td class=\"number\">" + tdata[5].toString() + "</td>";
-            tableText += "<td>" + tldData[i].tld + "</td>"
-            tableText += "</tr>\n";
-        }
-        tableElem.innerHTML = tableText + "</table>";
-    }
-
-    // "tld": "aaa.", "mx": 0, "mx_full": 0, "mx_partial": 0, "mx_none": 0, "ip": 0, "ip_passed": 0, "ip_failed": 0, "ip_nt": 0
-
-    function draw_EAI_IP(table_id, tldData, nbTld) {
-        var headerText = ["TLD", "IP total", "Unique IPs EAI passed", "Unique IPs EAI failed", "Unique IPs EAI not tested"];
-        var tableElem = document.getElementById(table_id);
-        tableElem.innerHTML = "Drawing";
-        var tableText = draw_EAI_global_header(headerText);
-        tableElem.innerHTML = tableText + "</table>";
-        var i = 0;
-        for (i = startIndex; i < nbTld && i < startIndex + linesPerTable; i++) {
-            tdata = tldData[i];
-            tableText += "<tr>";
-            /* Column 1: "TLD"*/
-            tableText += "<td>" + tdata[1] + "</td>";
             /* Column 6: "IP_TOTAL"*/
             tableText += "<td class=\"number\">" + tdata[6].toString() + "</td>";
             /* Column 7: "IP_EAI_PASSED"*/
@@ -356,10 +321,13 @@
     <p>
         The EAI metrics track the Email Address Internationalization (EAI) support on mail
         exchanger (MX) servers of second level domain names across participating Top
-        Level Domains (TLDs). See <a href="about-EAI.html">About EAI</a> for details.
-        The data is presented in the <a href="#EAITld">EAI table</a> below. The table
-        includes one line per TLD, showing the MX records or registered
-        in that TLD, or the IP addresses used by these MX records.
+        Level Domains (TLDs). See <a href="about-eai.html">About EAI</a> for details.
+        The data is presented in the <a href="#EAITld">EAI TLD table</a> below. The EAI
+        TLD table includes one line per TLD, showing the MX records or registered
+        in that TLD, or the IP addresses used by these MX records. The <a href="#EAISummaryTable">
+        EAI Summary Table</a> shows the count of unique domain names found in these MX
+        records.
+    </p><p>
         The CSV files for previous measurements are <a href="eai_results">available here</a>.
         The table is quite large. The controls below can be used to navigate to specific
         slices of the data.
@@ -372,7 +340,7 @@
             <option value="MX">MX</option>
             <option value="IP">IP</option>
         </select>
-        <br/>
+        <br />
         <input type="button" value="Next" onclick="selectNextFunc()">
         <input type="button" value="Previous" onclick="selectPreviousFunc()">
         <input type="button" value="First" onclick="selectTopFunc()">
@@ -380,5 +348,14 @@
     </div>
     <div id="EAITld">Table EAI TLD not found</div>
 
+    <h3 id="EAISummaryTable">Summary Table</h3>
+    <p>
+        The TLD table lists the total number of MX records found when scanning
+        the zone files for each TLD listed, and the total number of IP addresses
+        associated with the MX records of the TLD. The summary table below lists the
+        number of unique domain names present in the MX records across all TLD, and
+        the number of unique IP addresses associated with these MX records.
+    </p>
+    <div id="EAISummary"> -- not found -- </div>
 </body>
 </html>
