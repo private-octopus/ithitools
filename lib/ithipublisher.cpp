@@ -1050,8 +1050,16 @@ bool ithipublisher::PublishDataM7(FILE * F)
             }
         }
     }
-    fprintf(F, "]\n");
-
+    fprintf(F, "],\n");
+    if (ret) {
+        /* Add M7.3, frequencies by algo for all TLD */
+        ret &= PrintNumberVectorMetric(F, "M7.3", "M73", 100.0);
+    }
+    if (ret) {
+        /* Add M7.4, frequencies by algo for CC TLD */
+        ret &= PrintNumberVectorMetric(F, "M7.4", "M74", 100.0);
+    }
+    fprintf(F, "M7Last: []\n");
     return ret;
 }
 
