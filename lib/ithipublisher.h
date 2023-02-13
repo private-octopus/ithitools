@@ -101,7 +101,8 @@ public:
     bool PublishDataM5(FILE * F);
     bool PublishDataM6(FILE * F);
     bool PublishDataM7(FILE * F);
-    bool PublishOptTable(FILE * F, char const * metricId);
+    bool PublishNamedElementTable(FILE * F, char const * metric_name, char const* m6TableId);
+    bool PublishOptTable(FILE * F, char const * metric_name);
     bool PublishDataM8(FILE * F);
     bool PublishDataM9(FILE* F);
     bool PublishDataM10(FILE* F);
