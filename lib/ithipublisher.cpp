@@ -1029,8 +1029,6 @@ bool ithipublisher::PublishDataM7(FILE * F)
     char subMetX[16];
     bool ret = true;
 
-    metric6_def_t const* algo_table = ComputeM6::GetTable("M6.DNSSEC.3");
-
     fprintf(F, "\"M7DataSet\" : [\n");
 
     for (int i = 1; ret && i <= 2; i++) {
