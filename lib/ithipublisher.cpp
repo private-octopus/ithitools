@@ -1057,13 +1057,13 @@ bool ithipublisher::PublishDataM7(FILE * F)
         /* Add M7.3, frequencies by algo for all TLD */
         ret &= fprintf(F, "\"M73\" : ") > 0;
         ret &= PublishNamedElementTable(F, "M7.3", "M6.DNSSEC.3");
+        fprintf(F, ",\n");
     }
     if (ret) {
         /* Add M7.4, frequencies by algo for CC TLD */
         ret &= fprintf(F, "\"M74\" : ") > 0;
         ret &= PublishNamedElementTable(F, "M7.4", "M6.DNSSEC.3");
     }
-    fprintf(F, "\"M7Last\" : []\n");
     return ret;
 }
 
