@@ -87,6 +87,13 @@
         sortDrawFunc(previousSortMode, "LAST");
     }
 
+    function selectWholeFunc() {
+        var oldLinesPerTable = linesPerTable;
+        linesPerTable = 2 * EAIData.length;
+        sortDrawFunc(previousSortMode, "TOP");
+        linesPerTable = oldLinesPerTable;
+    }
+
     function selectFocusFunc() {
         var obj = document.getElementById(selectFocusOption);
         var v = obj.options[obj.selectedIndex].value;
@@ -108,6 +115,7 @@
         
     function sortDrawFunc(sortMode, startPoint) {
         var nbTld = EAIData.length;
+        currentFocus = startPoint;
         if (sortMode != previousSortMode) {
             sort_tld_table(EAIData, nbTld, sortMode);
             previousSortMode = sortMode;
@@ -322,7 +330,7 @@
         The EAI metrics track the Email Address Internationalization (EAI) support on mail
         exchanger (MX) servers of second level domain names across participating Top
         Level Domains (TLDs). See <a href="about-eai.html">About EAI</a> for details.
-        The data is presented in the <a href="#EAITld">EAI TLD table</a> below. The EAI
+        The data is presented in the <a href="#EAITldTable">EAI TLD table</a> below. The EAI
         TLD table includes one line per TLD, showing the MX records or registered
         in that TLD, or the IP addresses used by these MX records. The <a href="#EAISummaryTable">
             EAI Summary Table
@@ -340,7 +348,8 @@
         the number of unique IP addresses associated with these MX records.
     </p>
     <div id="EAISummary"> -- not found -- </div>
-    <h3 id="EAITld">EAI TLD Table</h3>
+    <p></p>
+    <h3 id="EAITldTable">EAI TLD Table</h3>
     <p>
         The table is quite large. The controls below can be used to navigate to specific
         slices of the data.
@@ -358,6 +367,7 @@
         <input type="button" value="Previous" onclick="selectPreviousFunc()">
         <input type="button" value="First" onclick="selectTopFunc()">
         <input type="button" value="Last" onclick="selectLastFunc()">
+        <input type="button" value="Whole Table" onclick="selectWholeFunc()">
     </div>
     <div id="EAITld">Table EAI TLD not found</div>
 </body>
