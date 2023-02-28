@@ -19,6 +19,7 @@
     var startIndex = 0;
     var tldIndex = "";
     var linesPerTable = 20;
+    var displayWholeTable = false;
     var focusOptions = ["NEXT", "PREVIOUS", "TOP", "BOTTOM"];
 
     function init() {
@@ -64,9 +65,10 @@
             draw_EAI_TLD("EAISummary", EAISummary, EAISummary.length, 0);
         }
 
-        sort_tld_table(EAIData, EAIData.length, "TLD");
-        previousSortMode = "TLD";
-
+        document.getElementById("eaiWhole").checked = false;;
+        document.getElementById(selectSortOption).value = "MX";
+        sort_tld_table(EAIData, EAIData.length, "MX");
+        previousSortMode = "MX";
         fillNextFocusList();
         sortDrawFunc("MX", "TOP");
     }
@@ -87,11 +89,12 @@
         sortDrawFunc(previousSortMode, "LAST");
     }
 
-    function selectWholeFunc() {
-        var oldLinesPerTable = linesPerTable;
-        linesPerTable = 2 * EAIData.length;
-        sortDrawFunc(previousSortMode, "TOP");
-        linesPerTable = oldLinesPerTable;
+    function selectWholeClick() {
+        var oldTableMode = displayWholeTable
+        displayWholeTable = document.getElementById("eaiWhole").checked;
+        if (oldTableMode != displayWholeTable) {
+            sortDrawFunc(previousSortMode, "TOP");
+        }
     }
 
     function selectFocusFunc() {
@@ -195,11 +198,17 @@
     function draw_EAI_TLD(table_id, tldData, nbTld, tableStartIndex) {
         var headerText = ["TLD", "MX total", "MX full EAI support", "MX partial EAI support", "MX no EAI support", "IP total", "Unique IPs EAI passed", "Unique IPs EAI failed", "Unique IPs EAI not tested"];
         var tableElem = document.getElementById(table_id);
+        var linesForThisTable = linesPerTable;
+        var startIndexForThisTable = tableStartIndex;
         tableElem.innerHTML = "Drawing";
+        if (displayWholeTable) {
+            linesForThisTable = 2 * tldData.length;
+            startIndexForThisTable = 0;
+        }
 
         var tableText = draw_EAI_global_header(headerText);
         tableElem.innerHTML = tableText + "</table>";
-        for (i = tableStartIndex; i < nbTld && i < tableStartIndex + linesPerTable; i++) {
+        for (i = startIndexForThisTable; i < nbTld && i < startIndexForThisTable + linesForThisTable; i++) {
             tdata = tldData[i];
             tableText += "<tr>";
             /* Column 0: "SURVEY_DATE" */
@@ -367,7 +376,8 @@
         <input type="button" value="Previous" onclick="selectPreviousFunc()">
         <input type="button" value="First" onclick="selectTopFunc()">
         <input type="button" value="Last" onclick="selectLastFunc()">
-        <input type="button" value="Whole Table" onclick="selectWholeFunc()">
+        <label for="eaiWholePage"> Whole Page?</label>
+        <input type="checkbox" id="eaiWhole" name="Whole Page?" value="eaiWholePage" onclick="selectWholeClick()">
     </div>
     <div id="EAITld">Table EAI TLD not found</div>
 </body>
