@@ -560,7 +560,7 @@ bool ithimetrics::ParseMetricFileName(const char * name, int * metric_id, int * 
          */
         char sep_expect[4] = { '-', '-', '-', '.' };
         int sep_found[4] = { 0, 0, 0, 0 };
-        int current = char_after_sep_index;
+        int current = (int)char_after_sep_index;
         int nb_found = 0;
         int current_val = 0;
 

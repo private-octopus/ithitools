@@ -42,7 +42,11 @@
         for (i = 0; i < 2; i++) {
             fillValueAverageMinMax(pilot[i], M7Data.M7DataSet[i], format);
         }
-        
+
+        fillDnssecAlgoTable("Algorithms use by all TLDs", "M73table", M7Data.M73, M7Data);
+
+        fillDnssecAlgoTable("Algorithms use by CC TLDs", "M74table", M7Data.M74, M7Data);
+  
         // Plot the charts
 
         var firstMonth = 1;
@@ -57,6 +61,44 @@
         }
         plotGraph("graphM72", M7Data.M7DataSet[1], 100, firstMonth, "#404040C0", "%");
     }
+
+    function fillDnssecAlgoTable(tableName, tableId, dataSet, MData) {
+        var i = 0;
+
+        var tableElem = document.getElementById(tableId);
+        var tableText = "<table class=\"metrics\"><tr><th>" + tableName + "</th> <th class=\"number\">";
+        
+        if ("year" in MData && "month" in MData) {
+            tableText += "As of " + getMonthId(MData.month) + " " + MData.year;
+        } else {
+            tableText += "Current Value";
+        }
+
+        tableText += "</th><th class=\"number\">Past 3 months</th>" +
+            "<th class=\"number\">Historic Low</th>" +
+            "<th class=\"number\">Historic High</th></tr>\n";
+
+        for (i = 0; i < dataSet.length; i++) {
+            var j = 0;
+            var lineSet = dataSet[i];
+            var lineValueSet = lineSet[1];
+            var lineValues = [
+                getLastElement(lineSet[1]),
+                getAverageLastNSkip0(lineSet[1], 3),
+                getMinElementSkip0(lineSet[1]),
+                getMaxElement(lineSet[1])];
+
+            tableText += "<tr><td>" + lineSet[0].toString() + "</td>";
+            for (j = 0; j < 4; j++) {
+                tableText += "<td class=\"number\">" + lineValues[j].toFixed(3) + "%</td>";
+            }
+            tableText += "</tr>\n";
+        }
+
+        tableElem.innerHTML += "</table>\n";
+
+        tableElem.innerHTML = tableText;
+    }
 </script>
 </head>
 
@@ -67,7 +109,7 @@
     <h1>M7: DNSSEC Deployment</h1>
     <h2 id="dateHeading">-</h2>
     <p>
-        We track the deployment of DNSSEC by tracking two metrics:
+        We track the deployment of DNSSEC by tracking four metrics:
     </p>
     <ul>
         <li>
@@ -83,6 +125,14 @@
             copy of the root zone. The metric M7.1 is defined as the ratio of the number of
             CC TLD for which at least one DS record is present over the total number of CC TLD
             in the root zone.
+        </li>
+        <li>
+            M7.3: the fraction of Top Level Domain zone using a specified algorithm with DNSSEC,
+            as derived from the DS records for TLD in the root zone.
+        </li>
+        <li>
+            M7.4: the fraction of Country Top Level Domain zone using a specified algorithm with DNSSEC,
+            as derived from the DS records for CC TLD in the root zone.
         </li>
     </ul>
     <p>
@@ -156,6 +206,10 @@
     <canvas id="graphM72" height="400" width="650">
         No M7.2 data available
     </canvas>
+    <h3 id="M73">M7.3: % of TLD using specific algorithms </h3>
+    <div id="M73table"> - </div>
+    <h3 id="M74">M7.4: % of CC TLD using specific algorithms </h3>
+    <div id="M74table"> - </div>
 
 </body>
 </html>

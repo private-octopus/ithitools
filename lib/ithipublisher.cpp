@@ -1050,15 +1050,25 @@ bool ithipublisher::PublishDataM7(FILE * F)
             }
         }
     }
-    fprintf(F, "]\n");
-
+    fprintf(F, "],\n");
+    if (ret) {
+        /* Add M7.3, frequencies by algo for all TLD */
+        ret &= fprintf(F, "\"M73\" : ") > 0;
+        ret &= PublishNamedElementTable(F, "M7.3", "M6.DNSSEC.3");
+        fprintf(F, ",\n");
+    }
+    if (ret) {
+        /* Add M7.4, frequencies by algo for CC TLD */
+        ret &= fprintf(F, "\"M74\" : ") > 0;
+        ret &= PublishNamedElementTable(F, "M7.4", "M6.DNSSEC.3");
+    }
     return ret;
 }
 
-bool ithipublisher::PublishOptTable(FILE * F, char const * metric_name)
+bool ithipublisher::PublishNamedElementTable(FILE * F, char const * metric_name, char const* m6TableId)
 {
     std::vector<MetricNameLine> name_list;
-    const metric6_def_t * opt_def = ComputeM6::GetTable("M6.DNS.08");
+    const metric6_def_t * opt_def = ComputeM6::GetTable(m6TableId);
     bool ret = GetNameList(metric_name, &name_list);
     std::vector<double>  mvec;
 
@@ -1103,6 +1113,13 @@ bool ithipublisher::PublishOptTable(FILE * F, char const * metric_name)
     ret &= fprintf(F, "]\n") > 0;
 
     return ret;
+}
+
+
+
+bool ithipublisher::PublishOptTable(FILE* F, char const* metric_name)
+{
+    return PublishNamedElementTable(F, metric_name, "M6.DNS.08");
 }
 
 bool ithipublisher::PublishDataM8(FILE * F)
