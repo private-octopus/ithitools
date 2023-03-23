@@ -618,10 +618,20 @@ function setScale(canvasId, v_max, sections, firstMonth, unit) {
     graph.context.beginPath();
 
     // print Parameters on X axis, and grid lines on the graph
-    for (i = 1; i <= sections + 1; i++) {
+    var skip = 0;
+    var skip_month = Math.round((sections + 6) / 12);
+    if (skip_month < 1) {
+        skip_month = 1;
+    }
+    for (i = 1; i <= sections + 1; i++, skip++) {
         var x = rowSize + (i -1) * graph.xScale;
-        if (i <= sections){
-            graph.context.fillText(getMonthId( firstMonth + i - 1), x, columnSize - margin);
+        if (i <= sections) {
+            if (skip >= skip_month) {
+                skip = 0;
+            }
+            if (skip <= 0) {
+                graph.context.fillText(getMonthId(firstMonth + i - 1), x, columnSize - margin);
+            }
         }
         graph.context.moveTo(x, columnSize + margin);
         graph.context.lineTo(x, graph.canvas.height);

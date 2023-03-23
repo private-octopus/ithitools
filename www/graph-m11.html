@@ -1,0 +1,396 @@
+<html>
+<head>
+
+    <title>ITHI Metric M11 - DNSSEC in TLD and SLD</title>
+
+<link rel="stylesheet" type="text/css" href="ithistyle.css">
+
+<script src="ithinav.js"></script>
+
+<script src="ithigraph.js"></script>
+
+<script type="text/javascript">
+
+    var M11Data; // Will be obtained from the web server.
+
+    function init() {
+        initnav();
+        loadDoc();
+    }
+
+    function loadDoc() {
+        var xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                M11Data = JSON.parse(this.responseText);
+                draw_page();
+            }
+        };
+        xhttp.open("GET", "M11Data.txt", true);
+        xhttp.send();
+    }
+
+    function draw_page() {
+        var slice_names = ["gTLD", "ccTLD", "top 100", "101 to 1000", "1001 to 10,000",
+            "10001 to 100,000", "100,001 to 1M", "COM zone"];
+        var short_names = ["gTLD", "ccTLD", "100", "1000", "10K",
+            "100K", "1M", "COM"];
+        var top = get_M11_top(M11Data.slices);
+        var top_slices = get_M11_top_slices(top, M11Data.slices);
+        var top_names = get_M11_top_names(top);
+        /* TODO: add "other algos" */
+        var graph = plotBarGraphM11("barGraphM11", top_slices, short_names, top_names, "No DNSSEC");
+        draw_M11_top_services("M11Top", M11Data, M11Data.slices, slice_names, top_slices, top_names);
+
+        setDateElement(M11Data.date);
+    }
+
+    function get_M11_top(slices) {
+        var top_sum = [];
+
+        /* Gather the sum of the data per key across all slices */
+        var i = 0;
+        for (i = 0; i < slices.length; i++) {
+            s = slices[i];
+            s_data = s[1];
+            var j = 0;
+            for (j = 0; j < s_data.length; j++) {
+                var k = 0;
+                var found = false;
+                var s_one = s_data[j];
+                for (k = 0; k < top_sum.length; k++) {
+                    ts = top_sum[k];
+                    if (ts[0] == s_one[0]) {
+                        ts[1] += s_one[1];
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    var elem = [s_one[0], s_one[1]];
+                    top_sum.push(elem);
+                }
+            }
+        }
+        /* Sort the top values */
+        var sorted = false;
+        while (!sorted) {
+            sorted = true;
+            for (i = 1; i < top_sum.length; i++) {
+                previous = top_sum[i - 1];
+                ts = top_sum[i];
+                if (ts[1] > previous[1]) {
+                    top_sum[i - 1] = ts;
+                    top_sum[i] = previous;
+                    sorted = false;
+                }
+            }
+        }
+        /* Keep the top 12 */
+        var top = [];
+
+        for (i = 0; i < top_sum.length && i < 12; i++) {
+            var ts = top_sum[i];
+            var x = ts[0];
+            top.push(x);
+        }
+        return (top);
+    }
+
+    function get_service_element_M11_share(topCode, shareSet) {
+        var x = 0;
+        var i = 0;
+
+        for (i = 0; i < shareSet.length; i++) {
+            var codeData = shareSet[i];
+            if (codeData[0] == topCode) {
+                x = codeData[1];
+                break;
+            }
+        }
+        return x;
+    }
+
+    function get_M11_top_slices(top, slices) {
+        var i = 0;
+        var j = 0;
+        var len = slices.length;
+        var top_slices = [];
+        for (j = 0; j < len; j++) {
+            var top_slice = [];
+            var slice = slices[j];
+            for (i = 0; i < top.length; i++) {
+                var x = get_service_element_M11_share(top[i], slice[1]);
+                top_slice.push(x);
+            }
+            top_slices.push(top_slice);
+        }
+        return top_slices;
+    }
+
+    function get_algorithm_name(code) {
+        var algo_names = [
+            [3, "DSA/SHA1"],
+            [5, "RSA/SHA-1"],
+            [6, "DSA-NSEC3-SHA1"],
+            [7, "RSASHA1-NSEC3-SHA1"],
+            [8, "RSA/SHA-256"],
+            [10, "RSA/SHA-512"],
+            [12, "GOST R 34.10-2001"],
+            [13, "ECDSA P-256, SHA-256"],
+            [14, "ECDSA P-384, SHA-384"],
+            [15, "Ed25519"],
+            [16, "Ed448"]
+        ];
+        var alg_name = "Alg. nb. " + code.toString();
+
+        for (i = 0; i < algo_names.length; i++) {
+            var x = algo_names[i];
+            if (x[0] == code) {
+                alg_name = x[1];
+                break;
+            }
+        }
+
+        return alg_name;
+    }
+
+    function get_M11_top_names(top) {
+        var i = 0;
+        var top_names = [];
+
+        for (i = 0; i < top.length; i++) {
+            var alg_name = get_algorithm_name(top[i]);
+            top_names.push(alg_name);
+        }
+        return top_names;
+    }
+
+    function draw_M11_global_header(title, MData, slice_names) {
+        var tableText = "<table class=\"metrics\"><tr><th>" + title + ", ";
+        if ("year" in MData && "month" in MData) {
+            tableText += "as of " + getMonthId(MData.month) + " " + MData.year;
+        } else {
+            tableText += "current value";
+        }
+        tableText += "</th>";
+        var len = slice_names.length;
+        for (i = 0; i < len; i++) {
+            tableText += "</th><th class=\"number\">" + slice_names[i] + "</th>";
+        }
+        tableText += "</th></tr>\n";
+        return tableText;
+    }
+
+    function draw_M11_top_services(table_id, MData, slices, slice_names, top_slices, top_names) {
+        var i = 0;
+        var len = slices.length;
+        var tableElem = document.getElementById(table_id);
+        tableElem.innerHTML = "Drawing";
+
+        var tableText = draw_M11_global_header("Share", MData, slice_names);
+        /* Add a line with the total */
+        tableText += "<tr><td>DNSSEC Total</td>\n";
+        for (j = 0; j < len; j++) {
+            top_slice = top_slices[j];
+            var t = 0;
+            for (i = 0; i < top_names.length; i++) {
+                t += top_slice[i];
+            }
+            tableText += "<td class=\"number\">";
+            if (t > 0.001) {
+                tableText += (100 * t).toFixed(1) + "%";
+            } else {
+                tableText += "&lt 0.1%";
+            }
+            tableText += "</td>";
+        }
+        tableText += "</tr>\n";
+        /* Then add one line per algorithm */
+        for (i = 0; i < top_names.length; i++) {
+            var j = 0;
+            var sv = top_names[i];
+            tableText += "<tr><td>" + sv + "</td>\n";
+            for (j = 0; j < len; j++) {
+                var top_slice = top_slices[j];
+                var x = top_slice[i];
+                tableText += "<td class=\"number\">";
+                if (x > 0.001) {
+                    tableText += (100 * x).toFixed(1) + "%";
+                } else {
+                    tableText += "&lt 0.1%";
+                }
+                tableText += "</td>";
+            }
+            tableText += "</tr>\n";
+        }
+        tableText += "</table>\n";
+        tableElem.innerHTML = tableText;
+    }
+
+    function plotBarGraphM11(canvasId, mat, names, top_names, last_name) {
+        var nb_names = names.length;
+        var nb_bars = mat.length;
+        var v_min = 0;
+        var v_max = 1.0;
+        var stepSize = v_max / 10;
+        var columnSize = 50;
+        var rowSize = 50;
+        var margin = 10;
+        var graph = new Object();
+        var i = 0;
+        var x = 0;
+        var y = 0;
+        var colorSet = ["#4040FFFF", "#40FF40FF", "#FF4040FF",
+            "#FFFF40FF", "#40FFFFFF", "#FF40FFFF",
+            "#8080C0FF", "#80C080FF", "#C08080FF",
+            "#C0C080FF", "#80C0C0FF", "#C080C0FF"];
+        var color0 = ["#EFEFEFFF"]
+        var nb_colors = colorSet.length;
+
+        graph.canvas = document.getElementById(canvasId);
+        graph.context = graph.canvas.getContext("2d");
+        graph.context.fillStyle = "#000000";
+        graph.context.font = "20px sans-serif";
+
+        graph.yScale = (graph.canvas.height - columnSize - margin) / (v_max - v_min);
+        graph.xScale = (graph.canvas.width - rowSize) / (nb_bars + 4);
+
+        graph.context.strokeStyle = "#555555"; // color of grid lines
+        graph.context.beginPath();
+        // print Parameters on X axis, and grid lines on the graph
+        for (i = 0; i < nb_names; i++) {
+            x = rowSize + i * graph.xScale;
+            if (i < nb_names) {
+                graph.context.fillText(names[i], x, columnSize - margin);
+            }
+        }
+        // print row header and draw horizontal grid lines
+        var count = 0;
+        var scale = 0;
+        var dw = graph.xScale / 6.25;
+        var bar_width = rowSize + nb_names * graph.xScale;
+        graph.context.font = "11px sans-serif";
+        for (scale = v_max; scale >= v_min; scale = scale - stepSize) {
+            y = columnSize + graph.yScale * count * stepSize;
+            var fscale = (100.0 * scale).toFixed(0);
+            graph.context.fillText(fscale + "%", margin, y + margin);
+            if (scale < v_max) {
+                graph.context.moveTo(rowSize, y + margin);
+                graph.context.lineTo(bar_width - dw, y + margin);
+            }
+            count++;
+        }
+        graph.context.stroke();
+
+        /* Print the legend */
+        graph.context.font = "20px sans-serif";
+        graph.context.beginPath();
+        x = rowSize + nb_names * graph.xScale + margin;
+        var nb_top = top_names.length;
+        var n_h = graph.canvas.height / (nb_top + 3);
+        y = n_h;
+        var b_h = 20;
+        var b_w = 20;
+        var b_color = 0;
+
+        for (j = 0; j < nb_top; j++) {
+            y += n_h;
+            graph.context.fillStyle = "#000000";
+            graph.context.fillText(top_names[j], x + b_w + margin, y);
+            graph.context.fillStyle = colorSet[b_color];
+            graph.context.fillRect(x, y - b_h, b_w, b_h);
+            graph.context.beginPath();
+            graph.context.rect(x, y - b_h, b_w, b_h);
+            graph.context.stroke();
+            b_color++;
+            if (b_color > nb_colors) {
+                b_color = 0;
+            }
+        }
+        y += n_h;
+        graph.context.fillStyle = color0;
+        graph.context.fillRect(x, y - b_h, b_w, b_h);
+        graph.context.beginPath();
+        graph.context.rect(x, y - b_h, b_w, b_h);
+        graph.context.stroke();
+        graph.context.fillStyle = "#000000";
+        graph.context.fillText(last_name, x + b_w + margin, y);
+
+        // Print each bar
+        var barSize = graph.yScale * 10 * stepSize;
+        var bottom = columnSize + barSize + margin;
+        var w = 3.0 * graph.xScale / 4.0;
+        var h = 0;
+
+        for (i = 0; i < nb_names; i++) {
+            var i_color = 0;
+            var slice = mat[i];
+            x = rowSize + i * graph.xScale;
+            y = bottom;
+
+            for (j = 0; j < slice.length; j++) {
+                var v = slice[j];
+                h = barSize * v;
+                y -= h;
+
+                graph.context.fillStyle = colorSet[i_color];
+                graph.context.fillRect(x, y, w, h);
+                graph.context.beginPath();
+                graph.context.rect(x, y, w, h);
+                graph.context.stroke();
+                i_color++;
+                if (i_color > nb_colors) {
+                    i_color = 0;
+                }
+            }
+
+            h = y - columnSize - margin;
+            y -= h;
+            graph.context.fillStyle = color0;
+            graph.context.fillRect(x, y, w, h);
+            graph.context.beginPath();
+            graph.context.rect(x, y, w, h);
+            graph.context.stroke();
+        }
+        return graph;
+    }
+
+</script>
+</head>
+
+<body onLoad="init()">
+
+    <nav id="navMenu"></nav>
+
+    <h1>M11: DNSSEC Deployment in TLD and SLD</h1>
+    <h2 id="dateHeading">-</h2>
+    <p>
+        The M11 metrics analyze the Deployment of DNSSEC in TLDs and second level
+        domains (such as "example.com")
+        across 8 categories: gTLD, ccTLD, top 100, 101 to 1,000, 1,001 to 10,000,
+        10,001 to 100000, and 100,001 to 1M domains
+        in the "Majectic Million" list, and names in the COM zone (See
+        <a href="./about-m11.html">About M11 page</a> for details.)
+        For each category, we track the total deployment number and also the usage
+        of specific DNS algorithms.
+    </p>
+    <p>
+        The following graph shows the usage of DNS SEC algorithms across
+        these categories. A tabulated version of the same data is
+        <a href="#M11Top">available here</a>.
+    </p>
+    <p>
+        <canvas display="inline" id="barGraphM11" height="400" width="880"></canvas>
+    </p>
+    <h2>DNSSEC Algorithms usage</h2>
+    <p>
+        The following table shows the data underlying <a href="#barGraphM11">
+            the graph at the top of this page
+        </a>:
+    </p>
+    <div id="M11Top">Table M11 top not found</div>
+
+</body>
+</html>

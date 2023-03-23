@@ -506,7 +506,6 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
     uint64_t nb_locally_leaked_tld = 0;
     CaptureLine *local_leak = new CaptureLine;
     uint64_t skipped_tld_length[64];
-    int nb_obsolete = 0;
 
     memset(skipped_tld_length, 0, sizeof(skipped_tld_length));
 
@@ -576,11 +575,6 @@ bool CaptureSummary::Merge(size_t nb_summaries, CaptureSummary ** cs)
                 {
                     complete.push_back(cs[i]->summary[j]);
                 }
-            }
-            else if (strcmp(cs[i]->summary[j]->registry_name, name_list_id) == 0 ||
-                strcmp(cs[i]->summary[j]->registry_name, addr_list_id) == 0) {
-                /* Obsolete records should not be part of summary */
-                nb_obsolete++;
             }
             /* TODO: if local leak present, add to total */
             else

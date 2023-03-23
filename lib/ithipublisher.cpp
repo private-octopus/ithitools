@@ -368,6 +368,9 @@ bool ithipublisher::Publish(char const * web_folder)
             case 10:
                 ret = PublishDataM10(F);
                 break;
+            case 11:
+                ret = PublishDataM11(F);
+                break;
             default:
                 ret = fprintf(F, "\"error\" : \"No data yet for metric M%d\"\n", metric_id) > 0;
                 break;
@@ -1353,6 +1356,53 @@ bool ithipublisher::PublishDataM10(FILE* F)
     ret &= fprintf(F, "]\n") > 0;
     return ret;
 }
+
+bool ithipublisher::PublishDataM11(FILE* F)
+{
+    bool ret = true;
+    char m11xx[6] = { 'M', '1', '1', '.', '0', 0 };
+    char const* slice_elem_comma = "";
+
+    /* Open the slices element */
+    ret &= fprintf(F, "\"slices\":[") > 0;
+    /* for each submetric */
+    for (int m = 1; ret && m <= 8; m++) {
+        /* Open the submetric #N */
+        m11xx[4] = '0' + m;
+        ret = fprintf(F, "%s\n[\"M11_%d\",", slice_elem_comma, m) > 0;
+        slice_elem_comma = ",";
+        
+        /* Publish line for each M11.x */
+        if (ret) {
+            char const* algo_list_comma = "";
+            std::vector<MetricNameLine> algo_list;
+            size_t algo_index = 0;
+            ret &= fprintf(F, "[") > 0;
+            ret &= GetNameOrNumberList(m11xx, &algo_list, false);
+            if (ret) {
+                /* Sort the name list from bigger to lower */
+                std::sort(algo_list.begin(), algo_list.end(), ithipublisher::MetricNameLineIsBigger);
+            }
+            while (ret && algo_index < algo_list.size())
+            {
+                ret = fprintf(F, "%s\n[%s,%f]", 
+                    algo_list_comma,
+                    algo_list[algo_index].name,
+                    algo_list[algo_index].current) > 0;
+                algo_list_comma = ",";
+                algo_index++;
+            }
+            ret &= fprintf(F, "]") > 0;
+        }
+        /* Close the submetric element */
+        ret &= fprintf(F, "]") > 0;
+    }
+    /* Close the slices element */
+    ret &= fprintf(F, "]\n") > 0;
+
+    return ret;
+}
+
 
 static const int ithiIndexPublisherInputMetrics[4] = { 2, 3, 4, 5 };
 

@@ -96,6 +96,9 @@ wget https://www.internic.net/domain/root.zone -O $M7F1
 echo "Copying M9 metrics from octo0"
 rsync -av /home/octo0/data/M9 /home/ubuntu/ithi/
 
+echo "Copying M11 metrics from octo0"
+rsync -av /home/octo0/data/M11 /home/ubuntu/ithi/
+
 echo "Computing metrics for $LAST_LAST_DAY"
 ./ithitools/ithitools -i /home/ubuntu/ithi -d $LAST_LAST_DAY -m
 echo "Computing metrics for $LAST_DAY"

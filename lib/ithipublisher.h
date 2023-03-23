@@ -106,6 +106,7 @@ public:
     bool PublishDataM8(FILE * F);
     bool PublishDataM9(FILE* F);
     bool PublishDataM10(FILE* F);
+    bool PublishDataM11(FILE* F);
     bool FinishCCdataM10(FILE* F, bool is_svc_list_open, bool sub_metric_found[5], char const* sub_met_name[5]);
 };
 

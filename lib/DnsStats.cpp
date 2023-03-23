@@ -259,10 +259,10 @@ static char const * RegisteredTldName[] = {
     "LANDROVER", "LANXESS", "LASALLE", "LAT", "LATINO", "LATROBE", "LAW", "LAWYER", "LB",
     "LC", "LDS", "LEASE", "LECLERC", "LEFRAK", "LEGAL", "LEGO", "LEXUS", "LGBT", "LI",
     "LIDL", "LIFE", "LIFEINSURANCE", "LIFESTYLE", "LIGHTING", "LIKE", "LILLY",
-    "LIMITED", "LIMO", "LINCOLN", "LINDE", "LINK", "LIPSY", "LIVE", "LIVING", "LK", "LLC", "LLP",
+    "LIMITED", "LIMO", "LINCOLN", "LINK", "LIPSY", "LIVE", "LIVING", "LK", "LLC", "LLP",
     "LOAN", "LOANS", "LOCKER", "LOCUS", "LOL", "LONDON", "LOTTE", "LOTTO", "LOVE",
     "LPL", "LPLFINANCIAL", "LR", "LS", "LT", "LTD", "LTDA", "LU", "LUNDBECK",
-    "LUXE", "LUXURY", "LV", "LY", "MA", "MACYS", "MADRID", "MAIF", "MAISON", "MAKEUP", "MAN",
+    "LUXE", "LUXURY", "LV", "LY", "MA", "MADRID", "MAIF", "MAISON", "MAKEUP", "MAN",
     "MANAGEMENT", "MANGO", "MAP", "MARKET", "MARKETING", "MARKETS", "MARRIOTT", "MARSHALLS",
     "MASERATI", "MATTEL", "MBA", "MC", "MCKINSEY", "MD", "ME", "MED", "MEDIA", "MEET",
     "MELBOURNE", "MEME", "MEMORIAL", "MEN", "MENU", "MERCKMSD", "MG", "MH",
@@ -678,7 +678,6 @@ void DnsStats::SubmitOpcodeAndFlags(uint32_t opcode, uint32_t flags)
 int DnsStats::SubmitName(uint8_t * packet, uint32_t length, uint32_t start, bool should_tabulate)
 {
     uint32_t l = 0;
-    int nb_name_parts = 0;
 
     while (start < length)
     {
@@ -740,7 +739,6 @@ int DnsStats::SubmitName(uint8_t * packet, uint32_t length, uint32_t start, bool
             }
             else
             {
-                nb_name_parts++;
                 start += l + 1;
             }
         }
@@ -2049,8 +2047,6 @@ bool DnsStats::LoadPcapFile(char const * fileName)
 {
     bool ret = true;
     pcap_reader reader;
-    size_t nb_records_read = 0;
-    size_t nb_udp_dns_frag = 0;
     size_t nb_udp_dns = 0;
     uint64_t data_udp53 = 0;
     uint64_t data_tcp53 = 0;
@@ -2065,18 +2061,12 @@ bool DnsStats::LoadPcapFile(char const * fileName)
     {
         while (reader.ReadNext())
         {
-            nb_records_read++;
-
             if (reader.tp_version == 17 &&
                 (reader.tp_port1 == 53 || reader.tp_port2 == 53))
             {
                 data_udp53 += (uint64_t)reader.tp_length - 8;
 
-                if (reader.is_fragment)
-                {
-                    nb_udp_dns_frag++;
-                }
-                else
+                if (!reader.is_fragment)
                 {
                     my_bpftimeval ts;
 
