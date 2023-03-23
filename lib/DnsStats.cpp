@@ -678,7 +678,6 @@ void DnsStats::SubmitOpcodeAndFlags(uint32_t opcode, uint32_t flags)
 int DnsStats::SubmitName(uint8_t * packet, uint32_t length, uint32_t start, bool should_tabulate)
 {
     uint32_t l = 0;
-    int nb_name_parts = 0;
 
     while (start < length)
     {
@@ -740,7 +739,6 @@ int DnsStats::SubmitName(uint8_t * packet, uint32_t length, uint32_t start, bool
             }
             else
             {
-                nb_name_parts++;
                 start += l + 1;
             }
         }
