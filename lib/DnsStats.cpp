@@ -2049,8 +2049,6 @@ bool DnsStats::LoadPcapFile(char const * fileName)
 {
     bool ret = true;
     pcap_reader reader;
-    size_t nb_records_read = 0;
-    size_t nb_udp_dns_frag = 0;
     size_t nb_udp_dns = 0;
     uint64_t data_udp53 = 0;
     uint64_t data_tcp53 = 0;
@@ -2065,18 +2063,12 @@ bool DnsStats::LoadPcapFile(char const * fileName)
     {
         while (reader.ReadNext())
         {
-            nb_records_read++;
-
             if (reader.tp_version == 17 &&
                 (reader.tp_port1 == 53 || reader.tp_port2 == 53))
             {
                 data_udp53 += (uint64_t)reader.tp_length - 8;
 
-                if (reader.is_fragment)
-                {
-                    nb_udp_dns_frag++;
-                }
-                else
+                if (!reader.is_fragment)
                 {
                     my_bpftimeval ts;
 
