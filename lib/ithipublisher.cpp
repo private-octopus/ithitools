@@ -1286,7 +1286,7 @@ bool ithipublisher::FinishCCdataM10(FILE* F, bool is_svc_list_open, bool sub_met
 bool ithipublisher::PublishDataM10(FILE* F)
 {
     /* Find the list of countries from reading the metric file */
-    char cc_current[3] = { 0, 0, 0 };
+    char cc_current[4] = { 0, 0, 0, 0 };
     bool ret = true;
     bool is_svc_list_open = false;
     bool sub_metric_found[5] = { false, false, false, false, false };
@@ -1300,8 +1300,17 @@ bool ithipublisher::PublishDataM10(FILE* F)
         else {
             char* metric_name = line_list[i]->metric_name;
             int sub_met_id = 0;
+            int sub_metric_index = 7;
+#if 1
+            if (line_list[i]->metric_name == "M10.ZZZ.1") {
+                printf("Bug?");
+            }
+#endif
             if (cc_current[0] != metric_name[4] ||
-                cc_current[1] != metric_name[5]) {
+                cc_current[1] != metric_name[5] ||
+                (cc_current[2] == 0 && metric_name[6] != '.') ||
+                (cc_current[2] != 0 && metric_name[6] != cc_current[2])) {
+
                 /* This is the first line for the next country code */
                 if (cc_current[0] != 0) {
                     /* Need to close the previous country code data set */
@@ -1311,13 +1320,22 @@ bool ithipublisher::PublishDataM10(FILE* F)
                 /* Open the list for the new country code */
                 cc_current[0] = metric_name[4];
                 cc_current[1] = metric_name[5];
+                if (metric_name[6] == '.') {
+                    cc_current[2] = 0;
+                }
+                else {
+                    cc_current[2] = metric_name[6];
+                }
                 is_svc_list_open = false;
                 for (int s = 0; s < 5; s++) {
                     sub_metric_found[s] = false;
                 }
                 ret &= fprintf(F, "{ \"cc\": \"%s\"", cc_current) > 0;
             }
-            sub_met_id = metric_name[7] - '1';
+            if (cc_current[2] != 0) {
+                sub_metric_index = 8;
+            }
+            sub_met_id = metric_name[sub_metric_index] - '1';
             if (sub_met_id < 0 || sub_met_id >= 5) {
                 ret = false;
             }
