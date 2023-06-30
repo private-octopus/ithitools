@@ -245,12 +245,18 @@ function get_name_from_cc(cc) {
 	["VU", "Vanuatu"],
 	["WF", "Wallis and Futuna"],
 	["WS", "Samoa"],
+	["XAF", "Africa"],
+	["XAP", "Asia-Pacific"],
+	["XEU", "Europe"],
+	["XLA", "Latin America and Carribean"],
+	["XNA", "North America"],
 	["YE", "Yemen"],
 	["YT", "Mayotte"],
 	["ZA", "South Africa"],
 	["ZM", "Zambia"],
 	["ZW", "Zimbabwe"],
 	["ZZ", "The Whole World"],
+	["ZZZ", "The Whole World"],
 	];
 	var i = 0;
 	var s = cc;
