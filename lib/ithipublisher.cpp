@@ -1301,11 +1301,7 @@ bool ithipublisher::PublishDataM10(FILE* F)
             char* metric_name = line_list[i]->metric_name;
             int sub_met_id = 0;
             int sub_metric_index = 7;
-#if 1
-            if (line_list[i]->metric_name == "M10.ZZZ.1") {
-                printf("Bug?");
-            }
-#endif
+
             if (cc_current[0] != metric_name[4] ||
                 cc_current[1] != metric_name[5] ||
                 (cc_current[2] == 0 && metric_name[6] != '.') ||
