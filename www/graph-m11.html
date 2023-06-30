@@ -43,6 +43,16 @@
         var graph = plotBarGraphM11("barGraphM11", top_slices, short_names, top_names, "No DNSSEC");
         draw_M11_top_services("M11Top", M11Data, M11Data.slices, slice_names, top_slices, top_names);
 
+        if ("providers" in M11Data) {
+            setDateElement("providers found");
+            draw_M11_top_source("M11Providers", M11Data, "Provider", M11Data.providers, true);
+        }
+
+        if ("tlds" in M11Data) {
+            setDateElement("TLD found");
+            draw_M11_top_source("M11Tlds", M11Data, "TLD", M11Data.tlds, false);
+        }
+
         setDateElement(M11Data.date);
     }
 
@@ -229,6 +239,35 @@
         tableElem.innerHTML = tableText;
     }
 
+    function draw_M11_top_source(table_id, MData, source_name, data_list, mapServiceName) {
+        var i = 0;
+        var len = data_list.length;
+        var tableElem = document.getElementById(table_id);
+
+        var tableText = "<table class=\"metrics\"><tr><th>" + "DNSSEC per " + source_name + ", ";
+        if ("year" in MData && "month" in MData) {
+            tableText += "as of " + getMonthId(MData.month) + " " + MData.year;
+        } else {
+            tableText += "current value";
+        }
+        tableText += "</th><th>% of top 10,000</th><th> %DNSSEC </th></tr>\n";
+
+        for (i = 0; i < len; i++) {
+            source_data = data_list[i];
+            service_name = source_data[0];
+            if (mapServiceName) {
+                service_name = get_DNS_service_name(service_name);
+            }
+            tableText += "<tr><td>" + service_name + "</td>";
+            tableText += "<td class=\"number\">" + (100 * source_data[1]).toFixed(1) + "%" + "</td>";
+            tableText += "<td class=\"number\">" + (100 * source_data[2]).toFixed(1) + "%" + "</td></tr>";
+        }
+
+        tableText += "</table>\n";
+        tableElem.innerHTML = tableText;
+    }
+
+
     function plotBarGraphM11(canvasId, mat, names, top_names, last_name) {
         var nb_names = names.length;
         var nb_bars = mat.length;
@@ -391,6 +430,18 @@
         </a>:
     </p>
     <div id="M11Top">Table M11 top not found</div>
-
+    <h2 id="M11ProvidersH2">DNS usage by top DNS providers</h2>
+    <p>
+        The following table shows DNSSEC usage statistic by the top 20 DNS providers
+        for the top 10,000 domains in the "million" list. The definition of providers is the same
+        as used in <a href="graph-m9.html">metric M9</a>.
+    </p>
+    <div id="M11Providers">Table M11 providers not found.</div>
+    <h2 id="M11TldH2">DNS usage by top TLD</h2>
+    <p>
+        The following table shows DNSSEC usage statistic by the TLD to which at
+        least 0.01% of the top 10,000 domains in the "million" list belong. 
+    </p>
+    <div id="M11Tlds">Table M11 providers not found.</div>
 </body>
 </html>
