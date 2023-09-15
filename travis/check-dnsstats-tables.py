@@ -67,7 +67,6 @@ if __name__ == '__main__':
 	try:
 		root_hints = urlopen("https://www.internic.net/domain/named.root") \
 				 .read().decode('utf-8')
-		print("Got root hints, " + str(len(root_hints)) + " chars.");
 		root_hints = set([ln.split()[-1] for ln in root_hints.split('\n') 
 										 if len(ln) > 0 and ln[0].isalpha()])
 		root_hints = set(canonical_ipaddress(ip) for ip in root_hints)
