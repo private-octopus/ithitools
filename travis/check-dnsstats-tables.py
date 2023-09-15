@@ -54,19 +54,22 @@ if __name__ == '__main__':
 			     % '", "'.join(
 				     sorted(rfc6761_tlds - iana_rfc6761_tlds)))
 
-	root_hints = urlopen("https://www.internic.net/domain/named.root") \
-		     .read().decode('utf-8')
-	root_hints = set([ln.split()[-1] for ln in root_hints.split('\n')
-	                                 if ln[0].isalpha()])
-	if roots != root_hints:
-		if root_hints - roots:
-			fail = True
-			print( 'Root servers to add: "%s"'
-			     % '", "'.join(sorted(root_hints - roots)))
-		if roots - root_hints:
-			# Not a failure, because the old ones are kept
-			# working for a while
-			print( 'Root servers not in root.hints: "%s"' 
-			     % '", "'.join(sorted(roots - root_hints)))
+	try:
+		root_hints = urlopen("https://www.internic.net/domain/named.root") \
+				 .read().decode('utf-8')
+		root_hints = set([ln.split()[-1] for ln in root_hints.split('\n')
+										 if ln[0].isalpha()])
+		if roots != root_hints:
+			if root_hints - roots:
+				fail = True
+				print( 'Root servers to add: "%s"'
+					 % '", "'.join(sorted(root_hints - roots)))
+			if roots - root_hints:
+				# Not a failure, because the old ones are kept
+				# working for a while
+				print( 'Root servers not in root.hints: "%s"' 
+					 % '", "'.join(sorted(roots - root_hints)))
+	except:
+		print("Could not assess the list of root servers.");
 	if fail:
 		sys.exit(1)

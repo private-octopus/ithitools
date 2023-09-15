@@ -27,6 +27,7 @@
                 draw_page();
             }
         };
+        setDateElement("loading");
         xhttp.open("GET", "M11Data.txt", true);
         xhttp.send();
     }
@@ -42,6 +43,16 @@
         /* TODO: add "other algos" */
         var graph = plotBarGraphM11("barGraphM11", top_slices, short_names, top_names, "No DNSSEC");
         draw_M11_top_services("M11Top", M11Data, M11Data.slices, slice_names, top_slices, top_names);
+
+        if ("providers" in M11Data) {
+            setDateElement("providers found");
+            draw_M11_top_source("M11Providers", M11Data, "Provider", M11Data.providers, true, "share");
+        }
+
+        if ("tlds" in M11Data) {
+            setDateElement("TLD found");
+            draw_M11_top_source("M11Tlds", M11Data, "TLD", M11Data.tlds, false, "share");
+        }
 
         setDateElement(M11Data.date);
     }
@@ -229,6 +240,107 @@
         tableElem.innerHTML = tableText;
     }
 
+    function providerFocusFunc() {
+        var obj = document.getElementById("providerSortOption");
+        var sortMode = obj.options[obj.selectedIndex].value;
+        draw_M11_top_source("M11Providers", M11Data, "Provider", M11Data.providers, true, sortMode);
+    }
+
+    function tldFocusFunc() {
+        var obj = document.getElementById("tldSortOption");
+        var sortMode = obj.options[obj.selectedIndex].value;
+        draw_M11_top_source("M11Tlds", M11Data, "TLD", M11Data.tlds, false, sortMode);
+    }
+
+    function sortDrawFunc(sortMode, startPoint) {
+        var nbTld = EAIData.length;
+        currentFocus = startPoint;
+        if (sortMode != previousSortMode) {
+            sort_tld_table(EAIData, nbTld, sortMode);
+            previousSortMode = sortMode;
+        }
+        startIndex = setStartPoint(EAIData, nbTld, startPoint);
+        draw_EAI_TLD("EAITld", EAIData, nbTld, startIndex);
+    }
+
+    function draw_M11_top_source(table_id, MData, source_name, data_list, mapServiceName, sortMode) {
+        var i = 0;
+        var len = data_list.length;
+        var tableElem = document.getElementById(table_id);
+
+        var tableText = "<table class=\"metrics\"><tr><th>" + "DNSSEC per " + source_name + ", ";
+        if ("year" in MData && "month" in MData) {
+            tableText += "as of " + getMonthId(MData.month) + " " + MData.year;
+        } else {
+            tableText += "current value";
+        }
+        tableText += "</th><th>% of top million domains</th><th> %DNSSEC </th></tr>\n";
+
+        sort_M11_table(data_list, sortMode);
+
+        for (i = 0; i < len; i++) {
+            source_data = data_list[i];
+            service_name = source_data[0];
+            if (mapServiceName) {
+                service_name = get_DNS_service_name(service_name);
+            }
+            tableText += "<tr><td>" + service_name + "</td>";
+            tableText += "<td class=\"number\">" + (100 * source_data[1]).toFixed(1) + "%" + "</td>";
+            tableText += "<td class=\"number\">" + (100 * source_data[2]).toFixed(1) + "%" + "</td></tr>";
+        }
+
+        tableText += "</table>\n";
+        tableElem.innerHTML = tableText;
+    }
+
+    /* This is a simple bubble sort, because we assume that tables are not too long. */
+    /* Column 1 = name; column2 = share; column 3 = dnssec */
+    /* The "other" column should always be last */
+
+    function sort_M11_table(data_list, sortMode) {
+        var i = 0;
+        var len = data_list.length;
+        var switching = (len > 1);
+
+        while (switching) {
+            switching = false;
+            for (i = 1; i < len; i++) {
+                var shouldSwitch = false;
+                current = data_list[i];
+                previous = data_list[i - 1];
+                if (previous[0] == "others") {
+                    shouldSwitch = true;
+                }
+                else if (current[0] == "others") {
+                    shouldSwitch = false;
+                }
+                else if (sortMode == "share") {
+                    if (previous[1] < current[1] ||
+                        (previous[1] == current[1] && previous[0] > current[0])) {
+                        shouldSwitch = true;
+                    }
+                }
+                else if (sortMode == "dnssec") {
+                    if (previous[2] < current[2] ||
+                        (previous[2] == current[2] &&
+                            (previous[1] < current[1] ||
+                                (previous[1] == current[1] && previous[0] > current[0])))) {
+                        shouldSwitch = true;
+                    }
+                } else {
+                    if (previous[0] > current[0]) {
+                        shouldSwitch = true;
+                    }
+                }
+                if (shouldSwitch) {
+                    data_list[i - 1] = current;
+                    data_list[i] = previous;
+                    switching = true;
+                }
+            }
+        }
+    }
+
     function plotBarGraphM11(canvasId, mat, names, top_names, last_name) {
         var nb_names = names.length;
         var nb_bars = mat.length;
@@ -391,6 +503,30 @@
         </a>:
     </p>
     <div id="M11Top">Table M11 top not found</div>
-
+    <h2 id="M11ProvidersH2">DNSSEC usage by top DNS providers</h2>
+    <p>
+        The following table shows DNSSEC usage statistic for the top 20 DNS providers
+        for the "million" list. The definition of providers is the same
+        as used in <a href="graph-m9.html">metric M9</a>.
+        <label for="providerSortOption">Providers will be sorted by</label>
+        <select id="providerSortOption" onchange="providerFocusFunc()" onload="providerFocusFunc()">
+            <option value="share">Share</option>
+            <option value="dnssec">DNSSEC</option>
+            <option value="name">name</option>
+        </select>
+    </p>
+    <div id="M11Providers">Table M11 providers not found.</div>
+    <h2 id="M11TldH2">DNSSEC usage by top TLD</h2>
+    <p>
+        The following table shows DNSSEC usage statistic for the TLD to which at
+        least 0.1% of the "million" list belong.
+        <label for="tldSortOption">TLDs will be sorted by</label>
+        <select id="tldSortOption" onchange="tldFocusFunc()" onload="tldFocusFunc()">
+            <option value="share">Share</option>
+            <option value="dnssec">DNSSEC</option>
+            <option value="name">TLD</option>
+        </select>
+    </p>
+    <div id="M11Tlds">Table M11 TLDs not found.</div>
 </body>
 </html>

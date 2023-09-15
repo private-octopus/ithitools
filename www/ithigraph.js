@@ -801,3 +801,26 @@ function plotStackGraph(canvasId, dataSet1, dataSet2, rangeMax, firstMonth, colo
     context.fill();
 }
 
+function get_DNS_service_name(d_name) {
+    var service_names = [
+        ["domaincontrol.com", "GoDaddy"],
+        ["cloudflare.com", "CloudFlare"],
+        ["awsdns-??.com", "Amazon AWS DNS"],
+        ["wikimedia.org", "wikimedia"],
+        ["nsone.net", "NS1"],
+        ["akam.net", "Akamai"],
+        ["dynect.net", "Oracle Dyn"]
+    ];
+    var s_name = d_name;
+
+    for (i = 0; i < service_names.length; i++) {
+        var x = service_names[i];
+        if (x[0] === d_name) {
+            s_name = x[1];
+            break;
+        }
+    }
+
+    return s_name;
+}
+

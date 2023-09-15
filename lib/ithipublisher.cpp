@@ -1371,11 +1371,22 @@ bool ithipublisher::PublishDataM10(FILE* F)
     return ret;
 }
 
+/* M11 publisher prepares data for the per slice graph,
+ * and also for usage of by providers and tld in the
+ * top million.
+ */
+
 bool ithipublisher::PublishDataM11(FILE* F)
 {
     bool ret = true;
     char m11xx[6] = { 'M', '1', '1', '.', '0', 0 };
     char const* slice_elem_comma = "";
+    char const* sub_metric_1516[4] = {
+        "M11.15.1", "M11.15.2", "M11.16.1", "M11.16.2"
+    };
+    char const* table_1516[2] = {
+        "providers", "tlds"
+    };
 
     /* Open the slices element */
     ret &= fprintf(F, "\"slices\":[") > 0;
@@ -1411,8 +1422,60 @@ bool ithipublisher::PublishDataM11(FILE* F)
         /* Close the submetric element */
         ret &= fprintf(F, "]") > 0;
     }
+
+
     /* Close the slices element */
-    ret &= fprintf(F, "]\n") > 0;
+    ret &= fprintf(F, "]") > 0;
+    
+    /* Metric 11.15 is about the DNSSEC penetration and relative share of
+     * the top 20 DNS providers in the top 1M domains, and 
+     * Metric 11.16 is about the DNSSEC penetration and relative share of
+     * the top TLDs with at least 10 samples in the top 1M domains.
+     * For each of these metrics, the first submetric (11.15.1, 11.16.1)
+     * provides the share of the million served by that provider or tld,
+     * and the second provide the share of domains deploying DNSSEC
+     * among these.
+     */
+    for (int m = 0; ret && m < 2; m++) {
+        std::vector<MetricNameLine> share_list;
+        std::vector<MetricNameLine> dnssec_list;
+        ret &= GetNameOrNumberList(sub_metric_1516[2*m], &share_list, false);
+        ret &= GetNameOrNumberList(sub_metric_1516[2*m+1], &dnssec_list, false);
+        if (ret) {
+            /* New entry in table */
+            bool same_size = share_list.size() == dnssec_list.size();
+            char const* entry_list_comma = "";
+
+            ret &= fprintf(F, ",\n\"%s\":[", table_1516[m] ) > 0;
+            for (size_t entry_index = 0;ret && entry_index < share_list.size(); entry_index++)
+            {
+                char const * entry = share_list[entry_index].name;
+                double share = share_list[entry_index].current;
+                double dnssec = 0.0;
+
+                if (entry != NULL) {
+                    if (same_size && dnssec_list[entry_index].name != NULL &&
+                        strcmp(dnssec_list[entry_index].name, entry) == 0) {
+                        dnssec = dnssec_list[entry_index].current;
+                    }
+                    else {
+                        for (size_t e = 0; ret && e < dnssec_list.size(); e++) {
+                            if (dnssec_list[e].name != NULL &&
+                                strcmp(dnssec_list[e].name, entry) == 0) {
+                                dnssec = dnssec_list[e].current;
+                                break;
+                            }
+                        }
+                    }
+                    ret = fprintf(F, "%s\n[\"%s\",%f,%f]",
+                        entry_list_comma, entry, share, dnssec) > 0;
+                    entry_list_comma = ",";
+                }
+
+            }
+            ret &= fprintf(F, "]") > 0;
+        }
+    }
 
     return ret;
 }
