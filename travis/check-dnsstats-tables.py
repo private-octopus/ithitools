@@ -1,6 +1,16 @@
 #!/usr/bin/env python
 
 import re, sys, csv
+import ipaddress
+
+def canonical_ipaddress(addr):
+	try:
+		ip = ipaddress.ip_address(addr)
+		addr = str(ip)
+	except:
+		print("Invalid IP: " + addr)
+	return addr
+
 try:
 	# For Python 3.0 and later
 	from urllib.request import urlopen
@@ -57,8 +67,10 @@ if __name__ == '__main__':
 	try:
 		root_hints = urlopen("https://www.internic.net/domain/named.root") \
 				 .read().decode('utf-8')
-		root_hints = set([ln.split()[-1] for ln in root_hints.split('\n')
-										 if ln[0].isalpha()])
+		print("Got root hints, " + str(len(root_hints)) + " chars.");
+		root_hints = set([ln.split()[-1] for ln in root_hints.split('\n') 
+										 if len(ln) > 0 and ln[0].isalpha()])
+		root_hints = set(canonical_ipaddress(ip) for ip in root_hints)
 		if roots != root_hints:
 			if root_hints - roots:
 				fail = True
