@@ -1371,6 +1371,11 @@ bool ithipublisher::PublishDataM10(FILE* F)
     return ret;
 }
 
+/* M11 publisher prepares data for the per slice graph,
+ * and also for usage of by providers and tld in the
+ * top million.
+ */
+
 bool ithipublisher::PublishDataM11(FILE* F)
 {
     bool ret = true;
