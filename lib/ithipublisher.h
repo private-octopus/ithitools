@@ -93,6 +93,8 @@ public:
     bool PrintNumberVectorMetric(FILE* F, char const* sub_met_name, char const* metric_name, double mult);
     bool PrintNameList(FILE * F, std::vector<MetricNameLine> * name_list, double mult);
 
+    void AddToTopList(std::vector<MetricNameLine>* top_list, MetricNameLine* name_entry);
+
     /* Metric specific publishers */
     bool PublishDataM1(FILE * F);
     bool PublishDataM2(FILE * F);

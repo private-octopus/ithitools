@@ -38,10 +38,40 @@
             "100K", "1M", "COM"];
 
         setDateElement(M9Data.date);
-        var top_slices = gather_M9_top_services(M9Data.top, M9Data.slices);
-        draw_M9_top_services("M9Top", M9Data, M9Data.top, M9Data.slices, slice_names);
-        draw_M9_global_stats("M9Stats", M9Data, M9Data.slices, slice_names);
-        var graph = plotBarGraph("barGraphM9", top_slices, short_names, M9Data.top);
+        var M9ServiceSlices = M9Data.slices.slice(0, 6);
+        var top_slices = gather_M9_top_services(M9Data.top, M9ServiceSlices);
+        draw_M9_top_services("M9Top", M9Data, M9Data.top, M9ServiceSlices, slice_names);
+        draw_M9_global_stats("M9Stats", M9Data, M9ServiceSlices, slice_names);
+        plotBarGraph("barGraphM9", top_slices, short_names, get_top_names(M9Data.top));
+
+        var M9NsAsSlices = M9Data.slices.slice(6, 12);
+        var top_slices_ns_as = gather_M9_top_services(M9Data.top_ns_as, M9NsAsSlices);
+        var top_ns_as_names = get_top_AS_names(M9Data.top_ns_as, M9Data.as_names);
+        draw_M9_global_stats_by_AS("M9StatsNSAS", M9Data, M9NsAsSlices, slice_names);
+        draw_M9_top_AS("M9TopNSAS", M9Data, M9Data.top_ns_as, M9NsAsSlices, slice_names);
+        plotBarGraph("barGraphM9AS", top_slices_ns_as, short_names, top_ns_as_names);
+
+        var top_comparison = [];
+        var i = 0;
+        for (i = 0; i < M9Data.top_as.length; i++) {
+            top_comparison.push(M9Data.top_as[i]);
+        }
+        for (i = 0; i < M9Data.top_ns_as.length; i++) {
+            var j = 0;
+            var x = M9Data.top_ns_as[i]
+            var not_found = true;
+            for (j = 0; j < M9Data.top_as.length; j++) {
+                if (x == M9Data.top_as[j]) {
+                    not_found = false;
+                    break;
+                }
+            }
+            if (not_found) {
+                top_comparison.push(x);
+            }
+        }
+        var M9AsSlices = M9Data.slices.slice(12, 18);
+        draw_M9_AS_comparison("M9TopAS", M9Data, top_comparison, M9AsSlices, M9NsAsSlices, slice_names);
     }
 
     function draw_M9_global_stats(table_id, MData, slices, slice_names) {
@@ -51,7 +81,7 @@
             "Nb services for 90% of domains"];
         var j = 0;
         var tableElem = document.getElementById(table_id);
-        var tableText = draw_M9_global_header("Statistics", MData, slice_names);
+        var tableText = draw_M9_global_header("Statistics", MData, slice_names, 1);
         var len = slices.length;
         var ppx = [ 0, 2, 0, 0 ];
         for (j = 1; j < 4; j++) {
@@ -73,15 +103,15 @@
         var len = slices.length;
         var tableElem = document.getElementById(table_id);
         tableElem.innerHTML = "Drawing";
-        var tableText = draw_M9_global_header("Share", MData, slice_names);
+        var tableText = draw_M9_global_header("Share " + table_id, MData, slice_names);
         var top_slices = gather_M9_top_services(top, slices);
         for (i = 0; i < top.length; i++) {
             var j = 0;
             var sv = get_service_name(top[i])
+            var top_slice = top_slices[i];
             tableText += "<tr><td>" + sv + "</td>\n";
             for (j = 0; j < len; j++) {
-                top_slice = top_slices[j];
-                var x = top_slice[i];
+                var x = top_slice[j];
                 tableText += "<td class=\"number\">";
                 if (x > 0.001) {
                     tableText += (100 * x).toFixed(1) + "%";
@@ -97,8 +127,11 @@
         tableElem.innerHTML = tableText;
     }
 
-    function draw_M9_global_header(title, MData, slice_names) {
+    function draw_M9_global_header(title, MData, slice_names, colspan) {
         var tableText = "<table class=\"metrics\"><tr><th>" + title + ", ";
+        if (colspan > 1) {
+            tableText = "<table class=\"metrics\"><tr><th colspan=\"" + colspan.toFixed(0) + "\">" + title + ", ";
+        }
         if ("year" in MData && "month" in MData) {
             tableText += "as of " + getMonthId(MData.month) + " " + MData.year;
         } else {
@@ -111,6 +144,126 @@
         }
         tableText += "</th></tr>\n";
         return tableText;
+    }
+
+    function get_M9_AS_Name(asn, table) {
+        var as_name = "AS" + asn;
+        var i = 0;
+        for (i = 0; i < table.length; i++) {
+            row = table[i];
+            if (row.length > 1 && row[1].toFixed(0) == asn) {
+                as_name = row[0];
+                break;
+            }
+        }
+        return as_name;
+    }
+
+    function get_top_AS_names(top, table) {
+        var j = 0;
+        top_names = [];
+        for (j = 0; j < top.length; j++) {
+            top_names.push(get_M9_AS_Name(top[j], table))
+        }
+        return top_names;
+    }
+
+    function draw_M9_global_stats_by_AS(table_id, MData, slices, slice_names) {
+        var headerText = ["",  
+            "Average Nb. AS of NS per domain",
+            "Nb AS of NS for 50% of domains",
+            "Nb AS of NS for 90% of domains"];
+        var j = 0;
+        var tableElem = document.getElementById(table_id);
+
+        var tableText = draw_M9_global_header("Statistics", MData, slice_names, 1);
+        var len = slices.length;
+        var ppx = [0, 2, 0, 0];
+        for (j = 1; j < 4; j++) {
+            var i = 0;
+            tableText += "<tr><td>" + headerText[j] + "</td>";
+            for (i = 0; i < len; i++) {
+                slice = slices[i];
+                tableText += "<td class=\"number\">" + slice[j].toFixed(ppx[j]) + "</td>";
+            }
+            tableText += "<tr>\n"
+        }
+        tableText += "</table>\n";
+
+        tableElem.innerHTML = tableText;
+    }
+
+    function draw_M9_top_AS(table_id, MData, top, slices, slice_names) {
+        var i = 0;
+        var len = slices.length;
+        var tableElem = document.getElementById(table_id);
+        tableElem.innerHTML = "Drawing";
+        var tableText = draw_M9_global_header("Share", MData, slice_names, 1);
+        tableElem.innerHTML = "Drawn global";
+        var top_slices = gather_M9_top_services(top, slices);
+        tableElem.innerHTML = "Gathered " + top_slices.length.toFixed(0) + " slices.";
+        for (i = 0; i < top.length; i++) {
+            var j = 0;
+            tableElem.innerHTML = "top[" + i.toFixed(0) + "]: " + top[i];
+            var sv = get_M9_AS_Name(top[i], M9Data.as_names);
+            tableElem.innerHTML = "top[" + i.toFixed(0) + "]:" + sv;
+            tableText += "<tr><td>" + sv + "</td>\n";
+            for (j = 0; j < len; j++) {
+                top_slice = top_slices[i];
+                var x = top_slice[j];
+                tableText += "<td class=\"number\">";
+                if (x > 0.001) {
+                    tableText += (100 * x).toFixed(1) + "%";
+                } else {
+                    tableText += "&lt 0.1%";
+                }
+                tableText += "</td>";
+            }
+            tableText += "</tr>\n";
+        }
+
+        tableText += "</table>\n";
+        tableElem.innerHTML = tableText;
+    }
+
+    function draw_M9_AS_comparison(table_id, MData, top, slices_AS, slices_NS, slice_names) {
+        var i = 0;
+        var len = slices_AS.length;
+        var tableElem = document.getElementById(table_id);
+        tableElem.innerHTML = "Drawing";
+        var tableText = draw_M9_global_header("Share of Domain vs NS hosting", MData, slice_names, 2);
+        var top_service_AS = gather_M9_top_services(top, slices_AS);
+        var top_services_NS = gather_M9_top_services(top, slices_NS);
+        for (i = 0; i < top.length; i++) {
+            var k = 0;
+            var sv = get_M9_AS_Name(top[i], M9Data.as_names);
+
+            for (k = 0; k < 2; k++) {
+                var j = 0;
+                var top_service = top_service_AS[i];
+                if (k == 0) {
+                    tableText += "<tr><td rowspan=\"2\">" + sv + "</td><td>Domains</td>\n";
+                } else {
+                    tableText += "<tr><td>NS</td>\n";
+                    top_service = top_services_NS[i];
+                }
+                for (j = 0; j < 6; j++) {
+                    tableElem.innerHTML = "top[" + i.toFixed(0) + "]: " + top[i] + ", row: " + k.toFixed(0) + ", col: " + j.toFixed(0) + "/" + top_slice.length.toFixed(0);
+                    x = top_service[j];
+                    tableText += "<td class=\"number\">";
+                    if (x > 0.001) {
+                        tableText += (100 * x).toFixed(1) + "%";
+                    } else {
+                        tableText += "&lt 0.1%";
+                    }
+                    tableText += "</td>";
+                }
+                tableText += "</tr>\n";
+            }
+        }
+
+        tableText += "</table>\n";
+        tableElem.innerHTML = tableText;
     }
 
     function get_service_element_share(topName, shareSet){
@@ -131,20 +284,43 @@
         var i = 0;
         var j = 0;
         var len = slices.length;
-        var top_slices = [];
-        for (j = 0; j < len; j++) {
-            var top_slice = [];
-            var slice = slices[j];
-            for (i = 0; i < top.length; i++) {
-                var x = get_service_element_share(top[i], slice[4]);
-                top_slice.push(x);
-            }
-            top_slices.push(top_slice);
+        var top_services = [];
+        for (i = 0; i < top.length; i++) {
+            top_services.push([ 0, 0, 0, 0, 0, 0]);
         }
-        return top_slices;
+        for (i = 0; i < top.length; i++) {
+            var top_service = top_services[i]
+            var topName = top[i]
+            for (j = 0; j < 6; j++) {
+                var slice = slices[j];
+                var shareSet = slice[4];
+                var k = 0;
+                var x = 0;
+                if (j < len) {
+                    for (k = 0; k < shareSet.length; k++) {
+                        var nameData = shareSet[k];
+                        if (nameData[0] == top[i]) {
+                            x = nameData[1];
+                            break;
+                        }
+                    }
+                }
+                top_service[j] = x;
+            }
+        }
+        return top_services;
     }
 
-    function plotBarGraph(canvasId, mat, names, top) {
+    function get_top_names(top) {
+        var j = 0;
+        top_names = [];
+        for (j = 0; j < top.length; j++) {
+            top_names.push(get_service_name(top[j]))
+        }
+        return top_names;
+    }
+
+    function plotBarGraph(canvasId, mat, names, top_names) {
         var nb_names = names.length;
         var nb_bars = mat.length;
         var v_min = 0;
@@ -203,7 +379,7 @@
         graph.context.font = "20px sans-serif";
         graph.context.beginPath();
         x = rowSize + nb_names * graph.xScale + margin;
-        var nb_top = top.length;
+        var nb_top = top_names.length;
         var n_h = graph.canvas.height / (nb_top + 3);
         y = n_h;
         var b_h = 20;
@@ -213,7 +389,7 @@
         for (j = 0; j < nb_top; j++) {
             y += n_h;
             graph.context.fillStyle = "#000000";
-            graph.context.fillText(get_service_name(top[j]), x + b_w + margin, y);
+            graph.context.fillText(top_names[j], x + b_w + margin, y);
             graph.context.fillStyle = colorSet[b_color];
             graph.context.fillRect(x, y - b_h, b_w, b_h);
             graph.context.beginPath();
@@ -240,14 +416,14 @@
         var w = 3.0 * graph.xScale / 4.0;
         var h = 0;
 
-        for (i = 0; i <= nb_names; i++) {
+        for (i = 0; i < nb_names; i++) {
             var i_color = 0;
-            var slice = mat[i];
             x = rowSize + i * graph.xScale;
             y = bottom;
 
-            for (j = 0; j < slice.length; j++) {
-                var v = slice[j];
+            for (j = 0; j < mat.length; j++) {
+                var slice = mat[j];
+                var v = slice[i];
                 h = barSize * v;
                 y -= h;
 
@@ -264,13 +440,13 @@
 
             h = y - columnSize - margin;
             y -= h;
+
             graph.context.fillStyle = color0;
             graph.context.fillRect(x, y, w, h);
             graph.context.beginPath();
             graph.context.rect(x, y, w, h);
             graph.context.stroke();
         }
-
 
         return graph;
     }
@@ -312,27 +488,60 @@
         across 6 categories: top 100, 101 to 1,000, 1,001 to 10,000,
         10,001 to 100000, and 100,001 to 1M domains
         in the "Majectic Million" list, and names in the COM zone (See
-        <a href="./about-m9.html">About M9 page</a> for details.) The
-        following graph shows the share of most frequent services across
-        all categories. A tabulated version of the same data is
+        <a href="./about-m9.html">About M9 page</a> for details). The
+        level of concentration is assed based on either names or addresses.
+    </p>
+    <p>
+        The <a href="#M9Services">service graph</a> shows the share of the largest
+        name services providers across
+        all categories. The service name is derived from the domain names of
+        the name servers for the domains in each category.
+        A tabulated version of the same data is
         <a href="#M9Top">available here</a>.
     </p>
     <p>
+        The <a href="#M9Networks">network graph</a> shows the share of the largest
+        networks that host name services across
+        all categories, identified by AS number of the IP address of the name servers.
+        A tabulated version of the same data is
+        <a href="#M9AS">available here</a>.
+    </p>
+    <h2 id="M9Services">Concentration of DNS service providers</h2>
+    <p>
         <canvas display="inline" id="barGraphM9" height="400" width="720"></canvas>
     </p>
-    <h2>Concentration indices</h2>
     <p>
         The following table provides a summary view of concentration in each category:
         how many services are used on average per domain, and how many services
         account for 50% or 90% of the market.
     </p>
     <div id="M9Stats">Table M9 stats not found</div>
-    <h2>Top services</h2>
+    <h3>Top services</h3>
     The following table shows the data underlying <a href="#barGraphM9">
         the graph
         at the top of this page
     </a>:
     <div id="M9Top">Table M9 top not found</div>
+    <h2 id="M9Services">Concentration of DNS service hosters</h2>
+    <p>
+        <canvas display="inline" id="barGraphM9AS" height="400" width="720"></canvas>
+    </p>
+    <p>
+        The following table provides a summary view of concentration in each category:
+        how many ASes are used on average per domain, and how many ASes
+        account for 50% or 90% of the market.
+    </p>
+    <div id="M9StatsNSAS">Table M9 AS stats not found</div>
+    <h3>ASes serving NS records for the largest number of domains</h3>
+    The following table shows the data underlying <a href="#barGraphM9AS">
+    the graph of DNS service hosters</a>:
+    <div id="M9TopNSAS">Table M9 NS AS not found</div>
+    <h3>Name providers versus Domain hosters </h3>
+    <p>
+        The following table compares the concentration of DNS service providers
+        and that of Domain hosters, or CDNs.
+    </p>
+    <div id="M9TopAS">Table M9 AS compare not found</div>
 
 </body>
 </html>
