@@ -1162,25 +1162,67 @@ bool ithipublisher::PublishDataM8(FILE * F)
     return ret;
 }
 
+void ithipublisher::AddToTopList(std::vector<MetricNameLine>* top_list, MetricNameLine * name_entry)
+{
+    size_t top_index = 0;
+    bool found = false;
+
+    while (!found && top_index < top_list->size()) {
+        if (strcmp(name_entry->name,
+            (*top_list)[top_index].name) == 0) {
+            found = true;
+            if (name_entry->current >
+                (*top_list)[top_index].current) {
+                (*top_list)[top_index].current =
+                    name_entry->current;
+            }
+            (*top_list)[top_index].average +=
+                name_entry->current;
+        }
+        top_index++;
+    }
+    if (!found) {
+        MetricNameLine top_name = { NULL, 0, 0 };
+        top_name.name = name_entry->name;
+        top_name.current = name_entry->current;
+        top_name.average =name_entry->current;
+        top_list->push_back(top_name);
+    }
+}
+
 bool ithipublisher::PublishDataM9(FILE* F)
 {
-    char m9xx[7] = { 'M', '9', '.', '1', '.', '1', 0 };
-    const double threshold = 0.05;
-    std::vector<MetricNameLine> top_list;
+    char m9xx[8] = { 'M', '9', '.', '1', '.', '1', 0 };
+    const double threshold = 0.035;
+    std::vector<MetricNameLine> top_list[3];
+    char const* top_list_name[3] = { "top", "top_ns_as", "top_as" };
     char const * slice_elem_comma = "";
     bool ret = true;
     /* Open the slices element */
     ret &= fprintf(F, "\"slices\":[") > 0;
     /* for each submetric */
-    for (int m = 1; ret && m < 7; m++) {
+    for (int m = 1; ret && m < 19; m++) {
         /* Open the submetric #N */
-        m9xx[3] = '0' + m;
+        int sub_metric_index = 5;
+        if (m < 10) {
+            m9xx[3] = '0' + m;
+            m9xx[4] = '.';
+            sub_metric_index = 5;
+        }
+        else {
+            m9xx[3] = '0' + m/10;
+            m9xx[4] = '0' + m%10;
+            m9xx[5] = '.';
+            sub_metric_index = 6;
+        }
+        m9xx[sub_metric_index + 1] = 0;
+
         ret = fprintf(F, "%s\n[\"M9%d\",", slice_elem_comma, m) > 0;
         slice_elem_comma = ",";
         /* Publish value, M9.x.1, M9.x.2, M9.x. 3 */
         for (int sm = 1; ret && sm < 4; sm++) {
             double d=0;
-            m9xx[5] = '0' + sm;
+            m9xx[sub_metric_index] = '0' + sm;
             ret = GetCurrent(m9xx, NULL, &d);
             if (ret){
                 if (sm == 1) {
@@ -1196,7 +1238,7 @@ bool ithipublisher::PublishDataM9(FILE* F)
             char const* name_list_comma = "";
             std::vector<MetricNameLine> name_list;
             size_t name_index = 0;
-            m9xx[5] = '4';
+            m9xx[sub_metric_index] = '4';
             ret &= fprintf(F, "[") > 0;
             ret &= GetNameOrNumberList(m9xx, &name_list, false);
             if (ret) {
@@ -1212,28 +1254,14 @@ bool ithipublisher::PublishDataM9(FILE* F)
                 name_list_comma = ",";
                 /* Add the top entries to the top list */
                 if (ret && name_list[name_index].current >= threshold) {
-                    size_t top_index = 0;
-                    bool found = false;
-                    while (!found && top_index < top_list.size()) {
-                        if (strcmp(name_list[name_index].name,
-                            top_list[top_index].name) == 0) {
-                            found = true;
-                            if (name_list[name_index].current >
-                                top_list[top_index].current) {
-                                top_list[top_index].current =
-                                    name_list[name_index].current;
-                            }
-                            top_list[top_index].average +=
-                                name_list[name_index].current;
-                        }
-                        top_index++;
+                    if (m > 0 && m < 7) {
+                        AddToTopList(&top_list[0], &name_list[name_index]);
                     }
-                    if (!found) {
-                        MetricNameLine top_name = { NULL, 0, 0 };
-                        top_name.name = name_list[name_index].name;
-                        top_name.current = name_list[name_index].current;
-                        top_name.average = name_list[name_index].current;
-                        top_list.push_back(top_name);
+                    else if (m > 7 && m < 13) {
+                        AddToTopList(&top_list[1], &name_list[name_index]);
+                    }
+                    else if (m > 13) {
+                        AddToTopList(&top_list[2], &name_list[name_index]);
                     }
                 }
                 name_index++;
@@ -1245,20 +1273,38 @@ bool ithipublisher::PublishDataM9(FILE* F)
     }
     /* Close the slices element */
     ret &= fprintf(F, "],\n") > 0;
+    /* add the asnames element */
     if (ret) {
-        size_t top_index = 0;
-        char const* top_list_comma = "";
-        /* Sort the top list from bigger to lower */
-        std::sort(top_list.begin(), top_list.end(), ithipublisher::MetricNameLineIsBigger);
-        /* Write the top list */
-        ret &= fprintf(F, "\"top\":[") > 0;
-        while (ret && top_index < top_list.size()) {
-            ret = fprintf(F, "%s\n\"%s\"", top_list_comma,
-                top_list[top_index].name);
-            top_list_comma = ",";
-            top_index++;
+        std::vector<MetricNameLine> asn_list;
+        char const* as_list_comma = "";
+        ret &= GetNameOrNumberList("M9.19.1", &asn_list, false);
+        if (ret) {
+            ret &= fprintf(F, "\"as_names\":[") > 0;
+            for (size_t i = 0; ret  && i < asn_list.size(); i++) {
+                ret &= (fprintf(F, "%s\n[\"%s\",%d]", as_list_comma, asn_list[i].name, (int)asn_list[i].current) > 0);
+                as_list_comma = ",";
+            }
+            ret &= fprintf(F, "]") > 0;
         }
-        ret &= fprintf(F, "]\n") > 0;
+    }
+    if (ret) {
+        for (int t = 0; t < 3; t++) {
+            size_t top_index = 0;
+            char const* top_list_comma = "";
+            ret &= fprintf(F, ",\n") > 0;
+            /* Sort the top list from bigger to lower */
+            std::sort(top_list[t].begin(), top_list[t].end(), ithipublisher::MetricNameLineIsBigger);
+            /* Write the top list */
+            ret &= fprintf(F, "\"%s\":[", top_list_name[t]) > 0;
+            while (ret&& top_index < top_list[t].size()) {
+                ret = fprintf(F, "%s\n\"%s\"", top_list_comma,
+                    (top_list[t])[top_index].name);
+                top_list_comma = ",";
+                top_index++;
+            }
+            ret &= fprintf(F, "]") > 0;
+        }
+        ret &= fprintf(F, "\n") > 0;
     }
     return ret;
 }
