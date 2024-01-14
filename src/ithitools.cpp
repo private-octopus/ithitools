@@ -638,7 +638,6 @@ int main(int argc, char ** argv)
     }
     else if (exec_mode == ithi_mode_ipstats)
     {
-        bool ret = true;
         IPStats ipstats;
 
         if (optind >= argc)

@@ -1,3 +1,8 @@
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include "cbor.h"
 #include "cdns.h"
 #include "ipstats.h"
 #include "DnsStats.h"
@@ -187,8 +192,8 @@ bool IPStats::LoadCborFile(char const* fileName)
         }
 #endif
     }
-#endif
     return ret;
+#endif
 }
 
 #if 0
