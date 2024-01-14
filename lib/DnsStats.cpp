@@ -100,7 +100,9 @@ static char const * DefaultRootAddresses[] = {
     "2001:500:9f::42",
     "199.7.83.42",
     "2001:dc3::35",
-    "202.12.27.33"
+    "202.12.27.33",
+    "170.247.170.2",
+    "2801:1b8:10::b"
 };
 
 static char const * RegistryNameById[] = {
