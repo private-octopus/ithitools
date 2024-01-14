@@ -31,7 +31,7 @@ public:
     ~HyperLogLog_test();
 
     bool DoTest() override;
-    bool DoOneTest(int nb_repeat);
+    bool DoNameTest(size_t nb_names);
     bool DoNumberTest(int nb_number);
 
 private:

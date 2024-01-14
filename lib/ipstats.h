@@ -99,7 +99,6 @@ public:
 
     IPStatsRecord * HashNext;
 
-    uint32_t fnv_hash_32(uint8_t* x, size_t l);
     void add_vec(uint64_t* x, uint64_t* y, size_t l);
 
     bool Serialize(uint8_t buffer, size_t buffer_size, size_t * length);

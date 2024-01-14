@@ -229,7 +229,7 @@ bool HyperLogLog_test::DoTest()
     F = ithi_file_open("hyperloglogtest.csv", "wt");
 
     for (int x = 1; x < (int)nb_tld; x *= 2) {
-        if (!DoOneTest(x)) {
+        if (!DoNameTest(x)) {
             ret = false;
             break;
         }
@@ -249,12 +249,12 @@ bool HyperLogLog_test::DoTest()
     return ret;
 }
 
-bool HyperLogLog_test::DoOneTest(int nb_test_names)
+bool HyperLogLog_test::DoNameTest(size_t nb_test_names)
 {
     HyperLogLog hll;
-    int k = (nb_tld - nb_test_names) / 2;
-    for (int i = 0; i < nb_test_names; i++) {
-        int j = (i + nb_test_names / 2);
+
+    for (size_t i = 0; i < nb_test_names; i++) {
+        size_t j = (i + nb_test_names / 2);
         while (j >= nb_tld) {
             j -= nb_tld;
         }
@@ -267,7 +267,7 @@ bool HyperLogLog_test::DoOneTest(int nb_test_names)
 
     double ret = (E >= E_min && E <= E_max);
     if (F != NULL) {
-        (void)fprintf(F, "%d, %f", nb_test_names, E);
+        (void)fprintf(F, "%zu, %f", nb_test_names, E);
         for (int i = 0; i < 16; i++) {
             (void)fprintf(F, ",%d", hll.hllv[i]);
         }

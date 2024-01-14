@@ -38,7 +38,7 @@ uint32_t IPStatsRecord::Hash()
     const uint32_t fnv_offset_32 = 0x811c9dc5;
     uint32_t h = fnv_offset_32;
     for (size_t i = 0; i < ipaddr_length; i++) {
-        h = h * fnv_offset_32;
+        h = h * fnv_prime_32;
         h ^= ip_addr[i];
     }
     return h;
@@ -89,18 +89,6 @@ void IPStatsRecord::Add(IPStatsRecord* key)
 
     tld_hyperlog.AddLogs(&key->tld_hyperlog);
     sld_hyperlog.AddLogs(&key->sld_hyperlog);
-}
-
-uint32_t IPStatsRecord::fnv_hash_32(uint8_t* x, size_t l)
-{
-    const uint32_t fnv_prime_32 = 0x01000193;
-    const uint32_t fnv_offset_32 = 0x811c9dc5;
-    uint32_t h = fnv_offset_32;
-    for (size_t i = 0; i < l; i++) {
-        h = h * fnv_offset_32;
-        h ^= x[i];
-    }
-    return h;
 }
 
 void IPStatsRecord::add_vec(uint64_t* x, uint64_t* y, size_t l)
@@ -404,7 +392,6 @@ void HyperLogLog::AddKey(const uint8_t* x, size_t l)
 {
     uint64_t fnv64 = 0xcbf29ce484222325ull;
     const uint64_t fnv64_prime = 0x00000100000001B3;
-    const uint8_t scramble[8] = { 0xa5, 0x93, 0x56, 0x3a, 0x5a, 0x39, 0x65, 0xa3 };
     uint8_t* hash_buffer = (uint8_t*)&fnv64;
     int bucket_id = 0;
     /* Compute the FNV 64 bit hash */
