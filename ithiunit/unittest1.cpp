@@ -42,6 +42,7 @@
 #include "StatsByIpTest.h"
 #include "capture_fuzz.h"
 #include "CdnsCaptureTest.h"
+#include "HyperLogLogTest.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -338,5 +339,13 @@ namespace ithiunit
             Assert::AreEqual(ret, true);
         }
 #endif
+
+        TEST_METHOD(HyperLogLog)
+        {
+            HyperLogLog_test test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
 	};
 }

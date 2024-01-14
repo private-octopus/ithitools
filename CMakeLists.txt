@@ -23,6 +23,7 @@ SET(ITHITOOLS_LIBRARY_FILES
    cdns/lib/cdns.cpp
    lib/DnscapPlugIn.cpp
    lib/DnsStats.cpp
+   lib/ipstats.cpp
    lib/ithimetrics.cpp
    lib/ithipublisher.cpp
    lib/ithiutil.cpp
@@ -46,6 +47,7 @@ SET(ITHITOOLS_TEST_LIBRARY_FILES
    test/DnsPrefixTest.cpp
    test/hashtest.cpp
    test/GetNameTest.cpp
+   test/HyperLogLogTest.cpp
    test/LoadTest.cpp
    test/MergeTest.cpp
    test/MetricTest.cpp
@@ -71,21 +73,22 @@ ADD_EXECUTABLE(ithitools
    lib/CaptureSummary.cpp
    cdns/lib/cbor.cpp
    cdns/lib/cdns.cpp
-   lib/DnsStats.cpp
-   lib/ithimetrics.cpp
-   lib/ithipublisher.cpp
-   lib/ithiutil.cpp
-   lib/pcap_reader.cpp
-   lib/NamePattern.cpp
-   lib/M7Getter.cpp
-   lib/getopt.c
-   lib/CsvHelper.cpp
-   lib/M1Data.cpp
-   lib/M2Data.cpp
    lib/ComputeMetric.cpp
    lib/ComputeM34.cpp
    lib/ComputeM6.cpp
+   lib/CsvHelper.cpp
+   lib/DnsStats.cpp
+   lib/getopt.c
+   lib/ipstats.cpp
+   lib/ithimetrics.cpp
+   lib/ithipublisher.cpp
+   lib/ithiutil.cpp
+   lib/M1Data.cpp
+   lib/M2Data.cpp
+   lib/M7Getter.cpp
+   lib/NamePattern.cpp
    lib/OdiPublisher.cpp
+   lib/pcap_reader.cpp
 )
 
 ADD_EXECUTABLE(ithitest
@@ -94,26 +97,27 @@ ADD_EXECUTABLE(ithitest
    lib/CaptureSummary.cpp
    cdns/lib/cbor.cpp
    cdns/lib/cdns.cpp
+   lib/ComputeMetric.cpp
+   lib/ComputeM34.cpp
+   lib/ComputeM6.cpp
    lib/DnsStats.cpp
    lib/ithimetrics.cpp
    lib/ithipublisher.cpp
    lib/ithiutil.cpp
-   lib/pcap_reader.cpp
    lib/NamePattern.cpp
    lib/DnscapPlugIn.cpp
    lib/M7Getter.cpp
    lib/CsvHelper.cpp
    lib/M1Data.cpp
    lib/M2Data.cpp
-   lib/ComputeMetric.cpp
-   lib/ComputeM34.cpp
-   lib/ComputeM6.cpp
    lib/OdiPublisher.cpp
+   lib/pcap_reader.cpp
    lib/getopt.c
    test/CaptureTest.cpp
    test/CdnsCaptureTest.cpp
    test/DnsPrefixTest.cpp
    test/hashtest.cpp
+   test/HyperLogLogTest.cpp
    test/GetNameTest.cpp
    test/LoadTest.cpp
    test/MergeTest.cpp
@@ -128,6 +132,7 @@ ADD_EXECUTABLE(ithitest
    test/CsvTest.cpp
    test/TldCountTest.cpp
    test/ithi_test_class.cpp
+   test/HyperLogLogTest.cpp
    test/OdiPublishTest.cpp
    test/QNameTest.cpp
    test/StatsByIpTest.cpp
@@ -140,6 +145,7 @@ ADD_LIBRARY(ithicap SHARED
    cdns/lib/cbor.cpp
    cdns/lib/cdns.cpp
    lib/DnsStats.cpp
+   lib/ipstats.cpp
    lib/ithiutil.cpp
    lib/pcap_reader.cpp
    lib/UsefulTransaction.cpp
