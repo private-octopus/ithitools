@@ -559,7 +559,6 @@ bool ithimetrics::ParseMetricFileName(const char * name, int * metric_id, int * 
          * '.' after day
          */
         char sep_expect[4] = { '-', '-', '-', '.' };
-        size_t sep_found[4] = { 0, 0, 0, 0 };
         size_t current = char_after_sep_index;
         int nb_found = 0;
         int current_val = 0;
@@ -570,7 +569,6 @@ bool ithimetrics::ParseMetricFileName(const char * name, int * metric_id, int * 
             while (nb_found < 4 && current < name_len) {
                 if (name[current] == sep_expect[nb_found]) {
                     val[nb_found] = current_val;
-                    sep_found[nb_found] = current;
                     current_val = 0;
                     nb_found++;
                 }

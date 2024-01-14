@@ -101,6 +101,7 @@ ADD_EXECUTABLE(ithitest
    lib/ComputeM34.cpp
    lib/ComputeM6.cpp
    lib/DnsStats.cpp
+   lib/ipstats.cpp
    lib/ithimetrics.cpp
    lib/ithipublisher.cpp
    lib/ithiutil.cpp
