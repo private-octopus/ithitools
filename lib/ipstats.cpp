@@ -1,4 +1,4 @@
-#include "cdns/lib/cdns.h"
+#include "cdns.h"
 #include "ipstats.h"
 #include "DnsStats.h"
 #include <math.h>
