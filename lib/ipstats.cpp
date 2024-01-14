@@ -169,6 +169,9 @@ bool IPStats::LoadCborFiles(size_t nb_files, char const** fileNames)
 
 bool IPStats::LoadCborFile(char const* fileName)
 {
+#if 1
+    return false;
+#else
     cdns cdns_ctx;
     int err;
     bool ret = cdns_ctx.open(fileName);
@@ -184,7 +187,7 @@ bool IPStats::LoadCborFile(char const* fileName)
         }
 #endif
     }
-
+#endif
     return ret;
 }
 
