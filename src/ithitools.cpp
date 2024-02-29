@@ -645,10 +645,6 @@ int main(int argc, char ** argv)
             fprintf(stderr, "No capture file to analyze!\n");
             exit_code = usage();
         }
-        else if (!ipstats.SetOutputFile(ip_stats_csv)) {
-            fprintf(stderr, "Cannot open csv file: %s.\n", ip_stats_csv);
-            exit_code = usage();
-        }
         else {
             if (!ipstats.LoadCborFiles((size_t)argc - optind, (char const**)(argv + optind)))
             {
@@ -657,7 +653,14 @@ int main(int argc, char ** argv)
             }
             else
             {
-                printf("CBOR Capture processing succeeded.\n");
+                printf("CBOR Capture processing succeeded, %d records.\n", ipstats.GetCount());
+                if (!ipstats.SaveToCsv(ip_stats_csv)) {
+                    fprintf(stderr, "Cannot save to csv file: %s.\n", ip_stats_csv);
+                    exit_code = usage();
+                }
+                else {
+                    printf("IP Stats have been saved to %s\n", ip_stats_csv);
+                }
             }
         }
     }

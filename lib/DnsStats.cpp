@@ -178,7 +178,7 @@ static char const * RegistryNameById[] = {
 
 static uint32_t RegistryNameByIdNb = sizeof(RegistryNameById) / sizeof(char const*);
 
-static char const * RegisteredTldName[] = {
+char const * RegisteredTldName[] = {
     "AAA", "AARP", "ABB", "ABBOTT", "ABBVIE", "ABC", "ABLE", "ABOGADO",
     "ABUDHABI", "AC", "ACADEMY", "ACCENTURE", "ACCOUNTANT", "ACCOUNTANTS", "ACO",
     "ACTOR", "AD", "ADS", "ADULT", "AE", "AEG", "AERO", "AETNA",
@@ -366,7 +366,7 @@ static char const * RegisteredTldName[] = {
     "ZERO", "ZIP", "ZM", "ZONE", "ZUERICH", "ZW",
 };
 
-static uint32_t RegisteredTldNameNb = sizeof(RegisteredTldName) / sizeof(char const*);
+const uint32_t RegisteredTldNameNb = sizeof(RegisteredTldName) / sizeof(char const*);
 
 static char const * FrequentTldLeak[] = {
     "AAAAAA",

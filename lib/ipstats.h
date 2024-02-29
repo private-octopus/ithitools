@@ -27,6 +27,7 @@
 #include <stdint.h>
 #include <vector>
 #include <HashBinGeneric.h>
+#include <cdns.h>
 
 /*
 * The class IPStats manages the extraction of per address records,
@@ -64,9 +65,13 @@ public:
     size_t Serialize(uint8_t* buffer, size_t buffer_size);
     size_t Deserialize(const uint8_t* buffer, size_t buffer_size);
     double Assess();
+    bool WriteHyperLogLog(FILE* F);
 
     uint8_t hllv[16];
 };
+
+extern const uint32_t RegisteredTldNameNb;
+extern char const* RegisteredTldName[];
 
 class IPStatsRecord
 {
@@ -80,16 +85,20 @@ public:
     uint64_t query_volume;
     uint64_t hourly_volume[24];
     uint64_t daily_volume[31];
+    uint64_t arpa_count;
     uint64_t no_such_domain_queries;
     uint64_t no_such_domain_reserved;
     uint64_t no_such_domain_frequent;
     uint64_t no_such_domain_chromioids;
     uint64_t tld_counts[8];
     HyperLogLog tld_hyperlog;
+    /* TODO: do we really need the SLD count? If this is for "good" records,
+     * we have no statistical basis for expecting specific values */
     uint64_t sld_counts[8];
     HyperLogLog sld_hyperlog;
-    uint64_t name_parts[4];
+    uint64_t name_parts[8];
     uint64_t rr_types[8];
+    /* TODO: how will we derive "locale" from the name in the file? */
     uint64_t locales[8];
 
     bool IsSameKey(IPStatsRecord* key);
@@ -104,9 +113,18 @@ public:
     bool Serialize(uint8_t buffer, size_t buffer_size, size_t * length);
     bool Deserialize(uint8_t buffer, size_t buffer_size, size_t * length);
 
+    /* The following methods are used to populate a record describing a single query */
+    bool SetIP(size_t ipaddr_length, uint8_t* ipaddr_v);
+    bool SetTime(int64_t qr_time);
+    bool SetQName(uint8_t* q_name, uint32_t q_name_length, int query_rcode);
+    bool SetRR(int rr_type, int rr_class);
 
-
-    bool Write(FILE* F);
+    bool WriteRecord(FILE* F);
+private:
+    bool WriteIP(FILE* F);
+    static void SetXLD(size_t xld_length, uint8_t * xld, const char ** XLD_subset, size_t nb_XLD_subset, uint64_t * xld_counts, HyperLogLog * xld_hyperlog);
+    void SetTLD(size_t tld_length, uint8_t* tld);
+    void SetSLD(size_t sld_length, uint8_t* sld);
 };
 
 class IPStats
@@ -115,11 +133,13 @@ public:
     IPStats();
     ~IPStats();
 
-    bool SetOutputFile(char const* fileName);
-
     /* For the command line tools */
     bool LoadCborFiles(size_t nb_files, char const** fileNames);
     bool LoadCborFile(char const* fileNames);
+
+    bool SaveToCsv(char const* file_name);
+
+    uint32_t GetCount();
 
 #if 0
     bool LoadPcapFiles(size_t nb_files, char const ** fileNames);
@@ -127,12 +147,9 @@ public:
 #endif
 
 private:
-    FILE* IPF;
-    BinHash<IPStatsRecord> records;
-#if 0
+    BinHash<IPStatsRecord> ip_records;
     void SubmitCborPacket(cdns* cdns_ctx, size_t packet_id);
-    void SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig, IPStatsRecord* ispr);
-#endif
+    static bool IPAddressIsLower(IPStatsRecord * x, IPStatsRecord * y);
 };
 
 #endif /* IPSTATS_H */

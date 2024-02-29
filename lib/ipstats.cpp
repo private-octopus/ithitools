@@ -2,15 +2,20 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <inttypes.h>
 #include "cbor.h"
 #include "cdns.h"
 #include "ipstats.h"
 #include "DnsStats.h"
+#include "AddressFilter.h"
+#include <algorithm>
 #include <math.h>
+#include <time.h>
 
 IPStatsRecord::IPStatsRecord() :
     ipaddr_length(0),
     query_volume(0),
+    arpa_count(0),
     no_such_domain_queries(0),
     no_such_domain_reserved(0),
     no_such_domain_frequent(0),
@@ -56,6 +61,7 @@ IPStatsRecord* IPStatsRecord::CreateCopy()
     if (isr != NULL) {
         isr->ipaddr_length = ipaddr_length;
         isr->query_volume = query_volume;
+        isr->arpa_count = arpa_count;
         isr->no_such_domain_queries = no_such_domain_queries;
         isr->no_such_domain_reserved = no_such_domain_reserved;
         isr->no_such_domain_frequent = no_such_domain_frequent;
@@ -77,8 +83,9 @@ IPStatsRecord* IPStatsRecord::CreateCopy()
 
 void IPStatsRecord::Add(IPStatsRecord* key)
 {
-    ipaddr_length += key->ipaddr_length;
+    ipaddr_length = key->ipaddr_length;
     query_volume += key->query_volume;
+    arpa_count += key->arpa_count;
     no_such_domain_queries += key->no_such_domain_queries;
     no_such_domain_reserved += key->no_such_domain_reserved;
     no_such_domain_frequent += key->no_such_domain_frequent;
@@ -113,23 +120,239 @@ bool IPStatsRecord::Deserialize(uint8_t buffer, size_t buffer_size, size_t* leng
     return false;
 }
 
-bool IPStatsRecord::Write(FILE* F)
+bool IPStatsRecord::SetIP(size_t ipaddr_length, uint8_t* ipaddr_v)
 {
-    return false;
+    bool ret = true;
+
+    if (ipaddr_length != 16 && ipaddr_length != 4) {
+        ret = false;
+    }
+    else {
+        this->ipaddr_length = ipaddr_length;
+        memcpy(this->ip_addr, ipaddr_v, ipaddr_length);
+    }
+    return ret;
 }
 
-IPStats::IPStats():
-    IPF(NULL)
+bool IPStatsRecord::SetTime(int64_t qr_time)
+{
+    bool ret = true;
+    struct tm time_m;
+#ifdef _WINDOWS
+    const __time64_t sourceTime = (__time64_t)qr_time;
+    if (_gmtime64_s(&time_m, &sourceTime) != 0) {
+        ret = false;
+    }
+#else
+    time_t sourceTime = (time_t)qr_time;
+    if (gmtime_r(&sourceTime, &time_m) == NULL) {
+        ret = false;
+    }
+#endif
+    if (ret) {
+        this->hourly_volume[time_m.tm_hour] += 1;
+        this->daily_volume[time_m.tm_mday] += 1;
+    }
+    return ret;
+}
+
+bool IPStatsRecord::SetQName(uint8_t* q_name, uint32_t q_name_length, int query_rcode)
+{
+    bool ret = true;
+    uint32_t tld_offset = 0;
+    int nb_name_parts = 0;
+    uint32_t previous_offset = 0;
+
+    ret = DnsStats::GetTLD(q_name, q_name_length, 0, &tld_offset, &previous_offset, &nb_name_parts);
+
+    if (ret) {
+        /* TODO: case of root queries */
+        /* TODO: case of ARPA queries */
+        uint8_t tld[65];
+        size_t tld_length = *(q_name + tld_offset);
+
+        if (tld_length > 63) {
+            ret = false;
+        }
+        else if (tld_length == 0 || nb_name_parts == 0) {
+            this->name_parts[0] += 1;
+        }
+        else {
+            /* Normalize the domain name to upper case. */
+            memcpy(tld, q_name + tld_offset + 1, tld_length);
+            DnsStats::SetToUpperCase(tld, tld_length);
+
+            if (strcmp((char*)tld, "ARPA") == 0) {
+                this->arpa_count += 1;
+            }
+            else if (query_rcode == DNS_RCODE_NOERROR) {
+                /* Document the TLD count */
+                IPStatsRecord::SetTLD(tld_length, tld);
+                /* Find the SLD and document the SLD count */
+                if (ret && nb_name_parts > 1) {
+                    uint8_t sld[65];
+                    size_t sld_length = *(q_name + previous_offset);
+                    if (sld_length > 63) {
+                        ret = false;
+                    }
+                    else {
+                        /* Normalize the domain name to upper case. */
+                        memcpy(sld, q_name + previous_offset + 1, sld_length);
+                        DnsStats::SetToUpperCase(sld, sld_length);
+                        IPStatsRecord::SetSLD(sld_length, sld);
+                    }
+                }
+                /* Document the number of name parts */
+                if (nb_name_parts < 7) {
+                    this->name_parts[nb_name_parts] += 1;
+                }
+                else {
+                    this->name_parts[7] += 1;
+                }
+            }
+            else {
+                /* find the type of error */
+                this->no_such_domain_queries += 1;
+                if (DnsStats::IsRfc6761Tld(tld, tld_length)) {
+                    this->no_such_domain_reserved += 1;
+                }
+                if (DnsStats::IsFrequentLeakTld(tld, tld_length)) {
+                    this->no_such_domain_frequent += 1;
+                }
+                if (DnsStats::IsProbablyChromiumProbe(tld, tld_length, nb_name_parts)) {
+                    this->no_such_domain_chromioids += 1;
+                }
+            }
+        }
+    }
+    return ret;
+}
+
+int RR_subset[8] = {
+    2 /* NS */,
+    1 /* A */,
+    28 /* AAAA */,
+    12 /* PTR */,
+    43 /* DS */,
+    47 /* NSEC */,
+    50 /* NSEC3 */,
+    6 /* SOA */
+};
+
+bool IPStatsRecord::SetRR(int rr_type, int rr_class)
+{
+    bool ret = true;
+
+    if (rr_class == 1) {
+        for (int i = 0; i < 8; i++) {
+            if (rr_type == RR_subset[i]) {
+                this->rr_types[i] += 1;
+                break;
+            }
+        }
+    }
+
+    return ret;
+}
+
+bool IPStatsRecord::WriteRecord(FILE* F)
+{
+    bool ret = WriteIP(F);
+    ret &= (fprintf(F, ",%" PRIu64, query_volume) > 0);
+    for (int i = 0; i < 24; i++) {
+        ret &= (fprintf(F, ",%" PRIu64, hourly_volume[i]) > 0);
+    }
+    for (int i = 0; i < 31; i++) {
+        ret &= (fprintf(F, ",%" PRIu64, daily_volume[i]) > 0);
+    }
+    ret &= (fprintf(F, ",%" PRIu64, arpa_count) > 0);
+    ret &= (fprintf(F, ",%" PRIu64, no_such_domain_queries) > 0);
+    ret &= (fprintf(F, ",%" PRIu64, no_such_domain_reserved) > 0);
+    ret &= (fprintf(F, ",%" PRIu64, no_such_domain_frequent) > 0);
+    ret &= (fprintf(F, ",%" PRIu64, no_such_domain_chromioids) > 0);
+    for (int i = 0; i < 8; i++) {
+        ret &= (fprintf(F, ",%" PRIu64, tld_counts[i]) > 0);
+    }
+    ret &= (fprintf(F, ",") > 0);
+    ret &= tld_hyperlog.WriteHyperLogLog(F);
+    for (int i = 0; i < 8; i++) {
+        ret &= (fprintf(F, ",%" PRIu64, sld_counts[i]) > 0);
+    }
+    ret &= (fprintf(F, ",") > 0);
+    ret &= sld_hyperlog.WriteHyperLogLog(F);
+    for (int i = 0; i < 8; i++) {
+        ret &= (fprintf(F, ",%" PRIu64, name_parts[i]) > 0);
+    }
+    for (int i = 0; i < 8; i++) {
+        ret &= (fprintf(F, ",%" PRIu64, rr_types[i]) > 0);
+    }
+    for (int i = 0; i < 8; i++) {
+        ret &= (fprintf(F, ",%" PRIu64, locales[i]) > 0);
+    }
+    ret &= (fprintf(F, "\n") > 0);
+
+    return ret;
+}
+
+bool IPStatsRecord::WriteIP(FILE* F)
+{
+    char text[256];
+    bool ret = AddressFilter::AddressText(ip_addr, ipaddr_length, text, 256);
+    if (ret) {
+        ret = (fprintf(F, "%s", text) > 0);
+    }
+    return ret;
+}
+
+void IPStatsRecord::SetXLD(size_t xld_length, uint8_t* xld, const char** XLD_subset, size_t nb_XLD_subset, uint64_t* xld_counts, HyperLogLog* xld_hyperlog)
+{
+    /* Find whether the TLD is in the subset */
+    size_t subset_rank = 8;
+    for (size_t i = 0; i < nb_XLD_subset; i++) {
+        if (strcmp((char*)xld, XLD_subset[i]) == 0) {
+            subset_rank = i;
+            break;
+        }
+    }
+    if (subset_rank < 8) {
+        xld_counts[subset_rank] += 1;
+    }
+    else {
+        xld_hyperlog->AddKey(xld, xld_length);
+    }
+}
+
+const char* TLD_subset[8] = {
+    "COM", "NET", "ORG", "INFO", "CN", "IN", "DE", "US",
+};
+
+const size_t nb_TLD_subset = sizeof(TLD_subset) / sizeof(const char*);
+
+void IPStatsRecord::SetTLD(size_t tld_length, uint8_t* tld)
+{
+    IPStatsRecord::SetXLD(tld_length, tld, TLD_subset, nb_TLD_subset, this->tld_counts, &this->tld_hyperlog);
+}
+
+const char* SLD_subset[8] = {
+    "RESOLVER", "EC2", "CLOUD", "WPAD", "CORP", "MAIL", "_TCP", "PROD"
+};
+
+const size_t nb_SLD_subset = sizeof(SLD_subset) / sizeof(const char*);
+
+void IPStatsRecord::SetSLD(size_t sld_length, uint8_t* sld)
+{
+    IPStatsRecord::SetXLD(sld_length, sld, SLD_subset, nb_SLD_subset, this->sld_counts, &this->sld_hyperlog);
+}
+
+IPStats::IPStats()
 {
 }
 
 IPStats::~IPStats()
 {
-    if (this->IPF != NULL && this->IPF != stdout) {
-        fclose(this->IPF);
-    }
 }
 
+#if 0
 bool IPStats::SetOutputFile(char const* file_name)
 {
     bool ret = true;
@@ -158,6 +381,7 @@ bool IPStats::SetOutputFile(char const* file_name)
     }
     return ret;
 }
+#endif
 
 bool IPStats::LoadCborFiles(size_t nb_files, char const** fileNames)
 {
@@ -171,12 +395,8 @@ bool IPStats::LoadCborFiles(size_t nb_files, char const** fileNames)
     return ret;
 }
 
-
 bool IPStats::LoadCborFile(char const* fileName)
 {
-#if 1
-    return false;
-#else
     cdns cdns_ctx;
     int err;
     bool ret = cdns_ctx.open(fileName);
@@ -186,197 +406,139 @@ bool IPStats::LoadCborFile(char const* fileName)
             ret = (err == CBOR_END_OF_ARRAY);
             break;
         }
-#if 0
         for (size_t i = 0; i < cdns_ctx.block.queries.size(); i++) {
             SubmitCborPacket(&cdns_ctx, i);
         }
-#endif
     }
     return ret;
-#endif
 }
 
-#if 0
-void IPStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
-{
-    IPStatsRecord ipsr;
-    cdns_query* query = &cdns_ctx->block.queries[packet_id];
-    cdns_query_signature* q_sig = NULL; 
-    size_t c_address_id = (size_t)query->client_address_index - cdns_ctx->index_offset;
-
-    if (query->query_signature_index >= cdns_ctx->index_offset) {
-        q_sig = &cdns_ctx->block.tables.q_sigs[(size_t)query->query_signature_index - cdns_ctx->index_offset];
-    }
-    /* TODO: this should really be IP entry, not a name! */
-    NamePartEntry* ip_entry = AddNamePartEntry(&this->h_ip, (uint32_t)cdns_ctx->block.tables.addresses[c_address_id].l, cdns_ctx->block.tables.addresses[c_address_id].v);
-
-    if (ip_entry != NULL) {
-        ipsr.ip_addr = (char *)ip_entry->name_part_value;
-    }
-
-    ipsr.t_start_sec = (uint32_t)cdns_ctx->block.preamble.earliest_time_sec;
-
-    if (cdns_ctx->is_old_version()) {
-        ipsr.is_udp = (q_sig == NULL) || (q_sig->qr_transport_flags & 1) == 0;
-    }
-    else {
-        ipsr.is_udp = (q_sig == NULL) || ((q_sig->qr_transport_flags >> 1)&0xF) == 0;
-    }
-
-    if (q_sig != NULL)
-    {
-        /* Some QSIG flags bits vary between RFC and draft, but bit 0 and bit 5 have the same meaning. */
-        if ((q_sig->qr_sig_flags&0x01) != 0)
-        {
-            ipsr.query_count++;
-
-            SubmitCborPacketQuery(cdns_ctx, query, q_sig, &ipsr);
-        }
-    }
-}
-
-void IPStats::SubmitCborPacketQuery(cdns* cdns_ctx, cdns_query* query, cdns_query_signature* q_sig, IPStatsRecord * ipsr)
-{
-    uint64_t query_time_usec = cdns_ctx->block.block_start_us + query->time_offset_usec;
-
-    /* Check that all work is done here.. */
-    if (q_sig->query_opcode == DNS_OPCODE_QUERY &&
-        q_sig->query_rcode == DNS_RCODE_NOERROR &&
-        query->query_name_index >= 0)
-    {
-        /* This works because parsing of OPT records sets the proper values for OPT fields */
-        size_t nid = (size_t)query->query_name_index - cdns_ctx->index_offset;
-        size_t addrid = (size_t)query->client_address_index - cdns_ctx->index_offset;
-        uint32_t name_len = (uint32_t)cdns_ctx->block.tables.name_rdata[nid].l;
-        uint8_t* name = cdns_ctx->block.tables.name_rdata[nid].v;
-        uint8_t* tld = NULL;
-        uint32_t tld_len = 0;
-        uint8_t* sld = NULL;
-        uint32_t sld_len = 0;
-        uint32_t i = 0;
-
-        while (i < name_len) {
-            uint8_t l = name[i];
-
-            if (l == 0)
-            {
-                /* end of parsing*/
-                break;
-            }
-            else if (l > 0x3F || i + l + 1 > name_len)
-            {
-                /* Name compression, but we don't support that. */
-                tld = NULL;
-                tld_len = 0;
-                sld = NULL;
-                sld_len = 0;
-                break;
-            }
-            else
-            {
-                i += 1;
-                sld = tld;
-                sld_len = tld_len;
-                tld = &name[i];
-                tld_len = l;
-                i += l;
-            }
-        }
-        /* Document SLD & TLD */
-        if (tld_len > 0) {
-            ipsr->TLD = this->AddNamePartEntry(&this->htld, tld_len, tld);
-        }
-        if (sld_len > 0) {
-            ipsr->SLD = this->AddNamePartEntry(&this->hsld, sld_len, sld);
-        }
-        ipsr->Write(this->IPF);
-    }
-}
-
-bool IPStats::LoadPcapFile(char const * fileName)
+bool IPStats::SaveToCsv(char const* file_name)
 {
     bool ret = true;
-#if 0
-    pcap_reader reader;
-    size_t nb_udp_dns = 0;
-    uint64_t data_udp53 = 0;
-    uint64_t data_tcp53 = 0;
-    uint64_t data_tcp853 = 0;
-    uint64_t data_tcp443 = 0;
-
-    if (!reader.Open(fileName, NULL))
-    {
+    FILE* F;
+#ifdef _WINDOWS
+    errno_t err = fopen_s(&F, file_name, "wt");
+    if (err != 0) {
+        if (F != NULL) {
+            fclose(F);
+            F = NULL;
+        }
         ret = false;
     }
-    else
-    {
-        while (reader.ReadNext())
+#else
+    F = fopen(file_name, "wt");
+
+    ret &= (F != NULL);
+#endif
+
+    if (F != NULL) {
+        /* Enumerate the records in the binhash, store the keys in a vector */
+        std::vector<IPStatsRecord*> records(ip_records.GetCount());
+        size_t record_index = 0;
+
+        for (uint32_t i = 0; i < ip_records.GetSize(); i++)
         {
-            if (reader.tp_version == 17 &&
-                (reader.tp_port1 == 53 || reader.tp_port2 == 53))
-            {
-                data_udp53 += (uint64_t)reader.tp_length - 8;
+            IPStatsRecord* record = ip_records.GetEntry(i);
 
-                if (!reader.is_fragment)
-                {
-                    my_bpftimeval ts;
-
-                    ts.tv_sec = reader.frame_header.ts_sec;
-                    ts.tv_usec = reader.frame_header.ts_usec;
-                    SubmitPacket(reader.buffer + reader.tp_offset + 8,
-                        reader.tp_length - 8, reader.ip_version, reader.buffer + reader.ip_offset, ts);
-                    nb_udp_dns++;
-
-                    if (target_number_dns_packets > 0 &&
-                        nb_udp_dns >= target_number_dns_packets) {
-                        /* Break when enough data captured */
-                        break;
-                    }
-                }
-            }
-            else if (reader.tp_version == 6) {
-                /* Do simple statistics on TCP traffic */
-                size_t header_length32 = reader.buffer[reader.tp_offset + 12] >> 4;
-                size_t tcp_payload = reader.tp_length - 4 * header_length32;
-                bool is_port_853 = false;
-                bool is_port_443 = false;
-
-                if (reader.tp_port1 == 53 || reader.tp_port2 == 53) {
-                    data_tcp53 += tcp_payload;
-                }
-                else if (reader.tp_port1 == 853 || reader.tp_port2 == 853) {
-                    data_tcp853 += tcp_payload;
-                    is_port_853 = true;
-                    is_capture_dns_only = false;
-                }
-                else if (reader.tp_port1 == 443 || reader.tp_port2 == 443) {
-                    data_tcp443 += tcp_payload;
-                    is_port_443 = true;
-                    is_capture_dns_only = false;
-                }
-                else {
-                    is_capture_dns_only = false;
-                }
-                if (is_port_443 || is_port_853) {
-                    uint8_t flags = reader.buffer[reader.tp_offset + 13] & 0x3F;
-                    if (flags == 0x02) {
-                        uint8_t * addr;
-                        size_t addr_length;
-                        GetSourceAddress(reader.ip_version, reader.buffer + reader.ip_offset,
-                            &addr, &addr_length);
-                        RegisterTcpSynByIp(addr, addr_length, is_port_853, is_port_443);
-                    }
-                }
-            }
-            else {
-                is_capture_dns_only = false;
+            while (record != NULL) {
+                records[record_index] = record;
+                record_index++;
+                record = record->HashNext;
             }
         }
+        /* Sort the records by IP addresses */
+        std::sort(records.begin(), records.end(), IPAddressIsLower);
+        /* print the records to the file */
+        for (size_t i = 0; i < records.size(); i++) {
+            records[i]->WriteRecord(F);
+        }
+        /* Close the file */
+        fclose(F);
     }
-#endif
+
     return ret;
 }
-#endif
+
+uint32_t IPStats::GetCount()
+{
+    return ip_records.GetCount();
+}
+
+bool IPStats::IPAddressIsLower(IPStatsRecord * x, IPStatsRecord * y)
+{
+    bool ret = (x->ipaddr_length < y->ipaddr_length) ||
+        (x->ipaddr_length == y->ipaddr_length && memcmp(x->ip_addr, y->ip_addr, x->ipaddr_length) < 0);
+
+    return ret;
+}
+
+
+
+void IPStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
+{
+    /* TODO: add to database. */
+    bool is_valid = true;
+    IPStatsRecord ipsr;
+    cdns_query* query = &cdns_ctx->block.queries[packet_id];
+    cdns_query_signature* q_sig = NULL;
+
+    if ((size_t)query->client_address_index >= cdns_ctx->index_offset){
+        size_t addrid = (size_t)query->client_address_index - cdns_ctx->index_offset;
+        if (!ipsr.SetIP(cdns_ctx->block.tables.addresses[addrid].l, cdns_ctx->block.tables.addresses[addrid].v)) {
+            /* malformed IP address. Cannot do anything with that record. */
+            is_valid = false;
+        }
+    }
+
+    if (is_valid) {
+        if (query->query_signature_index >= cdns_ctx->index_offset) {
+            q_sig = &cdns_ctx->block.tables.q_sigs[(size_t)query->query_signature_index - cdns_ctx->index_offset];
+        }
+
+
+        ipsr.query_volume += 1;
+
+        /* Queried name and response type */
+        if (q_sig != NULL &&
+            query->query_name_index >= cdns_ctx->index_offset) {
+            size_t nid = (size_t)query->query_name_index - cdns_ctx->index_offset;
+            uint8_t* q_name = cdns_ctx->block.tables.name_rdata[nid].v;
+            uint32_t q_name_length = (uint32_t)cdns_ctx->block.tables.name_rdata[nid].l;
+            is_valid = ipsr.SetQName(q_name, q_name_length, q_sig->query_rcode);
+        }
+        else {
+            is_valid = false;
+        }
+    }
+
+    /* Set date */
+    if (is_valid) {
+        /* Find hour and date */
+        is_valid = ipsr.SetTime(cdns_ctx->block.preamble.earliest_time_sec);
+    }
+
+    /* TODO: Set RR */
+    if (is_valid) {
+        /* Find qr_class, so leak analysis can distinguish between Internet and Chaos */
+        int rr_class = 0;
+        int rr_type = 0;
+        if (q_sig != NULL &&
+            query->query_name_index >= cdns_ctx->index_offset) {
+            /* assume just one query per q_sig, but sometimes there is none. */
+            size_t cid = (size_t)q_sig->query_classtype_index - cdns_ctx->index_offset;
+            rr_class = cdns_ctx->block.tables.class_ids[cid].rr_class;
+            rr_type = cdns_ctx->block.tables.class_ids[cid].rr_type;
+            is_valid = ipsr.SetRR(rr_type, rr_class);
+        }
+    }
+
+    /* If the packet is valid, add the record to the table of addresses */
+    if (is_valid) {
+        bool stored = false;
+        this->ip_records.InsertOrAdd(&ipsr, true, &stored);
+    }
+}
 
 HyperLogLog::HyperLogLog()
 {
@@ -509,4 +671,14 @@ double HyperLogLog::Assess()
     }
 
     return E;
+}
+
+bool HyperLogLog::WriteHyperLogLog(FILE* F)
+{
+    double E = Assess();
+    bool ret = (fprintf(F, "%f", E) > 0);
+    for (int i = 0; i < 16; i++) {
+        ret &= (fprintf(F, ",%u", hllv[i]) > 0);
+    }
+    return ret;
 }
