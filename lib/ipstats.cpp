@@ -483,7 +483,7 @@ void IPStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
     cdns_query* query = &cdns_ctx->block.queries[packet_id];
     cdns_query_signature* q_sig = NULL;
 
-    if ((size_t)query->client_address_index >= cdns_ctx->index_offset){
+    if (query->client_address_index >= cdns_ctx->index_offset){
         size_t addrid = (size_t)query->client_address_index - cdns_ctx->index_offset;
         if (!ipsr.SetIP(cdns_ctx->block.tables.addresses[addrid].l, cdns_ctx->block.tables.addresses[addrid].v)) {
             /* malformed IP address. Cannot do anything with that record. */

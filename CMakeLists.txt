@@ -161,8 +161,8 @@ ADD_EXECUTABLE(ithitest
 
 target_link_libraries(ithitest
    PRIVATE
-      ithitools-core
       ithitools-test
+      ithitools-core
 )
 
 target_include_directories(ithitest
@@ -188,10 +188,10 @@ ADD_LIBRARY(ithicap SHARED
 )
 
 SET_TARGET_PROPERTIES(ithicap PROPERTIES
-                              VERSION 2.03
+                              VERSION 2.04
                               PUBLIC_HEADER include/ithicap.h)
 
-SET_TARGET_PROPERTIES(ithitools PROPERTIES VERSION 2.10)
+SET_TARGET_PROPERTIES(ithitools PROPERTIES VERSION 2.04)
 
 SET(TEST_EXES ithitest)
 
