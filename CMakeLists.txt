@@ -73,11 +73,11 @@ SET(ITHITOOLS_LIBRARY_FILES
 add_library(ithitools-core ${ITHITOOLS_LIBRARY_HEADERS} ${ITHITOOLS_LIBRARY_FILES})
 target_include_directories(ithitools-core
     PUBLIC
-        lib)
+        lib
+        cdns/lib)
 
 SET(ITHITOOLS_TEST_LIBRARY_HEADERS
    test/CaptureTest.h
-   test/capture_fuzz.h
    test/CdnsCaptureTest.h
    test/CsvTest.h
    test/DnsPrefixTest.h
@@ -100,34 +100,36 @@ SET(ITHITOOLS_TEST_LIBRARY_HEADERS
    test/StatsByIpTest.h
    test/testRfc6761.h
    test/TldCountTest.h
+   cdns/lib/cbor.cpp
+   cdns/lib/cdns.cpp
 )
 
 SET(ITHITOOLS_TEST_LIBRARY_FILES
    test/CaptureTest.cpp
-   test/CborTest.cpp
-   test/CdnsTest.cpp
+   test/capture_fuzz.cpp
+   test/CdnsCaptureTest.cpp
+   test/CsvTest.cpp
    test/DnsPrefixTest.cpp
-   test/hashtest.cpp
    test/GetNameTest.cpp
+   test/hashtest.cpp
    test/HyperLogLogTest.cpp
    test/IPStatsTest.cpp
+   test/ithitest.cpp
+   test/ithi_test_class.cpp
    test/LoadTest.cpp
-   test/MergeTest.cpp
-   test/MetricTest.cpp
    test/M1DataTest.cpp
    test/M2DataTest.cpp
-   test/SaveTest.cpp
-   test/testRfc6761.cpp
+   test/MergeTest.cpp
+   test/MetricTest.cpp
+   test/OdiPublishTest.cpp
    test/PatternTest.cpp
    test/PluginTest.cpp
    test/PublishTest.cpp
-   test/CsvTest.cpp
-   test/TldCountTest.cpp
-   test/ithi_test_class.cpp
-   test/OdiPublishTest.cpp
    test/QNameTest.cpp
+   test/SaveTest.cpp
    test/StatsByIpTest.cpp
-   test/capture_fuzz.cpp
+   test/testRfc6761.cpp
+   test/TldCountTest.cpp
 )
 
 add_library(ithitools-test ${ITHITOOLS_LIBRARY_HEADERS}
