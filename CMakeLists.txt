@@ -143,13 +143,32 @@ target_include_directories(ithitools-test
 
 ADD_EXECUTABLE(ithitools 
    src/ithitools.cpp
-   ithitools-core
+)
+
+target_link_libraries(ithitools
+   PRIVATE
+      ithitools-core
+)
+
+target_include_directories(ithitest
+    PUBLIC
+        lib
 )
 
 ADD_EXECUTABLE(ithitest
    src/ithitest.cpp 
-   ithitools-core
-   ithitools-test
+)
+
+target_link_libraries(ithitest
+   PRIVATE
+      ithitools-core
+      ithitools-test
+)
+
+target_include_directories(ithitest
+    PUBLIC
+        lib
+        test
 )
 
 ADD_LIBRARY(ithicap SHARED
