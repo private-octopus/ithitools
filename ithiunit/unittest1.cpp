@@ -43,6 +43,7 @@
 #include "capture_fuzz.h"
 #include "CdnsCaptureTest.h"
 #include "HyperLogLogTest.h"
+#include "IPStatsTest.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -347,5 +348,17 @@ namespace ithiunit
 
             Assert::AreEqual(ret, true);
         }
+
+#ifdef PRIVACY_CONSCIOUS
+
+        TEST_METHOD(IPStats)
+        {
+            IPStatsTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+#endif
+
 	};
 }

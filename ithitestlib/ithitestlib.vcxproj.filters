@@ -87,6 +87,9 @@
     <ClCompile Include="..\test\HyperLogLogTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\test\IPStatsTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\test\CaptureTest.h">
@@ -156,6 +159,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\test\HyperLogLogTest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\test\IPStatsTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

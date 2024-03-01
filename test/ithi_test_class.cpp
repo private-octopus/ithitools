@@ -29,6 +29,7 @@
 #include "capture_fuzz.h"
 #include "CdnsCaptureTest.h"
 #include "HyperLogLogTest.h"
+#include "IPStatsTest.h"
 
 enum test_list_enum {
     test_enum_hash = 0,
@@ -70,6 +71,7 @@ enum test_list_enum {
     test_enum_cdns_capture_draft,
     test_enum_cdns_capture_rfc,
     test_enum_HyperLogLog,
+    test_enum_IPStats,
     test_enum_max_number,
 };
 
@@ -165,6 +167,8 @@ char const * ithi_test_class::GetTestName(int number)
         return("cdns_capture_rfc");
     case test_enum_HyperLogLog:
         return("HyperLogLog");
+    case test_enum_IPStats:
+        return("IPStats");
     default:
         break;
     }
@@ -305,6 +309,11 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
     case test_enum_HyperLogLog:
         test = new HyperLogLog_test();
         break;
+#ifdef PRIVACY_CONSCIOUS
+    case test_enum_IPStats:
+        test = new IPStatsTest();
+        break;
+#endif
     default:
         break;
     }
