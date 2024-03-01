@@ -712,7 +712,7 @@ void HyperLogLog::AddLogs(const HyperLogLog* y)
     }
 }
 
-void HyperLogLog::AddKey(const uint8_t* x, size_t l)
+uint64_t HyperLogLog::Fnv64(const uint8_t* x, size_t l)
 {
     uint64_t fnv64 = 0xcbf29ce484222325ull;
     const uint64_t fnv64_prime = 0x00000100000001B3ull;
@@ -723,22 +723,29 @@ void HyperLogLog::AddKey(const uint8_t* x, size_t l)
         fnv64 ^= x[i];
         fnv64 *= fnv64_prime;
     }
-    /* To reduce potential bias, compute bucket id as hash of all nibbles in FNV64 */
-    for (size_t i = 0; i < 8; i++) {
+    return fnv64;
+}
+
+int HyperLogLog::BucketID(uint64_t fnv64)
+{
+    /* To reduce potential bias, compute bucket id as hash of bottom nibbles in FNV64
+    * Exclude the top nibbles, because the number of leading zeroes is computed from them.
+     */
+    uint8_t* hash_buffer = (uint8_t*)&fnv64;
+    int bucket_id = 0;
+    for (size_t i = 4; i < 8; i++) {
         bucket_id ^= (int)((fnv64 >> (8 * i)) & 0xff);
     }
     bucket_id ^= (bucket_id >> 4);
     bucket_id &= 0x0f;
+    return bucket_id;
+}
 
-    /* compute the number of zeroes plus 1.
-     * the number 1 is because Flajolet's original counted the 
-     * position of the first 1, and the rest of the algorithm
-     * depends on that.
-     */
-    uint8_t nb_zeroes = 1;
-    uint8_t* y = hash_buffer;
-    for (int j = 0; j < 7; j++) {
-        int v = y[j];
+int HyperLogLog::LeadingZeroes(uint64_t fnv64)
+{
+    int nb_zeroes = 0;
+    for (size_t i = 0; i < 8; i++) {
+        uint8_t v = (uint8_t)((fnv64 >> (8 * i)) & 0xff);
         if (v == 0) {
             nb_zeroes += 8;
             continue;
@@ -762,6 +769,21 @@ void HyperLogLog::AddKey(const uint8_t* x, size_t l)
             break;
         }
     }
+    return nb_zeroes;
+}
+
+void HyperLogLog::AddKey(const uint8_t* x, size_t l)
+{
+    uint64_t fnv64 = HyperLogLog::Fnv64(x, l);
+    int bucket_id = HyperLogLog::BucketID(fnv64);
+
+    /* compute the number of zeroes plus 1.
+     * the number 1 is because Flajolet's original counted the 
+     * position of the first 1, and the rest of the algorithm
+     * depends on that.
+     */
+    uint8_t nb_zeroes = 1 + HyperLogLog::LeadingZeroes(fnv64);
+    /* Update the array of buckets */
     if (nb_zeroes > hllv[bucket_id]) {
         hllv[bucket_id] = nb_zeroes;
     }

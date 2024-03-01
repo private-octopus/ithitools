@@ -62,6 +62,9 @@ public:
     ~HyperLogLog();
 
     void AddLogs(const HyperLogLog* hll);
+    static uint64_t Fnv64(const uint8_t* x, size_t l);
+    static int BucketID(uint64_t fnv64);
+    static int LeadingZeroes(uint64_t fnv64);
     void AddKey(const uint8_t* x, size_t l);
     size_t Serialize(uint8_t* buffer, size_t buffer_size);
     size_t Deserialize(const uint8_t* buffer, size_t buffer_size);
