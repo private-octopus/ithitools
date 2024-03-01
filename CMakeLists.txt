@@ -150,7 +150,7 @@ target_link_libraries(ithitools
       ithitools-core
 )
 
-target_include_directories(ithitest
+target_include_directories(ithitools
     PUBLIC
         lib
 )
