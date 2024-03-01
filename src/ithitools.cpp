@@ -82,8 +82,8 @@ static int usage()
     fprintf(stderr, "  -n number          Number of strings in the list of leaking domains(M4).\n");
     fprintf(stderr, "  -N number          Number of packets to read from this capture.\n");
     fprintf(stderr, "  -X                 Include TCP records in CBOR files.\n");
-#ifdef PRIVACY_CONSCIOUS
     fprintf(stderr, "  -I ip-usage.csv    Extract IP level statistics.\n");
+#ifdef PRIVACY_CONSCIOUS
     fprintf(stderr, "  -A                 List all IP addresses and their usage in the report.\n");
     fprintf(stderr, "  -E                 List all DNS names found and their usage in the report.\n");
     fprintf(stderr, "                     Options A and E are rather slow, and have privacy issues.\n");
@@ -286,11 +286,11 @@ int main(int argc, char ** argv)
         case 'f':
             stats.enable_frequent_address_filtering = true;
             break;
-#ifdef PRIVACY_CONSCIOUS
         case 'I':
             ip_stats_csv = optarg;
             exit_code = check_execution_mode(ithi_mode_ipstats, &exec_mode);
             break;
+#ifdef PRIVACY_CONSCIOUS
         case 'A':
             stats.address_report = optarg;
             break;

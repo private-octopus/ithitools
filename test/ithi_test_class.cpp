@@ -309,11 +309,9 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
     case test_enum_HyperLogLog:
         test = new HyperLogLog_test();
         break;
-#ifdef PRIVACY_CONSCIOUS
     case test_enum_IPStats:
         test = new IPStatsTest();
         break;
-#endif
     default:
         break;
     }
