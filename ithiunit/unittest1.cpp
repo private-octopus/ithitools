@@ -340,6 +340,13 @@ namespace ithiunit
             Assert::AreEqual(ret, true);
         }
 #endif
+        TEST_METHOD(Fnv64)
+        {
+            Fnv64_test test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
 
         TEST_METHOD(HyperLogLog)
         {

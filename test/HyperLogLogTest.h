@@ -39,4 +39,12 @@ private:
     uint64_t number_old;
 };
 
+class Fnv64_test : public ithi_test_class
+{
+public:
+    Fnv64_test();
+    ~Fnv64_test();
+
+    bool DoTest() override;
+};
 #endif /* HYPERLOGLOGTEST_H */
