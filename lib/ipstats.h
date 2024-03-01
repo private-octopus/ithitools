@@ -29,6 +29,7 @@
 #include <HashBinGeneric.h>
 #include <cdns.h>
 
+
 /*
 * The class IPStats manages the extraction of per address records,
 * as a first step towards the study of DNS resolvers. The goal is
@@ -66,6 +67,7 @@ public:
     size_t Deserialize(const uint8_t* buffer, size_t buffer_size);
     double Assess();
     bool WriteHyperLogLog(FILE* F);
+    void ParseHyperLogLog(char const* line, size_t* index);
 
     uint8_t hllv[16];
 };
@@ -120,6 +122,7 @@ public:
     bool SetRR(int rr_type, int rr_class);
 
     bool WriteRecord(FILE* F);
+    static IPStatsRecord* ParseLine(char const* line);
 private:
     bool WriteIP(FILE* F);
     static void SetXLD(size_t xld_length, uint8_t * xld, const char ** XLD_subset, size_t nb_XLD_subset, uint64_t * xld_counts, HyperLogLog * xld_hyperlog);

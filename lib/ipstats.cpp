@@ -12,6 +12,105 @@
 #include <math.h>
 #include <time.h>
 
+#ifdef _WINDOWS
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#include <WinSock2.h>
+#include <iphlpapi.h>
+#include <ws2tcpip.h>
+
+#else  /* Linux */
+
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+#ifndef __USE_XOPEN2K
+#define __USE_XOPEN2K
+#endif
+#ifndef __USE_POSIX
+#define __USE_POSIX
+#endif
+
+#endif /* _WINDOWS or Linux*/
+
+/* Helper function to parse csv cells in text lines
+*/
+void ParseCsvCell(char const* line, size_t* index, size_t* index_first, size_t* index_last)
+{
+    size_t i = *index;
+
+    /* Skip the first blanks */
+    while (line[i] == ' ' || line[i] == '\t' || line[i] != '\r' || line[i] != '\n') {
+        i++;
+    }
+    /* Skip until the next blank or comma */
+    *index_first = i;
+    while (line[i] != ' ' && line[i] != '\t' && line[i] != '\r' && line[i] != '\n' && line[i] != ',' && line[i] != 0) {
+        i++;
+    }
+    *index_last = i;
+    /* Skip the blanks until the comma */
+    while (line[i] == ' ' || line[i] == '\t' || line[i] != '\r' || line[i] != '\n') {
+        i++;
+    }
+    /* Skip the comma if present */
+    if (line[i] == ',') {
+        i++;
+    }
+    *index = i;
+}
+
+uint64_t ParseUint64Cell(char const* line, size_t* index)
+{
+    size_t index_first;
+    size_t index_last;
+    uint64_t number = 0;
+    ParseCsvCell(line, index, &index_first, &index_last);
+    for (size_t i = index_first; i <= index_last; i++) {
+        char c = line[i];
+        if (c >= '0' && c <= '9') {
+            number *= 10;
+            number += (c - '0');
+        }
+    }
+    return number;
+}
+
+size_t ParseIPCell(char const* line, size_t* index, uint8_t * IPAddress)
+{
+    size_t index_first;
+    size_t index_last;
+    char addrText[64];
+    size_t t_len;
+    size_t addr_len = 0;
+
+    ParseCsvCell(line, index, &index_first, &index_last);
+    t_len = index_last - index_first;
+    if (t_len > 0 && t_len <= 63) {
+        struct in_addr ipv4_addr;
+        struct in6_addr ipv6_addr;
+
+        memcpy(addrText, line + index_first, t_len);
+        addrText[t_len] = 0;
+
+        if (inet_pton(AF_INET, addrText, &ipv4_addr) == 1)
+        {
+            /* Valid IPv4 address */
+            addr_len = 4;
+            memcpy(IPAddress, (uint8_t*)&ipv4_addr, addr_len);
+        }
+        else  if (inet_pton(AF_INET6, addrText, &ipv6_addr) == 1)
+        {
+            /* Valid IPv6 address */
+            addr_len = 16;
+            memcpy(IPAddress, (uint8_t*)&ipv6_addr, addr_len);
+        }
+    }
+
+    return addr_len;
+}
+
+
 IPStatsRecord::IPStatsRecord() :
     ipaddr_length(0),
     query_volume(0),
@@ -294,6 +393,45 @@ bool IPStatsRecord::WriteRecord(FILE* F)
     return ret;
 }
 
+IPStatsRecord* IPStatsRecord::ParseLine(char const* line)
+{
+    size_t index = 0;
+    IPStatsRecord* record = new IPStatsRecord();
+
+    record->ipaddr_length = ParseIPCell(line, &index, record->ip_addr);
+    record->query_volume = ParseUint64Cell(line, &index);
+    for (int i = 0; i < 24; i++) {
+        record->hourly_volume[i] = ParseUint64Cell(line, &index);
+    }
+    for (int i = 0; i < 31; i++) {
+        record->daily_volume[i] = ParseUint64Cell(line, &index);
+    }
+    record->arpa_count = ParseUint64Cell(line, &index);
+    record->no_such_domain_queries = ParseUint64Cell(line, &index);
+    record->no_such_domain_reserved = ParseUint64Cell(line, &index);
+    record->no_such_domain_frequent = ParseUint64Cell(line, &index);
+    record->no_such_domain_chromioids = ParseUint64Cell(line, &index);
+    for (int i = 0; i < 8; i++) {
+        record->tld_counts[i] = ParseUint64Cell(line, &index);
+    }
+    record->tld_hyperlog.ParseHyperLogLog(line, &index);
+    for (int i = 0; i < 8; i++) {
+        record->sld_counts[i] = ParseUint64Cell(line, &index);
+    }
+    record->sld_hyperlog.ParseHyperLogLog(line, &index);
+    for (int i = 0; i < 8; i++) {
+        record->name_parts[i] = ParseUint64Cell(line, &index);
+    }
+    for (int i = 0; i < 8; i++) {
+        record->rr_types[i] = ParseUint64Cell(line, &index);
+    }
+    for (int i = 0; i < 8; i++) {
+        record->locales[i] = ParseUint64Cell(line, &index);
+    }
+
+    return nullptr;
+}
+
 bool IPStatsRecord::WriteIP(FILE* F)
 {
     char text[256];
@@ -330,6 +468,15 @@ const size_t nb_TLD_subset = sizeof(TLD_subset) / sizeof(const char*);
 
 void IPStatsRecord::SetTLD(size_t tld_length, uint8_t* tld)
 {
+#if 1
+    uint8_t test_ip[4] = { 181, 31, 37, 2 };
+    if (memcmp(this->ip_addr, test_ip, 4) == 0) {
+        char tldz[65];
+        memcpy(tldz, tld, tld_length);
+        tldz[tld_length] = 0;
+        printf("TLD: %s\n", tldz);
+    }
+#endif
     IPStatsRecord::SetXLD(tld_length, tld, TLD_subset, nb_TLD_subset, this->tld_counts, &this->tld_hyperlog);
 }
 
@@ -341,6 +488,15 @@ const size_t nb_SLD_subset = sizeof(SLD_subset) / sizeof(const char*);
 
 void IPStatsRecord::SetSLD(size_t sld_length, uint8_t* sld)
 {
+#if 1
+    uint8_t test_ip[4] = { 181, 31, 37, 2 };
+    if (memcmp(this->ip_addr, test_ip, 4) == 0) {
+        char sldz[65];
+        memcpy(sldz, sld, sld_length);
+        sldz[sld_length] = 0;
+        printf("TLD: %s\n", sldz);
+    }
+#endif
     IPStatsRecord::SetXLD(sld_length, sld, SLD_subset, nb_SLD_subset, this->sld_counts, &this->sld_hyperlog);
 }
 
@@ -473,8 +629,6 @@ bool IPStats::IPAddressIsLower(IPStatsRecord * x, IPStatsRecord * y)
     return ret;
 }
 
-
-
 void IPStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
 {
     /* TODO: add to database. */
@@ -561,7 +715,7 @@ void HyperLogLog::AddLogs(const HyperLogLog* y)
 void HyperLogLog::AddKey(const uint8_t* x, size_t l)
 {
     uint64_t fnv64 = 0xcbf29ce484222325ull;
-    const uint64_t fnv64_prime = 0x00000100000001B3;
+    const uint64_t fnv64_prime = 0x00000100000001B3ull;
     uint8_t* hash_buffer = (uint8_t*)&fnv64;
     int bucket_id = 0;
     /* Compute the FNV 64 bit hash */
@@ -681,4 +835,15 @@ bool HyperLogLog::WriteHyperLogLog(FILE* F)
         ret &= (fprintf(F, ",%u", hllv[i]) > 0);
     }
     return ret;
+}
+
+void HyperLogLog::ParseHyperLogLog(char const* line, size_t* index)
+{
+    /* Skip the float value */
+    size_t index_first;
+    size_t index_last;
+    ParseCsvCell(line, index, &index_first, &index_last);
+    for (int i = 0; i < 16; i++) {
+        hllv[i] = (uint8_t)ParseUint64Cell(line, index);
+    }
 }
