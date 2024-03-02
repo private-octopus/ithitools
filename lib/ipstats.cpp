@@ -716,7 +716,6 @@ uint64_t HyperLogLog::Fnv64(const uint8_t* x, size_t l)
 {
     uint64_t fnv64 = 0xcbf29ce484222325ull;
     const uint64_t fnv64_prime = 0x00000100000001B3ull;
-    uint8_t* hash_buffer = (uint8_t*)&fnv64;
     int bucket_id = 0;
     /* Compute the FNV 64 bit hash */
     for (size_t i = 0; i < l; i++) {
@@ -731,10 +730,9 @@ int HyperLogLog::BucketID(uint64_t fnv64)
     /* To reduce potential bias, compute bucket id as hash of bottom nibbles in FNV64
     * Exclude the top nibbles, because the number of leading zeroes is computed from them.
      */
-    uint8_t* hash_buffer = (uint8_t*)&fnv64;
     int bucket_id = 0;
     for (size_t i = 4; i < 8; i++) {
-        bucket_id ^= (int)((fnv64 >> (8 * i)) & 0xff);
+        bucket_id ^= (int)((fnv64 >> (8 * i)) & 0xffull);
     }
     bucket_id ^= (bucket_id >> 4);
     bucket_id &= 0x0f;
