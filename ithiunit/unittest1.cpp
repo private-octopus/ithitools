@@ -348,6 +348,14 @@ namespace ithiunit
             Assert::AreEqual(ret, true);
         }
 
+        TEST_METHOD(BucketID)
+        {
+            BucketId_test test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
         TEST_METHOD(HyperLogLog)
         {
             HyperLogLog_test test;

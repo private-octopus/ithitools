@@ -1783,10 +1783,11 @@ uint64_t fnv64_ref[] = {
 
 bool Fnv64_test::DoTest()
 {
-    bool ret = true;
+    bool ret = false;
     uint64_t * ref = new(uint64_t[nb_tld + 1]);
 
-    if (ref != NULL){
+    if (ref != NULL) {
+        ret = true;
         for (int x = 0; x < (int)nb_tld; x++) {
             size_t l = strlen(TldNameForTest[x]);
             ref[x] = HyperLogLog::Fnv64((uint8_t*)TldNameForTest[x], l);
@@ -1806,5 +1807,163 @@ bool Fnv64_test::DoTest()
 
         delete[] ref;
     }
+    return ret;
+}
+
+BucketId_test::BucketId_test()
+{
+}
+
+BucketId_test::~BucketId_test()
+{
+}
+
+const int bucket_id_ref[128] = {
+    7,
+8,
+15,
+8,
+11,
+12,
+0,
+14,
+1,
+5,
+11,
+13,
+13,
+12,
+9,
+14,
+13,
+11,
+9,
+12,
+10,
+0,
+2,
+0,
+10,
+10,
+1,
+4,
+2,
+8,
+6,
+7,
+4,
+13,
+13,
+5,
+10,
+14,
+2,
+1,
+12,
+0,
+15,
+4,
+2,
+7,
+1,
+0,
+14,
+4,
+9,
+4,
+14,
+14,
+1,
+10,
+6,
+9,
+15,
+0,
+2,
+3,
+5,
+2,
+8,
+5,
+3,
+0,
+2,
+9,
+4,
+12,
+0,
+14,
+14,
+9,
+8,
+15,
+6,
+12,
+10,
+10,
+3,
+4,
+1,
+6,
+4,
+0,
+11,
+10,
+14,
+12,
+10,
+14,
+7,
+4,
+6,
+0,
+0,
+6,
+3,
+14,
+6,
+3,
+8,
+13,
+15,
+0,
+0,
+0,
+11,
+14,
+8,
+13,
+12,
+5,
+13,
+3,
+9,
+3,
+2,
+15,
+1,
+14,
+8,
+8,
+15,
+12
+};
+
+bool BucketId_test::DoTest()
+{
+
+    bool ret = true;
+    int ref[128];
+
+    for (int x = 0; x < (int)nb_tld && x < 128; x++) {
+        ref[x] = HyperLogLog::BucketID(fnv64_ref[x]);
+        if (ref[x] != bucket_id_ref[x]) {
+            TEST_LOG("BucketID(0x%" PRIx64 ") = %d instead of %d",
+                fnv64_ref[x], ref[x], bucket_id_ref[x]);
+            ret = false;
+            break;
+        }
+    }
+
     return ret;
 }
