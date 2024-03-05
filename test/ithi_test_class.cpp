@@ -72,7 +72,7 @@ enum test_list_enum {
     test_enum_cdns_capture_rfc,
     test_enum_Fnv64,
     test_enum_BucketID,
-    test_enum_LeadingZeroes,
+    test_enum_TrailingZeroes,
     test_enum_HyperLogLog,
     test_enum_IPStats,
     test_enum_max_number,
@@ -172,8 +172,8 @@ char const * ithi_test_class::GetTestName(int number)
         return("HyperLogLog_Fnv64");
     case test_enum_BucketID:
         return("HyperLogLog_BucketID");
-    case test_enum_LeadingZeroes:
-        return("HyperLogLog_LeadingZeroes");
+    case test_enum_TrailingZeroes:
+        return("HyperLogLog_TrailingZeroes");
     case test_enum_HyperLogLog:
         return("HyperLogLog");
     case test_enum_IPStats:
@@ -321,8 +321,8 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
     case test_enum_BucketID:
         test = new BucketId_test();
         break;
-    case test_enum_LeadingZeroes:
-        test = new LeadingZeroes_test();
+    case test_enum_TrailingZeroes:
+        test = new TrailingZeroes_test();
         break;
     case test_enum_HyperLogLog:
         test = new HyperLogLog_test();

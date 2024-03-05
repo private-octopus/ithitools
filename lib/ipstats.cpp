@@ -520,7 +520,7 @@ void IPStatsRecord::DebugPrint(FILE* F)
             }
         }
 
-        fprintf(F, ", SLD[%zu]= .", tld_length);
+        fprintf(F, ", SLD[%zu]= .", sld_length);
         for (size_t i = 0; i < sld_length; i++) {
             int c = SLD[i];
             if (c >= 32 && c < 127) {
@@ -732,41 +732,41 @@ uint64_t HyperLogLog::Fnv64(const uint8_t* x, size_t l)
 
 int HyperLogLog::BucketID(uint64_t fnv64)
 {
-    /* To reduce potential bias, compute bucket id as hash of bottom nibbles in FNV64
-    * Exclude the top nibbles, because the number of leading zeroes is computed from them.
+    /* To reduce potential bias, compute bucket id as hash of top nibbles in FNV64
+    * Exclude the bottom nibbles, because the number of trailing zeroes is computed from them.
      */
-    int bucket_id = 0;
-    for (size_t i = 4; i < 8; i++) {
-        bucket_id ^= (int)((fnv64 >> (8 * i)) & 0xffull);
+    uint32_t  bucket_id = 0;
+    uint32_t top64 = (uint32_t)(fnv64>>32);
+    for (size_t i = 0; i < 4; i++) {
+        bucket_id ^= (int)top64;
+        top64 >>= 8;
     }
     bucket_id ^= (bucket_id >> 4);
     bucket_id &= 0x0f;
-    return bucket_id;
+    return (int)bucket_id;
 }
 
-int HyperLogLog::LeadingZeroes(uint64_t fnv64)
+int HyperLogLog::TrailingZeroes(uint64_t fnv64)
 {
     int nb_zeroes = 0;
+    uint64_t v64 = fnv64;
     for (size_t i = 0; i < 8; i++) {
-        uint8_t v = (uint8_t)((fnv64 >> (8 * i)) & 0xff);
+        uint8_t v = (uint8_t)(v64 & 0xff);
         if (v == 0) {
             nb_zeroes += 8;
+            v64 >>= 8;
             continue;
         }
         else {
-            if (v < 16) {
+            if ((v&0xf) == 0) {
                 nb_zeroes += 4;
-            }
-            else {
                 v >>= 4;
             }
-            if (v < 4) {
+            if ((v&0x3) == 0) {
                 nb_zeroes += 2;
-            }
-            else {
                 v >>= 2;
             }
-            if (v < 2) {
+            if ((v&0x1)== 0) {
                 nb_zeroes += 1;
             }
             break;
@@ -785,7 +785,7 @@ void HyperLogLog::AddKey(const uint8_t* x, size_t l)
      * position of the first 1, and the rest of the algorithm
      * depends on that.
      */
-    uint8_t nb_zeroes = 1 + HyperLogLog::LeadingZeroes(fnv64);
+    uint8_t nb_zeroes = 1 + HyperLogLog::TrailingZeroes(fnv64);
     /* Update the array of buckets */
     if (nb_zeroes > hllv[bucket_id]) {
         hllv[bucket_id] = nb_zeroes;

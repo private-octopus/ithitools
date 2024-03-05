@@ -1958,7 +1958,7 @@ bool BucketId_test::DoTest()
     for (int x = 0; x < (int)nb_tld && x < 128; x++) {
         ref[x] = HyperLogLog::BucketID(fnv64_ref[x]);
         if (ref[x] != bucket_id_ref[x]) {
-            TEST_LOG("BucketID(0x%" PRIx64 ") = %d instead of %d",
+            TEST_LOG("BucketID(0x%" PRIx64 ") = %d instead of %d\n",
                 fnv64_ref[x], ref[x], bucket_id_ref[x]);
             ret = false;
             break;
@@ -1968,27 +1968,29 @@ bool BucketId_test::DoTest()
     return ret;
 }
 
-LeadingZeroes_test::LeadingZeroes_test()
+TrailingZeroes_test::TrailingZeroes_test()
 {
 }
 
-LeadingZeroes_test::~LeadingZeroes_test()
+TrailingZeroes_test::~TrailingZeroes_test()
 {
 }
 
-bool LeadingZeroes_test::DoTest()
+bool TrailingZeroes_test::DoTest()
 {
     bool ret = true;
 
-    for (uint8_t i = 128; ret && i <= 255; i++) {
+    for (uint64_t i = 0; ret && i < 256; i += 2) {
         uint64_t t64;
-        memset(&t64, i, sizeof(t64));
+        uint8_t mask = (uint8_t)((i + 1) & 0xff);
+        memset(&t64, mask, sizeof(t64));
+        t64 |= 1;
         for (int z = 0; ret && z < 32; z++) {
-            uint64_t tz = (t64 >> z);
-            int zv = HyperLogLog::LeadingZeroes(tz);
+            uint64_t tz = (t64 << z);
+            int zv = HyperLogLog::TrailingZeroes(tz);
 
             if (zv != z) {
-                TEST_LOG("NbZeroes(0x%" PRIx64 ") = %d instead of %d",
+                TEST_LOG("NbZeroes(0x%" PRIx64 ") = %d instead of %d\n",
                     tz, zv, z);
                 ret = false;
             }

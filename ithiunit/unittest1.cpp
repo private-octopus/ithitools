@@ -356,9 +356,9 @@ namespace ithiunit
             Assert::AreEqual(ret, true);
         }
 
-        TEST_METHOD(HyperLogLog_LeadingZeroes)
+        TEST_METHOD(HyperLogLog_TrailingZeroes)
         {
-            BucketId_test test;
+            TrailingZeroes_test test;
             bool ret = test.DoTest();
 
             Assert::AreEqual(ret, true);

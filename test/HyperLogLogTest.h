@@ -57,11 +57,11 @@ public:
     bool DoTest() override;
 };
 
-class LeadingZeroes_test : public ithi_test_class
+class TrailingZeroes_test : public ithi_test_class
 {
 public:
-    LeadingZeroes_test();
-    ~LeadingZeroes_test();
+    TrailingZeroes_test();
+    ~TrailingZeroes_test();
 
     bool DoTest() override;
 };
