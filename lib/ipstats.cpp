@@ -451,14 +451,15 @@ bool IPStatsRecord::WriteIP(FILE* F)
 void IPStatsRecord::SetXLD(size_t xld_length, uint8_t* xld, const char** XLD_subset, size_t nb_XLD_subset, uint64_t* xld_counts, HyperLogLog* xld_hyperlog)
 {
     /* Find whether the TLD is in the subset */
-    size_t subset_rank = 8;
+    size_t subset_rank = SIZE_MAX;
     for (size_t i = 0; i < nb_XLD_subset; i++) {
-        if (strcmp((char*)xld, XLD_subset[i]) == 0) {
+        if (strlen(XLD_subset[i]) == xld_length &&
+            memcmp(xld, XLD_subset[i], xld_length) == 0){
             subset_rank = i;
             break;
         }
     }
-    if (subset_rank < 8) {
+    if (subset_rank < SIZE_MAX) {
         xld_counts[subset_rank] += 1;
     }
     else {
@@ -699,7 +700,6 @@ bool IPStats::IsRegisteredTLD(uint8_t* x, size_t l)
 {
     return dnsstats.IsRegisteredTLD(x, l);
 }
-
 
 HyperLogLog::HyperLogLog()
 {
