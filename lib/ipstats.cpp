@@ -285,7 +285,7 @@ bool IPStatsRecord::SetQName(uint8_t* q_name, uint32_t q_name_length, IPStats * 
             memcpy(tld, q_name + tld_offset + 1, tld_length);
             DnsStats::SetToUpperCase(tld, tld_length);
 
-            if (strcmp((char*)tld, "ARPA") == 0) {
+            if (tld_length == 4 && memcmp(tld, "ARPA", 4) == 0) {
                 /* This is a tabulation of ARPA queries */
                 this->arpa_count += 1;
             }
@@ -500,9 +500,8 @@ void IPStatsRecord::SetSLD(size_t sld_length, uint8_t* sld)
 void IPStatsRecord::DebugPrint(FILE* F)
 {
 #if 1
-    uint8_t test_ip[4] = { 2, 37, 31, 181 };
-    uint8_t test_ip2[4] = { 35, 165, 32, 59 };
-    if (memcmp(this->ip_addr, test_ip, 4) == 0 || memcmp(this->ip_addr, test_ip2, 4) == 0 ) {
+    uint8_t test_ip[4] = { 10, 9, 1, 109 };
+    if (memcmp(this->ip_addr, test_ip, 4) == 0) {
         uint64_t tld_hash = HyperLogLog::Fnv64(TLD, tld_length);
         uint64_t sld_hash = HyperLogLog::Fnv64(SLD, sld_length);
         fprintf(F, "IP:%d.%d.%d.%d,", this->ip_addr[0], this->ip_addr[1], this->ip_addr[2], this->ip_addr[3]);
