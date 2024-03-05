@@ -50,7 +50,7 @@ bool IPStatsTest::DoTest()
 {
     IPStats ipstats;
     char const * list[1] = { ipstats_test_input };
-    bool ret = ipstats.LoadCborFiles(1, list);
+    bool ret = ipstats.LoadInputFiles(1, list);
 
     if (!ret){
         TEST_LOG("Cannot process the CBOR input file: %s\n", list[0]);

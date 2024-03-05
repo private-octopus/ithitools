@@ -492,13 +492,16 @@ IPStats::~IPStats()
 {
 }
 
-bool IPStats::LoadCborFiles(size_t nb_files, char const** fileNames)
+bool IPStats::LoadInputFiles(size_t nb_files, char const** fileNames)
 {
     bool ret = true;
 
     for (size_t i = 0; ret && i < nb_files; i++)
     {
+        /* If ends with ".cbor", load as cbor file */
         ret = LoadCborFile(fileNames[i]);
+        /* If ends with ".cbor.xz", load as compressed cbor file */
+        /* If ends with ".csv", load as csv file */
     }
 
     return ret;

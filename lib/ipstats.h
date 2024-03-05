@@ -144,7 +144,7 @@ public:
     ~IPStats();
 
     /* For the command line tools */
-    bool LoadCborFiles(size_t nb_files, char const** fileNames);
+    bool LoadInputFiles(size_t nb_files, char const** fileNames);
     bool LoadCborFile(char const* fileNames);
 
     bool SaveToCsv(char const* file_name);

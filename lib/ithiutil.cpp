@@ -130,6 +130,35 @@ FILE* ithi_gzip_compress_open(char const* file_name, int* last_err)
     return F;
 }
 
+FILE* ithi_xzcat_decompress_open(char const* file_name, int* last_err)
+{
+    FILE * F = NULL;
+    char const* xzcat_command = NULL;
+    char command[512];
+    int n_char = 0;
+
+#ifdef _WINDOWS
+    /* Running on windows requires that 7z.exe is installed */
+    xzcat_command = "7z.exe e -so";
+#else
+    xzcat_command = "zxcat -k";
+#endif
+
+#ifdef _WINDOWS
+    n_char = sprintf_s(command, sizeof(command), "%s %s", xzcat_command, file_name);
+#else 
+    n_char = sprintf(command, "%s %s", xzcat_command, file_name);
+#endif
+    if (n_char <= 0) {
+        *last_err = -1;
+    }
+    else {
+        F = ithi_pipe_open(command, false, last_err);
+    }
+
+    return F;
+}
+
 void ithi_pipe_close(FILE* F)
 {
 #ifdef _WINDOWS
