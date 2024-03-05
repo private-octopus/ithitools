@@ -431,6 +431,8 @@ public:
 
     static char const* LeakTypeName(DnsStatsLeakType leakType);
 
+    bool IsRegisteredTLD(uint8_t* tld, size_t tld_length);
+
 private:
     bool LoadPcapFile(char const * fileName);
 

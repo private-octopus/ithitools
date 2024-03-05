@@ -179,7 +179,7 @@ static char const * RegistryNameById[] = {
 
 static uint32_t RegistryNameByIdNb = sizeof(RegistryNameById) / sizeof(char const*);
 
-static char const * RegisteredTldName[] = {
+char const * RegisteredTldName[] = {
     "AAA", "AARP", "ABB", "ABBOTT", "ABBVIE", "ABC", "ABLE", "ABOGADO",
     "ABUDHABI", "AC", "ACADEMY", "ACCENTURE", "ACCOUNTANT", "ACCOUNTANTS", "ACO",
     "ACTOR", "AD", "ADS", "ADULT", "AE", "AEG", "AERO", "AETNA",
@@ -367,7 +367,7 @@ static char const * RegisteredTldName[] = {
     "ZERO", "ZIP", "ZM", "ZONE", "ZUERICH", "ZW",
 };
 
-static uint32_t RegisteredTldNameNb = sizeof(RegisteredTldName) / sizeof(char const*);
+const uint32_t RegisteredTldNameNb = sizeof(RegisteredTldName) / sizeof(char const*);
 
 static char const * FrequentTldLeak[] = {
     "AAAAAA",
@@ -1121,6 +1121,25 @@ char const* DnsStats::LeakTypeName(DnsStatsLeakType leakType)
     }
 
     return x;
+}
+
+bool DnsStats::IsRegisteredTLD(uint8_t* tld, size_t tld_length)
+{
+
+    bool isRegistered = false;
+    TldAsKey key(tld, tld_length);
+
+    if (registeredTld.GetCount() == 0)
+    {
+        this->LoadRegisteredTLD_from_memory();
+    }
+
+    if (registeredTld.Retrieve(&key) != NULL)
+    {
+        isRegistered = true;
+    }
+
+    return isRegistered;
 }
 
 int DnsStats::GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,

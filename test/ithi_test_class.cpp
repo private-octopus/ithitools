@@ -28,6 +28,8 @@
 #include "StatsByIpTest.h"
 #include "capture_fuzz.h"
 #include "CdnsCaptureTest.h"
+#include "HyperLogLogTest.h"
+#include "IPStatsTest.h"
 
 enum test_list_enum {
     test_enum_hash = 0,
@@ -68,6 +70,11 @@ enum test_list_enum {
     test_enum_CaptureFuzz,
     test_enum_cdns_capture_draft,
     test_enum_cdns_capture_rfc,
+    test_enum_Fnv64,
+    test_enum_BucketID,
+    test_enum_TrailingZeroes,
+    test_enum_HyperLogLog,
+    test_enum_IPStats,
     test_enum_max_number,
 };
 
@@ -161,6 +168,16 @@ char const * ithi_test_class::GetTestName(int number)
         return("cdns_capture_draft");
     case test_enum_cdns_capture_rfc:
         return("cdns_capture_rfc");
+    case test_enum_Fnv64:
+        return("HyperLogLog_Fnv64");
+    case test_enum_BucketID:
+        return("HyperLogLog_BucketID");
+    case test_enum_TrailingZeroes:
+        return("HyperLogLog_TrailingZeroes");
+    case test_enum_HyperLogLog:
+        return("HyperLogLog");
+    case test_enum_IPStats:
+        return("IPStats");
     default:
         break;
     }
@@ -297,6 +314,21 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_enum_cdns_capture_rfc:
         test = new CdnsCaptureTestRfc();
+        break;
+    case test_enum_Fnv64:
+        test = new Fnv64_test();
+        break;
+    case test_enum_BucketID:
+        test = new BucketId_test();
+        break;
+    case test_enum_TrailingZeroes:
+        test = new TrailingZeroes_test();
+        break;
+    case test_enum_HyperLogLog:
+        test = new HyperLogLog_test();
+        break;
+    case test_enum_IPStats:
+        test = new IPStatsTest();
         break;
     default:
         break;

@@ -1339,7 +1339,7 @@ bool ithipublisher::PublishDataM10(FILE* F)
     char const* sub_met_name[5] = { "allopnrvrs", "samecc", "diffcc", "svc", "count" };
     /* Open the ccdata element */
     ret &= fprintf(F, "\"ccdata\":[") > 0;
-    for (int i = 0; ret && i < line_list.size(); i++) {
+    for (size_t i = 0; ret && i < line_list.size(); i++) {
         if (line_list[i]->year != last_year || line_list[i]->month != last_month) {
             continue;
         }

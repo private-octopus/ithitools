@@ -41,6 +41,7 @@
 #include "ithimetrics.h"
 #include "ithipublisher.h"
 #include "OdiPublisher.h"
+#include "ipstats.h"
 
 static void ithitools_version() {
     fprintf(stderr, "ITHITOOLS. Version %d.%02d.\n", ITHITOOLS_VERSION_MAJOR, ITHITOOLS_VERSION_MINOR);
@@ -81,6 +82,7 @@ static int usage()
     fprintf(stderr, "  -n number          Number of strings in the list of leaking domains(M4).\n");
     fprintf(stderr, "  -N number          Number of packets to read from this capture.\n");
     fprintf(stderr, "  -X                 Include TCP records in CBOR files.\n");
+    fprintf(stderr, "  -I ip-usage.csv    Extract IP level statistics.\n");
 #ifdef PRIVACY_CONSCIOUS
     fprintf(stderr, "  -A                 List all IP addresses and their usage in the report.\n");
     fprintf(stderr, "  -E                 List all DNS names found and their usage in the report.\n");
@@ -154,6 +156,7 @@ enum ithi_tool_mode {
     ithi_mode_publish,
     ithi_mode_publish_odi,
     ithi_mode_publish_partner,
+    ithi_mode_ipstats,
     ithi_mode_max
 };
 
@@ -190,10 +193,11 @@ int main(int argc, char ** argv)
     char const * metric_file_name = NULL;
     char const * odi_dir = NULL;
     char const * data_dir = NULL;
+    char const* ip_stats_csv = NULL;
 
     /* Get the parameters */
     int opt;
-    while (exit_code == 0 && (opt = getopt(argc, argv, "a:b:cd:efghi:k:l:mn:o:pr:st:u:vw:x:y:z:A:B:D:E:O:P:M:N:S:TV:WXY1:2:3:4:5:6:7:?")) != -1)
+    while (exit_code == 0 && (opt = getopt(argc, argv, "a:b:cd:efghi:k:l:mn:o:pr:st:u:vw:x:y:z:A:B:D:E:I:O:P:M:N:S:TV:WXY1:2:3:4:5:6:7:?")) != -1)
     {
         switch (opt)
         {
@@ -281,6 +285,10 @@ int main(int argc, char ** argv)
             break;
         case 'f':
             stats.enable_frequent_address_filtering = true;
+            break;
+        case 'I':
+            ip_stats_csv = optarg;
+            exit_code = check_execution_mode(ithi_mode_ipstats, &exec_mode);
             break;
 #ifdef PRIVACY_CONSCIOUS
         case 'A':
@@ -626,6 +634,34 @@ int main(int argc, char ** argv)
         ret = OdiPublisher::PublishMetricFile(metric_file_name, odi_dir, data_dir, 0);
         if (ret) {
             printf("ITHI Metric <%s> saved in directory <%s>.\n", metric_file_name, odi_dir);
+        }
+    }
+    else if (exec_mode == ithi_mode_ipstats)
+    {
+        IPStats ipstats;
+
+        if (optind >= argc)
+        {
+            fprintf(stderr, "No capture file to analyze!\n");
+            exit_code = usage();
+        }
+        else {
+            if (!ipstats.LoadCborFiles((size_t)argc - optind, (char const**)(argv + optind)))
+            {
+                fprintf(stderr, "Cannot process the CBOR input files.\n");
+                exit_code = -1;
+            }
+            else
+            {
+                printf("CBOR Capture processing succeeded, %d records.\n", ipstats.GetCount());
+                if (!ipstats.SaveToCsv(ip_stats_csv)) {
+                    fprintf(stderr, "Cannot save to csv file: %s.\n", ip_stats_csv);
+                    exit_code = usage();
+                }
+                else {
+                    printf("IP Stats have been saved to %s\n", ip_stats_csv);
+                }
+            }
         }
     }
 

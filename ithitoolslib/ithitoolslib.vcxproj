@@ -170,6 +170,7 @@
     <ClInclude Include="..\lib\DnsStats.h" />
     <ClInclude Include="..\lib\DnsTypes.h" />
     <ClInclude Include="..\lib\HashBinGeneric.h" />
+    <ClInclude Include="..\lib\ipstats.h" />
     <ClInclude Include="..\lib\ithimetrics.h" />
     <ClInclude Include="..\lib\ithipublisher.h" />
     <ClInclude Include="..\lib\ithiutil.h" />
@@ -198,6 +199,7 @@
     <ClCompile Include="..\lib\DnscapPlugIn.cpp" />
     <ClCompile Include="..\lib\DnsStats.cpp" />
     <ClCompile Include="..\lib\getopt.c" />
+    <ClCompile Include="..\lib\ipstats.cpp" />
     <ClCompile Include="..\lib\ithimetrics.cpp" />
     <ClCompile Include="..\lib\ithipublisher.cpp" />
     <ClCompile Include="..\lib\ithiutil.cpp" />

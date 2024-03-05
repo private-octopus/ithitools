@@ -1,6 +1,6 @@
 /*
 * Author: Christian Huitema
-* Copyright (c) 2018, Private Octopus, Inc.
+* Copyright (c) 2023, Private Octopus, Inc.
 * All rights reserved.
 *
 * Permission to use, copy, modify, and distribute this software for any
@@ -19,11 +19,51 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef ITHITOOLS_VERSION_H
-#define ITHITOOLS_VERSION_H
+#ifndef HYPERLOGLOGTEST_H
+#define HYPERLOGLOGTEST_H
 
-#define ITHITOOLS_VERSION_MAJOR 2
-#define ITHITOOLS_VERSION_MINOR 4
-#define ITHITOOLS_VERSION ((ITHITOOLS_VERSION_MAJOR*100) + ITHITOOLS_VERSION_MINOR)
+#include "ithi_test_class.h"
 
-#endif /* ITHITOOLS_VERSION_H */
+class HyperLogLog_test : public ithi_test_class
+{
+public:
+    HyperLogLog_test();
+    ~HyperLogLog_test();
+
+    bool DoTest() override;
+    bool DoNameTest(size_t nb_names);
+    bool DoNumberTest(int nb_number);
+
+private:
+    FILE* F;
+    uint64_t number_old;
+};
+
+class Fnv64_test : public ithi_test_class
+{
+public:
+    Fnv64_test();
+    ~Fnv64_test();
+
+    bool DoTest() override;
+};
+
+class BucketId_test : public ithi_test_class
+{
+public:
+    BucketId_test();
+    ~BucketId_test();
+
+    bool DoTest() override;
+};
+
+class TrailingZeroes_test : public ithi_test_class
+{
+public:
+    TrailingZeroes_test();
+    ~TrailingZeroes_test();
+
+    bool DoTest() override;
+};
+
+#endif /* HYPERLOGLOGTEST_H */

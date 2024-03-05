@@ -141,6 +141,8 @@
     <ClCompile Include="..\test\DnsPrefixTest.cpp" />
     <ClCompile Include="..\test\GetNameTest.cpp" />
     <ClCompile Include="..\test\hashtest.cpp" />
+    <ClCompile Include="..\test\HyperLogLogTest.cpp" />
+    <ClCompile Include="..\test\IPStatsTest.cpp" />
     <ClCompile Include="..\test\ithitest.cpp" />
     <ClCompile Include="..\test\ithi_test_class.cpp" />
     <ClCompile Include="..\test\LoadTest.cpp" />
@@ -166,6 +168,8 @@
     <ClInclude Include="..\test\DnsPrefixTest.h" />
     <ClInclude Include="..\test\GetNameTest.h" />
     <ClInclude Include="..\test\hashtest.h" />
+    <ClInclude Include="..\test\HyperLogLogTest.h" />
+    <ClInclude Include="..\test\IPStatsTest.h" />
     <ClInclude Include="..\test\ithi_test_class.h" />
     <ClInclude Include="..\test\LoadTest.h" />
     <ClInclude Include="..\test\M1DataTest.h" />

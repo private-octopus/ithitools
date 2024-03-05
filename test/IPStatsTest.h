@@ -1,6 +1,6 @@
 /*
 * Author: Christian Huitema
-* Copyright (c) 2018, Private Octopus, Inc.
+* Copyright (c) 2024, Private Octopus, Inc.
 * All rights reserved.
 *
 * Permission to use, copy, modify, and distribute this software for any
@@ -19,11 +19,19 @@
 * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef ITHITOOLS_VERSION_H
-#define ITHITOOLS_VERSION_H
+#ifndef IPSTATS_TEST_H
+#define IPSTATS_TEST_H
 
-#define ITHITOOLS_VERSION_MAJOR 2
-#define ITHITOOLS_VERSION_MINOR 4
-#define ITHITOOLS_VERSION ((ITHITOOLS_VERSION_MAJOR*100) + ITHITOOLS_VERSION_MINOR)
+#include "ithi_test_class.h"
 
-#endif /* ITHITOOLS_VERSION_H */
+class IPStatsTest : public ithi_test_class
+{
+public:
+    IPStatsTest();
+    ~IPStatsTest();
+
+    bool DoTest() override;
+};
+
+#endif /* SAVE_TEST_H */
+
