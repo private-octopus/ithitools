@@ -1967,3 +1967,32 @@ bool BucketId_test::DoTest()
 
     return ret;
 }
+
+LeadingZeroes_test::LeadingZeroes_test()
+{
+}
+
+LeadingZeroes_test::~LeadingZeroes_test()
+{
+}
+
+bool LeadingZeroes_test::DoTest()
+{
+    bool ret = true;
+
+    for (uint8_t i = 128; ret && i <= 255; i++) {
+        uint64_t t64;
+        memset(&t64, i, sizeof(t64));
+        for (int z = 0; ret && z < 32; z++) {
+            uint64_t tz = (t64 >> z);
+            int zv = HyperLogLog::LeadingZeroes(tz);
+
+            if (zv != z) {
+                TEST_LOG("NbZeroes(0x%" PRIx64 ") = %d instead of %d",
+                    tz, zv, z);
+                ret = false;
+            }
+        }
+    }
+    return ret;
+}

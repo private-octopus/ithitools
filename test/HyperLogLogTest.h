@@ -48,12 +48,20 @@ public:
     bool DoTest() override;
 };
 
-
 class BucketId_test : public ithi_test_class
 {
 public:
     BucketId_test();
     ~BucketId_test();
+
+    bool DoTest() override;
+};
+
+class LeadingZeroes_test : public ithi_test_class
+{
+public:
+    LeadingZeroes_test();
+    ~LeadingZeroes_test();
 
     bool DoTest() override;
 };

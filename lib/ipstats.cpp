@@ -129,6 +129,11 @@ IPStatsRecord::IPStatsRecord() :
     memset(name_parts, 0, sizeof(name_parts));
     memset(rr_types, 0, sizeof(rr_types));
     memset(locales, 0, sizeof(locales));
+    /* Debug variables */
+    tld_length = 0;
+    sld_length = 0;
+    memset(TLD, 0, 64);
+    memset(SLD, 0, 64);
 }
 
 IPStatsRecord::~IPStatsRecord()
@@ -398,38 +403,39 @@ IPStatsRecord* IPStatsRecord::ParseLine(char const* line)
     size_t index = 0;
     IPStatsRecord* record = new IPStatsRecord();
 
-    record->ipaddr_length = ParseIPCell(line, &index, record->ip_addr);
-    record->query_volume = ParseUint64Cell(line, &index);
-    for (int i = 0; i < 24; i++) {
-        record->hourly_volume[i] = ParseUint64Cell(line, &index);
+    if (record != NULL) {
+        record->ipaddr_length = ParseIPCell(line, &index, record->ip_addr);
+        record->query_volume = ParseUint64Cell(line, &index);
+        for (int i = 0; i < 24; i++) {
+            record->hourly_volume[i] = ParseUint64Cell(line, &index);
+        }
+        for (int i = 0; i < 31; i++) {
+            record->daily_volume[i] = ParseUint64Cell(line, &index);
+        }
+        record->arpa_count = ParseUint64Cell(line, &index);
+        record->no_such_domain_queries = ParseUint64Cell(line, &index);
+        record->no_such_domain_reserved = ParseUint64Cell(line, &index);
+        record->no_such_domain_frequent = ParseUint64Cell(line, &index);
+        record->no_such_domain_chromioids = ParseUint64Cell(line, &index);
+        for (int i = 0; i < 8; i++) {
+            record->tld_counts[i] = ParseUint64Cell(line, &index);
+        }
+        record->tld_hyperlog.ParseHyperLogLog(line, &index);
+        for (int i = 0; i < 8; i++) {
+            record->sld_counts[i] = ParseUint64Cell(line, &index);
+        }
+        record->sld_hyperlog.ParseHyperLogLog(line, &index);
+        for (int i = 0; i < 8; i++) {
+            record->name_parts[i] = ParseUint64Cell(line, &index);
+        }
+        for (int i = 0; i < 8; i++) {
+            record->rr_types[i] = ParseUint64Cell(line, &index);
+        }
+        for (int i = 0; i < 8; i++) {
+            record->locales[i] = ParseUint64Cell(line, &index);
+        }
     }
-    for (int i = 0; i < 31; i++) {
-        record->daily_volume[i] = ParseUint64Cell(line, &index);
-    }
-    record->arpa_count = ParseUint64Cell(line, &index);
-    record->no_such_domain_queries = ParseUint64Cell(line, &index);
-    record->no_such_domain_reserved = ParseUint64Cell(line, &index);
-    record->no_such_domain_frequent = ParseUint64Cell(line, &index);
-    record->no_such_domain_chromioids = ParseUint64Cell(line, &index);
-    for (int i = 0; i < 8; i++) {
-        record->tld_counts[i] = ParseUint64Cell(line, &index);
-    }
-    record->tld_hyperlog.ParseHyperLogLog(line, &index);
-    for (int i = 0; i < 8; i++) {
-        record->sld_counts[i] = ParseUint64Cell(line, &index);
-    }
-    record->sld_hyperlog.ParseHyperLogLog(line, &index);
-    for (int i = 0; i < 8; i++) {
-        record->name_parts[i] = ParseUint64Cell(line, &index);
-    }
-    for (int i = 0; i < 8; i++) {
-        record->rr_types[i] = ParseUint64Cell(line, &index);
-    }
-    for (int i = 0; i < 8; i++) {
-        record->locales[i] = ParseUint64Cell(line, &index);
-    }
-
-    return nullptr;
+    return record;
 }
 
 bool IPStatsRecord::WriteIP(FILE* F)
@@ -469,13 +475,8 @@ const size_t nb_TLD_subset = sizeof(TLD_subset) / sizeof(const char*);
 void IPStatsRecord::SetTLD(size_t tld_length, uint8_t* tld)
 {
 #if 1
-    uint8_t test_ip[4] = { 181, 31, 37, 2 };
-    if (memcmp(this->ip_addr, test_ip, 4) == 0) {
-        char tldz[65];
-        memcpy(tldz, tld, tld_length);
-        tldz[tld_length] = 0;
-        printf("TLD: %s\n", tldz);
-    }
+    this->tld_length = tld_length;
+    memcpy(this->TLD, tld, tld_length);
 #endif
     IPStatsRecord::SetXLD(tld_length, tld, TLD_subset, nb_TLD_subset, this->tld_counts, &this->tld_hyperlog);
 }
@@ -488,16 +489,50 @@ const size_t nb_SLD_subset = sizeof(SLD_subset) / sizeof(const char*);
 
 void IPStatsRecord::SetSLD(size_t sld_length, uint8_t* sld)
 {
+    IPStatsRecord::SetXLD(sld_length, sld, SLD_subset, nb_SLD_subset, this->sld_counts, &this->sld_hyperlog);
 #if 1
-    uint8_t test_ip[4] = { 181, 31, 37, 2 };
-    if (memcmp(this->ip_addr, test_ip, 4) == 0) {
+    this->sld_length = sld_length;
+    memcpy(this->SLD, sld, sld_length);
+#endif
+}
+
+void IPStatsRecord::DebugPrint(FILE* F)
+{
+#if 1
+    uint8_t test_ip[4] = { 2, 37, 31, 181 };
+    uint8_t test_ip2[4] = { 35, 165, 32, 59 };
+    if (memcmp(this->ip_addr, test_ip, 4) == 0 || memcmp(this->ip_addr, test_ip2, 4) == 0 ) {
+        char tldz[65];
         char sldz[65];
-        memcpy(sldz, sld, sld_length);
+        memcpy(tldz, TLD, tld_length);
+        tldz[tld_length] = 0;
+        memcpy(sldz, SLD, sld_length);
         sldz[sld_length] = 0;
-        printf("TLD: %s\n", sldz);
+        fprintf(F, "IP:%d.%d.%d.%d,", this->ip_addr[0], this->ip_addr[1], this->ip_addr[2], this->ip_addr[3]);
+        fprintf(F, "TLD[%zu]= .", tld_length);
+        for (size_t i = 0; i < tld_length; i++) {
+            int c = TLD[i];
+            if (c >= 32 && c < 127) {
+                fprintf(F, "%c.", c);
+            }
+            else {
+                fprintf(F, "\\%x.", c);
+            }
+        }
+
+        fprintf(F, ", SLD[%zu]= .", tld_length);
+        for (size_t i = 0; i < sld_length; i++) {
+            int c = SLD[i];
+            if (c >= 32 && c < 127) {
+                fprintf(F, "%c.", c);
+            }
+            else {
+                fprintf(F, "\\%x.", c);
+            }
+        }
+        fprintf(F, "\n");
     }
 #endif
-    IPStatsRecord::SetXLD(sld_length, sld, SLD_subset, nb_SLD_subset, this->sld_counts, &this->sld_hyperlog);
 }
 
 IPStats::IPStats()
@@ -507,37 +542,6 @@ IPStats::IPStats()
 IPStats::~IPStats()
 {
 }
-
-#if 0
-bool IPStats::SetOutputFile(char const* file_name)
-{
-    bool ret = true;
-
-    if (this->IPF != NULL && this->IPF != stdout) {
-        fclose(this->IPF);
-    }
-    if (strcmp(file_name, "-") == 0) {
-        this->IPF = stdout;
-    }
-    else {
-#ifdef _WINDOWS
-        errno_t err = fopen_s(&this->IPF, file_name, "wt");
-        if (err != 0) {
-            if (this->IPF != NULL) {
-                fclose(this->IPF);
-                this->IPF = NULL;
-            }
-            ret = false;
-        }
-#else
-        this->IPF = fopen(file_name, "wt");
-
-        ret &= (this->IPF != NULL);
-#endif
-    }
-    return ret;
-}
-#endif
 
 bool IPStats::LoadCborFiles(size_t nb_files, char const** fileNames)
 {
@@ -692,6 +696,7 @@ void IPStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
         bool stored = false;
         this->ip_records.InsertOrAdd(&ipsr, true, &stored);
     }
+    ipsr.DebugPrint(stdout);
 }
 
 HyperLogLog::HyperLogLog()
@@ -716,7 +721,7 @@ uint64_t HyperLogLog::Fnv64(const uint8_t* x, size_t l)
 {
     uint64_t fnv64 = 0xcbf29ce484222325ull;
     const uint64_t fnv64_prime = 0x00000100000001B3ull;
-    int bucket_id = 0;
+
     /* Compute the FNV 64 bit hash */
     for (size_t i = 0; i < l; i++) {
         fnv64 ^= x[i];

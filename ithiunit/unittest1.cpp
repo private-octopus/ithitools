@@ -340,7 +340,7 @@ namespace ithiunit
             Assert::AreEqual(ret, true);
         }
 #endif
-        TEST_METHOD(Fnv64)
+        TEST_METHOD(HyperLogLog_Fnv64)
         {
             Fnv64_test test;
             bool ret = test.DoTest();
@@ -348,7 +348,15 @@ namespace ithiunit
             Assert::AreEqual(ret, true);
         }
 
-        TEST_METHOD(BucketID)
+        TEST_METHOD(HyperLogLog_BucketID)
+        {
+            BucketId_test test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(HyperLogLog_LeadingZeroes)
         {
             BucketId_test test;
             bool ret = test.DoTest();
@@ -364,8 +372,6 @@ namespace ithiunit
             Assert::AreEqual(ret, true);
         }
 
-#ifdef PRIVACY_CONSCIOUS
-
         TEST_METHOD(IPStats)
         {
             IPStatsTest test;
@@ -373,7 +379,6 @@ namespace ithiunit
 
             Assert::AreEqual(ret, true);
         }
-#endif
 
 	};
 }
