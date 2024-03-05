@@ -260,7 +260,7 @@ bool IPStatsRecord::SetTime(int64_t qr_time)
     return ret;
 }
 
-bool IPStatsRecord::SetQName(uint8_t* q_name, uint32_t q_name_length, int query_rcode)
+bool IPStatsRecord::SetQName(uint8_t* q_name, uint32_t q_name_length, IPStats * ip_stats)
 {
     bool ret = true;
     uint32_t tld_offset = 0;
@@ -270,8 +270,6 @@ bool IPStatsRecord::SetQName(uint8_t* q_name, uint32_t q_name_length, int query_
     ret = DnsStats::GetTLD(q_name, q_name_length, 0, &tld_offset, &previous_offset, &nb_name_parts);
 
     if (ret) {
-        /* TODO: case of root queries */
-        /* TODO: case of ARPA queries */
         uint8_t tld[65];
         size_t tld_length = *(q_name + tld_offset);
 
@@ -279,6 +277,7 @@ bool IPStatsRecord::SetQName(uint8_t* q_name, uint32_t q_name_length, int query_
             ret = false;
         }
         else if (tld_length == 0 || nb_name_parts == 0) {
+            /* This is a tabulation of root queries */
             this->name_parts[0] += 1;
         }
         else {
@@ -287,9 +286,10 @@ bool IPStatsRecord::SetQName(uint8_t* q_name, uint32_t q_name_length, int query_
             DnsStats::SetToUpperCase(tld, tld_length);
 
             if (strcmp((char*)tld, "ARPA") == 0) {
+                /* This is a tabulation of ARPA queries */
                 this->arpa_count += 1;
             }
-            else if (query_rcode == DNS_RCODE_NOERROR) {
+            else if (ip_stats->IsRegisteredTLD(tld, tld_length)) {
                 /* Document the TLD count */
                 IPStatsRecord::SetTLD(tld_length, tld);
                 /* Find the SLD and document the SLD count */
@@ -659,7 +659,7 @@ void IPStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
             size_t nid = (size_t)query->query_name_index - cdns_ctx->index_offset;
             uint8_t* q_name = cdns_ctx->block.tables.name_rdata[nid].v;
             uint32_t q_name_length = (uint32_t)cdns_ctx->block.tables.name_rdata[nid].l;
-            is_valid = ipsr.SetQName(q_name, q_name_length, q_sig->query_rcode);
+            is_valid = ipsr.SetQName(q_name, q_name_length, this);
         }
         else {
             is_valid = false;
@@ -694,6 +694,12 @@ void IPStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
     }
     ipsr.DebugPrint(stdout);
 }
+
+bool IPStats::IsRegisteredTLD(uint8_t* x, size_t l)
+{
+    return dnsstats.IsRegisteredTLD(x, l);
+}
+
 
 HyperLogLog::HyperLogLog()
 {

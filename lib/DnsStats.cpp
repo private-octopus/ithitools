@@ -1123,6 +1123,25 @@ char const* DnsStats::LeakTypeName(DnsStatsLeakType leakType)
     return x;
 }
 
+bool DnsStats::IsRegisteredTLD(uint8_t* tld, size_t tld_length)
+{
+
+    bool isRegistered = false;
+    TldAsKey key(tld, tld_length);
+
+    if (registeredTld.GetCount() == 0)
+    {
+        this->LoadRegisteredTLD_from_memory();
+    }
+
+    if (registeredTld.Retrieve(&key) != NULL)
+    {
+        isRegistered = true;
+    }
+
+    return isRegistered;
+}
+
 int DnsStats::GetDnsName(uint8_t * packet, uint32_t length, uint32_t start,
     uint8_t * name, size_t name_max, size_t * name_length)
 {

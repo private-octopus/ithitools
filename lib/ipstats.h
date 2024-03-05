@@ -27,6 +27,8 @@
 #include <stdint.h>
 #include <vector>
 #include <HashBinGeneric.h>
+#include <TldAsKey.h>
+#include <DnsStats.h>
 #include <cdns.h>
 
 
@@ -78,6 +80,8 @@ public:
 extern const uint32_t RegisteredTldNameNb;
 extern char const* RegisteredTldName[];
 
+class IPStats;
+
 class IPStatsRecord
 {
 public:
@@ -121,7 +125,7 @@ public:
     /* The following methods are used to populate a record describing a single query */
     bool SetIP(size_t ipaddr_length, uint8_t* ipaddr_v);
     bool SetTime(int64_t qr_time);
-    bool SetQName(uint8_t* q_name, uint32_t q_name_length, int query_rcode);
+    bool SetQName(uint8_t* q_name, uint32_t q_name_length, IPStats * ip_stats);
     bool SetRR(int rr_type, int rr_class);
 
     bool WriteRecord(FILE* F);
@@ -157,10 +161,15 @@ public:
     bool LoadPcapFile(char const * fileName);
 #endif
 
+    bool IsRegisteredTLD(uint8_t* x, size_t l);
+
 private:
     BinHash<IPStatsRecord> ip_records;
     void SubmitCborPacket(cdns* cdns_ctx, size_t packet_id);
+    void LoadRegisteredTLD_from_memory();
     static bool IPAddressIsLower(IPStatsRecord * x, IPStatsRecord * y);
+    BinHash<TldAsKey> registeredTld;
+    DnsStats dnsstats;
 };
 
 #endif /* IPSTATS_H */
