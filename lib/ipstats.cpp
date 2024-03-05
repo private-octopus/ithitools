@@ -502,14 +502,10 @@ void IPStatsRecord::DebugPrint(FILE* F)
     uint8_t test_ip[4] = { 2, 37, 31, 181 };
     uint8_t test_ip2[4] = { 35, 165, 32, 59 };
     if (memcmp(this->ip_addr, test_ip, 4) == 0 || memcmp(this->ip_addr, test_ip2, 4) == 0 ) {
-        char tldz[65];
-        char sldz[65];
-        memcpy(tldz, TLD, tld_length);
-        tldz[tld_length] = 0;
-        memcpy(sldz, SLD, sld_length);
-        sldz[sld_length] = 0;
+        uint64_t tld_hash = HyperLogLog::Fnv64(TLD, tld_length);
+        uint64_t sld_hash = HyperLogLog::Fnv64(SLD, sld_length);
         fprintf(F, "IP:%d.%d.%d.%d,", this->ip_addr[0], this->ip_addr[1], this->ip_addr[2], this->ip_addr[3]);
-        fprintf(F, "TLD[%zu]= .", tld_length);
+        fprintf(F, "TLD[%zu, 0x% " PRIx64 "] = .", tld_length, tld_hash);
         for (size_t i = 0; i < tld_length; i++) {
             int c = TLD[i];
             if (c >= 32 && c < 127) {
@@ -520,7 +516,7 @@ void IPStatsRecord::DebugPrint(FILE* F)
             }
         }
 
-        fprintf(F, ", SLD[%zu]= .", sld_length);
+        fprintf(F, ", SLD[%zu, 0x% " PRIx64 "] = .", sld_length, sld_hash);
         for (size_t i = 0; i < sld_length; i++) {
             int c = SLD[i];
             if (c >= 32 && c < 127) {
