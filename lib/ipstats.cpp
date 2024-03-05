@@ -129,11 +129,6 @@ IPStatsRecord::IPStatsRecord() :
     memset(name_parts, 0, sizeof(name_parts));
     memset(rr_types, 0, sizeof(rr_types));
     memset(locales, 0, sizeof(locales));
-    /* Debug variables */
-    tld_length = 0;
-    sld_length = 0;
-    memset(TLD, 0, 64);
-    memset(SLD, 0, 64);
 }
 
 IPStatsRecord::~IPStatsRecord()
@@ -475,10 +470,6 @@ const size_t nb_TLD_subset = sizeof(TLD_subset) / sizeof(const char*);
 
 void IPStatsRecord::SetTLD(size_t tld_length, uint8_t* tld)
 {
-#if 1
-    this->tld_length = tld_length;
-    memcpy(this->TLD, tld, tld_length);
-#endif
     IPStatsRecord::SetXLD(tld_length, tld, TLD_subset, nb_TLD_subset, this->tld_counts, &this->tld_hyperlog);
 }
 
@@ -491,44 +482,6 @@ const size_t nb_SLD_subset = sizeof(SLD_subset) / sizeof(const char*);
 void IPStatsRecord::SetSLD(size_t sld_length, uint8_t* sld)
 {
     IPStatsRecord::SetXLD(sld_length, sld, SLD_subset, nb_SLD_subset, this->sld_counts, &this->sld_hyperlog);
-#if 1
-    this->sld_length = sld_length;
-    memcpy(this->SLD, sld, sld_length);
-#endif
-}
-
-void IPStatsRecord::DebugPrint(FILE* F)
-{
-#if 1
-    uint8_t test_ip[4] = { 10, 9, 1, 109 };
-    if (memcmp(this->ip_addr, test_ip, 4) == 0) {
-        uint64_t tld_hash = HyperLogLog::Fnv64(TLD, tld_length);
-        uint64_t sld_hash = HyperLogLog::Fnv64(SLD, sld_length);
-        fprintf(F, "IP:%d.%d.%d.%d,", this->ip_addr[0], this->ip_addr[1], this->ip_addr[2], this->ip_addr[3]);
-        fprintf(F, "TLD[%zu, 0x% " PRIx64 "] = .", tld_length, tld_hash);
-        for (size_t i = 0; i < tld_length; i++) {
-            int c = TLD[i];
-            if (c >= 32 && c < 127) {
-                fprintf(F, "%c.", c);
-            }
-            else {
-                fprintf(F, "\\%x.", c);
-            }
-        }
-
-        fprintf(F, ", SLD[%zu, 0x% " PRIx64 "] = .", sld_length, sld_hash);
-        for (size_t i = 0; i < sld_length; i++) {
-            int c = SLD[i];
-            if (c >= 32 && c < 127) {
-                fprintf(F, "%c.", c);
-            }
-            else {
-                fprintf(F, "\\%x.", c);
-            }
-        }
-        fprintf(F, "\n");
-    }
-#endif
 }
 
 IPStats::IPStats()
@@ -692,7 +645,6 @@ void IPStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
         bool stored = false;
         this->ip_records.InsertOrAdd(&ipsr, true, &stored);
     }
-    ipsr.DebugPrint(stdout);
 }
 
 bool IPStats::IsRegisteredTLD(uint8_t* x, size_t l)

@@ -130,16 +130,11 @@ public:
 
     bool WriteRecord(FILE* F);
     static IPStatsRecord* ParseLine(char const* line);
-    void DebugPrint(FILE* F);
 private:
     bool WriteIP(FILE* F);
     static void SetXLD(size_t xld_length, uint8_t * xld, const char ** XLD_subset, size_t nb_XLD_subset, uint64_t * xld_counts, HyperLogLog * xld_hyperlog);
     void SetTLD(size_t tld_length, uint8_t* tld);
     void SetSLD(size_t sld_length, uint8_t* sld);
-    size_t tld_length;
-    size_t sld_length;
-    uint8_t TLD[64];
-    uint8_t SLD[64];
 };
 
 class IPStats
@@ -166,7 +161,6 @@ public:
 private:
     BinHash<IPStatsRecord> ip_records;
     void SubmitCborPacket(cdns* cdns_ctx, size_t packet_id);
-    void LoadRegisteredTLD_from_memory();
     static bool IPAddressIsLower(IPStatsRecord * x, IPStatsRecord * y);
     BinHash<TldAsKey> registeredTld;
     DnsStats dnsstats;
