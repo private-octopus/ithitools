@@ -25,7 +25,7 @@ jobs:
           
       - name: Install xz
         run: |
-          sudo apt-get install -y xz
+          sudo apt-get install -y xz-utils
 
       - name: Run cmake
         run: |
