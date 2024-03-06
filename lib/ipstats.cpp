@@ -615,7 +615,7 @@ bool IPStats::LoadCdnsRecords(cdns * cdns_ctx, int * err)
     bool ret = true;
 
     while (ret) {
-        if (cdns_ctx->open_block(err)) {
+        if (!cdns_ctx->open_block(err)) {
             ret = (*err == CBOR_END_OF_ARRAY);
             break;
         }
