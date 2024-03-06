@@ -534,15 +534,18 @@ bool IPStats::LoadCborCxFile(char const* fileName)
     FILE* F = ithi_xzcat_decompress_open(fileName, &err);
 
     if (F == NULL) {
-        fprintf(stderr, "Cannot open pipe for %s, err = 0x%x", fileName, err);
+        fprintf(stderr, "Cannot open pipe for %s, err = 0x%x\n", fileName, err);
     }
     else {
-        bool ret = cdns_ctx.read_entire_file(F);
+        ret = cdns_ctx.read_entire_file(F);
 
         if (!ret) {
-            fprintf(stderr, "Cannot read data from %s, err = 0x%x", fileName, err);
+            fprintf(stderr, "Cannot read data from %s, err = 0x%x\n", fileName, err);
         } else {
             ret = LoadCdnsRecords(&cdns_ctx, &err);
+            if (!ret) {
+                fprintf(stderr, "Cannot load records from %s, err = 0x%x\n", fileName, err);
+            }
         }
         ithi_pipe_close(F);
     }

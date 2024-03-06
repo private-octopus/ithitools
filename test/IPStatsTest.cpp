@@ -31,18 +31,15 @@
 static char const * ipstats_test_input = "..\\data\\tiny-capture.cbor";
 static char const * ipstats_test_output = "..\\data\\ipstats-tiny-ref.csv";
 static char const * ipstats_xz_test_input = "..\\data\\tiny-capture.cbor.xz";
-static char const * ipstats_xz_test_output = "..\\data\\ipstats-xz-tiny-ref.csv";
 #else
 static char const * ipstats_test_input = "..\\..\\data\\tiny-capture.cbor";
 static char const * ipstats_test_output = "..\\..\\data\\ipstats-tiny-ref.csv";
 static char const * ipstats_xz_test_input = "..\\..\\data\\tiny-capture.cbor.xz";
-static char const * ipstats_xz_test_output = "..\\..\\data\\ipstats-xz-tiny-ref.csv";
 #endif
 #else
 static char const * ipstats_test_input = "data/tiny-capture.cbor";
 static char const * ipstats_test_output = "data/ipstats-tiny-ref.csv";
 static char const * ipstats_xz_test_input = "data/tiny-capture.cbor.xz";
-static char const * ipstats_xz_test_output = "data/ipstats-xz-tiny-ref.csv";
 #endif
 static char const* ip_stats_csv = "tiny-capture-ipstats.csv";
 static char const* ip_stats_xz_csv = "tiny-capture-ipstats-xz.csv";
@@ -56,7 +53,6 @@ bool IPStatsTestOne(
 )
 {
     IPStats ipstats;
-    char const * list[1] = { ipstats_test_input };
     bool ret = ipstats.LoadInputFiles(nb_input_files, input_files);
 
     if (!ret){
