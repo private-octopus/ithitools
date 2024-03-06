@@ -20,6 +20,7 @@
 */
 
 #include "ithi_test_class.h"
+#include "ithiutil.h"
 #include "ipstats.h"
 #include "MetricTest.h"
 #include "IPStatsTest.h"
@@ -104,7 +105,45 @@ bool IPStatsXZTest::DoTest()
     IPStats ipstats;
     char const * list[1] = { ipstats_xz_test_input };
 
-    bool ret = IPStatsTestOne(ip_stats_xz_csv, /* TODO: change! */ ipstats_test_output, list, 1);
+    bool ret = IPStatsTestOne(ip_stats_xz_csv, /* TODO: change?*/ ipstats_test_output, list, 1);
 
+    return ret;
+}
+
+IPStatsLoadTest::IPStatsLoadTest()
+{
+}
+
+IPStatsLoadTest::~IPStatsLoadTest()
+{
+}
+
+bool IPStatsLoadTest::DoTest()
+{
+    bool ret;
+    cdns cdns_ctx;
+    FILE* P = NULL;
+    int err;
+    if (!(ret = cdns_ctx.open(ipstats_test_input))) {
+        fprintf(stderr, "Cannot read file %s\n", ipstats_test_input);
+    }
+    else {
+        cdns cdns_ctx_xz;
+
+        P = ithi_xzcat_decompress_open(ipstats_xz_test_input, &err);
+
+        if (P == NULL) {
+            fprintf(stderr, "Cannot open pipe for %s, err = 0x%x\n", ipstats_xz_test_input, err);
+        }
+        else if (!(ret = cdns_ctx_xz.read_entire_file(P))) {
+            fprintf(stderr, "Cannot decompress file %s\n", ipstats_xz_test_input);
+        }
+        else if (!(ret = (cdns_ctx_xz.buf_read == cdns_ctx.buf_read))) {
+            fprintf(stderr, "Read lengths differ, %zu from xz vs %zu\n", cdns_ctx_xz.buf_read, cdns_ctx.buf_read);
+        }
+        else if (!(ret = (memcmp(cdns_ctx_xz.buf, cdns_ctx.buf, cdns_ctx.buf_read) == 0))) {
+            fprintf(stderr, "Decompressed content differs from file content.\n");
+        }
+    }
     return ret;
 }

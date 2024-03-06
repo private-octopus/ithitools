@@ -42,6 +42,14 @@ public:
     bool DoTest() override;
 };
 
+class IPStatsLoadTest : public ithi_test_class
+{
+public:
+    IPStatsLoadTest();
+    ~IPStatsLoadTest();
+
+    bool DoTest() override;
+};
 
 #endif /* SAVE_TEST_H */
 
