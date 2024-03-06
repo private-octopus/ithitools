@@ -141,7 +141,7 @@ FILE* ithi_xzcat_decompress_open(char const* file_name, int* last_err)
     /* Running on windows requires that 7z.exe is installed */
     xzcat_command = "7z.exe e -so";
 #else
-    xzcat_command = "zxcat -k";
+    xzcat_command = "xzcat -k";
 #endif
 
 #ifdef _WINDOWS
