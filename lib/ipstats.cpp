@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <math.h>
 #include <time.h>
+#include "ithiutil.h"
 
 #ifdef _WINDOWS
 #define WIN32_LEAN_AND_MEAN
@@ -499,8 +500,13 @@ bool IPStats::LoadInputFiles(size_t nb_files, char const** fileNames)
     for (size_t i = 0; ret && i < nb_files; i++)
     {
         /* If ends with ".cbor", load as cbor file */
-        ret = LoadCborFile(fileNames[i]);
+        if (ithi_endswith(fileNames[i], ".cbor")) {
+            ret = LoadCborFile(fileNames[i]);
+        }
         /* If ends with ".cbor.xz", load as compressed cbor file */
+        else if (ithi_endswith(fileNames[i], ".cbor.cx")) {
+            ret = LoadCborCxFile(fileNames[i]);
+        }
         /* If ends with ".csv", load as csv file */
     }
 
@@ -513,15 +519,34 @@ bool IPStats::LoadCborFile(char const* fileName)
     int err;
     bool ret = cdns_ctx.open(fileName);
 
-    while (ret) {
-        if (!cdns_ctx.open_block(&err)) {
-            ret = (err == CBOR_END_OF_ARRAY);
-            break;
-        }
-        for (size_t i = 0; i < cdns_ctx.block.queries.size(); i++) {
-            SubmitCborPacket(&cdns_ctx, i);
-        }
+    if (ret) {
+        ret = LoadCdnsRecords(&cdns_ctx, &err);
     }
+
+    return ret;
+}
+
+bool IPStats::LoadCborCxFile(char const* fileName)
+{
+    cdns cdns_ctx;
+    int err;
+    bool ret = true;
+    FILE* F = ithi_xzcat_decompress_open(fileName, &err);
+
+    if (F == NULL) {
+        fprintf(stderr, "Cannot open pipe for %s, err = 0x%x", fileName, err);
+    }
+    else {
+        bool ret = cdns_ctx.read_entire_file(F);
+
+        if (!ret) {
+            fprintf(stderr, "Cannot read data from %s, err = 0x%x", fileName, err);
+        } else {
+            ret = LoadCdnsRecords(&cdns_ctx, &err);
+        }
+        ithi_pipe_close(F);
+    }
+
     return ret;
 }
 
@@ -582,6 +607,22 @@ bool IPStats::IPAddressIsLower(IPStatsRecord * x, IPStatsRecord * y)
     bool ret = (x->ipaddr_length < y->ipaddr_length) ||
         (x->ipaddr_length == y->ipaddr_length && memcmp(x->ip_addr, y->ip_addr, x->ipaddr_length) < 0);
 
+    return ret;
+}
+
+bool IPStats::LoadCdnsRecords(cdns * cdns_ctx, int * err)
+{
+    bool ret = true;
+
+    while (ret) {
+        if (cdns_ctx->open_block(err)) {
+            ret = (*err == CBOR_END_OF_ARRAY);
+            break;
+        }
+        for (size_t i = 0; i < cdns_ctx->block.queries.size(); i++) {
+            SubmitCborPacket(cdns_ctx, i);
+        }
+    }
     return ret;
 }
 

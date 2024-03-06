@@ -41,5 +41,7 @@ void ithi_pipe_close(FILE* F);
 
 size_t ithi_copy_to_safe_text(char* text, size_t text_max, uint8_t* x_in, size_t l_in);
 
+bool ithi_endswith(char const* target, char const* suffix);
+
 #endif
 

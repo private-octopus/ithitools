@@ -217,3 +217,14 @@ size_t ithi_copy_to_safe_text(char* text, size_t text_max, uint8_t * x_in, size_
     return (text_length);
 }
 
+bool ithi_endswith(char const* target, char const* suffix)
+{
+    size_t target_length = strlen(target);
+    size_t suffix_length = strlen(suffix);
+    bool ret = suffix_length <= target_length;
+    if (ret) {
+        size_t ix = target_length - suffix_length;
+        ret &= (strcmp(target + ix, suffix) == 0);
+    }
+    return ret;
+}

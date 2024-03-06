@@ -145,7 +145,8 @@ public:
 
     /* For the command line tools */
     bool LoadInputFiles(size_t nb_files, char const** fileNames);
-    bool LoadCborFile(char const* fileNames);
+    bool LoadCborFile(char const* fileName);
+    bool LoadCborCxFile(char const* fileName);
 
     bool SaveToCsv(char const* file_name);
 
@@ -160,6 +161,7 @@ public:
 
 private:
     BinHash<IPStatsRecord> ip_records;
+    bool LoadCdnsRecords(cdns * cdns_ctx, int * err);
     void SubmitCborPacket(cdns* cdns_ctx, size_t packet_id);
     static bool IPAddressIsLower(IPStatsRecord * x, IPStatsRecord * y);
     BinHash<TldAsKey> registeredTld;
