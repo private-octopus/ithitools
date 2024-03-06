@@ -76,7 +76,6 @@ DnsStats::~DnsStats()
 static char const * DefaultRootAddresses[] = {
     "2001:503:ba3e::2:30",
     "198.41.0.4",
-    "2001:500:200::b",
     "192.228.79.201", /* Since 2017-10-24, b.root-servers.net changed from 192.228.79.201 to 199.9.14.201 */
     "199.9.14.201",   /* See https://b.root-servers.org/news/2017/08/09/new-ipv4.html */
     "2001:500:2::c",
@@ -240,7 +239,7 @@ char const * RegisteredTldName[] = {
     "GLASS", "GLE", "GLOBAL", "GLOBO", "GM", "GMAIL", "GMBH", "GMO", "GMX", "GN", "GODADDY",
     "GOLD", "GOLDPOINT", "GOLF", "GOO", "GOODYEAR", "GOOG", "GOOGLE", "GOP",
     "GOT", "GOV", "GP", "GQ", "GR", "GRAINGER", "GRAPHICS", "GRATIS", "GREEN", "GRIPE",
-    "GROCERY", "GROUP", "GS", "GT", "GU", "GUARDIAN", "GUCCI", "GUGE", "GUIDE", "GUITARS",
+    "GROCERY", "GROUP", "GS", "GT", "GU", "GUCCI", "GUGE", "GUIDE", "GUITARS",
     "GURU", "GW", "GY", "HAIR", "HAMBURG", "HANGOUT", "HAUS", "HBO", "HDFC", "HDFCBANK",
     "HEALTH", "HEALTHCARE", "HELP", "HELSINKI", "HERE", "HERMES", "HIPHOP",
     "HISAMITSU", "HITACHI", "HIV", "HK", "HKT", "HM", "HN", "HOCKEY", "HOLDINGS", "HOLIDAY",
