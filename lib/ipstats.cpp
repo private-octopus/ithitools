@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <math.h>
 #include <time.h>
+#include "ithiutil.h"
 
 #ifdef _WINDOWS
 #define WIN32_LEAN_AND_MEAN
@@ -129,11 +130,6 @@ IPStatsRecord::IPStatsRecord() :
     memset(name_parts, 0, sizeof(name_parts));
     memset(rr_types, 0, sizeof(rr_types));
     memset(locales, 0, sizeof(locales));
-    /* Debug variables */
-    tld_length = 0;
-    sld_length = 0;
-    memset(TLD, 0, 64);
-    memset(SLD, 0, 64);
 }
 
 IPStatsRecord::~IPStatsRecord()
@@ -475,10 +471,6 @@ const size_t nb_TLD_subset = sizeof(TLD_subset) / sizeof(const char*);
 
 void IPStatsRecord::SetTLD(size_t tld_length, uint8_t* tld)
 {
-#if 1
-    this->tld_length = tld_length;
-    memcpy(this->TLD, tld, tld_length);
-#endif
     IPStatsRecord::SetXLD(tld_length, tld, TLD_subset, nb_TLD_subset, this->tld_counts, &this->tld_hyperlog);
 }
 
@@ -491,44 +483,6 @@ const size_t nb_SLD_subset = sizeof(SLD_subset) / sizeof(const char*);
 void IPStatsRecord::SetSLD(size_t sld_length, uint8_t* sld)
 {
     IPStatsRecord::SetXLD(sld_length, sld, SLD_subset, nb_SLD_subset, this->sld_counts, &this->sld_hyperlog);
-#if 1
-    this->sld_length = sld_length;
-    memcpy(this->SLD, sld, sld_length);
-#endif
-}
-
-void IPStatsRecord::DebugPrint(FILE* F)
-{
-#if 1
-    uint8_t test_ip[4] = { 10, 9, 1, 109 };
-    if (memcmp(this->ip_addr, test_ip, 4) == 0) {
-        uint64_t tld_hash = HyperLogLog::Fnv64(TLD, tld_length);
-        uint64_t sld_hash = HyperLogLog::Fnv64(SLD, sld_length);
-        fprintf(F, "IP:%d.%d.%d.%d,", this->ip_addr[0], this->ip_addr[1], this->ip_addr[2], this->ip_addr[3]);
-        fprintf(F, "TLD[%zu, 0x% " PRIx64 "] = .", tld_length, tld_hash);
-        for (size_t i = 0; i < tld_length; i++) {
-            int c = TLD[i];
-            if (c >= 32 && c < 127) {
-                fprintf(F, "%c.", c);
-            }
-            else {
-                fprintf(F, "\\%x.", c);
-            }
-        }
-
-        fprintf(F, ", SLD[%zu, 0x% " PRIx64 "] = .", sld_length, sld_hash);
-        for (size_t i = 0; i < sld_length; i++) {
-            int c = SLD[i];
-            if (c >= 32 && c < 127) {
-                fprintf(F, "%c.", c);
-            }
-            else {
-                fprintf(F, "\\%x.", c);
-            }
-        }
-        fprintf(F, "\n");
-    }
-#endif
 }
 
 IPStats::IPStats()
@@ -539,13 +493,21 @@ IPStats::~IPStats()
 {
 }
 
-bool IPStats::LoadCborFiles(size_t nb_files, char const** fileNames)
+bool IPStats::LoadInputFiles(size_t nb_files, char const** fileNames)
 {
     bool ret = true;
 
     for (size_t i = 0; ret && i < nb_files; i++)
     {
-        ret = LoadCborFile(fileNames[i]);
+        /* If ends with ".cbor", load as cbor file */
+        if (ithi_endswith(fileNames[i], ".cbor")) {
+            ret = LoadCborFile(fileNames[i]);
+        }
+        /* If ends with ".cbor.xz", load as compressed cbor file */
+        else if (ithi_endswith(fileNames[i], ".cbor.xz")) {
+            ret = LoadCborCxFile(fileNames[i]);
+        }
+        /* If ends with ".csv", load as csv file */
     }
 
     return ret;
@@ -557,15 +519,37 @@ bool IPStats::LoadCborFile(char const* fileName)
     int err;
     bool ret = cdns_ctx.open(fileName);
 
-    while (ret) {
-        if (!cdns_ctx.open_block(&err)) {
-            ret = (err == CBOR_END_OF_ARRAY);
-            break;
-        }
-        for (size_t i = 0; i < cdns_ctx.block.queries.size(); i++) {
-            SubmitCborPacket(&cdns_ctx, i);
-        }
+    if (ret) {
+        ret = LoadCdnsRecords(&cdns_ctx, &err);
     }
+
+    return ret;
+}
+
+bool IPStats::LoadCborCxFile(char const* fileName)
+{
+    cdns cdns_ctx;
+    int err;
+    bool ret = true;
+    FILE* F = ithi_xzcat_decompress_open(fileName, &err);
+
+    if (F == NULL) {
+        fprintf(stderr, "Cannot open pipe for %s, err = 0x%x\n", fileName, err);
+    }
+    else {
+        ret = cdns_ctx.read_entire_file(F);
+
+        if (!ret) {
+            fprintf(stderr, "Cannot read data from %s, err = 0x%x\n", fileName, err);
+        } else {
+            ret = LoadCdnsRecords(&cdns_ctx, &err);
+            if (!ret) {
+                fprintf(stderr, "Cannot load records from %s, err = 0x%x\n", fileName, err);
+            }
+        }
+        ithi_pipe_close(F);
+    }
+
     return ret;
 }
 
@@ -626,6 +610,22 @@ bool IPStats::IPAddressIsLower(IPStatsRecord * x, IPStatsRecord * y)
     bool ret = (x->ipaddr_length < y->ipaddr_length) ||
         (x->ipaddr_length == y->ipaddr_length && memcmp(x->ip_addr, y->ip_addr, x->ipaddr_length) < 0);
 
+    return ret;
+}
+
+bool IPStats::LoadCdnsRecords(cdns * cdns_ctx, int * err)
+{
+    bool ret = true;
+
+    while (ret) {
+        if (!cdns_ctx->open_block(err)) {
+            ret = (*err == CBOR_END_OF_ARRAY);
+            break;
+        }
+        for (size_t i = 0; i < cdns_ctx->block.queries.size(); i++) {
+            SubmitCborPacket(cdns_ctx, i);
+        }
+    }
     return ret;
 }
 
@@ -692,7 +692,6 @@ void IPStats::SubmitCborPacket(cdns* cdns_ctx, size_t packet_id)
         bool stored = false;
         this->ip_records.InsertOrAdd(&ipsr, true, &stored);
     }
-    ipsr.DebugPrint(stdout);
 }
 
 bool IPStats::IsRegisteredTLD(uint8_t* x, size_t l)

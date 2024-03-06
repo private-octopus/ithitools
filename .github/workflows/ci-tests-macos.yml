@@ -22,6 +22,10 @@ jobs:
           # a pull request then we can checkout the head.
           fetch-depth: 2
           submodules: 'recursive'
+          
+      - name: Install xz
+        run: |
+          brew install xz
 
       - name: Run cmake
         run: |

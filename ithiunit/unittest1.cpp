@@ -380,5 +380,21 @@ namespace ithiunit
             Assert::AreEqual(ret, true);
         }
 
+        TEST_METHOD(IPStatsLoad)
+        {
+            IPStatsLoadTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
+        TEST_METHOD(IPStatsXZ)
+        {
+            IPStatsXZTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
 	};
 }

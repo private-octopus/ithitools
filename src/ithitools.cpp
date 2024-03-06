@@ -642,18 +642,18 @@ int main(int argc, char ** argv)
 
         if (optind >= argc)
         {
-            fprintf(stderr, "No capture file to analyze!\n");
+            fprintf(stderr, "No file to load!\n");
             exit_code = usage();
         }
         else {
-            if (!ipstats.LoadCborFiles((size_t)argc - optind, (char const**)(argv + optind)))
+            if (!ipstats.LoadInputFiles((size_t)argc - optind, (char const**)(argv + optind)))
             {
-                fprintf(stderr, "Cannot process the CBOR input files.\n");
+                fprintf(stderr, "Cannot process the input files.\n");
                 exit_code = -1;
             }
             else
             {
-                printf("CBOR Capture processing succeeded, %d records.\n", ipstats.GetCount());
+                printf("File processing succeeded, %d records.\n", ipstats.GetCount());
                 if (!ipstats.SaveToCsv(ip_stats_csv)) {
                     fprintf(stderr, "Cannot save to csv file: %s.\n", ip_stats_csv);
                     exit_code = usage();
