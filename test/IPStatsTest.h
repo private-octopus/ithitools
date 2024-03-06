@@ -33,5 +33,15 @@ public:
     bool DoTest() override;
 };
 
+class IPStatsXZTest : public ithi_test_class
+{
+public:
+    IPStatsXZTest();
+    ~IPStatsXZTest();
+
+    bool DoTest() override;
+};
+
+
 #endif /* SAVE_TEST_H */
 

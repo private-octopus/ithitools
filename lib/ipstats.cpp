@@ -504,7 +504,7 @@ bool IPStats::LoadInputFiles(size_t nb_files, char const** fileNames)
             ret = LoadCborFile(fileNames[i]);
         }
         /* If ends with ".cbor.xz", load as compressed cbor file */
-        else if (ithi_endswith(fileNames[i], ".cbor.cx")) {
+        else if (ithi_endswith(fileNames[i], ".cbor.xz")) {
             ret = LoadCborCxFile(fileNames[i]);
         }
         /* If ends with ".csv", load as csv file */

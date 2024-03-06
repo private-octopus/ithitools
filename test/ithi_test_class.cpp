@@ -75,6 +75,7 @@ enum test_list_enum {
     test_enum_TrailingZeroes,
     test_enum_HyperLogLog,
     test_enum_IPStats,
+    test_enum_IPStatsXZ,
     test_enum_max_number,
 };
 
@@ -178,6 +179,8 @@ char const * ithi_test_class::GetTestName(int number)
         return("HyperLogLog");
     case test_enum_IPStats:
         return("IPStats");
+    case test_enum_IPStatsXZ:
+        return("IPStatsXZ");
     default:
         break;
     }
@@ -330,6 +333,8 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
     case test_enum_IPStats:
         test = new IPStatsTest();
         break;
+    case test_enum_IPStatsXZ:
+        test = new IPStatsXZTest();
     default:
         break;
     }

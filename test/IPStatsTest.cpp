@@ -29,16 +29,53 @@
 #ifndef _WINDOWS64
 static char const * ipstats_test_input = "..\\data\\tiny-capture.cbor";
 static char const * ipstats_test_output = "..\\data\\ipstats-tiny-ref.csv";
+static char const * ipstats_xz_test_input = "..\\data\\tiny-capture.cbor.xz";
+static char const * ipstats_xz_test_output = "..\\data\\ipstats-xz-tiny-ref.csv";
 #else
 static char const * ipstats_test_input = "..\\..\\data\\tiny-capture.cbor";
 static char const * ipstats_test_output = "..\\..\\data\\ipstats-tiny-ref.csv";
+static char const * ipstats_xz_test_input = "..\\..\\data\\tiny-capture.cbor.xz";
+static char const * ipstats_xz_test_output = "..\\..\\data\\ipstats-xz-tiny-ref.csv";
 #endif
 #else
 static char const * ipstats_test_input = "data/tiny-capture.cbor";
 static char const * ipstats_test_output = "data/ipstats-tiny-ref.csv";
+static char const * ipstats_xz_test_input = "data/tiny-capture.cbor.xz";
+static char const * ipstats_xz_test_output = "data/ipstats-xz-tiny-ref.csv";
 #endif
 static char const* ip_stats_csv = "tiny-capture-ipstats.csv";
+static char const* ip_stats_xz_csv = "tiny-capture-ipstats-xz.csv";
 
+
+bool IPStatsTestOne(
+    char const * result_file,
+    char const * ref_file,
+    char const** input_files,
+    size_t nb_input_files
+)
+{
+    IPStats ipstats;
+    char const * list[1] = { ipstats_test_input };
+    bool ret = ipstats.LoadInputFiles(nb_input_files, input_files);
+
+    if (!ret){
+        TEST_LOG("Cannot process the input file: %s\n", input_files[0]);
+    }
+    else
+    {
+        ret = ipstats.SaveToCsv(result_file);
+        if (!ret) {
+            TEST_LOG("Cannot save to csv file: %s.\n", result_file);
+        }
+        else {
+            TEST_LOG("IP Stats have been saved to %s\n", result_file);
+
+            ret = MetricTest::compare_files(result_file, ref_file);
+        }
+    }
+
+    return ret;
+}
 
 IPStatsTest::IPStatsTest()
 {}
@@ -48,26 +85,26 @@ IPStatsTest::~IPStatsTest()
 
 bool IPStatsTest::DoTest()
 {
-    IPStats ipstats;
     char const * list[1] = { ipstats_test_input };
-    bool ret = ipstats.LoadInputFiles(1, list);
 
-    if (!ret){
-        TEST_LOG("Cannot process the CBOR input file: %s\n", list[0]);
-    }
-    else
-    {
-        ret = ipstats.SaveToCsv(ip_stats_csv);
-        if (!ret) {
-            TEST_LOG("Cannot save to csv file: %s.\n", ip_stats_csv);
-        }
-        else {
-            TEST_LOG("IP Stats have been saved to %s\n", ip_stats_csv);
-            
-            ret = MetricTest::compare_files(ip_stats_csv, ipstats_test_output);
-        }
-    }
+    bool ret = IPStatsTestOne(ip_stats_csv, ipstats_test_output, list, 1);
 
     return ret;
 }
 
+
+IPStatsXZTest::IPStatsXZTest()
+{}
+
+IPStatsXZTest::~IPStatsXZTest()
+{}
+
+bool IPStatsXZTest::DoTest()
+{
+    IPStats ipstats;
+    char const * list[1] = { ipstats_xz_test_input };
+
+    bool ret = IPStatsTestOne(ip_stats_xz_csv, /* TODO: change! */ ipstats_test_output, list, 1);
+
+    return ret;
+}
