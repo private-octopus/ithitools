@@ -41,7 +41,7 @@ void ParseCsvCell(char const* line, size_t* index, size_t* index_first, size_t* 
     size_t i = *index;
 
     /* Skip the first blanks */
-    while (line[i] == ' ' || line[i] == '\t' || line[i] != '\r' || line[i] != '\n') {
+    while (line[i] == ' ' || line[i] == '\t' || line[i] == '\r' || line[i] == '\n') {
         i++;
     }
     /* Skip until the next blank or comma */
@@ -51,7 +51,7 @@ void ParseCsvCell(char const* line, size_t* index, size_t* index_first, size_t* 
     }
     *index_last = i;
     /* Skip the blanks until the comma */
-    while (line[i] == ' ' || line[i] == '\t' || line[i] != '\r' || line[i] != '\n') {
+    while (line[i] == ' ' || line[i] == '\t' || line[i] == '\r' || line[i] == '\n') {
         i++;
     }
     /* Skip the comma if present */
@@ -508,6 +508,9 @@ bool IPStats::LoadInputFiles(size_t nb_files, char const** fileNames)
             ret = LoadCborCxFile(fileNames[i]);
         }
         /* If ends with ".csv", load as csv file */
+        else if (ithi_endswith(fileNames[i], ".csv")) {
+            ret = LoadCsvFile(fileNames[i]);
+        }
     }
 
     return ret;
@@ -553,26 +556,49 @@ bool IPStats::LoadCborCxFile(char const* fileName)
     return ret;
 }
 
+bool IPStats::LoadCsvFile(char const* file_name)
+{
+    bool ret = true;
+    int last_err = 0;
+    FILE* F = ithi_file_open_ex(file_name, "rt", &last_err);
+
+    if (F == NULL) {
+        fprintf(stderr, "Cannot open input file %s\n", file_name);
+        ret = false;
+    }
+    else {
+        char buf[1024];
+
+        while (fgets(buf, 1024, F) != NULL) {
+            IPStatsRecord* ipsr = IPStatsRecord::ParseLine(buf);
+
+            if (ipsr != NULL) {
+                bool ipsr_stored = false;
+                this->ip_records.InsertOrAdd(ipsr, false, &ipsr_stored);
+                if (!ipsr_stored) {
+                    delete ipsr;
+                }
+            }
+            else {
+                fprintf(stderr, "Cannot parse: %s", buf);
+            }
+        }
+
+        fclose(F);
+    }
+    return ret;
+}
+
 bool IPStats::SaveToCsv(char const* file_name)
 {
     bool ret = true;
-    FILE* F;
-#ifdef _WINDOWS
-    errno_t err = fopen_s(&F, file_name, "wt");
-    if (err != 0) {
-        if (F != NULL) {
-            fclose(F);
-            F = NULL;
-        }
+    int last_err = 0;
+    FILE* F = ithi_file_open_ex(file_name, "wt", &last_err);
+
+    if (F == NULL) {
         ret = false;
     }
-#else
-    F = fopen(file_name, "wt");
-
-    ret &= (F != NULL);
-#endif
-
-    if (F != NULL) {
+    else {
         /* Enumerate the records in the binhash, store the keys in a vector */
         std::vector<IPStatsRecord*> records(ip_records.GetCount());
         size_t record_index = 0;

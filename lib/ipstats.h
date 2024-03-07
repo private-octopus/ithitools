@@ -147,6 +147,7 @@ public:
     bool LoadInputFiles(size_t nb_files, char const** fileNames);
     bool LoadCborFile(char const* fileName);
     bool LoadCborCxFile(char const* fileName);
+    bool LoadCsvFile(char const* fileName);
 
     bool SaveToCsv(char const* file_name);
 

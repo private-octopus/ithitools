@@ -380,6 +380,14 @@ namespace ithiunit
             Assert::AreEqual(ret, true);
         }
 
+        TEST_METHOD(IPStatsCsv)
+        {
+            IPStatsCsvTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
+
         TEST_METHOD(IPStatsLoad)
         {
             IPStatsLoadTest test;
