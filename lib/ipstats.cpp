@@ -569,7 +569,7 @@ bool IPStats::LoadCsvFile(char const* file_name)
     else {
         char buf[1024];
 
-        while (fgets(buf, 1024, F) > 0) {
+        while (fgets(buf, 1024, F) != NULL) {
             IPStatsRecord* ipsr = IPStatsRecord::ParseLine(buf);
 
             if (ipsr != NULL) {
