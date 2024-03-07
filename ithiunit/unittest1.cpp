@@ -395,6 +395,14 @@ namespace ithiunit
 
             Assert::AreEqual(ret, true);
         }
+        
+        TEST_METHOD(IPStatsMerge)
+        {
+            IPStatsMergeTest test;
+            bool ret = test.DoTest();
+
+            Assert::AreEqual(ret, true);
+        }
 
         TEST_METHOD(IPStatsXZ)
         {
