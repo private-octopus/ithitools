@@ -42,6 +42,15 @@ public:
     bool DoTest() override;
 };
 
+class IPStatsMergeTest : public ithi_test_class
+{
+public:
+    IPStatsMergeTest();
+    ~IPStatsMergeTest();
+
+    bool DoTest() override;
+};
+
 class IPStatsXZTest : public ithi_test_class
 {
 public:

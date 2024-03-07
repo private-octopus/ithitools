@@ -29,21 +29,25 @@
 #ifdef _WINDOWS
 #ifndef _WINDOWS64
 static char const * ipstats_test_input = "..\\data\\tiny-capture.cbor";
-static char const * ipstats_test_output = "..\\data\\ipstats-tiny-ref.csv";
+static char const * ipstats_test_output = "..\\data\\tiny-capture-ipstats.csv";
 static char const * ipstats_xz_test_input = "..\\data\\tiny-capture.cbor.xz";
+static char const * ipstats_test_output_2 = "..\\data\\tiny-capture-ipstats-2.csv";
 #else
 static char const * ipstats_test_input = "..\\..\\data\\tiny-capture.cbor";
-static char const * ipstats_test_output = "..\\..\\data\\ipstats-tiny-ref.csv";
+static char const * ipstats_test_output = "..\\..\\data\\tiny-capture-ipstats.csv";
 static char const * ipstats_xz_test_input = "..\\..\\data\\tiny-capture.cbor.xz";
+static char const * ipstats_test_output_2 = "..\\..\\data\\tiny-capture-ipstats-2.csv";
 #endif
 #else
 static char const * ipstats_test_input = "data/tiny-capture.cbor";
-static char const * ipstats_test_output = "data/ipstats-tiny-ref.csv";
+static char const * ipstats_test_output = "data/tiny-capture-ipstats.csv";
 static char const * ipstats_xz_test_input = "data/tiny-capture.cbor.xz";
+static char const * ipstats_test_output_2 = "data/tiny-capture-ipstats-2.csv";
 #endif
 static char const* ip_stats_csv = "tiny-capture-ipstats.csv";
 static char const* ip_stats_csv_csv = "tiny-capture-ipstats-csv.csv";
 static char const* ip_stats_xz_csv = "tiny-capture-ipstats-xz.csv";
+static char const * ip_stats_merge_csv = "tiny-capture-ipstats-2.csv";
 
 
 bool IPStatsTestOne(
@@ -102,6 +106,23 @@ bool IPStatsCsvTest::DoTest()
     char const * list[1] = { ipstats_test_output };
 
     bool ret = IPStatsTestOne(ip_stats_csv_csv, ipstats_test_output, list, 1);
+
+    return ret;
+}
+
+
+IPStatsMergeTest::IPStatsMergeTest()
+{}
+
+IPStatsMergeTest::~IPStatsMergeTest()
+{}
+
+bool IPStatsMergeTest::DoTest()
+{
+    IPStats ipstats;
+    char const * list[2] = { ipstats_test_output,  ipstats_test_output};
+
+    bool ret = IPStatsTestOne(ip_stats_merge_csv, ipstats_test_output_2, list, 2);
 
     return ret;
 }
