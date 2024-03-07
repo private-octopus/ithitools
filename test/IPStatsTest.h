@@ -33,6 +33,15 @@ public:
     bool DoTest() override;
 };
 
+class IPStatsCsvTest : public ithi_test_class
+{
+public:
+    IPStatsCsvTest();
+    ~IPStatsCsvTest();
+
+    bool DoTest() override;
+};
+
 class IPStatsXZTest : public ithi_test_class
 {
 public:

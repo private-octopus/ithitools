@@ -42,6 +42,7 @@ static char const * ipstats_test_output = "data/ipstats-tiny-ref.csv";
 static char const * ipstats_xz_test_input = "data/tiny-capture.cbor.xz";
 #endif
 static char const* ip_stats_csv = "tiny-capture-ipstats.csv";
+static char const* ip_stats_csv_csv = "tiny-capture-ipstats-csv.csv";
 static char const* ip_stats_xz_csv = "tiny-capture-ipstats-xz.csv";
 
 
@@ -89,6 +90,21 @@ bool IPStatsTest::DoTest()
     return ret;
 }
 
+IPStatsCsvTest::IPStatsCsvTest()
+{}
+
+IPStatsCsvTest::~IPStatsCsvTest()
+{}
+
+bool IPStatsCsvTest::DoTest()
+{
+    IPStats ipstats;
+    char const * list[1] = { ipstats_test_output };
+
+    bool ret = IPStatsTestOne(ip_stats_csv_csv, ipstats_test_output, list, 1);
+
+    return ret;
+}
 
 IPStatsXZTest::IPStatsXZTest()
 {}
@@ -101,7 +117,7 @@ bool IPStatsXZTest::DoTest()
     IPStats ipstats;
     char const * list[1] = { ipstats_xz_test_input };
 
-    bool ret = IPStatsTestOne(ip_stats_xz_csv, /* TODO: change?*/ ipstats_test_output, list, 1);
+    bool ret = IPStatsTestOne(ip_stats_xz_csv, ipstats_test_output, list, 1);
 
     return ret;
 }
