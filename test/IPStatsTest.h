@@ -51,6 +51,15 @@ public:
     bool DoTest() override;
 };
 
+class IPStatsTextListTest : public ithi_test_class
+{
+public:
+    IPStatsTextListTest();
+    ~IPStatsTextListTest();
+
+    bool DoTest() override;
+};
+
 class IPStatsXZTest : public ithi_test_class
 {
 public:

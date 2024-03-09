@@ -43,5 +43,7 @@ size_t ithi_copy_to_safe_text(char* text, size_t text_max, uint8_t* x_in, size_t
 
 bool ithi_endswith(char const* target, char const* suffix);
 
+size_t ithi_strip_end_space(char* line);
+
 #endif
 

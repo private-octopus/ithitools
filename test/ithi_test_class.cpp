@@ -78,6 +78,7 @@ enum test_list_enum {
     test_enum_IPStatsCsv,
     test_enum_IPStatsLoad,
     test_enum_IPStatsMerge,
+    test_enum_IPStatsTextList,
     test_enum_IPStatsXZ,
     test_enum_max_number,
 };
@@ -188,6 +189,8 @@ char const * ithi_test_class::GetTestName(int number)
         return("IPStatsLoad");
     case test_enum_IPStatsMerge:
         return("IPStatsMerge");
+    case test_enum_IPStatsTextList:
+        return("IPStatsTextList");
     case test_enum_IPStatsXZ:
         return("IPStatsXZ");
     default:
@@ -350,6 +353,9 @@ ithi_test_class * ithi_test_class::TestByNumber(int number)
         break;
     case test_enum_IPStatsMerge:
         test = new IPStatsMergeTest();
+        break;
+    case test_enum_IPStatsTextList:
+        test = new IPStatsTextListTest();
         break;
     case test_enum_IPStatsXZ:
         test = new IPStatsXZTest();

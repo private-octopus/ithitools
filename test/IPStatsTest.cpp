@@ -48,6 +48,8 @@ static char const* ip_stats_csv = "tiny-capture-ipstats.csv";
 static char const* ip_stats_csv_csv = "tiny-capture-ipstats-csv.csv";
 static char const* ip_stats_xz_csv = "tiny-capture-ipstats-xz.csv";
 static char const * ip_stats_merge_csv = "tiny-capture-ipstats-2.csv";
+static char const* ip_stats_text_list = "tiny_capture_text_list.txt";
+static char const* ip_stats_text_list_csv = "tiny_capture_text_list.csv";
 
 
 bool IPStatsTestOne(
@@ -124,6 +126,36 @@ bool IPStatsMergeTest::DoTest()
 
     bool ret = IPStatsTestOne(ip_stats_merge_csv, ipstats_test_output_2, list, 2);
 
+    return ret;
+}
+
+
+IPStatsTextListTest::IPStatsTextListTest()
+{}
+
+IPStatsTextListTest::~IPStatsTextListTest()
+{}
+
+bool IPStatsTextListTest::DoTest()
+{
+    bool ret = true;
+    IPStats ipstats;
+    char const * list[2] = { ipstats_test_output,  ipstats_test_output};
+    FILE* F = ithi_file_open(ip_stats_text_list, "wt");
+    if (F == NULL) {
+        ret = false;
+    }
+    else {
+        for (int i = 0; ret && i < 2; i++) {
+            ret &= fprintf(F, "%s\n", list[i]) > 0;
+        }
+        fclose(F);
+
+        if (ret) {
+            char const* l_txt[1] = { ip_stats_text_list };
+            ret = IPStatsTestOne(ip_stats_text_list_csv, ipstats_test_output_2, l_txt, 1);
+        }
+    }
     return ret;
 }
 
