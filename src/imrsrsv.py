@@ -99,7 +99,7 @@ def prepare_instance_list(storage_folder):
                 cbor_path = join(folder_path, "cbor")
                 if isdir(cbor_path):
                     instance_list.append(folder)
-    return instance_list
+    return sorted(instance_list)
 
 class instance_bucket:
     def __init__(self, instance, storage_folder, result_path, tmp_path, month, cmd, do_debug):
