@@ -493,24 +493,49 @@ IPStats::~IPStats()
 {
 }
 
+bool IPStats::LoadInputFile(char const* fileName)
+{
+    bool ret = true;
+
+    /* If ends with ".cbor", load as cbor file */
+    if (ithi_endswith(fileName, ".cbor")) {
+        ret = LoadCborFile(fileName);
+    }
+    /* If ends with ".cbor.xz", load as compressed cbor file */
+    else if (ithi_endswith(fileName, ".cbor.xz")) {
+        ret = LoadCborCxFile(fileName);
+    }
+    /* If ends with ".csv", load as csv file */
+    else if (ithi_endswith(fileName, ".csv")) {
+        ret = LoadCsvFile(fileName);
+    }
+    else if (ithi_endswith(fileName, ".txt")) {
+        FILE* F = ithi_file_open(fileName, "rt");
+        if (F == NULL) {
+            fprintf(stderr, "Cannot open %s\n", fileName);
+        }
+        else {
+            char buf[512];
+
+            while (ret && fgets(buf, 512, F) != NULL) {
+                size_t l = ithi_strip_end_space(buf);
+                if (l > 0) {
+                    ret = LoadInputFile(buf);
+                }
+            }
+            fclose(F);
+        }
+    }
+    return ret;
+}
+
 bool IPStats::LoadInputFiles(size_t nb_files, char const** fileNames)
 {
     bool ret = true;
 
     for (size_t i = 0; ret && i < nb_files; i++)
     {
-        /* If ends with ".cbor", load as cbor file */
-        if (ithi_endswith(fileNames[i], ".cbor")) {
-            ret = LoadCborFile(fileNames[i]);
-        }
-        /* If ends with ".cbor.xz", load as compressed cbor file */
-        else if (ithi_endswith(fileNames[i], ".cbor.xz")) {
-            ret = LoadCborCxFile(fileNames[i]);
-        }
-        /* If ends with ".csv", load as csv file */
-        else if (ithi_endswith(fileNames[i], ".csv")) {
-            ret = LoadCsvFile(fileNames[i]);
-        }
+        ret = LoadInputFile(fileNames[i]);
     }
 
     return ret;

@@ -228,3 +228,20 @@ bool ithi_endswith(char const* target, char const* suffix)
     }
     return ret;
 }
+
+size_t ithi_strip_end_space(char* line)
+{
+    size_t l = strlen(line);
+
+    while (l > 0) {
+        int c = line[l-1];
+        if (c == ' ' || c == '\t' || c == '\n' || c == '\r') {
+            l--;
+            line[l] = 0;
+        }
+        else {
+            break;
+        }
+    }
+    return l;
+}

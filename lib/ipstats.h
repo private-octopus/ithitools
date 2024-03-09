@@ -143,7 +143,9 @@ public:
     IPStats();
     ~IPStats();
 
+
     /* For the command line tools */
+    bool LoadInputFile(char const* fileName);
     bool LoadInputFiles(size_t nb_files, char const** fileNames);
     bool LoadCborFile(char const* fileName);
     bool LoadCborCxFile(char const* fileName);
