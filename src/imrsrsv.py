@@ -99,10 +99,10 @@ def prepare_instance_list(storage_folder):
                 cbor_path = join(folder_path, "cbor")
                 if isdir(cbor_path):
                     instance_list.append(folder)
-    return instance_list
+    return sorted(instance_list)
 
 class instance_bucket:
-    def __init__(self, instance, storage_folder, result_path, tmp_path, month, cmd):
+    def __init__(self, instance, storage_folder, result_path, tmp_path, month, cmd, do_debug):
         self.instance = instance
         self.storage_folder = storage_folder
         self.result_path = result_path
@@ -116,6 +116,7 @@ class instance_bucket:
         self.slices = []
         self.is_complete = False
         self.end_time = time.time() + 18*60*60
+        self.do_debug = do_debug
 
     def begin_instance(self):
         # verify the result and tmp subfolders
@@ -130,8 +131,12 @@ class instance_bucket:
         for slice in self.slices:
             slice_date = slice[0:8]
             date_set.add(slice_date)
-        date_list = list(date_set)
+        date_list = sorted(list(date_set))
         self.date_list = [ d for d in date_list[:-1] if d.startswith(self.month) ]
+        if self.do_debug:
+            print("Found " + str(len(self.date_list)) + "dates. Retain 1")
+            print(self.date_list)
+            self.date_list = self.date_list[0:1]
         return True
 
     def process_date(self, d):
@@ -150,7 +155,7 @@ class instance_bucket:
                 if cmd_ret == 0:
                     print("Computation of " + date_result + " succeeds.")
                 else:
-                    print("Computation of " + date_result + " faild, error:" + str(cmd-ret))
+                    print("Computation of " + date_result + " failed, error:" + str(cmd-ret))
                     return False
             
             except Exception as exc:
@@ -162,25 +167,30 @@ class instance_bucket:
         return True
 
     def load(self):
-        print("Loading " + self.instance)
-        if not self.begin_instance():
-            print("Begin " + self.instance + "failed.")
-            return False
-        print("Dates for " + self.instance)
-        if not self.get_list_of_dates():
-            print("Dates for " + self.instance + "failed.")
-            return False
-        print ("Found " + str(len(self.slices)) + " slices, " + str(len(self.date_list)) + " dates.")
-        for d in self.date_list:
-            if time.time() > self.end_time:
-                print("Job has been running too long, stop now")
+        try:
+            print("Loading " + self.instance)
+            if not self.begin_instance():
+                print("Begin " + self.instance + "failed.")
                 return False
-            print("Looking date " + d)
-            if not self.process_date(d):
+            print("Dates for " + self.instance)
+            if not self.get_list_of_dates():
+                print("Dates for " + self.instance + "failed.")
                 return False
-        print("Complete.")
-        self.is_complete = True
-        return True
+            print ("Found " + str(len(self.slices)) + " slices, " + str(len(self.date_list)) + " dates.")
+            for d in self.date_list:
+                if time.time() > self.end_time:
+                    print("Job has been running too long, stop now")
+                    return False
+                print("Looking date " + d)
+                if not self.process_date(d):
+                    return False
+            print("Complete.")
+            self.is_complete = True
+            return True
+        except Exception as exc:
+                traceback.print_exc()
+                print('\nScript generated an exception: %s' %(exc))
+                return False
 
 def instance_bucket_load(bucket):
     return bucket.load()
@@ -188,14 +198,16 @@ def instance_bucket_load(bucket):
 def main():
     start_time = time.time()
 
-    if len(sys.argv) != 5:
-        print("Usage: imrsrsv <storage_folder> <collection_folder> <yyyymm> <ithitool>")
+    if len(sys.argv) < 5 or len(sys.argv) > 6 or \
+       (len(sys.argv) == 6 and sys.argv[5] != "debug"):
+        print("Usage: imrsrsv <storage_folder> <collection_folder> <yyyymm> <ithitool> [debug]")
         print("There are just " + str(len(sys.argv)) + " arguments.")
         exit (1)
     storage_folder = sys.argv[1]
     collection_folder = sys.argv[2]
     month = sys.argv[3]
     ithitool = sys.argv[4]
+    do_debug = len(sys.argv) == 6
     result_path = join(collection_folder, "results")
     tmp_path = join(collection_folder, "tmp")
 
@@ -214,9 +226,11 @@ def main():
     bucket_list = []
     s = ""
     for instance in instance_list:
-        bucket = instance_bucket(instance, storage_folder, result_path, tmp_path, month, ithitool)
+        bucket = instance_bucket(instance, storage_folder, result_path, tmp_path, month, ithitool, do_debug)
         bucket_list.append(bucket)
         s += instance + ", "
+        if do_debug:
+            break;
     print("Starting to process " + str(len(instance_list)) + " instances:\n" + s)
     
     # process multiple instances in parallel
