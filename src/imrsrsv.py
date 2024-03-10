@@ -149,7 +149,9 @@ class instance_bucket:
             try:
                 with open(date_tmp, "wt") as F:
                     for s in this_slice:
-                        F.write(join(self.cbor_instance, s) + "\n")
+                        s_file = join(self.cbor_instance, s)
+                        if os.path.getsize(s_file) > 0:
+                            F.write(s_file + "\n")
                 merge_cmp = self.cmd + ' -I ' + date_result + " " + date_tmp
                 cmd_ret = os.system(merge_cmp)
                 if cmd_ret == 0:
