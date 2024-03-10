@@ -6,7 +6,7 @@ IMRS_CBOR=/data/ITHI/cbor/IMRS/
 MONTH=202403
 SCRIPT="$HOME/ithitools/src/imrsrsv.py"
 RUN_DATE=$(date '+%Y-%m-%d')
-RUN_LOG=`tmp/$RUN_DATE.$$.txt`
+RUN_LOG="tmp/$RUN_DATE.$$.txt"
 
 echo "Home: $HOME"
 echo "ithitools: $ITHITOOLS"
