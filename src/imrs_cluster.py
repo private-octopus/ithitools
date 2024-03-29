@@ -95,7 +95,7 @@ def process_cluster(cluster_id, result_folder, tmp_folder, ithitool, dates):
             else:
                 print("Computation of " + ipstats_file + " failed, error:" + str(cmd_ret))
                 return False
-    return true
+    return True
 
 # main
 if len(sys.argv) < 5 or len(sys.argv) > 6 or \
