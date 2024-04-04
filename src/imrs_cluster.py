@@ -91,7 +91,7 @@ def process_cluster(cluster_id, result_folder, tmp_folder, ithitool, dates, do_d
                 if do_debug:
                     print(report_name + ": no cbor file.")
             elif len(file_list) == 1:
-                cp_cmd = "cp " + file_list[0] + " " + ipstats_file_name
+                cp_cmd = "cp " + file_list[0] + " " + ipstats_file
                 cp_ret = os.system(cp_cmd)
                 if cp_ret == 0:
                     if do_debug:
