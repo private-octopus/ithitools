@@ -77,7 +77,7 @@ try:
                 if nb_files > 0:
                     ipstats_file = cluster_id + "." + month + "-" + "ipstats.csv"
                     ipstats_path = join(monthly_folder, ipstats_file)
-                    merge_cmd = ithitool + ' -I ' + ipstats_file + " " + tmp_file_name
+                    merge_cmd = ithitool + ' -I ' + ipstats_path + " " + tmp_file_name
                     cmd_ret = os.system(merge_cmd)
                     if cmd_ret == 0:
                         if do_debug:

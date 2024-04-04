@@ -132,7 +132,8 @@ class instance_bucket:
             slice_date = slice[0:8]
             date_set.add(slice_date)
         date_list = sorted(list(date_set))
-        self.date_list = [ d for d in date_list[:-1] if d.startswith(self.month) ]
+        # originally was d in date_list[:-1] to exclude the last one, but we want it now
+        self.date_list = [ d for d in date_list if d.startswith(self.month) ]
         if self.do_debug:
             print("Found " + str(len(self.date_list)) + "dates. Retain 1")
             print(self.date_list)
