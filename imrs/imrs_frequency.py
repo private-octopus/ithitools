@@ -75,4 +75,4 @@ with open(output_file, "w") as F:
             threshold += delta_threshold
             last_written = cumulative_count
     if last_written < cumulative_count:
-        F.write(str(cumulative_count) + "," + str(cumulative_use) + "," + str(cumulative_use/total_load))
+        F.write(str(cumulative_count) + "," + str(cumulative_use) + "," + str(cumulative_use/total_load) + ",\n")
