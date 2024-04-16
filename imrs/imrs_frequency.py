@@ -43,7 +43,7 @@ output_file = sys.argv[2]
 load_step = 0
 if len(sys.argv) == 4:
     s_load_step = sys.argv[3]
-    if not s_load_step.endswidth("%s"):
+    if not s_load_step.endswith("%"):
         print("Load step should be %, e.g. 1%, 0.1%, not " + s_load_step)
         exit(1)
     else:
