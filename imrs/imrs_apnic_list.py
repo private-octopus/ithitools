@@ -71,10 +71,10 @@ def parse_imrs(line):
 # main
 
 if len(sys.argv) != 4:
-    print("Usage: imrs_frequency.py <apnic_file> <imrs_file> <output_file>")
+    print("Usage: imrs_apnic_list.py <imrs_file> <apnic_file> <output_file>")
     exit(1)
-apnic_file = sys.argv[1]
-imrs_file = sys.argv[2]
+imrs_file = sys.argv[1]
+apnic_file = sys.argv[2]
 output_file = sys.argv[3]
 
 apnic_dict = dict()
