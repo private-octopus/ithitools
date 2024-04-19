@@ -73,17 +73,9 @@ def parse_imrs(line):
 if len(sys.argv) != 4:
     print("Usage: imrs_frequency.py <apnic_file> <imrs_file> <output_file>")
     exit(1)
-imrs_file = sys.argv[1]
-apnic_file = sys.argv[2]
-output_file = sys.argv[2]
-
-if len(sys.argv) == 4:
-    s_load_step = sys.argv[3]
-    if not s_load_step.endswith("%"):
-        print("Load step should be %, e.g. 1%, 0.1%, not " + s_load_step)
-        exit(1)
-    else:
-        load_step = float(s_load_step[:-1])/100.0
+apnic_file = sys.argv[1]
+imrs_file = sys.argv[2]
+output_file = sys.argv[3]
 
 apnic_dict = dict()
 
