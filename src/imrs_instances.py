@@ -27,7 +27,7 @@ def prepare_instances_list(ipstats_folder, month):
         folder_pole = listdir(pole_dir)
         for instance_id in folder_pole:
             instance_path = join(pole_dir, instance_id)
-            if is_dir(instance_path):
+            if isdir(instance_path):
                 if not instance_id in instances:
                     instances[instance_id] = []
                 file_list = listdir(instance_folder)
