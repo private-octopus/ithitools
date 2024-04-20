@@ -65,7 +65,7 @@ def process_instance(instance_id, month, result_folder, tmp_folder, ithitool, in
 
 # main
 if len(sys.argv) < 4 or len(sys.argv) > 5 or \
-    (len(sys.argv) == 5 and sys.argv[5] != "debug"):
+    (len(sys.argv) == 5 and sys.argv[4] != "debug"):
     print("Usage: imrs_instances <ipstats_folder> <yyyymm> <ithitool> [debug]")
     print("There are just " + str(len(sys.argv)) + " arguments.")
     exit (1)
