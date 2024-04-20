@@ -53,7 +53,7 @@ def process_instance(instance_id, month, result_folder, tmp_folder, ithitool, in
     with open(tmp_path,"wt") as F:
             for file_name in instances[instance_id]:
                 F.write(file_name + "\n")
-    merge_cmd = ithitool + ' -I ' + result_path + " " + result_path
+    merge_cmd = ithitool + ' -I ' + result_path + " " + tmp_path
     cmd_ret = os.system(merge_cmd)
     if cmd_ret == 0:
         if do_debug:
