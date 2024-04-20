@@ -48,7 +48,7 @@ def check_or_create_dir(dir_path):
 def process_instance(instance_id, month, result_folder, tmp_folder, ithitool, instances, do_debug):
     result_file = instance-id + "_" + month + "-ipstats.csv"
     result_path = join(result_folder, result_file)
-    tmp_file = instance-id + "_" + month + "-file-list.txt"
+    tmp_file = instance_id + "_" + month + "-file-list.txt"
     tmp_path = join(tmp_folder, tmp_file)
     with open(tmp_path,"wt") as F:
             for file_name in instances[instance_id]:
