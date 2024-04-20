@@ -30,9 +30,9 @@ def prepare_instances_list(ipstats_folder, month):
             if is_dir(instance_path):
                 if not instance_id in instances:
                     instances[instance_id] = []
-            file_list = listdir(instance_folder)
-            for file_name in file_list:
-                instances[instance_id].append(join(instance_folder, file_name))
+                file_list = listdir(instance_folder)
+                for file_name in file_list:
+                    instances[instance_id].append(join(instance_folder, file_name))
     return instances
 
 def check_or_create_dir(dir_path):
