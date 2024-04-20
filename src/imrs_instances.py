@@ -20,7 +20,7 @@ import os
 from os import listdir
 from os.path import isfile, isdir, join
 
-def prepare_instance_list(ipstats_folder, month):
+def prepare_instances_list(ipstats_folder, month):
     instances = dict()
     for pole in [ "east", "west" ]:
         pole_dir = join(ipstats_folder, pole)
