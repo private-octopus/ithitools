@@ -87,12 +87,13 @@ with open(output_file, "w") as F:
         sys.stdout.write(cluster_id)
         total_ip = 0
         total_queries = 0
+        ip_list = set()
         for file_name in clusters[cluster_id]:
             sys.stdout.write(".")
             sys.stdout.flush()
             file_path = join(input_folder, file_name)
-            ip_list = set()
             nb_queries = 0
+            nb_ip = 0
             for line in open(file_path, "r"):
                 ok,ip,count = parse_imrs(line)
                 if ok:
