@@ -62,7 +62,7 @@ if is_instances:
            len(first_parts[2]) != 3:
             print("Cannot get cluster ID from: " + file_name)
         else:
-            cluster_id = parts[1] + "-" + parts[2]
+            cluster_id = first_parts[1] + "-" + first_parts[2]
             if not cluster_id in clusters:
                 clusters[cluster_id] = []
             clusters[cluster_id].append(file_name)
