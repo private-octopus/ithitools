@@ -38,15 +38,13 @@ def parse_imrs(line):
 if len(sys.argv) != 3:
     print("usage: imrs_montly_ip input_folder output_file")
     exit(1)
-input_folder = argv[2]
-output_file = argv[3]
-sep = '_'
-column_1 = "instances"
-is_instances = True
-if input_folder[:-1].endswith("monthly"):
-    sep = '.'
-    column_1 = clusters
-    is_instances = False
+input_folder = sys.argv[2]
+output_file = sys.argv[3]
+is_instances = not input_folder[:-1].endswith("monthly")
+if is_instances:
+    print("From cluster monthly, " + input_folder + " compute " + output_file)
+else:
+    print("From alliances monthly, " + input_folder + " compute " + output_file)
 clusters = dict()
 if is_instances:
     file_list = listdir(input_folder)
