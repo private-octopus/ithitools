@@ -78,7 +78,7 @@ with open(output_file, "w") as F:
             file_path = join(input_folder, file_name)
             nb_ip = 0
             nb_queries = 0
-            for line in file_path:
+            for line in open(file_path, "r"):
                 ok,ip,count = parse_imrs(line)
                 if ok:
                     nb_ip += 1
