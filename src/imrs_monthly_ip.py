@@ -49,6 +49,7 @@ if is_instances:
 else:
     print("From cluster monthly, " + input_folder + " compute " + output_file)
 clusters = dict()
+nb_files = 0
 if is_instances:
     file_list = listdir(input_folder)
     for file_name in file_list:
@@ -58,6 +59,7 @@ if is_instances:
         if not cluster_id in clusters:
             clusters[cluster_id] = []
         clusters[cluster_id].append(file_name)
+        nb_files += 1
 else:
     file_list = listdir(input_folder)
     for file_name in file_list:
@@ -66,15 +68,21 @@ else:
         if not cluster_id in clusters:
             clusters[cluster_id] = []
         clusters[cluster_id].append(file_name)
+        nb_files +=1
+
+print("Found " + str(len(clusters)) + " clusters, " + str(nb_files) + " files.")
 
 id_list = sorted(list(clusters.keys()))
 
 with open(output_file, "w") as F:
     F.write("Cluster, Instance, nb_IP, nb_queries,\n")
     for cluster_id in id_list:
+        sys.stdout.write(cluster_id)
         total_ip = 0
         total_queries = 0
         for file_name in clusters[cluster_id]:
+            sys.stdout.write(".")
+            sys.stdout.flush()
             file_path = join(input_folder, file_name)
             nb_ip = 0
             nb_queries = 0
@@ -86,7 +94,7 @@ with open(output_file, "w") as F:
             if is_instances:
                 file_parts = file_name.split("_")
                 instance_id = parts[0]
-                F.write(cluster_id + "," + instance_id + "," + str(nb_ip) + "," + str(nb_queries))
+                F.write(cluster_id + "," + instance_id + "," + str(nb_ip) + "," + str(nb_queries) + ",\n")
             total_ip += nb_ip
             total_queries += nb_queries
-        F.write(cluster_id + ", total ," + str(total_ip) + "," + str(total_queries))
+        F.write(cluster_id + ", total ," + str(total_ip) + "," + str(total_queries) + ",\n")
