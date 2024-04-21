@@ -54,11 +54,12 @@ if is_instances:
     file_list = listdir(input_folder)
     for file_name in file_list:
         parts = file_name.split("_")
+        print(file_name + " -> " + parts[0])
         first_parts = parts[0].split('-')
         if len(first_parts) != 3 or \
-           len(parts[0]) != 4 or \
-           len(parts[1]) != 2 or \
-           len(parts[2]) != 3:
+           len(first_parts[0]) != 4 or \
+           len(first_parts[1]) != 2 or \
+           len(first_parts[2]) != 3:
             print("Cannot get cluster ID from: " + file_name)
         else:
             cluster_id = parts[1] + "-" + parts[2]
