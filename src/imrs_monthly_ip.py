@@ -98,3 +98,5 @@ with open(output_file, "w") as F:
             total_ip += nb_ip
             total_queries += nb_queries
         F.write(cluster_id + ", total ," + str(total_ip) + "," + str(total_queries) + ",\n")
+        sys.stdout.write("\n")
+    print("All done.")
