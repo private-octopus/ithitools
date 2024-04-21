@@ -54,7 +54,6 @@ if is_instances:
     file_list = listdir(input_folder)
     for file_name in file_list:
         parts = file_name.split("_")
-        print(file_name + " -> " + parts[0])
         first_parts = parts[0].split('-')
         if len(first_parts) != 3 or \
            len(first_parts[0]) != 4 or \
@@ -79,7 +78,10 @@ else:
 
 print("Found " + str(len(clusters)) + " clusters, " + str(nb_files) + " files.")
 
-id_list = sorted(list(clusters.keys()))
+for cluster_id in clusters:
+    for file_name in clusters[cluster_id]:
+        print(cluster + ", " + file-name)
+id_list = sorted(list(clusters.keys())
 
 with open(output_file, "w") as F:
     F.write("Cluster, Instance, nb_IP, nb_queries,\n")
