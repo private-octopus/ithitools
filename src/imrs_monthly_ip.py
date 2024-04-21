@@ -55,11 +55,17 @@ if is_instances:
     for file_name in file_list:
         parts = file_name.split("_")
         first_parts = parts[0].split('-')
-        cluster_id = parts[1] + "-" + parts[2]
-        if not cluster_id in clusters:
-            clusters[cluster_id] = []
-        clusters[cluster_id].append(file_name)
-        nb_files += 1
+        if len(first_parts) != 3 or \
+           len(parts[0]) != 4 or \
+           len(parts[1]) != 2 or \
+           len(parts[2]) != 3:
+            print("Cannot get cluster ID from: " + file_name)
+        else:
+            cluster_id = parts[1] + "-" + parts[2]
+            if not cluster_id in clusters:
+                clusters[cluster_id] = []
+            clusters[cluster_id].append(file_name)
+            nb_files += 1
 else:
     file_list = listdir(input_folder)
     for file_name in file_list:
