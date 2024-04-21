@@ -44,7 +44,7 @@ is_instances = not input_folder[:-1].endswith("monthly")
 if is_instances:
     print("From cluster monthly, " + input_folder + " compute " + output_file)
 else:
-    print("From alliances monthly, " + input_folder + " compute " + output_file)
+    print("From instances monthly, " + input_folder + " compute " + output_file)
 clusters = dict()
 if is_instances:
     file_list = listdir(input_folder)
