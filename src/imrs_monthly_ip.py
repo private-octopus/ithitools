@@ -88,4 +88,4 @@ with open(output_file) as F:
                 F.write(cluster_id + "," + instance_id + "," + str(nb_ip) + "," + str(nb_queries))
             total_ip += nb_ip
             total_queries += nb_queries
-        F.write(cluster_id + "," + total + "," + str(total_ip) + "," + str(total_queries)
+        F.write(cluster_id + "," + total + "," + str(total_ip) + "," + str(total_queries))
