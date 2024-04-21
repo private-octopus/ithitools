@@ -78,11 +78,6 @@ else:
 
 print("Found " + str(len(clusters)) + " clusters, " + str(nb_files) + " files.")
 
-for cluster_id in clusters:
-    for file_name in clusters[cluster_id]:
-        print(cluster_id + ", " + file_name)
-        pass
-
 id_list = sorted(list(clusters.keys()))
 
 with open(output_file, "w") as F:
@@ -107,7 +102,7 @@ with open(output_file, "w") as F:
                     nb_queries += count
             if is_instances:
                 file_parts = file_name.split("_")
-                instance_id = parts[0]
+                instance_id = file_parts[0]
                 F.write(cluster_id + "," + instance_id + "," + str(nb_ip) + "," + str(nb_queries) + ",\n")
             total_queries += nb_queries
         total_ip = len(ip_list)
