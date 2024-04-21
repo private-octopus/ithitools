@@ -38,8 +38,8 @@ def parse_imrs(line):
 if len(sys.argv) != 3:
     print("usage: imrs_montly_ip input_folder output_file")
     exit(1)
-input_folder = sys.argv[2]
-output_file = sys.argv[3]
+input_folder = sys.argv[1]
+output_file = sys.argv[2]
 is_instances = not input_folder[:-1].endswith("monthly")
 if is_instances:
     print("From cluster monthly, " + input_folder + " compute " + output_file)
