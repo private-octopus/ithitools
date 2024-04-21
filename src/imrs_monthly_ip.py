@@ -26,9 +26,12 @@ def parse_imrs(line):
     count = 0
     try:
         parts = line.split(",")
-        ip = parts[0].strip()
-        count = int(parts[1].strip())
-        ok = True
+        if len(parts) >= 2:
+            ip = parts[0].strip()
+            count = int(parts[1].strip())
+            ok = True
+        else:
+            print("Line <" + line.strip() + " has only " + str(len(parts)) + " parts.")
     except Exception as e:
         traceback.print_exc()
         print("Cannot parse IMRS Record:\n" + line.strip()  + "\nException: " + str(e))
@@ -42,9 +45,9 @@ input_folder = sys.argv[1]
 output_file = sys.argv[2]
 is_instances = not input_folder[:-1].endswith("monthly")
 if is_instances:
-    print("From cluster monthly, " + input_folder + " compute " + output_file)
-else:
     print("From instances monthly, " + input_folder + " compute " + output_file)
+else:
+    print("From cluster monthly, " + input_folder + " compute " + output_file)
 clusters = dict()
 if is_instances:
     file_list = listdir(input_folder)
