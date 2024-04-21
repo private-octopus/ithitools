@@ -66,7 +66,7 @@ else:
 
 id_list = sorted(list(clusters.keys()))
 
-with open(output_file) as F:
+with open(output_file, "w") as F:
     F.write("Cluster, Instance, nb_IP, nb_queries,\n")
     for cluster_id in id_list:
         total_ip = 0
