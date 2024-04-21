@@ -84,19 +84,20 @@ with open(output_file, "w") as F:
             sys.stdout.write(".")
             sys.stdout.flush()
             file_path = join(input_folder, file_name)
-            nb_ip = 0
+            ip_list = set()
             nb_queries = 0
             for line in open(file_path, "r"):
                 ok,ip,count = parse_imrs(line)
                 if ok:
                     nb_ip += 1
+                    if not ip in ip_list:
+                        ip_list.add(ip)
                     nb_queries += count
             if is_instances:
                 file_parts = file_name.split("_")
                 instance_id = parts[0]
                 F.write(cluster_id + "," + instance_id + "," + str(nb_ip) + "," + str(nb_queries) + ",\n")
-            total_ip += nb_ip
             total_queries += nb_queries
-        F.write(cluster_id + ", total ," + str(total_ip) + "," + str(total_queries) + ",\n")
-        sys.stdout.write("\n")
-    print("All done.")
+        total_ip = len(ip_list)
+        F.write(cluster_id + ",total," + str(total_ip) + "," + str(total_queries) + ",\n")
+    print("\nAll done.")
