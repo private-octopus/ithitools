@@ -106,6 +106,7 @@ ips = dict()
 clusters = listdir(cluster_folder)
 for cluster_file in clusters:
     sys.stdout.write(cluster_file[:6] + ",")
+    sys.stdout.flush()
     parse_cluster(cluster_folder, cluster_file, ips, min_volume)
 sys.stdout.write("\n")
 cross_path = dict()
