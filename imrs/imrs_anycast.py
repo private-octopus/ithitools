@@ -48,7 +48,7 @@ def parse_cluster(cluster_folder, cluster_file, ips, min_volume):
         r = imrs_record()
         if r.parse_imrs(line) and r.query_volume > min_volume:
             if not r.ip in ips:
-                ips[r.ip] = ip_clusters[ip]
+                ips[r.ip] = ip_clusters(r.ip)
             if not cluster in ips[r.ip].clusters:
                 ips[r.ip].clusters[cluster] = 0
             ips[r.ip].clusters[cluster] += r.query_volume
