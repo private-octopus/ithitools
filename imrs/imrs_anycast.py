@@ -105,9 +105,12 @@ except:
 ips = dict()
 clusters = listdir(cluster_folder)
 for cluster_file in clusters:
+    sdtout.write(cluster[:6] + ",")
     parse_cluster(cluster_folder, cluster_file, ips, min_volume)
+sdtout.write(cluster[:6] + "\n")
+cross_path = dict()
 compute_cross_path(ips, cross_path)
-
+cross_path_output(cross_path, output_file)
 
 
 
