@@ -19,6 +19,7 @@ import traceback
 import os
 from os import listdir
 from os.path import isfile, isdir, join
+improt .imrs
 from .imrs import imrs_record
 
 class ip_clusters:
