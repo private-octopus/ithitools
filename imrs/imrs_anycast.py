@@ -42,7 +42,7 @@ def parse_cluster(cluster_folder, cluster_file, ips, min_volume):
     parts = cluster_file.split(".")
     cluster = parts[0]
     # compose path
-    file_path = join(cluster_folder, cluster_file, ips)
+    file_path = join(cluster_folder, cluster_file)
     # record the clusters in which the address is found
     for line in open(file_path,"r"):
         r = imrs_record()
