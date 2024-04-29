@@ -95,6 +95,7 @@ if len(sys.argv) != 4:
     exit(1)
 cluster_folder = sys.argv[1]
 output_file = sys.argv[2]
+min_volume = 0
 try:
     min_volume = int(sys.argv[3])
 except:
@@ -104,7 +105,7 @@ except:
 ips = dict()
 clusters = listdir(cluster_folder)
 for cluster_file in clusters:
-    parse_cluster(cluster_folder, cluster_file, ips)
+    parse_cluster(cluster_folder, cluster_file, ips, min_volume)
 compute_cross_path(ips, cross_path)
 
 
