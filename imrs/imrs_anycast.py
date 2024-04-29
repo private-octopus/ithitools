@@ -19,8 +19,8 @@ import traceback
 import os
 from os import listdir
 from os.path import isfile, isdir, join
-import .imrs
-from .imrs import imrs_record
+import imrs
+from imrs import imrs_record
 
 class ip_clusters:
     def __init__(self, ip):
