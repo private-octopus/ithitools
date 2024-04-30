@@ -57,22 +57,20 @@ def compute_cross_path(ips, cross_path):
     for ip in ips:
         main_cluster = ""
         v_max = 0
-        v_sum = 0
-        for cluster in ips[r.ip].clusters:
-            v_sum += ips[r.ip].clusters[cluster]
-            if ips[r.ip].clusters[cluster] > v_max:
-                v_max = ips[r.ip].clusters[cluster]
+        for cluster in ips[ip].clusters:
+            if ips[ip].clusters[cluster] > v_max:
+                v_max = ips[ip].clusters[cluster]
                 main_cluster = cluster
         if not main_cluster in cross_path:
-            cross_path[main_cluster] = cluster_clusters[cluster]
-        for cluster in ips[r.ip].clusters:
+            cross_path[main_cluster] = cluster_clusters(cluster)
+        for cluster in ips[ip].clusters:
             if not cluster in cross_path[main_cluster].clusters:
                 cross_path[main_cluster].clusters[cluster] = 0
-            cross_path[main_cluster].clusters[cluster] += ips[r.ip].clusters[cluster]
+            cross_path[main_cluster].clusters[cluster] += ips[ip].clusters[cluster]
 
 def cross_path_output(cross_path, output_file):
     with open(output_file, "w") as F:
-        cluster_list = list(cross_path.keys()).sorted()
+        cluster_list = sorted(list(cross_path.keys()))
         for cluster in cluster_list:
             c_c = cross_path[cluster]
             c_volume = c_c.clusters[cluster]
@@ -83,11 +81,12 @@ def cross_path_output(cross_path, output_file):
                 if cluster2 != cluster:
                     v.append(cluster_item(cluster2, c_c.clusters[cluster2]))
                     c_volume += c_c.clusters[cluster2]
-            vs = sorted(v,key=lambda cl: cl.volume, reversed=True)
+            vs = sorted(v,key=lambda cl: cl.volume, reverse=True)
             for vs_c in vs:
                 F.write(vs_c.cluster + ",")
                 F.write(str(vs_c.volume) + ",")
-                F.write(str(100*vs_c.volume/c_volume) + "%,")
+                F.write(str((100.0*vs_c.volume)/c_volume) + "%,")
+            F.write("\n")
 
 # main
 if len(sys.argv) != 4:
