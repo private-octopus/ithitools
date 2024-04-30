@@ -25,6 +25,7 @@ from imrs import imrs_record
 class ip_clusters:
     def __init__(self, ip):
         self.ip = ip
+        self.query_volume=0
         self.clusters=dict()
 
 class cluster_clusters:
@@ -37,7 +38,7 @@ class cluster_item:
         self.cluster = cluster
         self.volume = volume
 
-def parse_cluster(cluster_folder, cluster_file, ips, min_volume):
+def parse_cluster(cluster_folder, cluster_file, ips):
     # extract cluster name from file name
     parts = cluster_file.split(".")
     cluster = parts[0]
@@ -46,17 +47,20 @@ def parse_cluster(cluster_folder, cluster_file, ips, min_volume):
     # record the clusters in which the address is found
     for line in open(file_path,"r"):
         r = imrs_record()
-        if r.parse_imrs(line) and r.query_volume > min_volume:
+        if r.parse_volume_only(line):
             if not r.ip in ips:
                 ips[r.ip] = ip_clusters(r.ip)
             if not cluster in ips[r.ip].clusters:
                 ips[r.ip].clusters[cluster] = 0
             ips[r.ip].clusters[cluster] += r.query_volume
+            ips[r.ip].query_volume += r.query_volume
 
-def compute_cross_path(ips, cross_path):
+def compute_cross_path(ips, cross_path, min_volume):
     for ip in ips:
         main_cluster = ""
         v_max = 0
+        if ips[ip].query_volume < min_volume:
+            continue
         for cluster in ips[ip].clusters:
             if ips[ip].clusters[cluster] > v_max:
                 v_max = ips[ip].clusters[cluster]
@@ -106,10 +110,10 @@ clusters = listdir(cluster_folder)
 for cluster_file in clusters:
     sys.stdout.write(cluster_file[:6] + ",")
     sys.stdout.flush()
-    parse_cluster(cluster_folder, cluster_file, ips, min_volume)
+    parse_cluster(cluster_folder, cluster_file, ips)
 sys.stdout.write("\n")
 cross_path = dict()
-compute_cross_path(ips, cross_path)
+compute_cross_path(ips, cross_path, min_volume)
 cross_path_output(cross_path, output_file)
 
 

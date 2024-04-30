@@ -88,3 +88,16 @@ class imrs_record:
             traceback.print_exc()
             print("Cannot parse IMRS Record after " + str(parsed) + " parts:\n" + line.strip()  + "\nException: " + str(e))
         return ok
+
+    def parse_volume_only(self, line):
+        ok = False
+        try:
+            parts = line.split(",")
+            self.ip = parts[0].strip()
+            parsed = 1
+            self.query_volume, parsed = imrs_parse_one_number(parts, parsed)
+            ok = True
+        except Exception as e:
+            traceback.print_exc()
+            print("Cannot parse IMRS Record after " + str(parsed) + " parts:\n" + line.strip()  + "\nException: " + str(e))
+        return ok
