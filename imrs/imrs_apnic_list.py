@@ -1,11 +1,9 @@
 #
-# This script will try to build a sample of the input file.
-# The purpose of the sample is, get a realistic test file
-# that is small enough for iterative development, measures,
-# etc., yet big enough to obtain statistically significant
-# results.
+# This script will build a list of IP addresses present in both
+# the APNIC and IMRS files, providing IMRS and APNIC query volume
+# from that address.
 #
-# Usage: imrs_sample.py <input_file> <sampling rate in %> <output_file>
+# Usage: imrs_apnic_list.py <imrs_file> <apnic_file> <output_file>
 #
 
 import sys
