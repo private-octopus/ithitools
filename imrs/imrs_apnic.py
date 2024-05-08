@@ -17,36 +17,8 @@ import math
 import os
 from os import listdir
 from os.path import isfile, isdir, join
-
-# APNIC record:
-#
-# each record is a resolver
-# the columns are:
-# 1 - IP address
-# 2 - AS Number
-# 3 - Country Code
-# 4 - Use count (i.e. the number of queries from this source address)
-# 5,6,... a list of paired values which are the AS of the end user and the number of queries from this AS
-#
-class apnic_record:
-    def __init__(self):
-        self.ip = ""
-        self.use_count = 0
-        self.seen_in_imrs = False
-        self.imrs_count = 0
-
-    def parse(self, line):
-        parts = line.split(",")
-        nb_parts = len(parts)
-        if nb_parts >= 4:
-            try:
-                self.ip = parts[0].strip()
-                self.use_count = int(parts[3].strip())
-            except Exception as e:
-                traceback.print_exc()
-                print("Cannot parse APNIC Record:\n" + line.strip()  + "\nException: " + str(e))
-                return False
-        return True
+import imrs
+from imrs import parse_imrs_volume_only, apnic_record
 
 class log_count:
     def __init__(self):
@@ -65,21 +37,6 @@ class log_count:
             self.log_total[lc] += queries
             self.count += 1
             self.queries += queries
-
-def parse_imrs(line):
-    ok = False
-    ip = ""
-    count = 0
-    try:
-        parts = line.split(",")
-        ip = parts[0].strip()
-        count = int(parts[1].strip())
-        ok = True
-    except Exception as e:
-        traceback.print_exc()
-        print("Cannot parse IMRS Record:\n" + line.strip()  + "\nException: " + str(e))
-    return ok, ip, count
-
 
 # main
 
@@ -100,7 +57,7 @@ for line in open(apnic_file,"r"):
         apnic_dict[apnic.ip] = apnic
 
 for line in open(imrs_file,"r"):
-    ok, ip, count = parse_imrs(line)
+    ok, ip, count = parse_imrs_volume_only(line)
     if ok:
         if ip in apnic_dict:
             apnic_dict[ip].seen_in_imrs = True

@@ -17,6 +17,7 @@ import math
 import os
 from os import listdir
 from os.path import isfile, isdir, join
+import math
 
 # Just process the first argument in a "line", when working fast.
 def parse_imrs_volume_only(line):
@@ -88,7 +89,7 @@ class imrs_hyperloglog:
                 if self.hllv[j] == 0:
                     V += 1
             if V > 0:
-                self.E = 16 * log(16.0 / V)
+                self.E = 16 * math.log(16.0 / V)
 
     def add(self, other):
         for i in range(0, len(self.hllv)):
@@ -186,7 +187,7 @@ class imrs_record:
         if is_new_ip:
             self.server_count += other.server_count
 
-    def to_string():
+    def to_string(self):
         s =""
         s += self.ip + ","
         s += str(self.query_volume) + ","
@@ -206,3 +207,32 @@ class imrs_record:
         s += imrs_vector_to_string(self.locales)
         s += str(self.apnic_count) + ","
         s += str(self.server_count) + ","
+        return s
+
+class apnic_record:
+    def __init__(self):
+        self.ip = ""
+        self.use_count = 0
+        self.seen_in_imrs = False
+        self.imrs_count = 0
+
+    def parse(self, line):
+        parts = line.split(",")
+        nb_parts = len(parts)
+        if nb_parts >= 4:
+            try:
+                self.ip = parts[0].strip()
+                self.use_count = int(parts[3].strip())
+            except Exception as e:
+                traceback.print_exc()
+                print("Cannot parse APNIC Record:\n" + line.strip()  + "\nException: " + str(e))
+                return False
+        return True
+
+def apnic_load(apnic_file):
+    apnic_dict = dict()
+    for line in open(apnic_file,"r"):
+        apnic = apnic_record()
+        if apnic.parse(line):
+            apnic_dict[apnic.ip] = apnic
+    return apnic_dict

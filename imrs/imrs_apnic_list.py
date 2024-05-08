@@ -15,6 +15,8 @@ import math
 import os
 from os import listdir
 from os.path import isfile, isdir, join
+import imrs
+from imrs import parse_imrs_volume_only, apnic_record, apnic_load
 
 class imrs_apnic_item:
     def __init__(self, ip, apnic_use, imrs_use):
@@ -31,40 +33,6 @@ class imrs_apnic_item:
         s = ip + "," + str(apnic_use) + "," + str(imrs_use) + ","
         return s
 
-class apnic_record:
-    def __init__(self):
-        self.ip = ""
-        self.use_count = 0
-        self.seen_in_imrs = False
-        self.imrs_count = 0
-
-    def parse(self, line):
-        parts = line.split(",")
-        nb_parts = len(parts)
-        if nb_parts >= 4:
-            try:
-                self.ip = parts[0].strip()
-                self.use_count = int(parts[3].strip())
-            except Exception as e:
-                traceback.print_exc()
-                print("Cannot parse APNIC Record:\n" + line.strip()  + "\nException: " + str(e))
-                return False
-        return True
-
-def parse_imrs(line):
-    ok = False
-    ip = ""
-    count = 0
-    try:
-        parts = line.split(",")
-        ip = parts[0].strip()
-        count = int(parts[1].strip())
-        ok = True
-    except Exception as e:
-        traceback.print_exc()
-        print("Cannot parse IMRS Record:\n" + line.strip()  + "\nException: " + str(e))
-    return ok, ip, count
-
 
 # main
 
@@ -75,15 +43,10 @@ imrs_file = sys.argv[1]
 apnic_file = sys.argv[2]
 output_file = sys.argv[3]
 
-apnic_dict = dict()
-
-for line in open(apnic_file,"r"):
-    apnic = apnic_record()
-    if apnic.parse(line):
-        apnic_dict[apnic.ip] = apnic
+apnic_dict = apnic_load(apnic_file)
 
 for line in open(imrs_file,"r"):
-    ok, ip, count = parse_imrs(line)
+    ok, ip, count = parse_imrs_volume_only(line)
     if ok:
         if ip in apnic_dict:
             apnic_dict[ip].seen_in_imrs = True
