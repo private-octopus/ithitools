@@ -33,15 +33,11 @@ class server_process:
         self.previous_ip = "0.0.0.0"
         self.previous_ipaddr = ipaddress.ip_address(self.previous_ip)
         self.previous_network = ipaddress.ip_network(self.previous_ip + "/24", strict=False)
-        self.previous_queries_low = 0
-        self.previous_queries_high = 0
         self.previous_line = ""
         self.this_group = 0
         self.this_queries = 0
         self.group_is_parsed = False
         self.group_record = imrs.imrs_record()
-        self.is_parsed = False
-        self.parsed = imrs.imrs_record()
         self.nb_apnic_found = 0
         self.nb_server_farms_apnic = 0
         self.need_output = need_output
@@ -53,21 +49,23 @@ class server_process:
                 self.group_record = imrs.imrs_record()
                 self.group_record.parse_imrs(self.previous_line)
                 self.group_is_parsed = True
-            if not self.is_parsed:
-                self.parsed = imrs.imrs_record()
-                self.parsed.parse_imrs(line)
-                self.is_parsed = True
-            self.group_record.add(self.parsed, is_new_ip=True)
+            parsed = imrs.imrs_record()
+            parsed.parse_imrs(line)
+            self.group_record.add(parsed, is_new_ip=True)
         self.this_group += 1
         self.this_queries += queries
 
-    def finalize_group(self, F):
+    def finalize_group(self, F,apnic_nets):
         if self.this_group < 2:
             # was not a group.
             # If output needed, just copy the previous line
-            if self.need_output and self.this_group > 0:
-                if self.is_parsed:
-                    F.write(self.parsed.to_string() + "\n")
+            if self.need_output and self.this_group > 0:     
+                if self.previous_network in apnic_nets:
+                    self.nb_apnic_found += 1
+                    parsed = imrs.imrs_record()
+                    parsed.parse_imrs(self.previous_line)
+                    parsed.apnic_count = apnic_nets[self.previous_network]
+                    F.write(parsed.to_string() + "\n")
                 else:
                     F.write(self.previous_line)
         else:
@@ -75,37 +73,29 @@ class server_process:
             self.nb_server_farms += 1
             self.ips_in_farm += self.this_group
             self.queries_from_farm += self.this_queries
+            apnic_count = 0
+            if self.previous_network in apnic_nets:
+                self.nb_server_farms_apnic += 1
+                self.nb_apnic_found += 1
+                apnic_count = apnic_nets[self.previous_network]
             if self.need_output:
+                self.group_record.apnic_count = apnic_count
                 F.write(self.group_record.to_string() + "\n")
-                if self.this_queries > 10000 or self.group_record.apnic_count > 1000:
-                    print(self.previous_ip + "," + \
-                        str(self.this_group) + "," + \
-                        str(self.this_queries) + "," + \
-                        str(self.group_record.apnic_count))
-                if self.group_record.apnic_count > 0:
-                    self.nb_server_farms_apnic += 1
-            else:
-                this_apnic = 0
-                if self.is_parsed:
-                    this_apnic = self.parsed.apnic_count
-                if this_queries > 32 or this_apnic > 0:
-                    print(self.previous_ip + ", " \
-                       + str(self.this_group) + ", " \
-                       + str(self.this_queries) + ", " + str(this_apnic))
+            if self.this_queries > 10000 or apnic_count > 1000:
+                print(str(self.previous_network) + "," + \
+                    str(self.this_group) + "," + \
+                    str(self.this_queries) + "," + \
+                    str(apnic_count))
 
     def reset_group(self, ip, ipaddr, network, queries):
         self.previous_ip = ip
         self.previous_ipaddr = ipaddr
         self.previous_network = network
-        self.previous_queries_low = queries - (queries >> 5)
-        self.previous_queries_high = queries + (queries >> 5)
         self.this_group = 1
         self.this_queries = queries
-        self.group_is_parsed = self.is_parsed
-        if self.is_parsed:
-            self.group_record = self.parsed  
+        self.group_is_parsed = False 
 
-    def load_line(self, line):
+    def load_line(self, line, apnic_nets):
         self.is_parsed = False
         ok,ip,queries = imrs.parse_imrs_volume_only(line)
         if not ok:
@@ -120,24 +110,16 @@ class server_process:
             print("Out of order, " + str(ipaddr) + " after " + str(self.previous_ipaddr))
             return False
         suffix = "/24"
-        if ip in apnic_dict:
-            self.parsed = imrs.imrs_record()
-            self.parsed.parse_imrs(line)
-            self.parsed.apnic_count = apnic_dict[ip].use_count
-            self.is_parsed = True
-            self.nb_apnic_found += 1
         if ipaddr.version == 6:
-            suffix = "/64"
+            suffix = "/48"
         network = ipaddress.ip_network(ip + suffix, strict=False)
 
-        if network == self.previous_network and \
-           queries >= self.previous_queries_low and \
-           queries <= self.previous_queries_high:
+        if network == self.previous_network:
             # continuation of previous group
             self.continue_with_group(queries, line)
         else:
             # start of new group. First add statistics.
-            self.finalize_group(F)
+            self.finalize_group(F, apnic_nets)
             # reset for new group
             self.reset_group(ip, ipaddr, network, queries)
         self.previous_line = line
@@ -166,8 +148,8 @@ if len(sys.argv) == 4:
     need_output = True
     output_file = sys.argv[3]
 
-apnic_dict = imrs.apnic_load(apnic_file)
-
+apnic_nets = imrs.apnic_load_networks(apnic_file)
+print("Loaded " + str(len(apnic_nets)) + " APNIC Nets")
 F = sys.stdout
 if need_output:
     F = open(output_file, "w")
@@ -175,10 +157,10 @@ if need_output:
 ctx = server_process(need_output)
 
 for line in open(imrs_file, "r"):
-    if not ctx.load_line(line):
+    if not ctx.load_line(line, apnic_nets):
         break
 # save the last line, or the last group
-ctx.finalize_group(F)
+ctx.finalize_group(F, apnic_nets)
 # Final report on stdout
 ctx.report()
 

@@ -18,6 +18,7 @@ import os
 from os import listdir
 from os.path import isfile, isdir, join
 import math
+import ipaddress
 
 # Just process the first argument in a "line", when working fast.
 def parse_imrs_volume_only(line):
@@ -236,3 +237,19 @@ def apnic_load(apnic_file):
         if apnic.parse(line):
             apnic_dict[apnic.ip] = apnic
     return apnic_dict
+
+def apnic_load_networks(apnic_file):
+    apnic_nets = dict()
+    for line in open(apnic_file,"r"):
+        apnic = apnic_record()
+        if apnic.parse(line):
+            ipaddr = ipaddress.ip_address(apnic.ip)
+            suffix = "/24"
+            if ipaddr.version == 6:
+                suffix = "/48"
+            network = ipaddress.ip_network(apnic.ip + suffix, strict=False)
+            if network in apnic_nets:
+                apnic_nets[network] += apnic.use_count
+            else:
+                apnic_nets[network] = apnic.use_count
+    return apnic_nets
