@@ -75,7 +75,8 @@ class imrs_hyperloglog:
         # harmonic_mean = m * Z
         divider = 0.0;
         for j in range(0, len(self.hllv)):
-            divider += 1.0 / (1 << self.hllv[j]);
+            n = 1 << int(self.hllv[j])
+            divider += 1.0 / n;
         Z = 1.0 / divider;
         # Then, compute E using a precomputed coefficient to correct the bias of the formula
         # E = alpha_m * (m^2) * 
