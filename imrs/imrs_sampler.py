@@ -43,7 +43,7 @@ nb_lines_out = 0
 with open(file_name_out,"wt") as F_OUT:
     for line in open(file_name_in, "rt"):
         nb_lines_in += 1
-        if random.random() < sampling_rate:
+        if random.random() < sampling_rate or nb_lines_out == 0:
             F_OUT.write(line)
             nb_lines_out += 1
 

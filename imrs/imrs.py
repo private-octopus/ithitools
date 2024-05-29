@@ -20,6 +20,26 @@ from os.path import isfile, isdir, join
 import math
 import ipaddress
 
+imrs_headers = [ "network", "queries", \
+    "h00", "h01", "h02", "h03", "h04", "h05", "h06", "h07", "h08", "h09", \
+    "h10", "h11", "h12", "h13", "h14", "h15", "h16", "h17", "h18", "h19", \
+    "h20", "h21", "h22", "h23", \
+    "d00", \
+    "d01", "d02", "d03", "d04", "d05", "d06", "d07", "d08", "d09", "d10", \
+    "d11", "d12", "d13", "d14", "d15", "d16", "d17", "d18", "d19", "d20", \
+    "d21", "d22", "d23", "d24", "d25", "d26", "d27", "d28", "d29", "d30", \
+    "arpa0", "no_such", "ns_res", "ns_frq", "ns_chr", \
+    "COM", "NET", "ORG", "INFO", "CN", "IN", "DE", "US", "TLDs", \
+    "tldh0", "tldh1", "tldh2", "tldh3",  "tldh4", "tldh5", "tldh6", "tldh7", \
+    "tldh8", "tldh9", "tldha", "tldhb",  "tldhc", "tldhd", "tldhe", "tldhf", \
+    "RESOLVER", "EC2", "CLOUD", "WPAD", "CORP", "MAIL", "_TCP", "PROD", "SLDs", \
+    "sldh0", "sldh1", "sldh2", "sldh3",  "sldh4", "sldh5", "sldh6", "sldh7", \
+    "sldh8", "sldh9", "sldha", "sldhb",  "sldhc", "sldhd", "sldhe", "sldhf", \
+    "np0", "np1", "np2", "np3",  "np4", "np5", "np6", "np7_more", \
+    "NS", "A", "AAAA", "PTR",  "DS", "NSEC", "NSEC3", "SOA", \
+    "loc0", "loc1", "loc2", "loc3", "loc4", "loc5", "loc6", "loc7", \
+    "APNIC", "servers" ]
+
 # Just process the first argument in a "line", when working fast.
 def parse_imrs_volume_only(line):
     ok = False
@@ -38,7 +58,7 @@ def parse_imrs_volume_only(line):
 def imrs_parse_one_number(parts, parsed):
     v = 0
     p = parts[parsed].strip()
-    v = int(parts[parsed])
+    v = int(p)
     parsed += 1
     return v, parsed
 
@@ -60,13 +80,20 @@ def imrs_vector_to_string(v):
 class imrs_hyperloglog:
     def __init__(self):
         self.E = 0.0
-        self.hllv=[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
+        self.hllv=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
         pass;
     def parse(self, parts, parsed):
         self.E = float(parts[parsed].strip())
         parsed += 1
         for i in range(0, len(self.hllv)):
-            self.hllv[i], parsed = imrs_parse_one_number(parts,parsed)
+            # Some large files were generated with "0.0" value instead of expected "0"
+            # so we work over that bug here.
+            p = parts[parsed].strip()
+            if p == "0" or p == "0.0":
+                self.hllv[i] = 0
+            else:
+                self.hllv[i] = int(p)
+            parsed += 1
         return parsed
     def assess(self):
         # First, compute the "indicator" of the m=16 registers
@@ -100,7 +127,7 @@ class imrs_hyperloglog:
         self.assess()
 
     def to_string(self):
-        s = str(self.E)+","
+        s = str(int(self.E))+","
         for i in range(0, len(self.hllv)):
             s += str(self.hllv[i])+","
         return s
@@ -109,20 +136,20 @@ class imrs_record:
     def __init__(self):
         self.ip = ""
         self.query_volume = 0
-        self.hourly_volume = [ 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-        self.daily_volume = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        self.hourly_volume = [ 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0]
+        self.daily_volume = [0,0,0,0, 0,0,0,0 ,0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0]
         self.arpa_count = 0
         self.no_such_domain_queries = 0
         self.no_such_domain_reserved = 0
         self.no_such_domain_frequent = 0
         self.no_such_domain_chromioids = 0
-        self.tld_counts = [0,0,0,0,0,0,0,0]
+        self.tld_counts = [0,0,0,0, 0,0,0,0]
         self.tld_hyperlog = imrs_hyperloglog()
-        self.sld_counts = [0,0,0,0,0,0,0,0]
+        self.sld_counts = [0,0,0,0, 0,0,0,0]
         self.sld_hyperlog = imrs_hyperloglog()
-        self.name_parts = [0,0,0,0,0,0,0,0]
-        self.rr_types = [0,0,0,0,0,0,0,0]
-        self.locales = [0,0,0,0,0,0,0,0]
+        self.name_parts = [0,0,0,0, 0,0,0,0]
+        self.rr_types = [0,0,0,0, 0,0,0,0]
+        self.locales = [0,0,0,0, 0,0,0,0]
         self.apnic_count = 0
         self.server_count = 1
 
@@ -131,6 +158,8 @@ class imrs_record:
         try:
             parts = line.split(",")
             self.ip = parts[0].strip()
+            if len(self.ip) == 0:
+                self.ip = "0.0.0.0"
             parsed = 1
             self.query_volume, parsed = imrs_parse_one_number(parts, parsed)
             parsed = imrs_parse_one_vector(parts, parsed, self.hourly_volume)
@@ -148,9 +177,9 @@ class imrs_record:
             parsed = imrs_parse_one_vector(parts, parsed, self.rr_types)
             parsed = imrs_parse_one_vector(parts, parsed, self.locales)
             if parsed < len(parts):
-                self.apnic_count = imrs_parse_one_number(parts, parsed)
+                self.apnic_count, parsed = imrs_parse_one_number(parts, parsed)
             if parsed < len(parts):
-                self.server_count = imrs_parse_one_number(parts, parsed)
+                self.server_count, parsed = imrs_parse_one_number(parts, parsed)
             ok = True
         except Exception as e:
             traceback.print_exc()
@@ -192,6 +221,10 @@ class imrs_record:
     def to_string(self):
         s =""
         s += self.ip + ","
+        if len(s) == 1:
+            # bug. Don't know why python would do that, but a "0.0.0.0" address 
+            # translates as a null string, so we fix it.
+            s = "0.0.0.0,"
         s += str(self.query_volume) + ","
         s += imrs_vector_to_string(self.hourly_volume)
         s += imrs_vector_to_string(self.daily_volume)
@@ -209,6 +242,60 @@ class imrs_record:
         s += imrs_vector_to_string(self.locales)
         s += str(self.apnic_count) + ","
         s += str(self.server_count) + ","
+        return s
+    
+    def ratios(self):
+        query_ratio = 1.0/self.query_volume
+        ratio = []
+        for hour_count in self.hourly_volume:
+            ratio.append(query_ratio*hour_count)
+        for day_count in self.daily_volume:
+            ratio.append(query_ratio*day_count)
+        ratio.append(query_ratio*self.arpa_count)
+        ratio.append(query_ratio*self.no_such_domain_queries)
+        ratio.append(query_ratio*self.no_such_domain_reserved)
+        ratio.append(query_ratio*self.no_such_domain_frequent)
+        ratio.append(query_ratio*self.no_such_domain_chromioids)
+        for tld_count in self.tld_counts:
+            ratio.append(query_ratio*tld_count)
+        ratio.append(self.tld_hyperlog.E)
+        for sld_count in self.sld_counts:
+            ratio.append(query_ratio*sld_count)
+        ratio.append(query_ratio*self.sld_hyperlog.E)
+        for np in self.name_parts:
+            ratio.append(query_ratio*np)
+        for rr in self.rr_types:
+            ratio.append(query_ratio*rr)
+        try:
+            if self.apnic_count > 0:
+                ratio.append(self.query_volume/self.apnic_count)
+            else:
+                ratio.append(0.0)
+        except Exception as e:
+            ratio.append(0.0)
+            print("For IP: " + self.ip + ", apnic = " + str(self.apnic_count) + ": " + str(e))
+        return ratio
+    
+    def ratio_headers():
+        s = ""
+        for h in range(1,25):
+            s += "h"+str(h)+","
+        for d in range(1,32):
+            s += "d"+str(d)+","
+        s += "arpa,"
+        s += "no_such,"
+        s += "ns_res,"
+        s += "ns_frq,"
+        s += "ns_chr,"
+        s += "COM,NET,ORG,INFO,CN,IN,DE,US,"
+        s += "TLDs,"
+        s += "RESOLVER,EC2,CLOUD,WPAD,CORP,MAIL,_TCP,PROD,"
+        s += "SLDs,"
+        for i in range(0,7):
+            s += "np" + str(i) + ","
+        s += "np7_more,"
+        s += "NS,A,AAAA,PTR,DS,NSEC,NSEC3,SOA,"
+        s += "APNIC,"
         return s
 
 class apnic_record:
