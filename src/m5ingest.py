@@ -3,6 +3,7 @@ import sys
 import os
 import json
 from os import walk
+import traceback
 #from os import path
 
 class m5_summary:
@@ -20,22 +21,48 @@ class m5_summary:
         for x in self.key_list:
             self.counters.append(0)
             self.total.append(0.0)
+
+    def add_text_to_summary(self, m5_text):
+        m5_data = json.loads(m5_text)
+        m5_i0 =  m5_data[0]
+        for i in range(0, len(self.key_list)):
+             if not self.key_list[i] in m5_i0:
+                 print("Could not find: " + self.key_list[i])
+                 raise Exception("incomplete list of submetrics.")
+        for i in range(0, len(self.key_list)):
+            try:
+                self.total[i] += m5_i0[self.key_list[i]]
+                self.counters[i] += 1
+            except:
+                pass
+            i += 1
+
+    def salvage_summary(self, dirpath, file_list):
+        m5_text = "[{"
+        has_comma = True
+        for file_name in file_list:
+            file_path = os.path.join(dirpath, file_name)
+            print("Opening " + file_path)
+            for line in open(file_path, "r"):
+                sline = line.strip()
+                # ignore the comment lines 
+                if sline.startswith("\"M5."):
+                    if not has_comma:
+                        m5_text += ","
+                    has_comma = sline.endswith(",")
+                    m5_text += sline
+        m5_text += "}]\n"
+        summary.add_text_to_summary(m5_text)
+        print("Salvage succeeded!")
     
     def add_to_summary (self, f_name):
         "Parse a JSON file and add the results to the summary"
+        print("parsing " + f_name)
         with open(f_name) as m5_file :
             self.i_count += 1
             m5_text = m5_file.read()
-            m5_data = json.loads(m5_text)
-            i = 0
-            while i < len(self.key_list) :
-                try:
-                    self.total[i] += m5_data[0][self.key_list[i]]
-                    self.counters[i] += 1
-                except:
-                    pass
-                i += 1
-            m5_file.close()
+            print(m5_text)
+            summary.add_text_to_summary(m5_text)
     
     def average(self):
         "Divide the results by the number of summaries counted"
@@ -55,19 +82,35 @@ class m5_summary:
         csv_file.close()
 
 # Main 
-
 summary = m5_summary()
 mypath = sys.argv[1]
+print("Walking: " + mypath)
 for (dirpath, dirnames, filenames) in walk(mypath):
+    print(dirpath)
+    other_files = []
+    got_summary = False
     for file_name in filenames :
+        print(file_name)
         if (file_name.startswith("m5-")):
             try:
-                print("Found: " + file_name)
                 file_path = os.path.join(dirpath, file_name)
                 summary.add_to_summary(file_path)
-            except:
+                got_summary = True
+            except Exception as e:
+                traceback.print_exc()
+                print('\nFile %s generated an exception: %s' % (file_name, str(e)))
                 print("Could not extract data from: " + file_path)
-
+        elif (file_name.startswith("m5.")):
+            other_files.append(file_name)
+    if not got_summary and len(other_files) == 7:
+        print("Trying to salvage the results from detail files.")
+        try:
+            summary.salvage_summary(dirpath, other_files)
+        except Exception as e:
+            traceback.print_exc()
+            print('\nSalvage generated an exception: %s' % (str(e)))
+            print("Could not extract data from: " + str(other_files))
+        
 print("Found " + str(summary.i_count) + " summaries.")
 summary.average()
 i = 0
