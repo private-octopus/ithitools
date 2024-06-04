@@ -595,13 +595,21 @@ bool ithipublisher::PrintNameOrNumberVectorMetric(FILE * F, char const * sub_met
     std::vector<double>  mvec;
     std::vector<MetricNameLine> name_list;
     bool ret = GetNameOrNumberList(sub_met_name, &name_list, is_number);
+    bool need_comma = true;
+    bool check_arpa = strcmp(sub_met_name, "M3.3.2") == 0;
 
 
     ret &= fprintf(F, "\"%s\" : [", metric_name) > 0;
 
     for (size_t i = 0; ret && i < name_list.size(); i++) {
-        if (i == 0) {
+        if (check_arpa && strcmp(name_list[i].name, "ARPA") == 0) {
+            /* Remove ARPA from the results, as it should not be there */
+            continue;
+        }
+
+        if (need_comma) {
             ret = fprintf(F, "\n") > 0;
+            need_comma = false;
         } else {
             ret = fprintf(F, ",\n") > 0;
         }
