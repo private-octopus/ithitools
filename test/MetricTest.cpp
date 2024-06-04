@@ -35,7 +35,7 @@
 
 #ifdef _WINDOWS
 #ifndef _WINDOWS64
-static char const * metric_test_input = "..\\data\\tiny-capture.csv";
+static char const * metric_test_input = "..\\data\\tiny-metric-input.csv";
 static char const * metric_test_output = "metric-test.csv";
 static char const * metric_test_ref = "..\\data\\tiny-metrics.csv";
 static char const * root_zone_file = "..\\data\\root.zone";
@@ -43,7 +43,7 @@ static char const * tlds_test_tlds = "..\\data\\2017-01-31_tlds.csv";
 static char const * tlds_test_registrars = "..\\data\\2017-01-31_registrars.csv";
 static char const * compliance_file = "..\\data\\M1-2017-01-31-compliance.csv";
 #else
-static char const * metric_test_input = "..\\..\\data\\tiny-capture.csv";
+static char const * metric_test_input = "..\\..\\data\\tiny-metric-input.csv";
 static char const * metric_test_output = "metric-test.csv";
 static char const * metric_test_ref = "..\\..\\data\\tiny-metrics.csv";
 static char const * root_zone_file = "..\\..\\data\\root.zone";
@@ -52,7 +52,7 @@ static char const * tlds_test_registrars = "..\\..\\data\\2017-01-31_registrars.
 static char const * compliance_file = "..\\..\\data\\M1-2017-01-31-compliance.csv";
 #endif
 #else
-static char const * metric_test_input = "data/tiny-capture.csv";
+static char const * metric_test_input = "data/tiny-metric-input.csv";
 static char const * metric_test_output = "metric-test.csv";
 static char const * metric_test_ref = "data/tiny-metrics.csv";
 static char const * root_zone_file = "data/root.zone";

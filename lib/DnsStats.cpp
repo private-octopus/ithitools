@@ -2822,6 +2822,16 @@ void DnsStats::NameLeaksAnalysis(
             /* Debug option, classify the TLD */
             DnsStatsLeakType x_type = dnsLeakNoLeak;
             int is_nx = -1;
+            
+            if (rcode == DNS_RCODE_NXDOMAIN && tld_length == 4 && memcmp(tld, "ARPA", 4) == 0)
+            {
+                /* very special case: some root servers are also authoritative
+                * servers for .arpa. If they receive a query for no-such.arpa,
+                * they will return an NX_DOMAIN error, but these errors should not
+                * result in increasing the tally of leaked domains.
+                */
+                rcode = DNS_RCODE_NOERROR;
+            }
 
             if (rcode == DNS_RCODE_NXDOMAIN)
             {

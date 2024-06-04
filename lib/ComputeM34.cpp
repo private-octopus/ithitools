@@ -337,6 +337,13 @@ bool ComputeM3::GetM33_2()
     bool ret = true;
     GetM3_X(REGISTRY_DNS_LeakedTLD, &m33_2, 0.001);
 
+    for (int i = 0; i < m33_2.size(); i++) {
+        if (strcmp(m33_2[i].domain, "ARPA") == 0) {
+            m33_2.erase(m33_2.begin() + i);
+            break;
+        }
+    }
+
     return ret;
 }
 

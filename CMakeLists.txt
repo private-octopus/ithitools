@@ -188,10 +188,10 @@ ADD_LIBRARY(ithicap SHARED
 )
 
 SET_TARGET_PROPERTIES(ithicap PROPERTIES
-                              VERSION 2.04
+                              VERSION 2.05
                               PUBLIC_HEADER include/ithicap.h)
 
-SET_TARGET_PROPERTIES(ithitools PROPERTIES VERSION 2.04)
+SET_TARGET_PROPERTIES(ithitools PROPERTIES VERSION 2.05)
 
 SET(TEST_EXES ithitest)
 
