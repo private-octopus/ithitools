@@ -274,7 +274,7 @@ char const * RegisteredTldName[] = {
     "MOTORCYCLES", "MOV", "MOVIE", "MP", "MQ", "MR", "MS", "MSD", "MT", "MTN",
     "MTR", "MU", "MUSIC",
     "MUSEUM", "MV", "MW", "MX", "MY", "MZ", "NA", "NAB",
-    "NAGOYA", "NAME", "NATURA", "NAVY", "NBA", "NC", "NE", "NEC", "NET",
+    "NAGOYA", "NAME", "NAVY", "NBA", "NC", "NE", "NEC", "NET",
     "NETBANK", "NETFLIX", "NETWORK", "NEUSTAR", "NEW", "NEWS", "NEXT",
     "NEXTDIRECT", "NEXUS", "NF", "NFL", "NG", "NGO", "NHK", "NI", "NICO", "NIKE", "NIKON",
     "NINJA", "NISSAN", "NISSAY", "NL", "NO", "NOKIA", "NORTON", "NOW",
