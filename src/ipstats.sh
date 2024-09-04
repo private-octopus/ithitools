@@ -1,7 +1,7 @@
 
 HOME=/home/christian.huitema@DS.ICANN.ORG
 ITHITOOLS="$HOME/ithitools/ithitools"
-IPSTATS_DIR="$HOME/ipstats"
+IPSTATS_DIR="/data/huitema/ipstats"
 IMRS_CBOR=/data/ITHI/cbor/IMRS/
 MONTH=202403
 SCRIPT="$HOME/ithitools/src/imrsrsv.py"
