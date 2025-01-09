@@ -216,7 +216,7 @@ char const * RegisteredTldName[] = {
     "CPA",
     "CR", "CREDIT", "CREDITCARD", "CREDITUNION", "CRICKET", "CROWN", "CRS", "CRUISE",
     "CRUISES", "CU", "CUISINELLA", "CV", "CW", "CX", "CY", "CYMRU", "CYOU", "CZ",
-    "DABUR", "DAD", "DANCE", "DATA", "DATE", "DATING", "DATSUN", "DAY", "DCLK", "DDS", "DE",
+    "DAD", "DANCE", "DATA", "DATE", "DATING", "DATSUN", "DAY", "DCLK", "DDS", "DE",
     "DEAL", "DEALER", "DEALS", "DEGREE", "DELIVERY", "DELL", "DELOITTE", "DELTA", "DEMOCRAT",
     "DENTAL", "DENTIST", "DESI", "DESIGN", "DEV", "DHL", "DIAMONDS", "DIET", "DIGITAL",
     "DIRECT", "DIRECTORY", "DISCOUNT", "DISCOVER", "DISH", "DIY", "DJ", "DK", "DM", "DNP",
@@ -1079,7 +1079,7 @@ int64_t DnsStats::DeltaUsec(long tv_sec, long tv_usec, long tv_sec_start, long t
 
 char const* DnsStats::LeakTypeName(DnsStatsLeakType leakType)
 {
-    char const* x = "unknown";
+    char const* x;
 
     switch (leakType) {
     case dnsLeakNoLeak:
@@ -1116,6 +1116,7 @@ char const* DnsStats::LeakTypeName(DnsStatsLeakType leakType)
         x = "chaos";
         break;
     default:
+        x = "unknown";
         break;
     }
 
