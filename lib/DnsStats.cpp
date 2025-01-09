@@ -1079,7 +1079,7 @@ int64_t DnsStats::DeltaUsec(long tv_sec, long tv_usec, long tv_sec_start, long t
 
 char const* DnsStats::LeakTypeName(DnsStatsLeakType leakType)
 {
-    char const* x = "unknown";
+    char const* x;
 
     switch (leakType) {
     case dnsLeakNoLeak:
@@ -1116,6 +1116,7 @@ char const* DnsStats::LeakTypeName(DnsStatsLeakType leakType)
         x = "chaos";
         break;
     default:
+        x = "unknown";
         break;
     }
 
