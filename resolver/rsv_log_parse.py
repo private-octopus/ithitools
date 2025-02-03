@@ -55,22 +55,30 @@
 # 
 # 6e8d88e1 = 110.141.135.225
 
+from math import nan
+from ssl import ALERT_DESCRIPTION_DECRYPT_ERROR
 import country
 import traceback
+import pandas as pd
+import ip2as
+import open_rsv
 
 class rsv_log_line:
     def __init__(self):
-        self.time_query = 0.0
+        self.query_time = 0.0
         self.resolver_IP = "0.0.0.0"
         self.resolver_port = 0
+        self.resolver_AS = ""
+        self.resolver_cc = ""
+        self.resolver_tag = ""
         self.query_experiment = ""
         self.query_user_id = ""
         self.query_cc = ""
-        self.query_as = ""
+        self.query_AS = ""
         self.query_ad_time = 0
         self.query_ip = ""
-        self.query_class = ""
-        self.query_type = ""
+        self.rr_class = ""
+        self.rr_type = ""
         self.query_edns = ""
         self.is_results = False
         self.is_anomalous = False
@@ -79,7 +87,7 @@ class rsv_log_line:
         self.invalid_query = ""
         self.server = ""
 
-    def parse_query_name_params(self, query_parts):
+    def parse_query_name_params(self, query_parts, query_name):
         is_valid = True
         self.query_experiment = query_parts[0]
         if query_parts[1] == "results":
@@ -89,20 +97,22 @@ class rsv_log_line:
 
         self.query_cc = country.country_code_from_c999(query_parts[2])
 
-        query_as_str = query_parts[3]
-        if query_as_str.startswith("a"):
-            as_num = int(query_as_str[1:], 16)
-            self.query_as = "AS" + str(as_num)
+        query_AS_str = query_parts[3]
+        if query_AS_str.startswith("a"):
+            as_num = int(query_AS_str[1:], 16)
+            self.query_AS = "AS" + str(as_num)
+            as_parsed = 1
         else:
-            print("Bad AS:" + query_as_str )
-            is_valid = False
-        ad_time_str = query_parts[4]
+            print("Bad AS:" + query_name )
+            self.query_AS = "AS0"
+            as_parsed = 0
+        ad_time_str = query_parts[3+as_parsed]
         if ad_time_str.startswith("s"):
             self.query_ad_time = int(ad_time_str[1:])
         else:
-            print("Bad Time:" + ad_time_str )
+            print("Bad Time:" + query_name )
             is_valid = False
-        query_ip_str = query_parts[5]
+        query_ip_str = query_parts[4+as_parsed]
         if query_ip_str.startswith("i"):
             ip_num = int(query_ip_str[1:], 16)
             self.query_ip = str(ip_num>>24)+ "." + \
@@ -110,7 +120,7 @@ class rsv_log_line:
                 str((ip_num>>8)&255)+ "." + \
                 str(ip_num&255)
         else:
-            print("Bad IP:" + query_ip_str )
+            print("Bad IP:" + query_name )
             is_valid = False
         return is_valid
 
@@ -124,12 +134,13 @@ class rsv_log_line:
         self.query_experiment = delimiter.join(query_parts[:5])
         self.query_user_id = query_parts[5]
         self.query_cc = country.country_code_from_c999("c" + query_parts[6])
-        query_as_str = query_parts[7]
-        if query_as_str.startswith("a"):
-            as_num = int(query_as_str[1:], 16)
-            self.query_as = "AS" + str(as_num)
+        query_AS_str = query_parts[7]
+        if query_AS_str.startswith("a"):
+            as_num = int(query_AS_str[1:], 16)
+            self.query_AS = "AS" + str(as_num)
+            as_parsed = 1
         else:
-            print("Bad AS:" + query_as_str )
+            print("Bad AS:" + query_AS_str )
             is_valid = False
         self.query_ad_time = int(query_parts[8])
         ip_num = int(query_parts[9], 16)
@@ -163,9 +174,8 @@ class rsv_log_line:
                 self.is_cretinous = True
                 self.invalid_query = query_string
         else:
-            is_valid = self.parse_query_name_params(query_parts)
+            is_valid = self.parse_query_name_params(query_parts, query_name)
         return is_valid
-
 
     def parse_line(self, s):
         is_valid = False
@@ -175,7 +185,7 @@ class rsv_log_line:
             parts[1] == "client" and \
             parts[3] == "query:":
             try:
-                self.time_query = float(parts[0])
+                self.query_time = float(parts[0])
                 # parse IP and port
                 ip_ports_str = parts[2]
                 if ip_ports_str.endswith(":"):
@@ -184,8 +194,8 @@ class rsv_log_line:
                 self.resolver_IP = ip_ports[0]
                 self.resolver_port = int(ip_ports[1])
                 # parse the query class and type
-                self.query_class = parts[5]
-                self.query_type = parts[6]
+                self.rr_class = parts[5]
+                self.rr_type = parts[6]
                 # parse the EDNS data
                 delimiter = " "
                 self.query_edns = delimiter.join(parts[7:])
@@ -197,6 +207,64 @@ class rsv_log_line:
                 print("Cannot parse:\n" + s + "\n")
                 is_valid = False
         return is_valid
+
+    # The filter function applies common filters:
+    # - query time at most 10 second later than ad time
+    # - rr_class = [ "odu" ]
+    # - rr_types = [ "A", "AAAA" ]
+    # - is_results = False
+    def filter(self, query_delay=10, experiment=["0du"], rr_types=["A", "AAAA"], is_results=[False] ):
+        filter_OK = True
+        if query_delay > 0:
+            qd = int(self.query_time) - self.query_ad_time
+            filter_OK = (qd <= query_delay)
+
+        if filter_OK and len(experiment) > 0:
+            filter_OK = False
+            for ex in experiment:
+                if ex == self.query_experiment:
+                    filter_OK = True
+                    break
+        if filter_OK and len(rr_types) > 0:
+            filter_OK = False
+            for qt in rr_types:
+                if qt == self.rr_type:
+                    filter_OK = True
+                    break
+        if filter_OK and len(is_results) > 0:
+            filter_OK = False
+            for ir in is_results:
+                if ir == self.is_results:
+                    filter_OK = True
+                    break
+        return filter_OK
+    
+    # set_resolver_AS checks the AS number associated with the source address
+    # of the query, and the country code for that AS. Using the source address
+    # and the AS number, it find whether this matches an "open resolver".
+    # If it does not, it sets the "same AS" flag, and if this is False it
+    # sets the "same CC" flag.
+    #
+    # The additional arguments are the table mapping IPv4 addresses
+    # to ASes (ip2a4), IPv6 addresses to (ip2a6) and the AS number
+    # to a CC (as_table)
+    def set_resolver_AS(self, ip2a4, ip2a6, as_table):
+        parts6 = self.resolver_IP.split(":")
+        if len(parts6) > 1:
+            asn = ip2a6.get_asn(self.resolver_IP)
+        else:
+            asn = ip2a4.get_asn(self.resolver_IP)
+        self.resolver_AS = "AS" + str(asn)
+        self.resolver_cc = as_table.cc(self.resolver_AS)
+        self.resolver_tag = open_rsv.get_open_rsv(self.resolver_IP, self.resolver_AS)
+        if len(self.resolver_tag) == 0:
+            if self.resolver_AS == self.query_AS:
+                self.resolver_tag = "Same_AS"
+            elif self.resolver_cc == self.query_cc:
+                self.resolver_tag = "Same_CC"
+            else:
+                self.resolver_tag = "Others"
+
 
     def pretty_string(self):
         r = ""
@@ -212,17 +280,17 @@ class rsv_log_line:
         if self.is_starquery:
             q = "S"
 
-        s = str(self.time_query) + ", " + \
+        s = str(self.query_time) + ", " + \
             self.resolver_IP + ", " + \
             str(self.resolver_port) + ", " + \
             self.query_experiment + ", " + \
             self.query_user_id + ", " + \
             self.query_cc + ", " + \
-            self.query_as + ", " + \
+            self.query_AS + ", " + \
             str(self.query_ad_time) + ", " + \
             self.query_ip + ", " + \
-            self.query_class  + ", " + \
-            self.query_type  + ", " + \
+            self.rr_class  + ", " + \
+            self.rr_type  + ", " + \
             self.server  + ", " + \
             r  + ", " + \
             a  + ", " + \
@@ -232,6 +300,219 @@ class rsv_log_line:
             self.invalid_query
         return s
 
-             
+    def header():
+        header = [ 'query_time', \
+            'resolver_IP', \
+            'resolver_port', \
+            'resolver_AS', \
+            'resolver_tag', \
+            'resolver_cc', \
+            'experiment_id', \
+            'query_user_id', \
+            'query_cc', \
+            'query_AS', \
+            'query_ad_time', \
+            'query_IP', \
+            'rr_class', \
+            'rr_type', \
+            'server', \
+            'is_result', \
+            'is_anomalous', \
+            'is_cretinous', \
+            'is_starquery', \
+            'query_edns', \
+            'invalid_query' ]
+        return header
+
+    def row(self):
+        r = [ self.query_time, \
+            self.resolver_IP, \
+            self.resolver_port, \
+            self.resolver_AS, \
+            self.resolver_tag, \
+            self.resolver_cc, \
+            self.query_experiment, \
+            self.query_user_id, \
+            self.query_cc, \
+            self.query_AS, \
+            self.query_ad_time, \
+            self.query_ip, \
+            self.rr_class, \
+            self.rr_type, \
+            self.server, \
+            self.is_results, \
+            self.is_anomalous, \
+            self.is_cretinous, \
+            self.is_starquery, \
+            self.query_edns , \
+            self.invalid_query ]
+        return r
+
+
+class rsv_log_file:
+    def __init__(self, filtering=True):
+        self.m = []
+        self.filtering = filtering
+    def load(self, file_name, ip2a4, ip2a6, as_table, rr_types=[], experiment=[]):
+        for line in open(file_name, "r"):
+            try:
+                x = rsv_log_line()
+                if x.parse_line(line):
+                    if (not self.filtering or x.filter(rr_types=rr_types, experiment=experiment)):
+                        x.set_resolver_AS(ip2a4, ip2a6, as_table)
+                        self.m.append(x.row())
+                else:
+                    print("Bad line:" + line.strip())
+            except Exception as exc:
+                traceback.print_exc()
+                print('\nCode generated an exception: %s' % (exc))
+                print("Cannot parse:\n" + line + "\n")
+                break
+        print("Matrix has " + str(len(self.m)) + " lines.")
+
+    def get_frame(self):
+        df = pd.DataFrame(self.m,columns=rsv_log_line.header())
+        return df
+
+# pivot per query, produce a view keeping first reply per query.
+# result frame will have one column per dsp, with time of first arrival.
+class pivoted_per_query:
+    def __init__(self):
+        self.rqt = dict()
+        self.tried = 0
+        self.tags = [ 'Same_AS', 'Same_CC', 'Others', 'googlepdns', 'cloudflare', \
+            'opendns', 'quad9', 'level3', 'neustar', 'he' ]
+        self.user_ids = set()
+
+    class pivoted_record:
+        def __init__(self,x):
+            qt = x['query_time']
+            tag = x['resolver_tag']
+            self.query_AS = x['query_AS']
+            self.query_user_id = x['query_user_id']
+            self.first_tag = tag
+            self.first_time = qt
+            self.rsv_times = dict()
+            self.rsv_times[tag] = qt
+
+
+    def compute_times(self, x):
+        uid = x['query_user_id']
+        key = uid
+        qt = x['query_time']
+        tag = x['resolver_tag']
+        if key in self.rqt:
+            if (not tag in self.rqt[key].rsv_times) or \
+                qt < self.rqt[key].rsv_times[tag]:
+                self.rqt[key].rsv_times[tag] = qt
+            if qt < self.rqt[key].first_time:
+                self.rqt[key].first_tag = tag
+                self.rqt[key].first_time = qt
+        else:
+            self.rqt[key] = pivoted_per_query.pivoted_record(x)
+            if not uid in self.user_ids:
+                self.user_ids.add(uid)
+
+    def process_log(self, df):
+        df.apply(lambda x: self.compute_times(x), axis=1)
+
+    def get_frame_delta_t(self):
+        # compose the headers
+        headers = [ 'query_AS', \
+            'query_user_id', \
+            'first_tag', \
+            'first_time' ]
+        for tag in self.tags:
+            headers.append(tag)
+        # create a list of rows
+        rl = []
+        for key in self.rqt:
+            qt = self.rqt[key]
+            r = [ \
+               qt.query_AS, \
+               qt.query_user_id, \
+               qt.first_tag, \
+               qt.first_time ]
+            for tag in self.tags:
+                t = 1000000.0 + qt.first_time
+                if tag in qt.rsv_times:
+                    r.append(qt.rsv_times[tag] - qt.first_time)
+                else:
+                    r.append(1000000)
+            rl.append(r)
+        # create a data frame
+        df = pd.DataFrame(rl,columns=headers)
+        return df
+
+    def get_frame_asns(self, first_only):
+        # compose the headers
+        headers = [ 'q_AS', \
+            'uids',
+            'q_total',
+            'isp',
+            'public',
+            'both' ]
+        for tag in self.tags:
+            headers.append(tag)
+        xt = dict()
+        uis = dict()
+        for key in self.rqt:
+            qt = self.rqt[key]
+            
+            if not qt.query_AS in xt:
+                r = [ \
+                    qt.query_AS,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ]
+                for tag in self.tags:
+                    r.append(0)
+                xt[qt.query_AS] = r
+                uis[qt.query_AS] = set()
+            xt[qt.query_AS][2] += 1
+            if not qt.query_user_id in uis[qt.query_AS]:
+                uis[qt.query_AS].add(qt.query_user_id)
+                xt[qt.query_AS][1] += 1
+            if qt.category == 'isp':
+                xt[qt.query_AS][3] += 1
+            elif qt.category == 'public':
+                xt[qt.query_AS][4] += 1
+            else:
+                xt[qt.query_AS][5] += 1
+            rank = 6
+            for tag in self.tags:
+                if (tag == qt.first_tag) or ((first_only == 0) and (tag in qt.rsv_times)):
+                    xt[qt.query_AS][rank] += 1
+                rank += 1
+        xl = list(xt.values())
+        xl.sort(key=lambda x: x[1], reverse=True)
+        df = pd.DataFrame(xl,columns=headers)
+        return df
+
+
+
+
+        
+# Prepare a plot of times per queries, one line per mode.
+
+#def plot_times(df, tags):
+#    for tag in tags:
+#        dft = df[tag]
+#        dftg = dft[
+#    colors = [ "black", "blue", "green", "orange", "red", "purple", "magenta", "brown", "violet", "yellow"]
+#    axa = without_apnic_df.plot.scatter(x="queries", y="n_slds", alpha=0.5, logx=True, logy=True, color="blue")
+#small_apnic_df.plot.scatter(ax=axa, x="queries", y="n_slds", alpha=0.5, color="orange")
+#big_apnic_df.plot.scatter(ax=axa, x="queries", y="n_slds", alpha=0.5, color="red")
+#plt.show()
+
+
+
+
+
+
+
 
 

@@ -1,7 +1,10 @@
 # APNIC test.
 # verify that the parse library does what we expect
-
+import sys
+import ip2as
 import rsv_log_parse
+import rsv_both_graphs
+import pandas as pd
 import traceback
 
 test_lines = [
@@ -72,13 +75,146 @@ def parse_test():
             break
     return passing
 
+def frame_test():
+    passing = True
+    m = []
+    for i in range(0,len(test_lines)):
+        line = test_lines[i]
+        try:
+            x = rsv_log_parse.rsv_log_line()
+            line = test_lines[i]
+            if x.parse_line(line):
+                m.append(x.row())
+        except Exception as exc:
+            traceback.print_exc()
+            print('\nCode generated an exception: %s' % (exc))
+            print("Cannot parse:\n" + line + "\n")
+            passing = False
+            break
+    print("Matrix has " + str(len(m)) + " lines.")
+    df = pd.DataFrame(m,columns=rsv_log_parse.rsv_log_line.header())
+    print(df)
 
+def get_name(as_names, x):
+    y = as_names.name(x)
+    if len(y) == 0:
+        y = "???"
+    return y;
+
+def create_as_frame(numpy_as, as_names):
+    header = [ \
+        'resolver_AS', \
+        'resolver_name', \
+        'count']
+    m = []
+    as_counts = dict()
+    bad_names = 0
+
+    for r in numpy_as:
+        as_v = r[0]
+        if not as_v in as_counts:
+            as_counts[as_v] = 1
+        else:
+            as_counts[as_v] += 1
+    for as_v in as_counts:
+        n = 0
+        name = as_names.name(as_v)
+        if name == "":
+            name = as_v
+        r = [ as_v, name, as_counts[as_v] ]
+        m.append(r)
+    df = pd.DataFrame(m,columns=header)
+    return df
+
+            
 
 # Main program
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        if not parse_test():
+            print("test fails.")
+            exit(-1)
+        frame_test()
 
-if not parse_test():
-    print("test fails.")
-    exit(-1)
-exit(0)
+    if len(sys.argv) >= 6:
+        ip2a4 = ip2as.ip2as_table()
+        ip2a4.load(sys.argv[1])
+        ip2a6 = ip2as.ip2as_table()
+        ip2a6.load(sys.argv[2])
+        as_names = ip2as.asname()
+        as_names.load(sys.argv[3])
+        rsv_table = rsv_log_parse.rsv_log_file()
+        rsv_table.load(sys.argv[4], ip2a4, ip2a6, as_names, experiment=['0du'], rr_types = [])
+        df = rsv_table.get_frame()
+        print("DF:")
+        print(df.head(10))
+        # list the top ISPs
+        isps = df['query_AS']
+        ispdf = isps.to_frame()
+        ispvc = ispdf['query_AS'].value_counts()
+        print("ISPVC:")
+        print(ispvc)
+        # list the top open DNS
+        odns = df['resolver_tag']
+        odnsdf = odns.to_frame()
+        odnsc = odnsdf['resolver_tag'].value_counts()
+        print("ODNSC:")
+        print(odnsc)
+
+        print("ODNSU:")
+        odnsu = odns.unique()
+        print(odnsu)
+        
+        
+        # list the top experiments
+        expt = df['experiment_id']
+        expdf = expt.to_frame()
+        exptc = expdf['experiment_id'].value_counts()
+        print("EXPTC:")
+        print(exptc)
+        print("EXPTU:")
+        exptu = expt.unique()
+        print(exptu)
+        
+        ppq = rsv_log_parse.pivoted_per_query()
+        ppq.process_log(df)
+        dfdt = ppq.get_frame_delta_t()
+        print("DFDT:")
+        print(dfdt)
+        # dfdt.to_csv(sys.argv[5], sep=",")
+
+        as_list = dfdt['query_AS'].unique()
+        as_res = []
+        for asn in as_list:
+            rbg = rsv_both_graphs.per_as_analysis(asn, dfdt)
+            rbg.compute_both()
+            l = rbg.to_list()
+            #print(str(l))
+            as_res.append(l)
+            if rbg.n_both > 50:
+                #image_file = "..\\tmp\\delays_log_" + asn
+                #rbg.do_graph(image_file, x_delay=True, log_y=True)
+                image_file = "..\\tmp\\delays_log_hist_" + asn
+                rbg.do_hist(image_file=image_file)
+
+        as_df = pd.DataFrame(as_res,columns=rsv_both_graphs.per_as_analysis.list_headers())
+        as_df.to_csv(sys.argv[5], sep=",")
+
+        # list the top RR types
+        qt = df['rr_type']
+        qtdf = qt.to_frame()
+        qtsc = qtdf['rr_type'].value_counts()
+        print("QTSC:")
+        print(qtsc)
+
+        #print the number of user ids:
+        #print("nb_uids: " + str(len(ppq.user_ids)))
+        #qui = df['query_user_id']
+        #quiu = qui.unique()
+        #print("nb_uids: " + str(quiu.shape[0]))
+
+        
+
+    exit(0)
 
 
