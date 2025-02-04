@@ -133,6 +133,7 @@ class per_as_analysis:
             plt.show()
         else:
             plt.savefig(image_file)
+        plt.clf()
 
     
     def do_hist(self, image_file=""):
@@ -169,9 +170,10 @@ class per_as_analysis:
             logbins = np.logspace(np.log10(x_min),np.log10(x_max), num=20)
             axa = plt.hist(row_list, logbins, histtype='bar', color=clrs)
             plt.title("Histogram of delays (seconds) per provider for " + self.asn)
-            plt.legend(legend_list)  
+            plt.legend(legend_list)
             plt.xscale('log')
             if len(image_file) == 0:
                 plt.show()
             else:
                 plt.savefig(image_file)
+            plt.clf()

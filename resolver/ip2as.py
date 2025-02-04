@@ -112,7 +112,8 @@ class asname:
                     traceback.print_exc()
                     print("When parsing \"" + l + "\": " + str(e))
             else:
-                print("Skipping line: " + l)
+                #print("Skipping line: " + l)
+                pass
 
     def name(self, asn):
         n = ""

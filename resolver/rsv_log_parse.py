@@ -103,7 +103,7 @@ class rsv_log_line:
             self.query_AS = "AS" + str(as_num)
             as_parsed = 1
         else:
-            print("Bad AS:" + query_name )
+            #print("Bad AS:" + query_name )
             self.query_AS = "AS0"
             as_parsed = 0
         ad_time_str = query_parts[3+as_parsed]
@@ -213,7 +213,8 @@ class rsv_log_line:
     # - rr_class = [ "odu" ]
     # - rr_types = [ "A", "AAAA" ]
     # - is_results = False
-    def filter(self, query_delay=10, experiment=["0du"], rr_types=["A", "AAAA"], is_results=[False] ):
+    # - query_ASes = [] (could be a specific set of ASes)
+    def filter(self, query_delay=10, experiment=["0du"], rr_types=["A", "AAAA"], is_results=[False], query_ASes=[]):
         filter_OK = True
         if query_delay > 0:
             qd = int(self.query_time) - self.query_ad_time
@@ -235,6 +236,12 @@ class rsv_log_line:
             filter_OK = False
             for ir in is_results:
                 if ir == self.is_results:
+                    filter_OK = True
+                    break
+        if filter_OK and len(query_ASes) > 0:
+            filter_OK = False
+            for asn in query_ASes:
+                if asn == self.query_AS:
                     filter_OK = True
                     break
         return filter_OK
@@ -353,7 +360,7 @@ class rsv_log_file:
     def __init__(self, filtering=True):
         self.m = []
         self.filtering = filtering
-    def load(self, file_name, ip2a4, ip2a6, as_table, rr_types=[], experiment=[]):
+    def load(self, file_name, ip2a4, ip2a6, as_table, rr_types=[], experiment=[], query_ASes=[]):
         for line in open(file_name, "r"):
             try:
                 x = rsv_log_line()
@@ -368,7 +375,7 @@ class rsv_log_file:
                 print('\nCode generated an exception: %s' % (exc))
                 print("Cannot parse:\n" + line + "\n")
                 break
-        print("Matrix has " + str(len(self.m)) + " lines.")
+        print("Data matrix has " + str(len(self.m)) + " lines.")
 
     def get_frame(self):
         df = pd.DataFrame(self.m,columns=rsv_log_line.header())
