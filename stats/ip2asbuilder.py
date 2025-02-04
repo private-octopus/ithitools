@@ -2,7 +2,7 @@
 # coding=utf-8
 #
 # Build an IP Address to AS number conversion table.
-# The input should be the table ip2asn-v4.tsv from https://iptoasn.com/data/ip2asn-v4.tsv.gz
+# The input should be the table ip2asn-v4.tsv from  
 
 import sys
 import traceback
