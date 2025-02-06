@@ -55,11 +55,14 @@
 # 
 # 6e8d88e1 = 110.141.135.225
 
+import ipaddress
 from math import nan
 from ssl import ALERT_DESCRIPTION_DECRYPT_ERROR
 import country
 import traceback
 import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
 import ip2as
 import open_rsv
 
@@ -381,77 +384,167 @@ class rsv_log_file:
         df = pd.DataFrame(self.m,columns=rsv_log_line.header())
         return df
 
-# pivot per query, produce a view keeping first reply per query.
-# result frame will have one column per dsp, with time of first arrival.
-class pivoted_per_query:
-    def __init__(self):
-        self.rqt = dict()
-        self.tried = 0
-        self.tags = [ 'Same_AS', 'Same_CC', 'Others', 'googlepdns', 'cloudflare', \
+
+# pivot per query and per AS, produce a dictionary with
+# one table per AS, containing the queries for that AS
+
+tag_list = [ 'Same_AS', 'Same_CC', 'Others', 'googlepdns', 'cloudflare', \
             'opendns', 'quad9', 'level3', 'neustar', 'he' ]
-        self.user_ids = set()
+tag_isp_set = set(['Same_AS', 'Same_CC', 'Others'])
+color_list = [ 'blue', 'magenta', 'indigo', 'green', 'orange', 'red', 'violet', 'yellow', 'yellow', 'yellow', 'yellow' ]
+dot_headers = [ 'rsv_type', 'rank', 'first_time', 'delay' ]
 
-    class pivoted_record:
-        def __init__(self,x):
-            qt = x['query_time']
-            tag = x['resolver_tag']
-            self.query_AS = x['query_AS']
-            self.query_user_id = x['query_user_id']
-            self.first_tag = tag
-            self.first_time = qt
-            self.rsv_times = dict()
-            self.rsv_times[tag] = qt
-
-
-    def compute_times(self, x):
-        uid = x['query_user_id']
-        key = uid
+class pivoted_record:
+    # Record is created for the first time an event appears in an AS record.
+    def __init__(self,x):
         qt = x['query_time']
         tag = x['resolver_tag']
+        self.query_AS = x['query_AS']
+        self.query_user_id = x['query_user_id']
+        self.first_tag = tag
+        self.first_time = qt
+        self.rsv_times = dict()
+        self.rsv_times[tag] = qt
+        self.delta_times = dict()
+        self.has_isp = False
+        self.has_public = False
+
+    # add event records a new event after the tag has been created
+    def add_event(self, x):
+        qt = x['query_time']
+        tag = x['resolver_tag']
+        if (not tag in self.rsv_times) or \
+            qt < self.rsv_times[tag]:
+            self.rsv_times[tag] = qt
+        if qt < self.first_time:
+            self.first_tag = tag
+            self.first_time = qt
+
+    # delta time is computed once all events are recorded
+    # We only consider the events that happen less that "delta_max"
+    # (default= 0.5 second) from the first event. This cuts down the
+    # noise of, for example, queries repeated to maintain a cache
+    def compute_delta_t(self, delta_max = 0.5):
+        for tag in self.rsv_times:
+            delta_t = self.rsv_times[tag] - self.first_time
+            if delta_t <= delta_max:
+                self.delta_times[tag] = delta_t
+                if tag in tag_isp_set:
+                    self.has_isp = True
+                else:
+                    self.has_public = True
+            
+class pivoted_AS_record:
+    def __init__(self,query_AS):
+        self.query_AS = query_AS
+        self.rqt = dict()
+        self.user_ids = set()
+        self.nb_isp = 0
+        self.nb_public = 0
+        self.nb_both = 0
+        self.nb_total = 0
+
+    # Compute time is called for each record "x" in the log file for that AS.
+    # For each UID, we compute a pivoted record, which contains a dict() of "tags".
+    # If a tag is present in the dict, we only retain the earliest time for that ta
+    def compute_time(self, x):
+        uid = x['query_user_id']
+        key = uid
+
         if key in self.rqt:
-            if (not tag in self.rqt[key].rsv_times) or \
-                qt < self.rqt[key].rsv_times[tag]:
-                self.rqt[key].rsv_times[tag] = qt
-            if qt < self.rqt[key].first_time:
-                self.rqt[key].first_tag = tag
-                self.rqt[key].first_time = qt
+            self.rqt[key].add_event(x)
         else:
-            self.rqt[key] = pivoted_per_query.pivoted_record(x)
+            self.rqt[key] = pivoted_record(x)
             if not uid in self.user_ids:
                 self.user_ids.add(uid)
+    
+    # Delta updates the per query record to compute the delta between the
+    # arrival in a given category and the first query for that UID.
+    # This computation can only be performed once all records have been logged.
+    def compute_delta_t(self, delta_max = 0.5):
+        for key in self.rqt:
+            self.rqt[key].compute_delta_t(delta_max=delta_max)
+            self.nb_total += 1
+            if self.rqt[key].has_public:
+                if self.rqt[key].has_isp:
+                    self.nb_both += 1
+                else:
+                    self.nb_public += 1
+            else:
+                self.nb_isp += 1
+
+    # Produce a one line summary record for the ASN   
+    # Return a list of values:
+    # r[0] = ASN
+    # r[1] = total number of UIDs
+    # r[2] = total number of queries (should be same as total number UIDs)
+    # r[3] = total number of ISP only queries
+    # r[4] = total number of public DNS only queries
+    # r[5] = total number of queries served by both ISP and public DNS
+    # r[6]..[5+N] = total number of queries served by a given category
+
+    def get_summary(self, first_only):
+        r = [
+            self.query_AS,
+            len(self.user_ids),
+            self.nb_total,
+            self.nb_isp,
+            self.nb_public,
+            self.nb_both
+        ]
+        for tag in tag_list:
+            r.append(0)
+
+        for key in self.rqt:
+            rqt_r = self.rqt[key]
+            rank = 6
+            for tag in tag_list:
+                if tag in rqt_r.rsv_times:
+                    r[rank] += 1
+                rank += 1
+        return r
+
+    # get_delta_t_both:
+    # we produce a list of dots" records suitable for statistics and graphs
+    def get_delta_t_both(self):
+        dots = []
+        for key in self.rqt:
+            rqt_r = self.rqt[key]
+            if len(rqt_r.delta_times) == 0:
+                rqt_r.compute_delta_times()
+            if rqt_r.has_public and rqt_r.has_isp:
+                n_both = 0
+                for tag in rqt_r.delta_times:
+                    n_both += 1
+                    dot_line = [ tag, n_both,  rqt_r.first_time, rqt_r.delta_times[tag]]
+                    dots.append(dot_line)
+        dot_df = pd.DataFrame(dots,columns=dot_headers)
+        return dot_df
+
+class pivoted_per_query:
+    def __init__(self):
+        self.ASes = dict()
+        self.tried = 0
+            
+    def compute_times(self, x):
+        query_AS = x['query_AS']
+
+        if not query_AS in self.ASes:
+            self.ASes[query_AS] = pivoted_AS_record(query_AS)
+
+        self.ASes[query_AS].compute_time(x)
 
     def process_log(self, df):
         df.apply(lambda x: self.compute_times(x), axis=1)
 
-    def get_frame_delta_t(self):
-        # compose the headers
-        headers = [ 'query_AS', \
-            'query_user_id', \
-            'first_tag', \
-            'first_time' ]
-        for tag in self.tags:
-            headers.append(tag)
-        # create a list of rows
-        rl = []
-        for key in self.rqt:
-            qt = self.rqt[key]
-            r = [ \
-               qt.query_AS, \
-               qt.query_user_id, \
-               qt.first_tag, \
-               qt.first_time ]
-            for tag in self.tags:
-                t = 1000000.0 + qt.first_time
-                if tag in qt.rsv_times:
-                    r.append(qt.rsv_times[tag] - qt.first_time)
-                else:
-                    r.append(1000000)
-            rl.append(r)
-        # create a data frame
-        df = pd.DataFrame(rl,columns=headers)
-        return df
+    def AS_list(self):
+        return list(self.ASes.keys())
 
-    def get_frame_asns(self, first_only):
+    def compute_delta_t(self):
+        for query_AS in self.ASes:
+            self.ASes[query_AS].compute_delta_t()
+
+    def get_summaries(self, AS_list, first_only):
         # compose the headers
         headers = [ 'q_AS', \
             'uids',
@@ -459,62 +552,92 @@ class pivoted_per_query:
             'isp',
             'public',
             'both' ]
-        for tag in self.tags:
+        for tag in tag_list:
             headers.append(tag)
-        xt = dict()
-        uis = dict()
-        for key in self.rqt:
-            qt = self.rqt[key]
-            
-            if not qt.query_AS in xt:
-                r = [ \
-                    qt.query_AS,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0
-                ]
-                for tag in self.tags:
-                    r.append(0)
-                xt[qt.query_AS] = r
-                uis[qt.query_AS] = set()
-            xt[qt.query_AS][2] += 1
-            if not qt.query_user_id in uis[qt.query_AS]:
-                uis[qt.query_AS].add(qt.query_user_id)
-                xt[qt.query_AS][1] += 1
-            if qt.category == 'isp':
-                xt[qt.query_AS][3] += 1
-            elif qt.category == 'public':
-                xt[qt.query_AS][4] += 1
-            else:
-                xt[qt.query_AS][5] += 1
-            rank = 6
-            for tag in self.tags:
-                if (tag == qt.first_tag) or ((first_only == 0) and (tag in qt.rsv_times)):
-                    xt[qt.query_AS][rank] += 1
-                rank += 1
-        xl = list(xt.values())
-        xl.sort(key=lambda x: x[1], reverse=True)
-        df = pd.DataFrame(xl,columns=headers)
+        s_list = []
+        for target_AS in AS_list:
+            if target_AS in self.ASes:
+                s_list.append(self.ASes[target_AS].get_summary(first_only))
+        s_list.sort(key=lambda x: x[1], reverse=True)
+        df = pd.DataFrame(s_list,columns=headers)
         return df
 
+    def get_delta_t_both(self, target_AS):
+        return self.ASes[target_AS].get_delta_t_both()
 
+def do_graph(asn, dot_df, image_file="", x_delay=False, log_y=False):
+    if log_y:
+        # replace 0 by low value so logy plots will work
+        dot_df.loc[dot_df['delay'] == 0, 'delay'] += 0.00001
+    is_first = True
+    sub_df = []
+    x_value = "rank"
+    if x_delay:
+        x_value = "first_time"
 
+    for rsv in tag_list:
+        sub_df.append(dot_df[dot_df['rsv_type'] == rsv])
 
-        
-# Prepare a plot of times per queries, one line per mode.
+    legend_list = []
+    for i in range(0, len(tag_list)):
+        rsv = tag_list[i]
+        rsv_color = color_list[i]
+        if len(sub_df[i]) > 0:
+            if is_first:
+                axa = sub_df[i].plot.scatter(x=x_value, y="delay", logy=log_y, alpha=0.25, color=rsv_color)
+            else:
+                sub_df[i].plot.scatter(ax=axa, x=x_value, y="delay", logy=log_y, alpha=0.25, color=rsv_color)
+            is_first = False
+            legend_list.append(rsv)
+    plt.title("Delay (seconds) per provider for " + asn)
+    plt.legend(legend_list)
+    if len(image_file) == 0:
+        plt.show()
+    else:
+        plt.savefig(image_file)
+    plt.close()
 
-#def plot_times(df, tags):
-#    for tag in tags:
-#        dft = df[tag]
-#        dftg = dft[
-#    colors = [ "black", "blue", "green", "orange", "red", "purple", "magenta", "brown", "violet", "yellow"]
-#    axa = without_apnic_df.plot.scatter(x="queries", y="n_slds", alpha=0.5, logx=True, logy=True, color="blue")
-#small_apnic_df.plot.scatter(ax=axa, x="queries", y="n_slds", alpha=0.5, color="orange")
-#big_apnic_df.plot.scatter(ax=axa, x="queries", y="n_slds", alpha=0.5, color="red")
-#plt.show()
+    
+def do_hist(asn, dot_df, image_file):
+    # get a frame from the list
+    dot_df.loc[dot_df['delay'] == 0, 'delay'] += 0.00001
+    is_first = True
+    clrs = []
+    legend_list = []
+    row_list = []
+    x_min = 1000000
+    x_max = 0.00001
 
+    for i in range(0, len(tag_list)):
+        rsv = tag_list[i]
+        sdf_all = dot_df[dot_df['rsv_type'] == rsv]
+        sdf = sdf_all['delay']
+        sdf_max = sdf.max()
+        if sdf_max > x_max:
+            x_max = sdf_max
+        sdf_min = sdf.min()
+        if sdf_min < x_min:
+            x_min = sdf_min
+        l = sdf.values.tolist()
+        if len(l) > 0:
+            row_list.append(np.array(l))
+            clrs.append(color_list[i])
+            legend_list.append(rsv)
+            is_first = False
+    if x_min == 0:
+        x_min = 0.00001
+
+    if not is_first:
+        logbins = np.logspace(np.log10(x_min),np.log10(x_max), num=20)
+        axa = plt.hist(row_list, logbins, histtype='bar', color=clrs)
+        plt.title("Histogram of delays (seconds) per provider for " + asn)
+        plt.legend(legend_list)
+        plt.xscale('log')
+        if len(image_file) == 0:
+            plt.show()
+        else:
+            plt.savefig(image_file)
+        plt.close()
 
 
 
