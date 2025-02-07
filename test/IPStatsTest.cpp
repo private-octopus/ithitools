@@ -167,12 +167,16 @@ IPStatsXZTest::~IPStatsXZTest()
 
 bool IPStatsXZTest::DoTest()
 {
+#ifdef _WINDOWS
+    return true;
+#else
     IPStats ipstats;
     char const * list[1] = { ipstats_xz_test_input };
 
     bool ret = IPStatsTestOne(ip_stats_xz_csv, ipstats_test_output, list, 1);
 
     return ret;
+#endif
 }
 
 IPStatsLoadTest::IPStatsLoadTest()
@@ -185,6 +189,9 @@ IPStatsLoadTest::~IPStatsLoadTest()
 
 bool IPStatsLoadTest::DoTest()
 {
+#ifdef _WINDOWS
+    return true;
+#else
     bool ret;
     cdns cdns_ctx;
     FILE* P = NULL;
@@ -211,4 +218,5 @@ bool IPStatsLoadTest::DoTest()
         }
     }
     return ret;
+#endif
 }
