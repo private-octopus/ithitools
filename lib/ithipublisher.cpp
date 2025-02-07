@@ -590,6 +590,30 @@ bool ithipublisher::PrintVector(FILE * F, std::vector<double> * vx, double mult)
     return ret;
 }
 
+/* The ITHI tools will sometimes generate "escaped" names, e.g. \172\016. They must be escaped to not violate JSON syntax */
+char const* double_whacks(char const* input_name, char* text, size_t text_size)
+{
+    int i = 0;
+    int j = 0;
+
+    while (input_name[i] != 0 && j < text_size - 2) {
+        if (input_name[i] == '\\') {
+            text[j] = '\\';
+            j++;
+            text[j] = '\\';
+            j++;
+        }
+        else
+        {
+            text[j] = input_name[i];
+            j++;
+        }
+        i++;
+    }
+    text[j] = 0;
+    return text;
+}
+
 bool ithipublisher::PrintNameOrNumberVectorMetric(FILE * F, char const * sub_met_name, char const * metric_name, double mult, bool is_number)
 {
     std::vector<double>  mvec;
@@ -597,6 +621,7 @@ bool ithipublisher::PrintNameOrNumberVectorMetric(FILE * F, char const * sub_met
     bool ret = GetNameOrNumberList(sub_met_name, &name_list, is_number);
     bool need_comma = true;
     bool check_arpa = strcmp(sub_met_name, "M3.3.2") == 0;
+    char text_buffer[512];
 
 
     ret &= fprintf(F, "\"%s\" : [", metric_name) > 0;
@@ -617,7 +642,12 @@ bool ithipublisher::PrintNameOrNumberVectorMetric(FILE * F, char const * sub_met
             ret &= (fprintf(F, "[ %s, ", name_list[i].name) > 0);
         }
         else {
-            ret &= (fprintf(F, "[\"%s\", ", name_list[i].name) > 0);
+#if 1
+            if (strcmp(name_list[i].name, "\\172\\016") == 0) {
+                text_buffer[0] = 1;
+            }
+#endif
+            ret &= (fprintf(F, "[\"%s\", ", double_whacks(name_list[i].name, text_buffer, sizeof(text_buffer))) > 0);
         }
 
         if (ret)
