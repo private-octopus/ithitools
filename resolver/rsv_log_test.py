@@ -1,9 +1,9 @@
 # APNIC test.
 # verify that the parse library does what we expect
+
 import sys
 import ip2as
 import rsv_log_parse
-import rsv_both_graphs
 import pandas as pd
 import traceback
 
@@ -22,6 +22,7 @@ test_lines = [
     "1730423099.989316 client 141.101.75.101#62737: query: valid.starnxdomain.net. IN A -ED () 1914810962 0",
     "1730423099.989316 client 141.101.75.101#62737: query: invalid4.starnxdomain.net. IN A -ED () 1914810962 0",
     "1730423099.989316 client 141.101.75.101#62737: query: invalid6.starnxdomain.net. IN A -ED () 1914810962 0",
+    "1738055179.971480 client 20.36.146.56#52164: query: root-key-sentinel-is-ta-20326.0ds-uec321a73-c233-s1536509491-icff1e56f-2.am.dotnxdomain.net. IN MX -ED () 0 875"
 ]
 
 test_results = [
@@ -39,6 +40,7 @@ test_results = [
     "1730423099.989316, 141.101.75.101, 62737, , , , , 0, , IN, A, valid.starnxdomain.net, , , , S, \"-ED () 1914810962 0\", ",
     "1730423099.989316, 141.101.75.101, 62737, , , , , 0, , IN, A, invalid4.starnxdomain.net, , , , S, \"-ED () 1914810962 0\", ",
     "1730423099.989316, 141.101.75.101, 62737, , , , , 0, , IN, A, invalid6.starnxdomain.net, , , , S, \"-ED () 1914810962 0\", ",
+    "1738055179.97148, 20.36.146.56, 52164, root-key-sentinel, , , , 0, , IN, MX, am.dotnxdomain.net, , , C, , \"-ED () 0 875\", ",
 ]
 
 def parse_test():
@@ -60,6 +62,7 @@ def parse_test():
                     passing = False
                     if len(s) != len(test_results[i]):
                         print("Got " + str(len(s)) + " chars instead of " + str(len(test_results[i])))
+                        print("S:\n" + s)
                     else:
                         t = test_results[i]
                         for j in range(0, len(s)):
@@ -95,39 +98,6 @@ def frame_test():
     df = pd.DataFrame(m,columns=rsv_log_parse.rsv_log_line.header())
     print(df)
 
-def get_name(as_names, x):
-    y = as_names.name(x)
-    if len(y) == 0:
-        y = "???"
-    return y;
-
-def create_as_frame(numpy_as, as_names):
-    header = [ \
-        'resolver_AS', \
-        'resolver_name', \
-        'count']
-    m = []
-    as_counts = dict()
-    bad_names = 0
-
-    for r in numpy_as:
-        as_v = r[0]
-        if not as_v in as_counts:
-            as_counts[as_v] = 1
-        else:
-            as_counts[as_v] += 1
-    for as_v in as_counts:
-        n = 0
-        name = as_names.name(as_v)
-        if name == "":
-            name = as_v
-        r = [ as_v, name, as_counts[as_v] ]
-        m.append(r)
-    df = pd.DataFrame(m,columns=header)
-    return df
-
-            
-
 # Main program
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -135,85 +105,8 @@ if __name__ == "__main__":
             print("test fails.")
             exit(-1)
         frame_test()
-
-    if len(sys.argv) >= 6:
-        ip2a4 = ip2as.ip2as_table()
-        ip2a4.load(sys.argv[1])
-        ip2a6 = ip2as.ip2as_table()
-        ip2a6.load(sys.argv[2])
-        as_names = ip2as.asname()
-        as_names.load(sys.argv[3])
-        rsv_table = rsv_log_parse.rsv_log_file()
-        rsv_table.load(sys.argv[4], ip2a4, ip2a6, as_names, experiment=['0du'], rr_types = [])
-        df = rsv_table.get_frame()
-        print("DF:")
-        print(df.head(10))
-        # list the top ISPs
-        isps = df['query_AS']
-        ispdf = isps.to_frame()
-        ispvc = ispdf['query_AS'].value_counts()
-        print("ISPVC:")
-        print(ispvc)
-        # list the top open DNS
-        odns = df['resolver_tag']
-        odnsdf = odns.to_frame()
-        odnsc = odnsdf['resolver_tag'].value_counts()
-        print("ODNSC:")
-        print(odnsc)
-
-        print("ODNSU:")
-        odnsu = odns.unique()
-        print(odnsu)
-        
-        
-        # list the top experiments
-        expt = df['experiment_id']
-        expdf = expt.to_frame()
-        exptc = expdf['experiment_id'].value_counts()
-        print("EXPTC:")
-        print(exptc)
-        print("EXPTU:")
-        exptu = expt.unique()
-        print(exptu)
-        
-        ppq = rsv_log_parse.pivoted_per_query()
-        ppq.process_log(df)
-        dfdt = ppq.get_frame_delta_t()
-        print("DFDT:")
-        print(dfdt)
-        # dfdt.to_csv(sys.argv[5], sep=",")
-
-        as_list = dfdt['query_AS'].unique()
-        as_res = []
-        for asn in as_list:
-            rbg = rsv_both_graphs.per_as_analysis(asn, dfdt)
-            rbg.compute_both()
-            l = rbg.to_list()
-            #print(str(l))
-            as_res.append(l)
-            if rbg.n_both > 50:
-                #image_file = "..\\tmp\\delays_log_" + asn
-                #rbg.do_graph(image_file, x_delay=True, log_y=True)
-                image_file = "..\\tmp\\delays_log_hist_" + asn
-                rbg.do_hist(image_file=image_file)
-
-        as_df = pd.DataFrame(as_res,columns=rsv_both_graphs.per_as_analysis.list_headers())
-        as_df.to_csv(sys.argv[5], sep=",")
-
-        # list the top RR types
-        qt = df['rr_type']
-        qtdf = qt.to_frame()
-        qtsc = qtdf['rr_type'].value_counts()
-        print("QTSC:")
-        print(qtsc)
-
-        #print the number of user ids:
-        #print("nb_uids: " + str(len(ppq.user_ids)))
-        #qui = df['query_user_id']
-        #quiu = qui.unique()
-        #print("nb_uids: " + str(quiu.shape[0]))
-
-        
+    else:
+        print("Usage: python rsv_log_test.py")
 
     exit(0)
 
