@@ -152,6 +152,10 @@ class rsv_log_line:
             str((ip_num>>8)&255)+ "." + \
             str(ip_num&255)
         return is_valid
+
+    def parse_query_name_sentinel(self, query_parts):
+        #query: root-key-sentinel-is-ta-20326.0ds-uec321a73-c233-s1536509491-icff1e56f-2
+        pass
         
     def parse_query_name(self, query_name):
         is_valid = True
@@ -170,6 +174,9 @@ class rsv_log_line:
         if query_string.startswith("000-000-000"):
             self.is_anomalous = True
             is_valid = self.parse_query_name_anomalous(query_parts)
+        elif query_string.startswith("root-key-sentinel"):
+            self.query_experiment = "root-key-sentinel"
+            self.is_cretinous = True
         elif len(query_parts) < 6:
             if self.server.endswith(".starnxdomain.net"):
                 self.is_starquery = True
@@ -275,7 +282,7 @@ class rsv_log_line:
             else:
                 self.resolver_tag = "Others"
 
-
+    # debugging function when we want to verify that parsing works as expected.
     def pretty_string(self):
         r = ""
         a = ""
@@ -309,7 +316,9 @@ class rsv_log_line:
             "\"" + self.query_edns + "\", " + \
             self.invalid_query
         return s
-
+    
+    # Headers and row function are useful if one wants to produce a panda
+    # data frame that has one line per filetered evennt in the frame.
     def header():
         header = [ 'query_time', \
             'resolver_IP', \
@@ -358,33 +367,6 @@ class rsv_log_line:
             self.invalid_query ]
         return r
 
-
-class rsv_log_file:
-    def __init__(self, filtering=True):
-        self.m = []
-        self.filtering = filtering
-    def load(self, file_name, ip2a4, ip2a6, as_table, rr_types=[], experiment=[], query_ASes=[]):
-        for line in open(file_name, "r"):
-            try:
-                x = rsv_log_line()
-                if x.parse_line(line):
-                    if (not self.filtering or x.filter(rr_types=rr_types, experiment=experiment)):
-                        x.set_resolver_AS(ip2a4, ip2a6, as_table)
-                        self.m.append(x.row())
-                else:
-                    print("Bad line:" + line.strip())
-            except Exception as exc:
-                traceback.print_exc()
-                print('\nCode generated an exception: %s' % (exc))
-                print("Cannot parse:\n" + line + "\n")
-                break
-        print("Data matrix has " + str(len(self.m)) + " lines.")
-
-    def get_frame(self):
-        df = pd.DataFrame(self.m,columns=rsv_log_line.header())
-        return df
-
-
 # pivot per query and per AS, produce a dictionary with
 # one table per AS, containing the queries for that AS
 
@@ -395,12 +377,10 @@ color_list = [ 'blue', 'magenta', 'indigo', 'green', 'orange', 'red', 'violet', 
 dot_headers = [ 'rsv_type', 'rank', 'first_time', 'delay' ]
 
 class pivoted_record:
-    # Record is created for the first time an event appears in an AS record.
-    def __init__(self,x):
-        qt = x['query_time']
-        tag = x['resolver_tag']
-        self.query_AS = x['query_AS']
-        self.query_user_id = x['query_user_id']
+    # Record is created for the first time an event appears in an AS record.    
+    def __init__(self, qt, tag, query_AS, uid):
+        self.query_AS = query_AS
+        self.query_user_id = uid
         self.first_tag = tag
         self.first_time = qt
         self.rsv_times = dict()
@@ -413,6 +393,14 @@ class pivoted_record:
     def add_event(self, x):
         qt = x['query_time']
         tag = x['resolver_tag']
+        if (not tag in self.rsv_times) or \
+            qt < self.rsv_times[tag]:
+            self.rsv_times[tag] = qt
+        if qt < self.first_time:
+            self.first_tag = tag
+            self.first_time = qt
+    
+    def add_event2(self, qt, tag):
         if (not tag in self.rsv_times) or \
             qt < self.rsv_times[tag]:
             self.rsv_times[tag] = qt
@@ -433,7 +421,27 @@ class pivoted_record:
                     self.has_isp = True
                 else:
                     self.has_public = True
-            
+
+class subnet_record:
+    def __init__(self, query_AS, resolver_AS, subnet, count):
+        self.query_AS = query_AS
+        self.resolver_AS = resolver_AS
+        self.subnet = str(subnet)
+        self.count = count
+
+    def headers():
+        return [ "query_AS", "resolver_AS", "subnet", "count" ]
+
+    def key(query_AS, resolver_AS, subnet):
+        return query_AS + "_" + resolver_AS  + "_" + str(subnet)
+
+    def as_list(self):
+        return [ 
+            self.query_AS,
+            self.resolver_AS,
+            self.subnet,
+            self.count ]
+
 class pivoted_AS_record:
     def __init__(self,query_AS):
         self.query_AS = query_AS
@@ -443,20 +451,35 @@ class pivoted_AS_record:
         self.nb_public = 0
         self.nb_both = 0
         self.nb_total = 0
+        self.subnets = dict()
 
-    # Compute time is called for each record "x" in the log file for that AS.
+    # process event 
     # For each UID, we compute a pivoted record, which contains a dict() of "tags".
     # If a tag is present in the dict, we only retain the earliest time for that ta
-    def compute_time(self, x):
-        uid = x['query_user_id']
-        key = uid
-
-        if key in self.rqt:
-            self.rqt[key].add_event(x)
+    def process_event(self, qt, tag, query_AS, uid, resolver_IP, resolver_AS):
+        if uid in self.rqt:
+            self.rqt[uid].add_event2(qt, tag)
         else:
-            self.rqt[key] = pivoted_record(x)
+            self.rqt[uid] = pivoted_record(qt, tag, query_AS, uid)
             if not uid in self.user_ids:
                 self.user_ids.add(uid)
+
+        if tag in tag_isp_set:
+            try:
+                addr = ipaddress.ip_address(resolver_IP)
+                if addr.version == 6:
+                    subnet = ipaddress.IPv6Network(resolver_IP + "/40", strict=False)
+                else:
+                    subnet = ipaddress.IPv4Network(resolver_IP + "/16", strict=False)
+                key = subnet_record.key(query_AS, resolver_AS, subnet)
+                if key in self.subnets:
+                    self.subnets[key].count += 1
+                else:
+                    self.subnets[key] = subnet_record(query_AS, resolver_AS, subnet, 1)
+            except Exception as exc:
+                traceback.print_exc()
+                print('\nCode generated an exception: %s' % (exc))
+                print("Bad address or subnet:" + resolver_IP + "\n")
     
     # Delta updates the per query record to compute the delta between the
     # arrival in a given category and the first query for that UID.
@@ -521,21 +544,49 @@ class pivoted_AS_record:
         dot_df = pd.DataFrame(dots,columns=dot_headers)
         return dot_df
 
+    def get_subnets(self):
+        snts = []
+        for key in self.subnets:
+            snts.append(self.subnets[key].as_list())
+        snts.sort(key=lambda x: x[3], reverse=True)
+        return snts
+
 class pivoted_per_query:
     def __init__(self):
         self.ASes = dict()
         self.tried = 0
-            
-    def compute_times(self, x):
-        query_AS = x['query_AS']
 
+    def process_event(self, qt, tag, query_AS, uid, resolver_IP, resolver_AS):
         if not query_AS in self.ASes:
             self.ASes[query_AS] = pivoted_AS_record(query_AS)
 
-        self.ASes[query_AS].compute_time(x)
+        self.ASes[query_AS].process_event(qt, tag, query_AS, uid, resolver_IP, resolver_AS)
 
-    def process_log(self, df):
-        df.apply(lambda x: self.compute_times(x), axis=1)
+    def quicker_load(self, file_name, ip2a4, ip2a6, as_table, rr_types=[], experiment=[], query_ASes=[], log_threshold = 15625):
+        nb_events = 0
+        lth = log_threshold;
+        
+        filtering = len(rr_types) > 0 or len(experiment) > 0 or len(query_ASes) > 0
+        for line in open(file_name, "r"):
+            parsed = True
+            try:
+                x = rsv_log_line()
+                parsed = x.parse_line(line)
+            except Exception as exc:
+                traceback.print_exc()
+                print('\nCode generated an exception: %s' % (exc))
+                print("Cannot parse:\n" + line + "\n")
+                parsed = False
+            if parsed:
+                if (not filtering) or x.filter(rr_types=rr_types, experiment=experiment, query_ASes=query_ASes):
+                    x.set_resolver_AS(ip2a4, ip2a6, as_table)
+                    self.process_event(x.query_time, x.resolver_tag, x.query_AS, x.query_user_id, x.resolver_IP, x.resolver_AS)
+                    nb_events += 1
+                    if (nb_events%lth) == 0:
+                        print("loaded " + str(nb_events) + " events.")
+                        lth *= 2
+                    
+        return nb_events
 
     def AS_list(self):
         return list(self.ASes.keys())
@@ -559,11 +610,18 @@ class pivoted_per_query:
             if target_AS in self.ASes:
                 s_list.append(self.ASes[target_AS].get_summary(first_only))
         s_list.sort(key=lambda x: x[1], reverse=True)
-        df = pd.DataFrame(s_list,columns=headers)
+        df = pd.DataFrame(s_list, columns=headers)
         return df
 
     def get_delta_t_both(self, target_AS):
         return self.ASes[target_AS].get_delta_t_both()
+
+    def get_subnets(self):
+        sn = []
+        for target_AS in self.ASes:
+            sn += self.ASes[target_AS].get_subnets()
+        sn_df = pd.DataFrame(sn, columns=subnet_record.headers())
+        return sn_df
 
 def do_graph(asn, dot_df, image_file="", x_delay=False, log_y=False):
     if log_y:

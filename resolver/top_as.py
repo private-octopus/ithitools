@@ -1,0 +1,55 @@
+
+# TopAS: list of top Ases thhat we are tracking. 
+import sys
+
+TopAS = {
+    "AS28573": ["Claro NXT Telecomunicacoes Ltda[BRAZIL]", "BR", "Cellular"],
+    "AS26599": ["TELEFONICA BRASIL S.A[BRAZIL]", "BR", "Cellular"],
+    "AS26615": ["TIM SA[BRAZIL]", "BR", "Cellular"],
+    "AS7738": ["V tal[BRAZIL]", "BR", "Broadband"],
+    "AS28126": ["BRISANET SERVICOS DE TELECOMUNICACOES S.A[BRAZIL]", "BR", "Broadband"],
+    "AS268581": ["QNAX LTDA[BRAZIL]", "BR", "Broadband"],
+    "AS7303": ["Telecom Argentina S.A.[ARGENTINA]", "AR", "Broadband"],
+    "AS19037": ["AMX Argentina S.A.[ARGENTINA]", "AR", "Cellular"],
+    "AS22927": ["Telefonica de Argentina[ARGENTINA]", "AR", "Cellular"],
+    "AS27747": ["Telecentro S.A.[ARGENTINA]", "AR", "Broadband"],
+    "AS11315": ["Telefonica Moviles Argentina S.A. Movistar Argentina[ARGENTINA]", "AR", "Cellular"],
+    "AS8151": ["UNINET[MEXICO]", "MX", "Broadband"],
+    "AS17072": ["TOTAL PLAY TELECOMUNICACIONES SA DE CV[MEXICO]","MX", "Broadband"],
+    "AS13999": ["Mega Cable S.A. de C.V.[MEXICO]", "MX", "Broadband"],
+    "AS28403": ["RadioMovil Dipsa S.A. de C.V.[MEXICO]","MX", "Broadband"],
+    "AS28548": ["Cablevision S.A. de C.V.[MEXICO]", "MX", "Broadband"],
+    "AS26611": ["COMUNICACION CELULAR S.A. COMCEL S.A.[COLOMBIA]", "CO", "Cellular"],
+    "AS3816": ["COLOMBIA TELECOMUNICACIONES S.A. ESP[COLOMBIA]", "CO", "Broadband"],
+    "AS10620": ["Telmex Colombia S.A.[COLOMBIA]", "CO", "Cellular"],
+    "AS27831": ["Colombia Movil[COLOMBIA]", "CO", "Cellular"],
+    "AS13489": ["EPM Telecomunicaciones S.A. E.S.P.[COLOMBIA]", "CO", "Broadband"],
+    "AS7418": ["TELEFONICA CHILE S.A.[CHILE]", "CL", "Cellular"],
+    "AS27651": ["ENTEL CHILE S.A.[CHILE]", "CL", "Broadband"],
+    "AS22047": ["VTR BANDA ANCHA S.A.[CHILE]", "CL", "Broadband"],
+    "AS52341": ["WOM S.A.[CHILE]", "CL", "Broadband"],
+    "AS27901": ["Pacifico Cable SPA.[CHILE]", "CL", "Broadband"],
+    "AS27882": ["Telefonica Celular de Bolivia S.A.[BOLIVIA]", "BO", "Cellular"],
+    "AS6568": ["Entel S.A. - EntelNet[BOLIVIA]", "BO", "Broadband"],
+    "AS23201": ["Telecel S.A.[PARAGUAY]", "PY", "Cellular"],
+    "AS27895": ["Nucleo S.A.[PARAGUAY]", "PY", "Cellular"],
+    "AS8048": ["CANTV Servicios Venezuela[VENEZUELA]", "VE", "Broadband"],
+    "AS21826": ["Corporacion Telemic C.A.[VENEZUELA]", "VE", "Cellular"],
+    "AS7922": ["Comcast", "US", "Broadband"],
+    "AS20115": ["Charter", "US", "Broadband"],
+    "AS22773": ["Cox", "US", "Broadband"],
+    "AS701": ["Verizon Business (Fios)", "US", "Broadband"],
+    "AS7843": ["Charter (ex TWC)", "US", "Broadband"],
+    "AS7018": ["AT&T", "US", "Cellular"],
+    "AS6167": ["Verizon", "US", "Cellular"],
+    "AS21928": ["T-Mobile", "US", "Cellular"],
+    "AS6614": ["US Cellular", "US", "Cellular"],
+    "AS22394": ["Verizon", "US", "Cellular"],
+    "AS3215": ["Orange", "EU", "Europe"],
+    "AS3269": ["Telecom Italia", "EU", "Europe"],
+    "AS3320": ["Deutsche Telekom", "EU", "Europe"],
+    "AS3352": ["Telefonica", "EU", "Europe"]}
+
+
+def top_as_list():
+    return list(TopAS.keys())
