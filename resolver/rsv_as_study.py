@@ -67,7 +67,8 @@ if __name__ == "__main__":
     # 1.5GB of memory.
     ppq = rsv_log_parse.pivoted_per_query()
     nb_events = ppq.quicker_load(log_file, ip2a4, ip2a6, as_names, experiment=['0du'], \
-        rr_types = [ 'A', 'AAAA', 'HTTPS' ], query_ASes = target_ASes )
+        rr_types = [ 'A', 'AAAA', 'HTTPS' ], query_ASes = target_ASes, \
+        time_start=time_start)
     print("Quick load of " + str(len(ppq.ASes)) + " ASes with " + str(nb_events) + " events.")
     time_file_read = time.time()
     print("File read at " + str(time_file_read - time_start) + " seconds.")

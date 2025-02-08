@@ -65,6 +65,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import ip2as
 import open_rsv
+import bz2
+import time
 
 class rsv_log_line:
     def __init__(self):
@@ -224,7 +226,7 @@ class rsv_log_line:
     # - rr_types = [ "A", "AAAA" ]
     # - is_results = False
     # - query_ASes = [] (could be a specific set of ASes)
-    def filter(self, query_delay=10, experiment=["0du"], rr_types=["A", "AAAA"], is_results=[False], query_ASes=[]):
+    def filter(self, query_delay=10, experiment=["0du"], rr_types=["A", "AAAA"], is_results=[False], query_ASes={}):
         filter_OK = True
         if query_delay > 0:
             qd = int(self.query_time) - self.query_ad_time
@@ -249,11 +251,7 @@ class rsv_log_line:
                     filter_OK = True
                     break
         if filter_OK and len(query_ASes) > 0:
-            filter_OK = False
-            for asn in query_ASes:
-                if asn == self.query_AS:
-                    filter_OK = True
-                    break
+            filter_OK = self.query_AS in query_ASes
         return filter_OK
     
     # set_resolver_AS checks the AS number associated with the source address
@@ -562,12 +560,18 @@ class pivoted_per_query:
 
         self.ASes[query_AS].process_event(qt, tag, query_AS, uid, resolver_IP, resolver_AS)
 
-    def quicker_load(self, file_name, ip2a4, ip2a6, as_table, rr_types=[], experiment=[], query_ASes=[], log_threshold = 15625):
+    def quicker_load(self, file_name, ip2a4, ip2a6, as_table, rr_types=[], experiment=[], query_ASes=[], log_threshold = 15625, time_start=0):
         nb_events = 0
         lth = log_threshold;
         
         filtering = len(rr_types) > 0 or len(experiment) > 0 or len(query_ASes) > 0
-        for line in open(file_name, "r"):
+        q_set = set(query_ASes)
+
+        if file_name.endswith(".bz2"):
+            F = bz2.open(file_name, "rt")
+        else:
+            F = open(file_name, "r")
+        for line in F:
             parsed = True
             try:
                 x = rsv_log_line()
@@ -578,12 +582,16 @@ class pivoted_per_query:
                 print("Cannot parse:\n" + line + "\n")
                 parsed = False
             if parsed:
-                if (not filtering) or x.filter(rr_types=rr_types, experiment=experiment, query_ASes=query_ASes):
+                if (not filtering) or x.filter(rr_types=rr_types, experiment=experiment, query_ASes=q_set):
                     x.set_resolver_AS(ip2a4, ip2a6, as_table)
                     self.process_event(x.query_time, x.resolver_tag, x.query_AS, x.query_user_id, x.resolver_IP, x.resolver_AS)
                     nb_events += 1
                     if (nb_events%lth) == 0:
-                        print("loaded " + str(nb_events) + " events.")
+                        if time_start > 0:
+                            time_n = time.time()
+                            print("loaded " + str(nb_events) + " events at " + str(time_n - time_start))
+                        else:
+                            print("loaded " + str(nb_events) + " events.")
                         lth *= 2
                     
         return nb_events
