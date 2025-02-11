@@ -69,7 +69,7 @@ if __name__ == "__main__":
     nb_events = ppq.quicker_load(log_file, ip2a4, ip2a6, as_names, experiment=['0du'], \
         rr_types = [ 'A', 'AAAA', 'HTTPS' ], query_ASes = target_ASes, \
         time_start=time_start)
-    print("Quick load of " + str(len(ppq.ASes)) + " ASes with " + str(nb_events) + " events.")
+    print("Quick load of " + str(len(ppq.cc_AS_list)) + " CC+AS with " + str(nb_events) + " events.")
     time_file_read = time.time()
     print("File read at " + str(time_file_read - time_start) + " seconds.")
 
@@ -87,21 +87,22 @@ if __name__ == "__main__":
     ppq.compute_delta_t()
     time_delays_computed = time.time()
     print("Delays computed at " + str(time_file_read - time_start) + " seconds.")
-    # Compute the list of ASes for which we have data to graph, i.e. the intersection
-    # of the list that we filter and the list of ASes present in the log file.
+
+    # Compute the list of (Country, AS) tuples for which we want a graph
     if len(target_ASes) == 0:
-        as_list = ppq.AS_list()
+        key_list = ppq.key_list()
     else:
-        as_list = []
-        for asn in target_ASes:
-            if asn in ppq.ASes:
-                as_list.append(asn)
+        key_list = []
+        for key in ppq.key_list():
+            for asn in target_ASes:
+                if key.endswith(asn):
+                    key_list.append(key)
         
-    # get the summaries per AS
-    summary_df = ppq.get_summaries(as_list, False);
+    # get the summaries per cc + AS
+    summary_df = ppq.get_summaries(key_list, False);
     summary_file = os.path.join(image_dir, "summary.csv" )
     summary_df.to_csv(summary_file, sep=",")
-    print("Published summaries for " + str(len(as_list)) + " Ases" + " in " + summary_file)
+    print("Published summaries for " + str(len(key_list)) + " CC+AS" + " in " + summary_file)
     time_summaries_computed = time.time()
     print("Summaries computed at " + str(time_summaries_computed - time_start) + " seconds.")
 
@@ -116,13 +117,13 @@ if __name__ == "__main__":
     # Analyse the spread of delays for the AS that have a sufficient share of UID with events
     # from both ISP resolvers and public resolvers. 
     nb_published = 0
-    for target_AS in as_list:
-        if ppq.ASes[target_AS].nb_both > target_threshold:
-            dot_df = ppq.get_delta_t_both(target_AS)
-            plot_delay_file = os.path.join(image_dir, target_AS + "_plot_delays" )
-            rsv_log_parse.do_graph(target_AS, dot_df, plot_delay_file, x_delay=True, log_y=True)
-            host_delay_files = os.path.join(image_dir, target_AS + "_hist_delays" )
-            rsv_log_parse.do_hist(target_AS, dot_df, image_file=host_delay_files)
+    for key in key_list:
+        if ppq.cc_AS_list[key].nb_both > target_threshold:
+            dot_df = ppq.get_delta_t_both(key)
+            plot_delay_file = os.path.join(image_dir, key[:2] + "_" + key[2:] + "_plot_delays" )
+            rsv_log_parse.do_graph(key, dot_df, plot_delay_file, x_delay=True, log_y=True)
+            host_delay_files = os.path.join(image_dir,  key[:2] + "_" + key[2:] + "_hist_delays" )
+            rsv_log_parse.do_hist(key, dot_df, image_file=host_delay_files)
             nb_published += 1
             if (nb_published%100) == 0:
                 print("Published " + str(nb_published) + " AS graphs")
