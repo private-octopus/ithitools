@@ -48,7 +48,27 @@ TopAS = {
     "AS3215": ["Orange", "EU", "Europe"],
     "AS3269": ["Telecom Italia", "EU", "Europe"],
     "AS3320": ["Deutsche Telekom", "EU", "Europe"],
-    "AS3352": ["Telefonica", "EU", "Europe"]}
+    "AS3352": ["Telefonica", "EU", "Europe"],
+    "AS197207": ["Mobile Communication of Iran PLC", "IR", "Mobile"],
+    "AS58224": ["TCI[Iran]", "IR", "Mix"],
+    "AS203214": ["Hulum Almustakbal", "IQ", "ISP"],
+    "AS199739": ["Earthlink [Iran]", "IR", "Mix"],
+    "AS48832": ["ZAIN[Jordan]", "JO", "Mix"],
+    "AS28885": ["Omantel [Oman]", "OM", "Mix"],
+    "AS43766": ["Zain [Saudi Arabia]", "SA", "Mix"],
+    "AS39801": ["Al Jawal [Saudi Arabia]", "SA", "Mobile"],
+    "AS35819": ["Etihad Etisalat [Saudi Arabia]", "SA", "Mix"],
+    "AS25019": ["Saudinetstc [Saudi Arabia]", "SA", "ISP"],
+    "AS29256": ["Int pdn ste [Syria]", "SY", "Mix"],
+    "AS34984": ["Tellcom [Turkiye]", "TR", "ISP"],
+    "AS20978": ["TT Mobil [Turkiye]", "TR", "Mobile"],
+    "AS16135": ["Turkcell [Turkiye]", "TR", "Mobile"],
+    "AS15897": ["Vodafone Turkiye [Turkiye]", "TR", "Mix"],
+    "AS9121": ["Turk Telekom [Turkiye]", "TR", "Mix"],
+    "AS8966": ["Etisalat [UAE]", "AE", "Mix"],
+    "AS5384": ["Emirates Telecommunications [UAE]", "AE", "Mix"],
+    "AS30873": ["Public Telecommunication [Yemen]", "YE", "Mix"]
+}
 
 
 def top_as_list():

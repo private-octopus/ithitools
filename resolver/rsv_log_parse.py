@@ -376,7 +376,8 @@ dot_headers = [ 'rsv_type', 'rank', 'first_time', 'delay' ]
 
 class pivoted_record:
     # Record is created for the first time an event appears in an AS record.    
-    def __init__(self, qt, tag, query_AS, uid):
+    def __init__(self, qt, tag, query_cc, query_AS, uid):
+        self.query_cc = query_cc
         self.query_AS = query_AS
         self.query_user_id = uid
         self.first_tag = tag
@@ -421,27 +422,30 @@ class pivoted_record:
                     self.has_public = True
 
 class subnet_record:
-    def __init__(self, query_AS, resolver_AS, subnet, count):
+    def __init__(self, query_cc, query_AS, resolver_AS, subnet, count):
+        self.query_cc = query_cc
         self.query_AS = query_AS
         self.resolver_AS = resolver_AS
         self.subnet = str(subnet)
         self.count = count
 
     def headers():
-        return [ "query_AS", "resolver_AS", "subnet", "count" ]
+        return [ "query_cc", "query_AS", "resolver_AS", "subnet", "count" ]
 
-    def key(query_AS, resolver_AS, subnet):
-        return query_AS + "_" + resolver_AS  + "_" + str(subnet)
+    def key(query_cc, query_AS, resolver_AS, subnet):
+        return query_cc + query_AS + "_" + resolver_AS  + "_" + str(subnet)
 
-    def as_list(self):
-        return [ 
+    def subnet_row(self):
+        return [
+            self.query_cc,
             self.query_AS,
             self.resolver_AS,
             self.subnet,
             self.count ]
 
-class pivoted_AS_record:
-    def __init__(self,query_AS):
+class pivoted_cc_AS_record:
+    def __init__(self, query_cc,query_AS):
+        self.query_cc = query_cc
         self.query_AS = query_AS
         self.rqt = dict()
         self.user_ids = set()
@@ -454,11 +458,11 @@ class pivoted_AS_record:
     # process event 
     # For each UID, we compute a pivoted record, which contains a dict() of "tags".
     # If a tag is present in the dict, we only retain the earliest time for that ta
-    def process_event(self, qt, tag, query_AS, uid, resolver_IP, resolver_AS):
+    def process_event(self, qt, tag, query_cc, query_AS, uid, resolver_IP, resolver_AS):
         if uid in self.rqt:
             self.rqt[uid].add_event2(qt, tag)
         else:
-            self.rqt[uid] = pivoted_record(qt, tag, query_AS, uid)
+            self.rqt[uid] = pivoted_record(qt, tag, query_cc, query_AS, uid)
             if not uid in self.user_ids:
                 self.user_ids.add(uid)
 
@@ -469,11 +473,11 @@ class pivoted_AS_record:
                     subnet = ipaddress.IPv6Network(resolver_IP + "/40", strict=False)
                 else:
                     subnet = ipaddress.IPv4Network(resolver_IP + "/16", strict=False)
-                key = subnet_record.key(query_AS, resolver_AS, subnet)
+                key = subnet_record.key(query_cc, query_AS, resolver_AS, subnet)
                 if key in self.subnets:
                     self.subnets[key].count += 1
                 else:
-                    self.subnets[key] = subnet_record(query_AS, resolver_AS, subnet, 1)
+                    self.subnets[key] = subnet_record(query_cc, query_AS, resolver_AS, subnet, 1)
             except Exception as exc:
                 traceback.print_exc()
                 print('\nCode generated an exception: %s' % (exc))
@@ -496,16 +500,18 @@ class pivoted_AS_record:
 
     # Produce a one line summary record for the ASN   
     # Return a list of values:
-    # r[0] = ASN
-    # r[1] = total number of UIDs
-    # r[2] = total number of queries (should be same as total number UIDs)
-    # r[3] = total number of ISP only queries
-    # r[4] = total number of public DNS only queries
-    # r[5] = total number of queries served by both ISP and public DNS
-    # r[6]..[5+N] = total number of queries served by a given category
+    # r[0] = CC
+    # r[1] = ASN
+    # r[2] = total number of UIDs
+    # r[3] = total number of queries (should be same as total number UIDs)
+    # r[4] = total number of ISP only queries
+    # r[5] = total number of public DNS only queries
+    # r[6] = total number of queries served by both ISP and public DNS
+    # r[7]..[5+N] = total number of queries served by a given category
 
     def get_summary(self, first_only):
         r = [
+            self.query_cc,
             self.query_AS,
             len(self.user_ids),
             self.nb_total,
@@ -518,7 +524,7 @@ class pivoted_AS_record:
 
         for key in self.rqt:
             rqt_r = self.rqt[key]
-            rank = 6
+            rank = 7
             for tag in tag_list:
                 if tag in rqt_r.rsv_times:
                     r[rank] += 1
@@ -526,7 +532,7 @@ class pivoted_AS_record:
         return r
 
     # get_delta_t_both:
-    # we produce a list of dots" records suitable for statistics and graphs
+    # we produce a list of "dots" records suitable for statistics and graphs
     def get_delta_t_both(self):
         dots = []
         for key in self.rqt:
@@ -545,20 +551,21 @@ class pivoted_AS_record:
     def get_subnets(self):
         snts = []
         for key in self.subnets:
-            snts.append(self.subnets[key].as_list())
-        snts.sort(key=lambda x: x[3], reverse=True)
+            snts.append(self.subnets[key].subnet_row())
+        snts.sort(key=lambda x: x[4], reverse=True)
         return snts
 
 class pivoted_per_query:
     def __init__(self):
-        self.ASes = dict()
+        self.cc_AS_list = dict()
         self.tried = 0
 
-    def process_event(self, qt, tag, query_AS, uid, resolver_IP, resolver_AS):
-        if not query_AS in self.ASes:
-            self.ASes[query_AS] = pivoted_AS_record(query_AS)
+    def process_event(self, qt, tag, query_cc, query_AS, uid, resolver_IP, resolver_AS):
+        key = query_cc + query_AS
+        if not key in self.cc_AS_list:
+            self.cc_AS_list[key] = pivoted_cc_AS_record(query_cc,query_AS)
 
-        self.ASes[query_AS].process_event(qt, tag, query_AS, uid, resolver_IP, resolver_AS)
+        self.cc_AS_list[key].process_event(qt, tag, query_cc, query_AS, uid, resolver_IP, resolver_AS)
 
     def quicker_load(self, file_name, ip2a4, ip2a6, as_table, rr_types=[], experiment=[], query_ASes=[], log_threshold = 15625, time_start=0):
         nb_events = 0
@@ -584,7 +591,7 @@ class pivoted_per_query:
             if parsed:
                 if (not filtering) or x.filter(rr_types=rr_types, experiment=experiment, query_ASes=q_set):
                     x.set_resolver_AS(ip2a4, ip2a6, as_table)
-                    self.process_event(x.query_time, x.resolver_tag, x.query_AS, x.query_user_id, x.resolver_IP, x.resolver_AS)
+                    self.process_event(x.query_time, x.resolver_tag, x.query_cc, x.query_AS, x.query_user_id, x.resolver_IP, x.resolver_AS)
                     nb_events += 1
                     if (nb_events%lth) == 0:
                         if time_start > 0:
@@ -596,16 +603,18 @@ class pivoted_per_query:
                     
         return nb_events
 
-    def AS_list(self):
-        return list(self.ASes.keys())
+    def key_list(self):
+        return list(self.cc_AS_list.keys())
 
     def compute_delta_t(self):
-        for query_AS in self.ASes:
-            self.ASes[query_AS].compute_delta_t()
+        for key in self.cc_AS_list:
+            self.cc_AS_list[key].compute_delta_t()
 
-    def get_summaries(self, AS_list, first_only):
+    def get_summaries(self, key_list, first_only):
         # compose the headers
-        headers = [ 'q_AS', \
+        headers = [ \
+            'q_cc', \
+            'q_AS', \
             'uids',
             'q_total',
             'isp',
@@ -614,24 +623,24 @@ class pivoted_per_query:
         for tag in tag_list:
             headers.append(tag)
         s_list = []
-        for target_AS in AS_list:
-            if target_AS in self.ASes:
-                s_list.append(self.ASes[target_AS].get_summary(first_only))
-        s_list.sort(key=lambda x: x[1], reverse=True)
+        for key in key_list:
+            if key in self.cc_AS_list:
+                s_list.append(self.cc_AS_list[key].get_summary(first_only))
+        s_list.sort(key=lambda x: x[2], reverse=True)
         df = pd.DataFrame(s_list, columns=headers)
         return df
 
-    def get_delta_t_both(self, target_AS):
-        return self.ASes[target_AS].get_delta_t_both()
+    def get_delta_t_both(self, key):
+        return self.cc_AS_list[key].get_delta_t_both()
 
     def get_subnets(self):
         sn = []
-        for target_AS in self.ASes:
-            sn += self.ASes[target_AS].get_subnets()
+        for key in self.cc_AS_list:
+            sn += self.cc_AS_list[key].get_subnets()
         sn_df = pd.DataFrame(sn, columns=subnet_record.headers())
         return sn_df
 
-def do_graph(asn, dot_df, image_file="", x_delay=False, log_y=False):
+def do_graph(key, dot_df, image_file="", x_delay=False, log_y=False):
     if log_y:
         # replace 0 by low value so logy plots will work
         dot_df.loc[dot_df['delay'] == 0, 'delay'] += 0.00001
@@ -655,7 +664,7 @@ def do_graph(asn, dot_df, image_file="", x_delay=False, log_y=False):
                 sub_df[i].plot.scatter(ax=axa, x=x_value, y="delay", logy=log_y, alpha=0.25, color=rsv_color)
             is_first = False
             legend_list.append(rsv)
-    plt.title("Delay (seconds) per provider for " + asn)
+    plt.title("Delay (seconds) per provider for " + key[:2] + "/" + key[2:])
     plt.legend(legend_list)
     if len(image_file) == 0:
         plt.show()
@@ -664,7 +673,7 @@ def do_graph(asn, dot_df, image_file="", x_delay=False, log_y=False):
     plt.close()
 
     
-def do_hist(asn, dot_df, image_file):
+def do_hist(key, dot_df, image_file):
     # get a frame from the list
     dot_df.loc[dot_df['delay'] == 0, 'delay'] += 0.00001
     is_first = True
@@ -696,7 +705,7 @@ def do_hist(asn, dot_df, image_file):
     if not is_first:
         logbins = np.logspace(np.log10(x_min),np.log10(x_max), num=20)
         axa = plt.hist(row_list, logbins, histtype='bar', color=clrs)
-        plt.title("Histogram of delays (seconds) per provider for " + asn)
+        plt.title("Histogram of delays (seconds) per provider for " + key[:2] + "/" + key[2:])
         plt.legend(legend_list)
         plt.xscale('log')
         if len(image_file) == 0:
