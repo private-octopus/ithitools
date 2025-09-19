@@ -84,6 +84,12 @@ TopAS = {
 # compared to the number of queries routed from other ASes. The list:
 #
 # discuss: yandex has DNS services similar to Google, CLoudflare
+#
+# consider adding:
+#   "AS16276": "OVH",
+#   "AS24940": "HETZNER-AS"
+# also maybe Digital Ocean and Azure, if we can identify Azure as an AS.
+# but check that "has cloud" does not trigger if Resolver As == Query AS
 # 
 CloudAS = {
     "AS396982": "GOOGLE-CLOUD-PLATFORM",

@@ -29,14 +29,18 @@ def usage():
     print("   <output_dir>/cloud_list.csv: table of cloud usage per cloud AS.")
 
 
+# TODO: add OVH, Hetzner, Digital Ocean, Azure?
 cloud_tracked = {
     'AS20940' : 0,
-    'AS36692' : 1, 
+    'AS36692' : 1,
     'AS36236' : 2,
     'AS54825' : 3,
-    'AS16509' : 4 }
+    'AS16509' : 4,
+    'AS18734' : 5,
+    'AS13238' : 6
+}
 
-cloud_names = [ 'AKAMAI-ASN1', 'CISCO-UMBRELLA', 'NETACTUATE', 'PACKET' , 'AMAZON-02' ]
+cloud_names = [ 'AKAMAI-ASN1', 'CISCO-UMBRELLA', 'NETACTUATE', 'PACKET' , 'AMAZON-02', 'BESTEL', 'YANDEX']
 
 def get_time_hour(first_time):
     fth = int(first_time/3600)
@@ -49,7 +53,9 @@ class cloud_slice:
         self.nb_cloud = 0
         self.nb_both = 0
         self.nb_tracked = 0
-        self.tracked = [0, 0, 0, 0, 0 ]
+        self.tracked = []
+        for asn in cloud_tracked:
+            self.tracked.append(0)
     
     def add_event(self, event):
         self.nb_uid += 1
@@ -111,6 +117,26 @@ class cloud_slices:
         df = pd.DataFrame(v, columns=headers)
 
         return df
+
+class cloud_as_details:
+    def __init__(self, slice_duration, as_list):
+        self.as_dict = dict()
+        for asn in as_list:
+            if not asn in self.as_dict:
+                self.as_dict[asn] = cloud_slices(slice_duration, asn)
+
+    def add_event(self, event):
+        ret = False
+        if event.query_AS in self.as_dict:
+            ret = self.as_dict[event.query_AS].add_event(event)
+        return ret
+
+    def save_files(self, output_dir):
+        for asn in self.as_dict:
+            asn_file = os.path.join(output_dir, "cloud_" + asn + "_" + str(self.as_dict[asn].slice_duration) + ".csv" )
+            asn_df = self.as_dict[asn].get_df()
+            asn_df.to_csv(asn_file, sep=",")
+            print("Saved: " + str(asn_df.shape[0]) + " time slices in " + asn_file)
 
 class cloud_cc_as_list:
     def __init__(self):
@@ -274,10 +300,7 @@ if __name__ == "__main__":
         usage()
         exit(-1)
 
-    cloud_list = [ cloud_slices(3600, "") , cloud_cc_as_list(), cloud_share() ]
-    for query_AS in as_list:
-        cloud_list.append(cloud_slices(300, query_AS))
-        cloud_list.append(cloud_slices(3600, query_AS))
+    cloud_list = [ cloud_slices(7200, "") , cloud_cc_as_list(), cloud_share(), cloud_as_details(7200, as_list)]
 
     first_time = 0
     for csv_file in csv_files:
@@ -308,9 +331,5 @@ if __name__ == "__main__":
     share_df.to_csv(share_file, sep=",")
     print("Saved: " + str(share_df.shape[0]) + " cloud services in " + share_file)
 
-    for asn_dup in cloud_list[3:]:
-        asn = asn_dup.query_AS
-        asn_file = os.path.join(output_dir, "cloud_" + asn + "_" + str(asn_dup.slice_duration) + ".csv" )
-        asn_df = asn_dup.get_df()
-        asn_df.to_csv(asn_file, sep=",")
-        print("Saved: " + str(asn_df.shape[0]) + " time slices in " + asn_file)
+    cloud_list[3].save_files(output_dir)
+

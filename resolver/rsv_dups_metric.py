@@ -114,6 +114,27 @@ class duplicate_slices:
 
         return df
 
+
+class duplicate_as_details:
+    def __init__(self, slice_duration, as_list):
+        self.as_dict = dict()
+        for asn in as_list:
+            if not asn in self.as_dict:
+                self.as_dict[asn] = duplicate_slices(slice_duration, asn)
+
+    def add_event(self, event):
+        ret = False
+        if event.query_AS in self.as_dict:
+            ret = self.as_dict[event.query_AS].add_event(event)
+        return ret
+
+    def save_files(self, output_dir):
+        for asn in self.as_dict:
+            asn_file = os.path.join(output_dir, "duplicate_" + asn + "_" + str(self.as_dict[asn].slice_duration) + ".csv" )
+            asn_df = self.as_dict[asn].get_df()
+            asn_df.to_csv(asn_file, sep=",")
+            print("Saved: " + str(asn_df.shape[0]) + " time slices in " + asn_file)
+
 class duplicate_AS_list:
     def __init__(self):
         self.key_list = dict()
@@ -253,10 +274,7 @@ if __name__ == "__main__":
         exit(-1)
 
 
-    dups_list = [ duplicate_slices(3600, "") , duplicate_AS_list() ]
-    for query_AS in as_list:
-        dups_list.append(duplicate_slices(300, query_AS))
-        dups_list.append(duplicate_slices(3600, query_AS))
+    dups_list = [ duplicate_slices(7200, "") , duplicate_AS_list(), duplicate_as_details(7200, as_list) ]
 
     first_time = 0
     for csv_file in csv_files:
@@ -280,12 +298,7 @@ if __name__ == "__main__":
     as_df.to_csv(as_file, sep=",")
     print("Saved: " + str(as_df.shape[0]) + " AS in " + as_file)
 
-    for asn_dup in dups_list[2:]:
-        asn = asn_dup.query_AS
-        asn_file = os.path.join(output_dir, "duplicate_" + asn + "_" + str(asn_dup.slice_duration) + ".csv" )
-        asn_df = asn_dup.get_df()
-        asn_df.to_csv(asn_file, sep=",")
-        print("Saved: " + str(asn_df.shape[0]) + " time slices in " + asn_file)
+    dups_list[2].save_files(output_dir)
 
 
 
