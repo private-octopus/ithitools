@@ -100,6 +100,26 @@ class https_slices:
                                       "nb_https", "nb_https_isp", "nb_https_pdns"])
         return df
 
+class https_as_details:
+    def __init__(self, slice_duration, as_list):
+        self.as_dict = dict()
+        for asn in as_list:
+            if not asn in self.as_dict:
+                self.as_dict[asn] = https_slices(slice_duration, asn)
+
+    def add_event(self, event):
+        ret = False
+        if event.query_AS in self.as_dict:
+            ret = self.as_dict[event.query_AS].add_event(event)
+        return ret
+
+    def save_files(self, output_dir):
+        for asn in self.as_dict:
+            asn_file = os.path.join(output_dir, "https_" + asn + "_" + str(self.as_dict[asn].slice_duration) + ".csv" )
+            asn_df = self.as_dict[asn].get_df()
+            asn_df.to_csv(asn_file, sep=",")
+            print("Saved: " + str(asn_df.shape[0]) + " time slices in " + asn_file)
+
 class https_cc_as_list:
     def __init__(self):
         self.AS_list = dict()
@@ -130,6 +150,7 @@ class https_cc_as_list:
                                       "https_pnds_metric", "nb_uids",
                                       "nb_https", "nb_https_isp", "nb_https_pdns"])
         return df
+
 
 class https_queries:
     def __init__(self):
@@ -289,10 +310,7 @@ if __name__ == "__main__":
         usage()
         exit(-1)
 
-    https_list = [ https_slices(3600, "") , https_cc_as_list() ]
-    for query_AS in as_list:
-        https_list.append(https_slices(300, query_AS))
-        https_list.append(https_slices(3600, query_AS))
+    https_list = [ https_slices(7200, "") , https_cc_as_list(), https_as_details(7200, as_list) ]
 
     first_time = 0
     for csv_file in csv_files:
@@ -316,9 +334,4 @@ if __name__ == "__main__":
     as_df.to_csv(as_file, sep=",")
     print("Saved: " + str(as_df.shape[0]) + " AS in " + as_file)
 
-    for asn_dup in https_list[2:]:
-        asn = asn_dup.query_AS
-        asn_file = os.path.join(output_dir, "https_" + asn + "_" + str(asn_dup.slice_duration) + ".csv" )
-        asn_df = asn_dup.get_df()
-        asn_df.to_csv(asn_file, sep=",")
-        print("Saved: " + str(asn_df.shape[0]) + " time slices in " + asn_file)
+    https_list[2].save_files(output_dir)
