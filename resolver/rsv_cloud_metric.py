@@ -28,6 +28,16 @@ def usage():
     print("   <output_dir>/cloud_as_list.csv: table of cloud usage per AS with more than 10000 queries.")
     print("   <output_dir>/cloud_list.csv: table of cloud usage per cloud AS.")
 
+
+cloud_tracked = {
+    'AS20940' : 0,
+    'AS36692' : 1, 
+    'AS36236' : 2,
+    'AS54825' : 3,
+    'AS16509' : 4 }
+
+cloud_names = [ 'AKAMAI-ASN1', 'CISCO-UMBRELLA', 'NETACTUATE', 'PACKET' , 'AMAZON-02' ]
+
 def get_time_hour(first_time):
     fth = int(first_time/3600)
     ft = fth*3600
@@ -38,11 +48,15 @@ class cloud_slice:
         self.nb_uid = 0
         self.nb_cloud = 0
         self.nb_both = 0
+        self.nb_tracked = 0
+        self.tracked = [0, 0, 0, 0, 0 ]
     
     def add_event(self, event):
         self.nb_uid += 1
         if event.has_cloud: 
             self.nb_cloud += 1
+            if event.cloud_AS in cloud_tracked:
+                self.tracked[cloud_tracked[event.cloud_AS]] += 1
             if event.has_other:
                 self.nb_both += 1
         return True
@@ -72,6 +86,7 @@ class cloud_slices:
         if not slice_time in self.slices:
             self.slices[slice_time] = cloud_slice()
         self.slices[slice_time].add_event(event)
+
         return True
 
     def get_df(self):
@@ -85,14 +100,17 @@ class cloud_slices:
                 unique_metric = unique_uids/self.slices[slice_time].nb_uid
                 x = [ slice_time, cloud_metric, unique_metric, self.slices[slice_time].nb_uid,
                      self.slices[slice_time].nb_cloud, unique_uids]
+                x += self.slices[slice_time].tracked
                 v.append(x)
 
         v.sort(key=lambda x:x[0])
 
-        df = pd.DataFrame(v, columns=["slice_time", "cloud_metric", "cloud_unique_metric", "uids", "cloud", "cloud_unique"])
+        headers = ["slice_time", "cloud_metric", "cloud_unique_metric", "uids", "cloud", "cloud_unique"]
+        headers += cloud_names
+
+        df = pd.DataFrame(v, columns=headers)
 
         return df
-
 
 class cloud_cc_as_list:
     def __init__(self):
@@ -114,11 +132,15 @@ class cloud_cc_as_list:
                 unique_metric = unique_uids/self.AS_list[key].nb_uid
                 x = [ key[0:2], key[2:], cloud_metric, unique_metric, self.AS_list[key].nb_cloud, unique_uids,
                     self.AS_list[key].nb_uid]
+                x += self.AS_list[key].tracked
                 v.append(x)
 
         v.sort(key=lambda x:x[4], reverse=True)
 
-        df = pd.DataFrame(v, columns=["query_cc", "query_AS", "cloud_metric", "cloud_unique_metric", "uids", "cloud", "cloud_unique"])
+        headers = ["query_cc", "query_AS", "cloud_metric", "cloud_unique_metric", "uids", "cloud", "cloud_unique"]
+        headers +=   cloud_names
+
+        df = pd.DataFrame(v, columns=headers)
 
         return df
 
@@ -127,6 +149,7 @@ class cloud_share:
         self.AS_list = dict()
         self.nb_cloud = 0
         self.nb_total = 0
+        print("Cloud share created")
 
     def add_event(self, event):
         self.nb_total += 1
@@ -137,23 +160,27 @@ class cloud_share:
             cloud_AS = ""
         if not cloud_AS in self.AS_list:
             self.AS_list[cloud_AS] =  0
+
         self.AS_list[cloud_AS] += 1
         return True
 
     def get_df(self, threshold=10000):        
         v = []
         for cloud_AS in self.AS_list:
+            cloud_name = ""
+            if cloud_AS in top_as.CloudAS:
+                cloud_name = top_as.CloudAS[cloud_AS]
             resolver_share = self.AS_list[cloud_AS] / self.nb_total
             if cloud_AS.startswith("AS"):
                 cloud_share = self.AS_list[cloud_AS] / self.nb_cloud
             else:
                 cloud_share = 0.0
-            x = [ cloud_AS, resolver_share, cloud_share, self.AS_list[cloud_AS]]
+            x = [ cloud_AS, cloud_name, resolver_share, cloud_share, self.AS_list[cloud_AS]]
             v.append(x)
                 
         v.sort(key=lambda x:x[3], reverse=True)
 
-        df = pd.DataFrame(v, columns=["cloud_AS", "resolver_share", "cloud_share", "uids"])
+        df = pd.DataFrame(v, columns=["cloud_AS", "cloud_name", "resolver_share", "cloud_share", "uids"])
 
         return df
 
@@ -250,6 +277,7 @@ if __name__ == "__main__":
     cloud_list = [ cloud_slices(3600, "") , cloud_cc_as_list(), cloud_share() ]
     for query_AS in as_list:
         cloud_list.append(cloud_slices(300, query_AS))
+        cloud_list.append(cloud_slices(3600, query_AS))
 
     first_time = 0
     for csv_file in csv_files:
@@ -263,6 +291,8 @@ if __name__ == "__main__":
         for hts in cloud_list:
             cq.add_slices(hts)
 
+    print ("Cloud share: " + str(len(cloud_list[2].AS_list)))
+
     metric_df = cloud_list[0].get_df()
     metric_file = os.path.join(output_dir, "cloud_metric.csv" )
     metric_df.to_csv(metric_file, sep=",")
@@ -273,15 +303,14 @@ if __name__ == "__main__":
     as_df.to_csv(as_file, sep=",")
     print("Saved: " + str(as_df.shape[0]) + " AS in " + as_file)
 
-    
     share_df = cloud_list[2].get_df()
-    as_file = os.path.join(output_dir, "clouds_list.csv" )
-    as_df.to_csv(as_file, sep=",")
-    print("Saved: " + str(as_df.shape[0]) + " cloud services in " + as_file)
+    share_file = os.path.join(output_dir, "clouds_list.csv" )
+    share_df.to_csv(share_file, sep=",")
+    print("Saved: " + str(share_df.shape[0]) + " cloud services in " + share_file)
 
     for asn_dup in cloud_list[3:]:
         asn = asn_dup.query_AS
-        asn_file = os.path.join(output_dir, "cloud_" + asn + ".csv" )
+        asn_file = os.path.join(output_dir, "cloud_" + asn + "_" + str(asn_dup.slice_duration) + ".csv" )
         asn_df = asn_dup.get_df()
         asn_df.to_csv(asn_file, sep=",")
         print("Saved: " + str(asn_df.shape[0]) + " time slices in " + asn_file)

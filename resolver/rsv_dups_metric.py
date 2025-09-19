@@ -256,6 +256,7 @@ if __name__ == "__main__":
     dups_list = [ duplicate_slices(3600, "") , duplicate_AS_list() ]
     for query_AS in as_list:
         dups_list.append(duplicate_slices(300, query_AS))
+        dups_list.append(duplicate_slices(3600, query_AS))
 
     first_time = 0
     for csv_file in csv_files:
@@ -281,7 +282,7 @@ if __name__ == "__main__":
 
     for asn_dup in dups_list[2:]:
         asn = asn_dup.query_AS
-        asn_file = os.path.join(output_dir, "duplicate_" + asn + ".csv" )
+        asn_file = os.path.join(output_dir, "duplicate_" + asn + "_" + str(asn_dup.slice_duration) + ".csv" )
         asn_df = asn_dup.get_df()
         asn_df.to_csv(asn_file, sep=",")
         print("Saved: " + str(asn_df.shape[0]) + " time slices in " + asn_file)
