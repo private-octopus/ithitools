@@ -44,6 +44,12 @@ import csv
 import rsv_arguments
 from rsv_delay_class import delay_query_as
 
+def usage():
+    print("Usage: python rsv_delay_summary.py <output_dir> <csv_file*>\n")
+    print("This script will sum the CSV files and save the result.")
+    print("It will retain all ASes with more than 1000 UIDs.")
+
+
 class delay_lines:
     def __init__(self):
         self.cc_as_list = dict()
@@ -62,11 +68,18 @@ class delay_lines:
         df.apply(lambda row: self.add_row(row),axis=1)
         print("After loading " + file_name + ", " + str(len(self.cc_as_list)) + " CC/AS.")
 
-    def get_df(self):
+    def nb_uids(self):
+        nb_uids = 0
+        for key in self.cc_as_list:
+            nb_uids += self.cc_as_list[key].nb_uids
+        return nb_uids
+
+    def get_df(self, min_uids=0):
         t = []
         for key in self.cc_as_list:
-            x = self.cc_as_list[key].get_row()
-            t.append(x)
+            if self.cc_as_list[key].nb_uids >= min_uids:
+                x = self.cc_as_list[key].get_row()
+                t.append(x)
 
         t.sort(key=lambda x:x[3], reverse=True)
 
@@ -103,7 +116,13 @@ if __name__ == "__main__":
     for csv_file in csv_files:
         dl.load_delay_log(csv_file)
 
-    as_df = dl.get_df()
+    nb_uids = dl.nb_uids()
+    uids_required=1000
+    if dl.nb_uids() < 50000:
+        uids_required=10
+    print("Found " + str(nb_uids) + ", requiring " + str(uids_required) + " to consider the AS.")
+
+    as_df = dl.get_df(min_uids=uids_required)
     as_file = os.path.join(output_dir, "delay_as_list.csv" )
     as_df.to_csv(as_file, sep=",")
     print("Saved: " + str(as_df.shape[0]) + " AS in " + as_file)
