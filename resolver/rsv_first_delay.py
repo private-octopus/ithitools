@@ -15,6 +15,7 @@ import traceback
 import top_as
 import time
 import bz2
+from rsv_delay_class import delay_query_as
 
 def usage():
     print("Usage: python rsv_first_pass.py <csv_file> <log_file> <ASxxxx>\n")
@@ -32,93 +33,6 @@ class delay_uid:
         self.nb_repeats = 0
         self.first_delay = 0
         self.max_delay = 0
-
-
-class delay_query_as:
-    def __init__(self, query_cc, query_AS):
-        self.query_cc = query_cc
-        self.query_AS=query_AS
-        self.late_repeats = 0
-        self.nb_uids = 0
-        self.nb_uids_repeated = 0
-        self.nb_repeats = 0
-        self.max_repeats = 0
-        self.max_delay = 0
-        self.first_repeat_slice = []
-
-    def add_hit_at_index(self, delay_index):
-        while delay_index >= len(self.first_repeat_slice):
-            self.first_repeat_slice.append(0)
-        self.first_repeat_slice[delay_index] += 1
-
-    def compute_index(delay):
-        delay_index = 0
-        while delay > 0:
-            if delay < 0.1:
-                break
-            elif delay < 0.2:
-                delay_index += 1
-                break
-            elif delay < 0.5:
-                delay_index += 2
-                break
-            else:
-                delay_index += 3
-                if delay_index == 15:
-                    break
-                delay /= 10
-        return delay_index
-
-    def tabulate(self, y):
-        self.nb_uids += 1
-        self.nb_repeats += y.nb_repeats
-        if y.nb_repeats > 0:
-            self.nb_uids_repeated += 1
-            self.add_hit_at_index(delay_query_as.compute_index(y.first_delay))
-        if y.nb_repeats > self.max_repeats:
-            self.max_repeats = y.nb_repeats
-        if y.max_delay > self.max_delay:
-            self.max_delay =  y.max_delay
-
-    def get_row_header():
-        h = [
-            "query_cc",
-            "query_AS",
-            "late_repeats",
-            "nb_uids",
-            "nb_uids_repeated",
-            "nb_repeats",
-            "max_repeats",
-            "max_delay" ]
-        h.append("<0.1")
-        h.append("<0.2")
-        h.append("<0.5")
-        delay_index = 3
-        delay = 1
-        while delay_index < 15:
-            h.append("<" + str(delay))
-            h.append("<" + str(2*delay))
-            h.append("<" + str(5*delay))
-            delay *= 10
-            delay_index += 3
-        h.append(">= " + str(int(delay/2)))
-        return h
-
-    def get_row(self):
-        r = [
-            self.query_cc,
-            self.query_AS,
-            self.late_repeats,
-            self.nb_uids,
-            self.nb_uids_repeated,
-            self.nb_repeats,
-            self.max_repeats,
-            self.max_delay ]
-        r += self.first_repeat_slice
-        for delay_index in range(len(self.first_repeat_slice), 16):
-            r.append(0)
-        return r
-
 
 class delay_uids_log:
     def __init__(self):
