@@ -146,7 +146,7 @@ class recap_cc_as:
         self.old_uids = dict()
 
     def init_next_slice(self):
-        self.slice_start += slice_duration
+        self.slice_start += self.slice_duration
         self.first_by_isp = 0
         self.first_by_pdns = [ 0, 0, 0, 0, 0, 0, 0 ]
         self.first_by_others = 0
@@ -191,6 +191,9 @@ class recap_cc_as:
             self.first_by_others += 1
 
     def add_query(self, uid, query_time, rr_type, resolver_tag, query_ad_time):
+        if query_time >= self.slice_start + self.slice_duration:
+            self.save_to_file()
+            self.init_next_slice()
         is_dup = False
         delta_t = 0
         is_processed = False
