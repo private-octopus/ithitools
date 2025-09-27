@@ -2,33 +2,34 @@ import ipaddress
 import sys
 import traceback
 
-as_table = [
-    ["AS20701","cz.nic"],
-    ["AS51289","skydns"],
-    ["AS40568","cira"],
-    ["AS212772","adguard"],
-    ["AS42","quad9"],
-    ["AS715","quad9"],
-    ["AS13335","cloudflare"],
-    ["AS204136","opennic"],
-    ["AS12008","neustar"],
-    ["AS15169","googlepdns"],
-    ["AS4812","dnspai"],
-    ["AS23274","dnspai"],
-    ["AS132203","dnspod"],
-    ["AS131400","dnswatch"],
-    ["AS31400","dnswatch"],
-    ["AS33517","dyn"],
-    ["AS51453","freedns"],
-    ["AS60679","freedomworld"],
-    ["AS8551","greenteamdns"],
-    ["AS1680","greenteamdns"],
-    ["AS4808","onedns"],
-    ["AS23724","onedns"],
-    ["AS57926","safedns"],
-    ["AS131621","twnic"],
-    ["AS23393","comodo"],
-]
+as_dict = {
+    "AS20701": "cz.nic",
+    "AS51289": "skydns",
+    "AS40568": "cira",
+    "AS212772": "adguard",
+    "AS42": "quad9",
+    "AS715": "quad9",
+    "AS13335": "cloudflare",
+    "AS204136": "opennic",
+    "AS12008": "neustar",
+    "AS15169": "googlepdns",
+    "AS4812": "dnspai",
+    "AS23274": "dnspai",
+    "AS132203": "dnspod",
+    "AS131400": "dnswatch",
+    "AS31400": "dnswatch",
+    "AS33517": "dyn",
+    "AS51453": "freedns",
+    "AS60679": "freedomworld",
+    "AS8551": "greenteamdns",
+    "AS1680": "greenteamdns",
+    "AS4808": "onedns",
+    "AS23724": "onedns",
+    "AS57926": "safedns",
+    "AS131621": "twnic",
+    "AS23393": "comodo",
+}
+
 n4_table = [
     [ipaddress.ip_network("8.0.0.0/16"),"level3"],
     [ipaddress.ip_network("23.236.73.15/32"),"cleanbrowsing"],
@@ -1233,10 +1234,10 @@ def table_print(rsvs_ips, f_name):
     net_6.sort(key = lambda x: x[0])
 
     with open(f_name, "w") as F:
-        F.write("as_table = [\n")
+        F.write("as_dict = {\n")
         for op_net in as_list:
-            F.write("    [\"" + op_net[0] + "\",\"" + op_net[1] + "\"],\n")
-        F.write("]\n\n")
+            F.write("    \"" + op_net[0] + "\": " + op_net[1] + "\",\n")
+        F.write("}\n\n")
         F.write("n4_table = [\n")
         for n4 in net_4:
              F.write("    [ipaddress.ip_network(\"" + str(n4[0]) + "\"),\"" + n4[1] + "\"],\n")
@@ -1249,43 +1250,9 @@ def table_print(rsvs_ips, f_name):
 # get_open_rsv: return the name of the open resolver service that matches
 # the resolver IP address or the resolver AS, or "" if no match
 def get_open_rsv_from_AS(key):
-    x_low = 0
-    x_high = len(as_table) - 1
     found = ""
-    r_low = as_table[0]
-    if r_low[0] == key:
-        #print("R_low[" + str(x_low) + "] matches " + key)
-        found = r_low[1]
-    elif r_low[0] < key:
-        #print("R_low[" + str(x_low) + "] < " + key)
-        r_high = as_table[x_high]
-        if r_high[0] == key:
-            #print("R_high[" + str(x_high) + "] matches " + key)
-            found = r_high[1]
-        elif r_high[0] > key:
-            #print("R_high[" + str(x_high) + "] > " + key)
-            while x_low != x_high:
-                x_mid = int((x_low + x_high) / 2)
-                if x_mid == x_low:
-                    #print("x_mid:" + str(x_high) + " = x_low:" + str(x_low))
-                    break
-                else:
-                    r_mid = as_table[x_mid]
-                    if r_mid[0] == key:
-                        #print("R_mid[" + str(x_mid) + "] matches " + key)
-                        found = r_mid[1]
-                        break
-                    elif r_mid[0] > key:
-                        #print("R_mid[" + str(x_mid) + "] > " + key)
-                        x_high = x_mid
-                    else:
-                        #print("R_mid[" + str(x_mid) + "] < " + key)
-                        x_low = x_mid
-        else:
-            #print("R_high[" + str(x_high) + "] < " + key + ", exit.")
-            pass
-
-    #print("Exit x_low: " + str(x_low) + ", x_high: " + str(x_high))
+    if key in as_dict:
+        found = as_dict[key]
     return found
 
 def get_open_rsv_from_IP(resolver_IP):
