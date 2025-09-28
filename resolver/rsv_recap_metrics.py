@@ -165,7 +165,7 @@ class recap_cc_as:
         for pnds_name in pdns_names:
             s += pnds_name  + ','
         s += 'first_others,nb_https,nb_A,dups_isp,dups_pdns,dups_both,dups_others,dups_long,'
-        s += 'zombie_1, zombie2, sum_delay, max_delay' + '\n'
+        s += 'zombie_1,zombie_2,sum_delay,max_delay' + '\n'
         return s
 
     def save_to_file(self):
@@ -198,6 +198,9 @@ class recap_cc_as:
         delta_t = 0
         is_processed = False
         if uid in self.old_uids:
+            has_https = self.old_uids[uid].has_https
+            if not has_https and rr_type == 'HTTPS':
+                self.nb_https += 1
             delta_t, is_dup, dup_index = self.old_uids[uid].update(query_time, rr_type, resolver_tag)
         elif not uid in self.uids:
             is_processed = True
@@ -210,9 +213,14 @@ class recap_cc_as:
                     self.max_first_delay = delta_first
                 if rr_type == 'A':
                     self.nb_A += 1
+                if rr_type == 'HTTPS':
+                    self.nb_https += 1
             else:
                 self.zombie_2 += 1
         else:
+            has_https = self.old_uids[uid].has_https
+            if not has_https and rr_type == 'HTTPS':
+                self.nb_https += 1
             delta_t, is_dup, dup_index = self.uids[uid].update(query_time, rr_type, resolver_tag)
 
         if not is_processed:

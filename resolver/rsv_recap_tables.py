@@ -29,7 +29,7 @@ recap_columns = [
     'googlepdns', 'cloudflare', 'opendns', 'quad9', 'level3', 'neustar', 'he',
     'first_others', 'nb_https',
     'nb_A', 'dups_isp', 'dups_pdns', 'dups_both', 'dups_others', 'dups_long',
-    'zombie_1', 'zombie2',
+    'zombie_1', 'zombie_2',
     'sum_delay', 'max_delay'
 ]
 
@@ -37,10 +37,6 @@ recap_first_columns =  [
     'CC', 'AS', 'start', 'uids', 'first_isp' ]
 
 recap_final_columns = [ 'nb_https',
-    'nb_A', 'dups_isp', 'dups_pdns', 'dups_both', 'dups_others', 'dups_long',
-    'zombie_1', 'zombie2', 'sum_delay', 'max_delay' ]
-
-recap_final_columns_corrected = [ 'nb_https',
     'nb_A', 'dups_isp', 'dups_pdns', 'dups_both', 'dups_others', 'dups_long',
     'zombie_1', 'zombie_2', 'sum_delay', 'max_delay' ]
 
@@ -93,7 +89,7 @@ class recap_cc_as:
         for i in range(0,3):
             columns.append(recap_pdns[self.top_pdns[i]])
         columns.append('first_others')
-        columns += recap_final_columns_corrected
+        columns += recap_final_columns
         columns.append('average_delay')
         return columns
 
