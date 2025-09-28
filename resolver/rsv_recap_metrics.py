@@ -199,7 +199,7 @@ class recap_cc_as:
         is_processed = False
         if uid in self.old_uids:
             has_https = self.old_uids[uid].has_https
-            if not has_https and rr_type == 'HTTPS':
+            if rr_type == 'HTTPS' and not has_https:
                 self.nb_https += 1
             delta_t, is_dup, dup_index = self.old_uids[uid].update(query_time, rr_type, resolver_tag)
         elif not uid in self.uids:
@@ -218,8 +218,8 @@ class recap_cc_as:
             else:
                 self.zombie_2 += 1
         else:
-            has_https = self.old_uids[uid].has_https
-            if not has_https and rr_type == 'HTTPS':
+            has_https = self.uids[uid].has_https
+            if rr_type == 'HTTPS' and not has_https:
                 self.nb_https += 1
             delta_t, is_dup, dup_index = self.uids[uid].update(query_time, rr_type, resolver_tag)
 
@@ -284,7 +284,7 @@ class recap_log:
                 print("Cannot parse:\n" + line + "\n")
                 parsed = False
             if parsed:
-                if x.filter(rr_types=['A'], experiment=['0du'], query_delay=1000000000):
+                if x.filter(rr_types=['A', 'AAAA', 'HTTPS'], experiment=['0du'], query_delay=1000000000):
                     x.set_resolver_AS(self.ip2a4, self.ip2a6, self.as_names)
                     self.add_query(x.query_user_id, x.query_time, x.query_cc, x.query_AS, x.resolver_tag, x.rr_type, x.query_ad_time)
                     nb_events += 1
