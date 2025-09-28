@@ -282,10 +282,10 @@ class recap_log:
                     nb_events += 1
                     if (nb_events%lth) == 0:
                         new_time = time.time() - time_start
-                        print("loaded " + str(nb_events) + " events at " + str(new_time))
+                        print(source_file + ": loaded " + str(nb_events) + " events at " + str(new_time))
+                        sys.stdout.flush()
                         if lth < 1000000:
                             lth *= 2
-        print("loaded " + str(nb_events) + " events.")
         return nb_events
 
     def save_and_close(self):
@@ -331,7 +331,9 @@ if __name__ == "__main__":
         rcl = recap_log(7200, 1800, ip2a4, ip2a6, as_names, recap_file)
         for source_file in source_files:
             nb_events = rcl.load_recap_log(source_file, time_start=time_start)
-            print(source_file + ": " + str(nb_events) + " events.")
+            print(source_file + ": loaded " + str(nb_events) + " events at " + str(time.time() - time_start))
+            sys.stdout.flush()
         rcl.save_and_close()
+        print("Saved output in " + output_file)
 
 

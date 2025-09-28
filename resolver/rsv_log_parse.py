@@ -106,9 +106,14 @@ class rsv_log_line:
 
         query_AS_str = query_parts[3]
         if query_AS_str.startswith("a"):
-            as_num = int(query_AS_str[1:], 16)
-            self.query_AS = "AS" + str(as_num)
-            as_parsed = 1
+            try:
+                as_num = int(query_AS_str[1:], 16)
+                self.query_AS = "AS" + str(as_num)
+                as_parsed = 1
+            except:
+                if is_valid:
+                    print("Bad AS:" + query_AS_str )
+                is_valid = False
         else:
             #print("Bad AS:" + query_name )
             self.query_AS = "AS0"
@@ -155,18 +160,33 @@ class rsv_log_line:
         self.query_cc = country.country_code_from_c999("c" + query_parts[6])
         query_AS_str = query_parts[7]
         if query_AS_str.startswith("a"):
-            as_num = int(query_AS_str[1:], 16)
-            self.query_AS = "AS" + str(as_num)
-            as_parsed = 1
+            try:
+                as_num = int(query_AS_str[1:], 16)
+                self.query_AS = "AS" + str(as_num)
+                as_parsed = 1
+            except:
+                if is_valid:
+                    print("Bad AS:" + query_AS_str)
+                is_valid = False
         else:
             print("Bad AS:" + query_AS_str )
             is_valid = False
-        self.query_ad_time = int(query_parts[8])
-        ip_num = int(query_parts[9], 16)
-        self.query_ip = str(ip_num>>24)+ "." + \
-            str((ip_num>>16)&255)+ "." + \
-            str((ip_num>>8)&255)+ "." + \
-            str(ip_num&255)
+        try:
+            self.query_ad_time = int(query_parts[8])
+        except:
+            if is_valid:
+                print("Bad AD Time:" + query_AS_str)
+            is_valid = False
+        try:
+            ip_num = int(query_parts[9], 16)
+            self.query_ip = str(ip_num>>24)+ "." + \
+                str((ip_num>>16)&255)+ "." + \
+                str((ip_num>>8)&255)+ "." + \
+                str(ip_num&255)
+        except:
+            if is_valid:
+                print("Bad IP:" + query_parts[9])
+            is_valid = False
         return is_valid
 
     def parse_query_name_sentinel(self, query_parts):
