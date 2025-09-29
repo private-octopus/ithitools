@@ -114,6 +114,7 @@ class rsv_log_line:
                 if is_valid:
                     print("Bad AS:" + query_AS_str )
                 is_valid = False
+                as_parsed = 0
         else:
             #print("Bad AS:" + query_name )
             self.query_AS = "AS0"
