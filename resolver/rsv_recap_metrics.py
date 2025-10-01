@@ -142,11 +142,17 @@ class recap_cc_as:
         self.max_first_delay = 0
         self.uids = dict()
         self.should_save = True
+        self.slice_number = 0
         if is_first:
             self.previous_slice = recap_cc_as(self.query_cc, self.query_AS,
                                              self.slice_start - self.slice_duration, 
                                              self.slice_duration, recap_file)
             self.previous_slice.should_save = False
+            self.slice_number += 1
+
+        self.saved_slices = 0
+        self.saved_uids = 0
+
 
     def init_next_slice(self):
         # Copy the values in the previous slice, 
@@ -171,6 +177,8 @@ class recap_cc_as:
         self.previous_slice.sum_first_delay = self.sum_first_delay
         self.previous_slice.max_first_delay = self.max_first_delay
         self.previous_slice.uids = self.uids
+        self.previous_slice.slice_number = self.slice_number
+        self.previous_slice.should_save = True
 
         # Reset the values of the current slice to zero
         self.slice_start += self.slice_duration
@@ -189,7 +197,8 @@ class recap_cc_as:
         self.sum_first_delay = 0
         self.max_first_delay = 0
         self.uids = dict()
-        self.should_save = False
+        self.should_save = True
+        self.slice_number += 1
 
     def get_header():
         s = "CC,AS,start,uids,first_isp,"
@@ -200,6 +209,9 @@ class recap_cc_as:
         return s
 
     def save_to_file(self):
+        self.saved_slices += 1
+        self.saved_uids += len(self.uids)
+
         s = self.query_cc + "," + self.query_AS + "," + str(self.slice_start) + ","
         s += str(len(self.uids)) + ','
         s += str(self.first_by_isp) + ','
@@ -222,11 +234,20 @@ class recap_cc_as:
     def save_to_file_and_rotate(self):
         if self.previous_slice.should_save:
             self.previous_slice.save_to_file()
+        elif self.previous_slice.slice_number != 0:
+            print("For " + self.query_cc + "-" + self.query_AS + ", skipped slice " + str(self.previous_slice.slice_number))
+        elif self.previous_slice.slice_number + 1 != self.slice_number:
+            print("For " + self.query_cc + "-" + self.query_AS + ", bad slice, " +
+                 str(self.previous_slice.slice_number) + ", " +
+                 str(self.slice_number))
+
         self.init_next_slice()
 
     def flush_to_file(self):
-        if self.should_save:
+        if self.previous_slice.should_save:
             self.previous_slice.save_to_file()
+        elif self.previous_slice.slice_number != 0:
+            print("For " + self.query_cc + "-" + self.query_AS + ", skipped slice " + str(self.previous_slice.slice_number))
         self.save_to_file()
 
     def add_first_tag(self, resolver_tag):
@@ -334,9 +355,9 @@ class recap_cc_as:
                 self.sum_first_delay += delta_first
                 if self.max_first_delay < delta_first:
                     self.max_first_delay = delta_first
-                if delta_first > 3:
-                    self.first_3s += 1
-                elif delta_first > 10:
+                if delta_first > 10:
+                    self.first_10s += 1
+                elif delta_first > 3:
                     self.first_10s += 1
             self.tabulate_known_query(self.uids[uid], query_time, rr_type, resolver_tag)
 
@@ -356,7 +377,6 @@ class recap_log:
     def add_cc_as(self, query_cc, query_AS):
         key = query_cc + "-" + query_AS
         if not key in self.cc_as_dict:
-            # print("Adding: " + key)
             self.cc_as_dict[key] = recap_cc_as(query_cc, query_AS, self.first_slice_start, 
                                                self.slice_duration, self.recap_file, is_first=True)
         return key
@@ -368,6 +388,7 @@ class recap_log:
                 self.first_slice_start = (slice_nb - 1)*self.slice_duration + self.initial_gap
             else:
                 self.first_slice_start = slice_nb*self.slice_duration
+            print("Start time: " + str(self.first_slice_start))
         key = self.add_cc_as(query_cc, query_AS)
         self.cc_as_dict[key].add_query(uid, query_time, rr_type, resolver_tag, query_ad_time)
 
