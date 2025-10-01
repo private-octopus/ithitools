@@ -254,7 +254,7 @@ if __name__ == "__main__":
 
     nb_files = 0
     for key in rcl.cc_as_list:
-        if rcl.cc_as_list[key].total_uids > 1000:
+        if rcl.cc_as_list[key].total_uids > 10000:
             as_file = os.path.join(output_dir, "recap-" + 
                                    rcl.cc_as_list[key].query_cc + "-" + 
                                    rcl.cc_as_list[key].query_AS + ".csv")
