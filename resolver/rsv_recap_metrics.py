@@ -76,25 +76,13 @@ class recap_uid:
     def __init__(self, query_time, rr_type, resolver_tag):
         self.first_time = query_time
         self.has_https = False
-        self.has_A = False
         self.has_AAAA = False
+        self.has_A = False
+        self.has_dup_A = False
+        self.first_time_A = 0
         self.has_ISP_for_A = False
         self.has_PNDS_for_A = False
         self.has_other_for_A = False
-
-        if rr_type == 'A':
-            self.has_A = True
-            if resolver_tag in rsv_log_parse.tag_isp_set:
-                self.has_ISP_for_A = True
-            elif resolver_tag in rsv_log_parse.tag_public_set:
-                self.has_PNDS_for_A = True
-            else:
-                has_other_for_A = True
-
-        elif rr_type == 'AAAA':
-            self.has_AAAA = True
-        elif rr_type == 'HTTPS':
-            self.has_HTTPS = True
 
     def update(self, query_time, rr_type, resolver_tag):
         delta_t = query_time - self.first_time
@@ -121,11 +109,10 @@ class recap_uid:
                     dup_index = 0
             else:
                 dup_index = 4
-            
         return delta_t, is_dup, dup_index
 
 class recap_cc_as:
-    def __init__(self, query_cc, query_AS, slice_start, slice_duration, recap_file):
+    def __init__(self, query_cc, query_AS, slice_start, slice_duration, recap_file, is_first=False):
         self.query_cc = query_cc
         self.query_AS = query_AS
         self.slice_start = slice_start
@@ -135,37 +122,81 @@ class recap_cc_as:
         self.first_by_pdns = [ 0, 0, 0, 0, 0, 0, 0 ]
         self.first_by_others = 0
         self.nb_https = 0
+        self.nb_AAAA = 0
         self.nb_A = 0
-        self.dups_A =  [ 0, 0, 0, 0, 0]
+        self.nb_A_dup = 0
+        self.nb_dup_A = 0
+        # vector of duplicates:
+        # ISP only
+        # PDNS only
+        # ISP + PNDS
+        # ISP + other
+        # others
+        # long, if t > 0.5
+        self.dups_A =  [ 0, 0, 0, 0, 0, 0 ]
         self.zombie_1 = 0
-        self.zombie_2 = 0
+        self.zombie_2 = [ 0, 0, 0, 0]
+        self.first_3s = 0
+        self.first_10s = 0
         self.sum_first_delay = 0
         self.max_first_delay = 0
-        
         self.uids = dict()
-        self.old_uids = dict()
+        self.should_save = True
+        if is_first:
+            self.previous_slice = recap_cc_as(self.query_cc, self.query_AS,
+                                             self.slice_start - self.slice_duration, 
+                                             self.slice_duration, recap_file)
+            self.previous_slice.should_save = False
 
     def init_next_slice(self):
+        # Copy the values in the previous slice, 
+        # because we may update the "border" uids in the next 30 seconds
+        self.previous_slice.slice_start = self.slice_start
+        self.previous_slice.first_by_isp = self.first_by_isp
+        for i in range(0,7):
+            self.previous_slice.first_by_pdns[i] = self.first_by_pdns[i]
+        self.previous_slice.first_by_others = self.first_by_others
+        self.previous_slice.nb_https = self.nb_https
+        self.previous_slice.nb_AAAA = self.nb_AAAA
+        self.previous_slice.nb_A = self.nb_A
+        self.previous_slice.nb_A_dup = self.nb_A_dup
+        self.previous_slice.nb_dup_A = self.nb_dup_A
+        for i in range(0,6):
+            self.previous_slice.dups_A[i] =  self.dups_A[i]
+        self.previous_slice.zombie_1 = self.zombie_1
+        for i in range(0,4):
+            self.previous_slice.zombie_2[i] = self.zombie_2[i]
+        self.previous_slice.first_3s = self.first_3s
+        self.previous_slice.first_10s = self.first_10s
+        self.previous_slice.sum_first_delay = self.sum_first_delay
+        self.previous_slice.max_first_delay = self.max_first_delay
+        self.previous_slice.uids = self.uids
+
+        # Reset the values of the current slice to zero
         self.slice_start += self.slice_duration
         self.first_by_isp = 0
         self.first_by_pdns = [ 0, 0, 0, 0, 0, 0, 0 ]
         self.first_by_others = 0
         self.nb_https = 0
+        self.nb_AAAA = 0
         self.nb_A = 0
-        self.dups_A =  [ 0, 0, 0, 0, 0]
+        self.nb_A_dup = 0
+        self.dups_A =  [ 0, 0, 0, 0, 0, 0]
         self.zombie_1 = 0
-        self.zombie_2 = 0
+        self.zombie_2 = [ 0, 0, 0, 0]
+        self.first_3s = 0
+        self.first_10s = 0
         self.sum_first_delay = 0
         self.max_first_delay = 0
-        self.old_uids = self.uids
         self.uids = dict()
+        self.should_save = False
 
     def get_header():
         s = "CC,AS,start,uids,first_isp,"
         for pnds_name in pdns_names:
             s += pnds_name  + ','
-        s += 'first_others,nb_https,nb_A,dups_isp,dups_pdns,dups_both,dups_others,dups_long,'
-        s += 'zombie_1,zombie_2,sum_delay,max_delay' + '\n'
+        s += 'first_others,nb_https,nb_AAAA,nb_A,nb_A_dup,nb_dup_A,dups_isp,dups_pdns,isp_pdns,isp_others,dups_others,dups_long,'
+        s += 'zombie_1,zombie_2,z_ISP,z_PDNS,z_others,first_3s,first_10s,sum_delay,max_delay' + '\n'
         return s
 
     def save_to_file(self):
@@ -175,12 +206,28 @@ class recap_cc_as:
         for pnds_total in self.first_by_pdns:
             s += str(pnds_total) + ','
         s += str(self.first_by_others) + ',' + str(self.nb_https) + ','
+        s += str(self.nb_AAAA) + ','
         s += str(self.nb_A) + ','
+        s += str(self.nb_A_dup) + ','
+        s += str(self.nb_dup_A) + ','
         for dups_total in self.dups_A:
             s += str(dups_total) + ','
-        s += str(self.zombie_1) + ',' + str(self.zombie_2) + ','
+        s += str(self.zombie_1) + ','
+        for z in self.zombie_2:
+            s += str(z) + ','
+        s += str(self.first_3s) + ',' + str(self.first_10s) + ','
         s += str(self.sum_first_delay) + ',' + str(self.max_first_delay) + '\n'
         self.recap_file.write(s)
+
+    def save_to_file_and_rotate(self):
+        if self.previous_slice.should_save:
+            self.previous_slice.save_to_file()
+        self.init_next_slice()
+
+    def flush_to_file(self):
+        if self.should_save:
+            self.previous_slice.save_to_file()
+        self.save_to_file()
 
     def add_first_tag(self, resolver_tag):
         if resolver_tag in rsv_log_parse.tag_isp_set:
@@ -190,47 +237,108 @@ class recap_cc_as:
         else:
             self.first_by_others += 1
 
+    def tabulate_duplicate_A(self, r_uid, delta_t, resolver_tag):
+        # duplicate A query for that UID
+        self.nb_dup_A += 1
+        if delta_t > 0.5:
+            # tabulate in the long category, 0.5 to 30s
+            self.dups_A[5] += 1
+        else:
+            # tabulate in one of the short categories
+            if resolver_tag in rsv_log_parse.tag_isp_set:
+                r_uid.has_ISP_for_A = True
+            elif resolver_tag in rsv_log_parse.tag_public_set:
+                r_uid.has_PNDS_for_A = True
+            else:
+                r_uid.has_other_for_A = True
+
+            if r_uid.has_other_for_A:
+                if r_uid.has_ISP_for_A and not r_uid.has_PNDS_for_A:
+                    # if no PNDS but ISP and other, tabulate as isp_other
+                    self.dups_A[3] += 1
+                else:
+                    # catch all category.
+                    # if other and PDNS, or other and ISP and PDNS, or other alone
+                    self.dups_A[4] += 1
+            elif r_uid.has_PNDS_for_A:
+                if r_uid.has_ISP_for_A:
+                    # if no others but PDNS and ISP, tabulate as isp_pdns
+                    self.dups_A[2] += 1
+                else:
+                    # if no others and no ISP, tabulate as dups_pdns
+                    self.dups_A[1] += 1
+            else:
+                # if no others and no PDNS, tabulate as dups_isp
+                self.dups_A[0] += 1
+
+    def tabulate_known_query(self, r_uid, query_time, rr_type, resolver_tag):
+        # Tabulate all the queries for which we saw the first UID request
+        # To make sure totals add to 100, they are tabulated in the slice
+        # where the UID first appeared.
+        delta_first = query_time - r_uid.first_time
+        if delta_first > 30:
+            self.zombie_1 += 1
+        elif rr_type == 'HTTPS':
+            if not r_uid.has_https:
+                self.nb_https += 1
+                r_uid.has_https = True
+        elif rr_type == 'AAAA':
+            if not r_uid.has_AAAA:
+                self.nb_AAAA += 1
+                r_uid.has_AAAA = True
+        elif rr_type == 'A':
+            # Detect whether this is new query or a repeat
+            if not r_uid.has_A:
+                r_uid.has_A = True
+                self.nb_A += 1
+                r_uid.first_time_A = query_time
+                is_dup = False
+                delta_t = 0
+            else:
+                is_dup = True
+                delta_t = query_time - r_uid.first_time_A
+            # Regardless of duplicate, set the flags indicating
+            # which kind of ISP was received
+            if resolver_tag in rsv_log_parse.tag_isp_set:
+                r_uid.has_ISP_for_A = True
+            elif resolver_tag in rsv_log_parse.tag_public_set:
+                r_uid.has_PNDS_for_A = True
+            else:
+                r_uid.has_other_for_A = True
+            # process the duplicates
+            if is_dup:
+                if not r_uid.has_dup_A:
+                    r_uid.has_dup_A = True
+                    self.nb_A_dup += 1
+                self.tabulate_duplicate_A(r_uid, delta_t, resolver_tag)
+
     def add_query(self, uid, query_time, rr_type, resolver_tag, query_ad_time):
         if query_time >= self.slice_start + self.slice_duration:
-            self.save_to_file()
-            self.init_next_slice()
-        is_dup = False
-        delta_t = 0
-        is_processed = False
-        if uid in self.old_uids:
-            has_https = self.old_uids[uid].has_https
-            if rr_type == 'HTTPS' and not has_https:
-                self.nb_https += 1
-            delta_t, is_dup, dup_index = self.old_uids[uid].update(query_time, rr_type, resolver_tag)
-        elif not uid in self.uids:
-            is_processed = True
-            delta_first = query_time - query_ad_time
-            if delta_first < 30:
+            self.save_to_file_and_rotate()
+        delta_first = query_time - query_ad_time
+        if delta_first > 30:
+            self.zombie_2[0] += 1
+            if resolver_tag in rsv_log_parse.tag_isp_set:
+                self.zombie_2[1] += 1
+            elif resolver_tag in rsv_log_parse.tag_public_set:
+                self.zombie_2[2] += 1
+            else:
+                self.zombie_2[3] += 1
+
+        if uid in self.previous_slice.uids:
+            self.previous_slice.tabulate_known_query(self.previous_slice.uids[uid], query_time, rr_type, resolver_tag)
+        elif delta_first < 30:
+            if not uid in self.uids:
                 self.uids[uid] = recap_uid(query_time, rr_type, resolver_tag)
                 self.add_first_tag(resolver_tag)
                 self.sum_first_delay += delta_first
                 if self.max_first_delay < delta_first:
                     self.max_first_delay = delta_first
-                if rr_type == 'A':
-                    self.nb_A += 1
-                if rr_type == 'HTTPS':
-                    self.nb_https += 1
-            else:
-                self.zombie_2 += 1
-        else:
-            has_https = self.uids[uid].has_https
-            if rr_type == 'HTTPS' and not has_https:
-                self.nb_https += 1
-            delta_t, is_dup, dup_index = self.uids[uid].update(query_time, rr_type, resolver_tag)
-
-        if not is_processed:
-            if delta_t < 30:
-                if rr_type == 'A':
-                    self.nb_A += 1
-                    if is_dup:
-                        self.dups_A[dup_index] += 1
-            else:
-                self.zombie_1 += 1
+                if delta_first > 3:
+                    self.first_3s += 1
+                elif delta_first > 10:
+                    self.first_10s += 1
+            self.tabulate_known_query(self.uids[uid], query_time, rr_type, resolver_tag)
 
 class recap_log:
     def __init__(self, slice_duration, initial_gap, ip2a4, ip2a6, as_names, recap_file):
@@ -250,7 +358,7 @@ class recap_log:
         if not key in self.cc_as_dict:
             # print("Adding: " + key)
             self.cc_as_dict[key] = recap_cc_as(query_cc, query_AS, self.first_slice_start, 
-                                               self.slice_duration, self.recap_file)
+                                               self.slice_duration, self.recap_file, is_first=True)
         return key
 
     def add_query(self, uid, query_time, query_cc, query_AS, resolver_tag, rr_type, query_ad_time):
@@ -298,7 +406,7 @@ class recap_log:
 
     def save_and_close(self):
         for key in self.cc_as_dict:
-            self.cc_as_dict[key].save_to_file()
+            self.cc_as_dict[key].flush_to_file()
         self.recap_file.close()
 
 
