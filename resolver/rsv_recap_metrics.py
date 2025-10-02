@@ -358,7 +358,7 @@ class recap_cc_as:
                 if delta_first > 10:
                     self.first_10s += 1
                 elif delta_first > 3:
-                    self.first_10s += 1
+                    self.first_3s += 1
             self.tabulate_known_query(self.uids[uid], query_time, rr_type, resolver_tag)
 
 class recap_log:
