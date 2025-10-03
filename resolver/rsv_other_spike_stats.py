@@ -175,7 +175,7 @@ class rsv_spike_log:
                 print("Cannot parse:\n" + line + "\n")
                 parsed = False
             if parsed:
-                if x.filter(rr_types=['A', 'AAAA', 'HTTPS'], experiment=['0du'], query_delay=1000000000):
+                if x.filter(rr_types=['A', 'AAAA', 'HTTPS'], experiment=['0du'], query_delay=30):
                     x.set_resolver_AS(self.ip2a4, self.ip2a6, self.as_names)
                     if x.resolver_tag in rsv_spike_set:
                         self.add_query(x.query_cc, x.query_AS, x.resolver_AS, x.query_user_id)
