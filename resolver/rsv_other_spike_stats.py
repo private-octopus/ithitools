@@ -195,6 +195,10 @@ class rsv_spike_log:
             if parsed:
                 if x.filter(rr_types=['A', 'AAAA', 'HTTPS'], experiment=['0du'], query_delay=30):
                     x.set_resolver_AS(self.ip2a4, self.ip2a6, self.as_names)
+                resolver_tag = x['resolver_tag]']
+                if not (resolver_tag in rsv_log_parse.tag_isp_set) and \
+                   not (resolver_tag in rsv_log_parse.tag_public_set):
+                    # classify as other 
                     if x.resolver_tag in rsv_spike_set:
                         self.add_query(x.query_cc, x.query_AS, x.resolver_AS, x.query_user_id)
                     nb_events += 1
