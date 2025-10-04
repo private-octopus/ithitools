@@ -18,6 +18,7 @@ import ipaddress
 import rsv_arguments
 import open_rsv
 import bz2
+import concurrent.futures
 
 class as_data:
     def __init__(self):
@@ -43,6 +44,23 @@ class as_data:
         self.r_as_list = dict()
         self.total_uids += len(self.uids)
         self.uids = set()
+        
+    def add_summary(self, resolver_AS, nb_uid):
+        if not resolver_AS in self.r_as_total:
+            self.r_as_total[resolver_AS] = nb_uid
+        else:
+            self.r_as_total[resolver_AS] += nb_uid
+
+    def get_summary_headers():
+        return [ 'CC', 'AS', 'resolver_AS', 'nb_uids' ]
+    
+    
+    def get_summary_table(self, query_cc, query_AS):
+        t = []
+        for resolver_AS in self.r_as_total:
+            r = [ query_cc, query_AS, resolver_AS, self.r_as_total[resolver_AS] ]
+            t.append(r)
+        return t
 
     def get_headers():
         return [ 'CC', 'AS', 'AS_name', 'uids',
@@ -198,8 +216,61 @@ class rsv_spike_log:
         for key in self.as_list:
             if len(self.as_list[key].r_as_total) > 0:
                 t.append(self.as_list[key].get_row(key, self.as_names))
+            else:
+                print(key + " r_as_total = " + str(len(self.as_list[key].r_as_total)))
         df = pd.DataFrame(t, columns=as_data.get_headers())
         return df
+
+    def save_raw_data(self, file_path):
+        t = []
+        for key in self.as_list:
+            kp = key.split('-')
+            t += self.as_list[key].get_summary_table(kp[0], kp[1])
+        df = pd.DataFrame(t, columns=as_data.get_summary_headers())
+        df.to_csv(file_path)
+        print("Saved " + str(df.shape[0]) + " lines to " + file_path)
+
+    def add_raw_cc_as(self, x):
+        key = str(x['CC']) + "-" + str(x['AS'])
+        if not key in self.as_list:
+            self.as_list[key] = as_data()
+        self.as_list[key].add_summary(x['resolver_AS'], x['nb_uids'])
+
+
+    def load_raw_data(self, csv_file):
+        df = pd.read_csv(csv_file,skipinitialspace=True)
+        print("Got " + str(df.shape[0]) + " records from " + csv_file)
+        df.apply(lambda x: self.add_raw_cc_as(x), axis=1)
+
+class file_bucket:
+    def __init__(self, ip2a4, ip2a6, as_names, as_csv):
+        self.as_csv = as_csv
+        self.input_files = []
+        self.file_path = ""
+        self.rsl = rsv_spike_log(ip2a4, ip2a6, as_names)
+
+
+    def load(self):
+        # load the AS list
+        time_start = time.time()
+        self.rsl.load_cc_as_list(self.as_csv)
+        if len(self.rsl.as_list) == 0:
+            exit(-1)
+        for input_file in self.input_files:
+            if input_file.endswith(".csv"):
+                nb_events =self.rsl.load_log(input_file)
+            else:
+                nb_events = self.rsl.load_recap_log(input_file, time_start=time_start)
+            print(input_file + ": found " + str(nb_events) + " events.")
+            self.rsl.flatten()
+
+    def save(self):
+        self.rsl.save_raw_data(self.file_path)
+ 
+
+def load_bucket(bucket):
+    bucket.load()
+    bucket.save()
 
 def usage():
     print("Usage: python rsv_other_spike_stats.py  <output_dir>  <as_spike-csv> <input_file> ... <input_file>\n")
@@ -243,24 +314,59 @@ if __name__ == "__main__":
 
     print("Tables loaded at " + str(time_loaded - time_start) + " seconds.")
 
-    # load the AS list
-    rsl = rsv_spike_log(ip2a4, ip2a6, as_names)
-    rsl.load_cc_as_list(as_csv)
-    print("Found " + str(len(rsl.as_list)) + " ASes.")
-    if len(rsl.as_list) == 0:
-        exit(-1)
 
-    # load the queries csv files
-    for input_file in input_files:
-        if input_file.endswith(".csv"):
-            nb_events =rsl.load_log(input_file)
-        else:
-            nb_events = rsl.load_recap_log(input_file, time_start=time_start)
-        print(input_file + ": found " + str(nb_events) + " events.")
-        rsl.flatten()
+    # Prepare the parallel buckets
+    
+    nb_process = os.cpu_count()
+    print("Aiming for " + str(nb_process) + " processes")
+    process_left = nb_process
+
+    bucket_list = []
+    bucket_first = 0
+    bucket_id = 0
+    while bucket_first < len(input_files):
+        bucket = file_bucket(ip2a4, ip2a6, as_names, as_csv)
+        step = int((len(input_files) - bucket_first + process_left - 1)/process_left)
+        print("step: " + str(step))
+        process_left -= 1
+        bucket_next = min(bucket_first+step, len(input_files))
+        bucket.input_files = input_files[bucket_first:bucket_next]
+        print("bucket: " + str(bucket_first) + "," + str(bucket_next))
+        bucket.bucket_id = bucket_id
+        bucket.file_path = os.path.join(output_dir, "tmp_other_spike_" + str(bucket.bucket_id) + ".csv" )
+        bucket_list.append(bucket)
+        bucket_id += 1
+        bucket_first = bucket_next
+
+    nb_process = min(nb_process, len(bucket_list))
+    # print("Will use " + str(nb_process) + " processes, " + str(len(bucket_list)) + " buckets")
+    total_files = 0
+    for bucket in bucket_list:
+        total_files += len(bucket.input_files)
+    print("%d files in %d buckets (%d .. %d), vs %d" %(total_files, len(bucket_list), len(bucket_list[0].input_files), len(bucket_list[len(bucket_list)-1].input_files), len(input_files)))
+
+
+    start_time = time.time()
+    with concurrent.futures.ProcessPoolExecutor(max_workers = nb_process) as executor:
+        future_to_bucket = {executor.submit(load_bucket, bucket):bucket for bucket in bucket_list }
+        for future in concurrent.futures.as_completed(future_to_bucket):
+            bucket = future_to_bucket[future]
+            try:
+                data = future.result()
+                print('Bucket %d complete' % (bucket.bucket_id))
+            except Exception as exc:
+                traceback.print_exc()
+                print('Bucket %d generated an exception: %s' % (bucket.bucket_id, exc))
+
+    bucket_time = time.time()
+
+    # collate the results
+    rsl = rsv_spike_log(ip2a4, ip2a6, as_names)
+    for bucket in bucket_list:
+        rsl.load_raw_data(bucket.file_path)
 
     # save the results
     df = rsl.get_df()
     as_file = os.path.join(output_dir, "other_spike_as.csv" )
     df.to_csv(as_file)
-    print("Report saved.")
+    print("Report saved in " + as_file)
