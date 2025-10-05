@@ -136,7 +136,7 @@ class rsv_spike_log:
             is_first = True
             is_second = True
             header_row = [ 'query_cc', 'query_AS', 'query_user_id', 'resolver_AS', 'resolver_tag' ]
-            header_index = [ -1, -1, -1, -1, -1, -1 ]
+            header_index = [ -1, -1, -1, -1, -1 ]
 
             for row in rsv_reader:
                 if is_first:
@@ -195,15 +195,18 @@ class rsv_spike_log:
             if parsed:
                 if x.filter(rr_types=['A', 'AAAA', 'HTTPS'], experiment=['0du'], query_delay=30):
                     x.set_resolver_AS(self.ip2a4, self.ip2a6, self.as_names)
-                    if x.resolver_tag in rsv_spike_set:
-                        self.add_query(x.query_cc, x.query_AS, x.resolver_AS, x.query_user_id)
-                    nb_events += 1
-                    if (nb_events%lth) == 0:
-                        new_time = time.time() - time_start
-                        print(log_file + ": loaded " + str(nb_events) + " events at " + str(new_time))
-                        sys.stdout.flush()
-                        if lth < 1000000:
-                            lth *= 2
+                    resolver_tag = x.resolver_tag
+                    if not (resolver_tag in rsv_log_parse.tag_isp_set) and \
+                       not (resolver_tag in rsv_log_parse.tag_public_set):
+                        # classify as other 
+                            self.add_query(x.query_cc, x.query_AS, x.resolver_AS, x.query_user_id)
+                nb_events += 1
+                if (nb_events%lth) == 0:
+                    new_time = time.time() - time_start
+                    print(log_file + ": loaded " + str(nb_events) + " events at " + str(new_time))
+                    sys.stdout.flush()
+                    if lth < 1000000:
+                        lth *= 2
         return nb_events
 
     def flatten(self):
@@ -254,6 +257,7 @@ class file_bucket:
         # load the AS list
         time_start = time.time()
         self.rsl.load_cc_as_list(self.as_csv)
+        print("Loaded: " + str(len(self.rsl.as_list)) + " ASes ")
         if len(self.rsl.as_list) == 0:
             exit(-1)
         for input_file in self.input_files:
@@ -271,6 +275,7 @@ class file_bucket:
 def load_bucket(bucket):
     bucket.load()
     bucket.save()
+    return True
 
 def usage():
     print("Usage: python rsv_other_spike_stats.py  <output_dir>  <as_spike-csv> <input_file> ... <input_file>\n")
