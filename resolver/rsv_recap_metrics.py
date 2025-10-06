@@ -415,7 +415,8 @@ class recap_log:
             if parsed:
                 if x.filter(rr_types=['A', 'AAAA', 'HTTPS'], experiment=['0du'], query_delay=1000000000):
                     x.set_resolver_AS(self.ip2a4, self.ip2a6, self.as_names)
-                    self.add_query(x.query_user_id, x.query_time, x.query_cc, x.query_AS, x.resolver_tag, x.rr_type, x.query_ad_time)
+                    if x.resolver_AS != 'AS0':
+                        self.add_query(x.query_user_id, x.query_time, x.query_cc, x.query_AS, x.resolver_tag, x.rr_type, x.query_ad_time)
                     nb_events += 1
                     if (nb_events%lth) == 0:
                         new_time = time.time() - time_start
