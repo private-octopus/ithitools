@@ -19,6 +19,19 @@ import rsv_arguments
 import open_rsv
 import bz2
 import concurrent.futures
+import ipaddress
+
+def get_subnet(resolver_IP):
+    try:
+        addr = ipaddress.ip_address(resolver_IP)
+        if addr.version == 6:
+            subnet = ipaddress.IPv6Network(resolver_IP + "/48", strict=False)
+        else:
+            subnet = ipaddress.IPv4Network(resolver_IP + "/24", strict=False)
+        txt = str(subnet)
+    except Exception as exc:
+        txt = str(resolver_IP)
+    return txt
 
 class as_data:
     def __init__(self):
@@ -165,8 +178,6 @@ class rsv_spike_log:
                     uid = row[header_index[2]]
                     resolver_AS = row[header_index[3]]
                     resolver_tag = row[header_index[4]]
-                    if resolver_AS == "AS13335":
-                        resolver_tag = "cloudflare"
                     if resolver_tag in rsv_spike_set:
                         self.add_query(query_cc, query_AS, resolver_AS, uid)
         return nb_events
@@ -198,8 +209,11 @@ class rsv_spike_log:
                     resolver_tag = x.resolver_tag
                     if not (resolver_tag in rsv_log_parse.tag_isp_set) and \
                        not (resolver_tag in rsv_log_parse.tag_public_set):
-                        # classify as other 
-                            self.add_query(x.query_cc, x.query_AS, x.resolver_AS, x.query_user_id)
+                        # classify as other
+                            resolver_AS = x.resolver_AS
+                            if x.resolver_AS == 'AS0':
+                                resolver_AS = 'AS0-' + get_subnet(x.resolver_IP)
+                            self.add_query(x.query_cc, x.query_AS, resolver_AS, x.query_user_id)
                 nb_events += 1
                 if (nb_events%lth) == 0:
                     new_time = time.time() - time_start
