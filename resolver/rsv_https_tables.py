@@ -1,4 +1,4 @@
-# Recapitulate the tables per CC/AS.
+# httpsitulate the tables per CC/AS.
 # Produce one file for all CC/AS that have more that 1000 commands per day
 # 
 
@@ -18,33 +18,33 @@ import rsv_arguments
 
 
 def usage():
-    print("Usage: python rsv_recap_tables.py <output_dir> <recap_metrics_files>\n")
-    print("This script will parse the files created by rsv_recap_metrics,")
+    print("Usage: python rsv_https_tables.py <output_dir> <https_metrics_files>\n")
+    print("This script will parse the files created by rsv_https_metrics,")
     print("find all slices for a given CC/AS combination, and then create")
     print("in the output directory a file for each CC/AS that has > 10,000")
     print("events")
 
-recap_columns = [ 
+https_columns = [ 
     'CC', 'AS', 'start', 'uids', 'first_isp',
     'googlepdns', 'cloudflare', 'opendns', 'quad9', 'level3', 'neustar', 'he',
-    'first_others', 'nb_https', 'nb_A', 'nb_A_dup', 'nb_dup_A',
+    'first_others', 'nb_HTTPS', 'nb_HTTPS_dup', 'nb_dup_HTTPS',
     'dups_isp', 'dups_pdns', 'isp_pdns', 'isp_others', 'dups_others', 'dups_long',
     'zombie_1', 'zombie_2', 'z_ISP', 'z_PDNS', 'z_others',
     'first_3s', 'first_10s', 'max_delay'
 ]
 
-recap_first_columns =  [ 
+https_first_columns =  [ 
     'CC', 'AS', 'start', 'uids', 'first_isp' ]
 
-recap_final_columns = [ 'nb_https', 'nb_AAAA', 'nb_A', 'nb_A_dup', 'nb_dup_A',
+https_final_columns = [ 'nb_HTTPS', 'nb_HTTPS_dup', 'nb_dup_HTTPS',
     'dups_isp', 'dups_pdns', 'isp_pdns', 'isp_others', 'dups_others', 'dups_long',
     'zombie_1', 'zombie_2', 'z_ISP', 'z_PDNS', 'z_others',
     'first_3s', 'first_10s', 'max_delay' ]
 
-recap_pdns = [
+https_pdns = [
     'googlepdns', 'cloudflare', 'opendns', 'quad9', 'level3', 'neustar', 'he' ]
 
-class recap_row:
+class https_row:
     def __init__(self, row):
         self.query_cc = row['CC']
         self.query_AS = row['AS']
@@ -53,13 +53,11 @@ class recap_row:
         self.first_isp = row['first_isp']
         self.total_pdns = [ 0, 0, 0, 0, 0, 0, 0 ]
         for i in range(0,7):
-            self.total_pdns[i] = row[recap_pdns[i]]
+            self.total_pdns[i] = row[https_pdns[i]]
         self.first_others = row['first_others']
-        self.nb_https = row['nb_https']
-        self.nb_AAAA = row['nb_AAAA']
-        self.nb_A = row['nb_A']
-        self.nb_A_dup = row['nb_A_dup']
-        self.nb_dup_A = row['nb_dup_A']
+        self.nb_HTTPS = row['nb_HTTPS']
+        self.nb_HTTPS_dup = row['nb_HTTPS_dup']
+        self.nb_dup_HTTPS = row['nb_dup_HTTPS']
         self.dups_isp = row['dups_isp']
         self.dups_pdns = row['dups_pdns']
         self.isp_pdns = row['isp_pdns']
@@ -80,13 +78,11 @@ class recap_row:
         self.total_uids += row['uids']
         self.first_isp += row['first_isp']
         for i in range(0,7):
-            self.total_pdns[i] += row[recap_pdns[i]]
+            self.total_pdns[i] += row[https_pdns[i]]
         self.first_others += row['first_others']
-        self.nb_https += row['nb_https']
-        self.nb_A += row['nb_A']
-        self.nb_AAAA = row['nb_AAAA']
-        self.nb_A_dup += row['nb_A_dup']
-        self.nb_dup_A += row['nb_dup_A']
+        self.nb_HTTPS += row['nb_HTTPS']
+        self.nb_HTTPS_dup += row['nb_HTTPS_dup']
+        self.nb_dup_HTTPS += row['nb_dup_HTTPS']
         self.dups_isp += row['dups_isp']
         self.dups_pdns += row['dups_pdns']
         self.isp_pdns += row['isp_pdns']
@@ -105,7 +101,7 @@ class recap_row:
             self.max_delay = row['max_delay']
 
 
-class recap_cc_as:
+class https_cc_as:
     def __init__(self, query_cc, query_AS):
         self.query_cc = query_cc
         self.query_AS = query_AS
@@ -119,7 +115,7 @@ class recap_cc_as:
         self.total_uids += row['uids']
         start = row['start']
         if not start in self.slices:
-            self.slices[start] = recap_row(row)
+            self.slices[start] = https_row(row)
         else:
             self.slices[start].add_row(row)
 
@@ -145,11 +141,11 @@ class recap_cc_as:
 
     def get_columns(self):
         columns = []
-        columns += recap_first_columns
+        columns += https_first_columns
         for i in range(0,3):
-            columns.append(recap_pdns[self.top_pdns[i]])
+            columns.append(https_pdns[self.top_pdns[i]])
         columns.append('first_others')
-        columns += recap_final_columns
+        columns += https_final_columns
         columns.append('average_delay')
         return columns
 
@@ -181,11 +177,9 @@ class recap_cc_as:
                 for skipped in self.skipped_pdns:
                     total_skipped += r_row.total_pdns[skipped]
                 s += str(total_skipped) + ","
-                s += str(r_row.nb_https) + ","
-                s += str(r_row.nb_AAAA) + ","
-                s += str(r_row.nb_A) + ","
-                s += str(r_row.nb_A_dup) + ","
-                s += str(r_row.nb_dup_A) + ","
+                s += str(r_row.nb_HTTPS) + ","
+                s += str(r_row.nb_HTTPS_dup) + ","
+                s += str(r_row.nb_dup_HTTPS) + ","
                 s += str(r_row.dups_isp) + ","
                 s += str(r_row.dups_pdns) + ","
                 s += str(r_row.isp_pdns) + ","
@@ -209,7 +203,7 @@ class recap_cc_as:
                 s += "\n"
                 F.write(s)
 
-class recap_lines:
+class https_lines:
     def __init__(self):
         self.cc_as_list = dict()
 
@@ -218,10 +212,10 @@ class recap_lines:
         asn = str(row['AS'])
         key = cc + '-' + asn
         if not key in self.cc_as_list:
-            self.cc_as_list[key] = recap_cc_as(cc, asn)
+            self.cc_as_list[key] = https_cc_as(cc, asn)
         self.cc_as_list[key].add_row(row)
 
-    def load_recap(self, file_name):
+    def load_https(self, file_name):
         df = pd.read_csv(file_name, sep=",", skipinitialspace=True)
         print(file_name + ": " + str(df.shape[0]) + " lines.")
         df.apply(lambda row: self.add_row(row),axis=1)
@@ -248,14 +242,14 @@ if __name__ == "__main__":
         usage()
         exit(-1)
     
-    rcl = recap_lines()
+    rcl = https_lines()
     for csv_file in csv_files:
-        rcl.load_recap(csv_file)
+        rcl.load_https(csv_file)
 
     nb_files = 0
     for key in rcl.cc_as_list:
         if rcl.cc_as_list[key].total_uids > 10000:
-            as_file = os.path.join(output_dir, "recap-" + 
+            as_file = os.path.join(output_dir, "https-" + 
                                    rcl.cc_as_list[key].query_cc + "-" + 
                                    rcl.cc_as_list[key].query_AS + ".csv")
             rcl.cc_as_list[key].save_file(as_file)
