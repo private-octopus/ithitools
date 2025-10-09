@@ -1,0 +1,58 @@
+List of columns in the "recap" tables
+
+CC: Country code for the AS in to which the advertisement as sent.
+
+AS: AS to which the advertisement as sent.
+
+start: First second of the time slice for which the data are collected (Unix 64 bit time format, UTC)
+
+uids: Number of UIDS with first arrival time < AD time stamp + 30 seconds.
+
+first_isp: Number of UIDS with the first query received by the ISP.
+
+Then, three columns describing the most frequent PDNS for
+this CC-AS, for example "googlepdns, cloudflare, opendns". This may
+be different for each CC-AS. The column provides the number of
+UIDs for which the first query was received by the PDNS.
+
+first_others: Number of UIDS with the first query was not received by the ISP or one of the three PDNS
+
+nb_https: Number of UIDS for which we received at least one HTTPS query.
+
+nb_AAAA: Number of UIDS for which we received at least one AAAA query.
+
+nb_A: Number of UIDS for which we received at least one A query.
+
+nb_A_dup: Number of UIDS for which we received duplicate A queries (count one per UID)
+
+nb_dup_A: Total number of duplicate A queries (may count more than one per UDI)
+
+dups_isp: Number of UIDs for which the ISP received a duplicate A query (but not the PDNS or others)
+
+dups_pdns: Number of UIDs for which the PDNS received a duplicate A query (but not the ISP or others)
+
+isp_pdns: Number of UIDs for which the ISP and the PDNS received a duplicate A query (but not the others)
+
+isp_others: Number of UIDs for which the ISP and an other received a duplicate A query (but not the PDNS)
+
+dups_others: Number of UIDs for which A queries where received by the other, or other and PDNS, or other and PDNS and ISP.
+
+dups_long: Duplicates received after 0.5 to 30 seconds.
+
+zombie_1: Number of queries received for UIDs that we see in memory, more than 30 seconds after first query.
+
+zombie_2: Number of queries received more than 30 seconds after the advertisement time stamp 
+
+z_ISP: Number of zombie_2 received from the ISP
+
+z_PDNS: Number of zombie_2 received from a PDNS
+
+z_others: Number of zombie_2 received from others
+
+first_3s: Number of UIDs for which the first query arrived between 3 and 10 seconds after the AD time stamps
+
+first_10s: Number of UIDs for which the first query arrived between 10 and 30 seconds after the AD time stamps
+
+max_delay: Maximum delay between AS time stamp andfirst query, for all UIDs in the slice.
+
+average_delay: Average delay between AS time stamp andfirst query, for all UIDs in the slice.
