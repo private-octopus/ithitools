@@ -1,0 +1,39 @@
+List of columns in the "flux" tables
+
+CC: Country code for the AS in to which the advertisement as sent.
+
+AS: AS to which the advertisement as sent.
+
+start: First second of the time slice for which the data are collected (Unix 64 bit time format, UTC)
+
+uids: Number of UIDS with first arrival time < AD time stamp + 30 seconds.
+
+nb_isp: Number of uids for which at least one of A, AAAA, HTTPS query is received by the ISP
+
+nb_pdns: Number of uids for which at least one of A, AAAA, HTTPS query is received by a PDNS
+
+nb_others: Number of uids for which at least one of A, AAAA, HTTPS query is received by other than ISP or PDNS
+
+nb_A: Number of uids for which at least one A query is received by any of ISP, PDNS or Other
+
+nb_A_isp: Number of uids for which at least one A query is received by the ISP
+
+nb_A_pdns:  Number of uids for which at least one A query is received by a PDNS
+
+nb_A_others: Number of uids for which at least one A query is received by other than ISP or PDNS
+
+nb_AAAA: Number of uids for which at least one AAAA query is received by any of ISP, PDNS or Other
+
+nb_AAAA_isp: Number of uids for which at least one AAAA query is received by the ISP
+
+nb_AAAA_pdns:  Number of uids for which at least one AAAA query is received by a PDNS
+
+nb_AAAA_others: Number of uids for which at least one AAAA query is received by other than ISP or PDNS
+
+nb_HTTPS: Number of uids for which at least one HTTPS query is received by any of ISP, PDNS or Other
+
+nb_HTTPS_isp: Number of uids for which at least one HTTPS query is received by the ISP
+
+nb_HTTPS_pdns:  Number of uids for which at least one HTTPS query is received by a PDNS
+
+nb_HTTPS_others: Number of uids for which at least one HTTPS query is received by other than ISP or PDNS
