@@ -24,22 +24,25 @@ def usage():
     print("in the output directory a file for each CC/AS that has > 10,000")
     print("events")
 
-recap_columns = [ 
+recap_columns = [
     'CC', 'AS', 'start', 'uids', 'first_isp',
     'googlepdns', 'cloudflare', 'opendns', 'quad9', 'level3', 'neustar', 'he',
-    'first_others', 'nb_https', 'nb_A', 'nb_A_dup', 'nb_dup_A',
-    'dups_isp', 'dups_pdns', 'isp_pdns', 'isp_others', 'dups_others', 'dups_long',
-    'zombie_1', 'zombie_2', 'z_ISP', 'z_PDNS', 'z_others',
-    'first_3s', 'first_10s', 'max_delay'
+    'first_others', 'nb_https', 'nb_AAAA', 'nb_A',
+    'A_ISP_only', ' A_PDNS_only', ' A_ISP_PDNS', ' A_others_only', ' A_ISP_others', ' A_PDNS_others', ' A_all3',
+    'nb_A_ISP', ' nb_A_PDNS', ' nb_A_others',
+    'zombies', 'z_ISP', 'z_PDNS', 'z_others',
+    'first_3s', 'first_10s', 'sum_delay', 'max_delay'
 ]
 
 recap_first_columns =  [ 
     'CC', 'AS', 'start', 'uids', 'first_isp' ]
 
-recap_final_columns = [ 'nb_https', 'nb_AAAA', 'nb_A', 'nb_A_dup', 'nb_dup_A',
-    'dups_isp', 'dups_pdns', 'isp_pdns', 'isp_others', 'dups_others', 'dups_long',
-    'zombie_1', 'zombie_2', 'z_ISP', 'z_PDNS', 'z_others',
-    'first_3s', 'first_10s', 'max_delay' ]
+recap_final_columns = [ 'nb_https', 'nb_AAAA', 'nb_A',
+    'A_ISP_only', 'A_PDNS_only', 'A_ISP_PDNS', 'A_others_only', 'A_ISP_others', 'A_PDNS_others', 'A_all3',
+    'nb_A_ISP', 'nb_A_PDNS', 'nb_A_others',
+    'zombies', 'z_ISP', 'z_PDNS', 'z_others',
+    'first_3s', 'first_10s', 'sum_delay'
+]
 
 recap_pdns = [
     'googlepdns', 'cloudflare', 'opendns', 'quad9', 'level3', 'neustar', 'he' ]
@@ -58,16 +61,17 @@ class recap_row:
         self.nb_https = row['nb_https']
         self.nb_AAAA = row['nb_AAAA']
         self.nb_A = row['nb_A']
-        self.nb_A_dup = row['nb_A_dup']
-        self.nb_dup_A = row['nb_dup_A']
-        self.dups_isp = row['dups_isp']
-        self.dups_pdns = row['dups_pdns']
-        self.isp_pdns = row['isp_pdns']
-        self.isp_others = row['isp_others']
-        self.dups_others = row['dups_others']
-        self.dups_long = row['dups_long']
-        self.zombie_1 = row['zombie_1']
-        self.zombie_2 = row['zombie_2']
+        self.A_ISP_only = row['A_ISP_only']
+        self.A_PDNS_only = row['A_PDNS_only']
+        self.A_ISP_PDNS = row['A_ISP_PDNS']
+        self.A_others_only = row['A_others_only']
+        self.A_ISP_others = row['A_ISP_others']
+        self.A_PDNS_others = row['A_PDNS_others']
+        self.A_all3 = row['A_all3']
+        self.nb_A_ISP = row['nb_A_ISP']
+        self.nb_A_PDNS = row['nb_A_PDNS']
+        self.nb_A_others = row['nb_A_others']
+        self.zombies = row['zombies']
         self.z_ISP = row['z_ISP']
         self.z_PDNS = row['z_PDNS']
         self.z_others = row['z_others']
@@ -83,18 +87,19 @@ class recap_row:
             self.total_pdns[i] += row[recap_pdns[i]]
         self.first_others += row['first_others']
         self.nb_https += row['nb_https']
+        self.nb_AAAA += row['nb_AAAA']
         self.nb_A += row['nb_A']
-        self.nb_AAAA = row['nb_AAAA']
-        self.nb_A_dup += row['nb_A_dup']
-        self.nb_dup_A += row['nb_dup_A']
-        self.dups_isp += row['dups_isp']
-        self.dups_pdns += row['dups_pdns']
-        self.isp_pdns += row['isp_pdns']
-        self.isp_others += row['isp_others']
-        self.dups_others += row['dups_others']
-        self.dups_long += row['dups_long']
-        self.zombie_1 += row['zombie_1']
-        self.zombie_2 += row['zombie_2']
+        self.A_ISP_only += row['A_ISP_only']
+        self.A_PDNS_only += row['A_PDNS_only']
+        self.A_ISP_PDNS += row['A_ISP_PDNS']
+        self.A_others_only += row['A_others_only']
+        self.A_ISP_others += row['A_ISP_others']
+        self.A_PDNS_others += row['A_PDNS_others']
+        self.A_all3 += row['A_all3']
+        self.nb_A_ISP += row['nb_A_ISP']
+        self.nb_A_PDNS += row['nb_A_PDNS']
+        self.nb_A_others += row['nb_A_others']
+        self.zombies += row['zombies']
         self.z_ISP += row['z_ISP']
         self.z_PDNS += row['z_PDNS']
         self.z_others += row['z_others']
@@ -174,7 +179,6 @@ class recap_cc_as:
                 s += str(r_row.start) + ","
                 s += str(r_row.total_uids) + ","
                 s += str(r_row.first_isp) + ","
-
                 for i in range(0,3):
                     s += str(r_row.total_pdns[self.top_pdns[i]]) + ","
                 total_skipped = r_row.first_others
@@ -183,17 +187,18 @@ class recap_cc_as:
                 s += str(total_skipped) + ","
                 s += str(r_row.nb_https) + ","
                 s += str(r_row.nb_AAAA) + ","
-                s += str(r_row.nb_A) + ","
-                s += str(r_row.nb_A_dup) + ","
-                s += str(r_row.nb_dup_A) + ","
-                s += str(r_row.dups_isp) + ","
-                s += str(r_row.dups_pdns) + ","
-                s += str(r_row.isp_pdns) + ","
-                s += str(r_row.isp_others) + ","
-                s += str(r_row.dups_others) + ","
-                s += str(r_row.dups_long) + ","
-                s += str(r_row.zombie_1) + ","
-                s += str(r_row.zombie_2) + ","
+                s += str(r_row.nb_A) + "," 
+                s += str(r_row.A_ISP_only) + ","
+                s += str(r_row.A_PDNS_only) + ","
+                s += str(r_row.A_ISP_PDNS) + ","
+                s += str(r_row.A_others_only) + ","
+                s += str(r_row.A_ISP_others) + ","
+                s += str(r_row.A_PDNS_others) + ","
+                s += str(r_row.A_all3) + ","
+                s += str(r_row.nb_A_ISP) + ","
+                s += str(r_row.nb_A_PDNS) + ","
+                s += str(r_row.nb_A_others) + ","
+                s += str(r_row.zombies) + ","
                 s += str(r_row.z_ISP) + ","
                 s += str(r_row.z_PDNS) + ","
                 s += str(r_row.z_others) + ","
