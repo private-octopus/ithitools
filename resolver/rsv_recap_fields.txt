@@ -17,42 +17,69 @@ UIDs for which the first query was received by the PDNS.
 
 first_others: Number of UIDS with the first query was not received by the ISP or one of the three PDNS
 
+Then we get three columns showing the number of queries for each of
+HTTPS, AAAA and A in the first 30s after the advertisement time stamp.
+
 nb_https: Number of UIDS for which we received at least one HTTPS query.
 
 nb_AAAA: Number of UIDS for which we received at least one AAAA query.
 
 nb_A: Number of UIDS for which we received at least one A query.
 
-nb_A_dup: Number of UIDS for which we received duplicate A queries (count one per UID)
+The next 7 columns are looking at "duplication patterns", based on
+the source of A queries. We only consider the A queries that
+arrive within 250ms of the first one, which of course always includes
+the first one. We ignore all queries that could be received more than 30s
+after the advertisement time stamp. 
 
-nb_dup_A: Total number of duplicate A queries (may count more than one per UDI)
+A_ISP_only: UIDs for which we only received A queries from the ISP.
 
-dups_isp: Number of UIDs for which the ISP received a duplicate A query (but not the PDNS or others)
+A_PDNS_only: UIDs for which we only received A queries from a PDNS.
 
-dups_pdns: Number of UIDs for which the PDNS received a duplicate A query (but not the ISP or others)
+A_ISP_PDNS: UIDs for which we received A queries from the ISP and a PDNS,
+            but none from others.
 
-isp_pdns: Number of UIDs for which the ISP and the PDNS received a duplicate A query (but not the others)
+A_others_only: UIDs for which we only received A queries from others.
 
-isp_others: Number of UIDs for which the ISP and an other received a duplicate A query (but not the PDNS)
+A_ISP_others: UIDs for which we received A queries from the ISP and others,
+              but none from PDNS. 
 
-dups_others: Number of UIDs for which A queries where received by the other, or other and PDNS, or other and PDNS and ISP.
+A_PDNS_others: UIDs for which we received A queries from the PDNS and others,
+               but none from ISP. 
 
-dups_long: Duplicates received after 0.5 to 30 seconds.
+A_all3: UIDs for which we received at least A queries from each
+        of ISP, PDNS and others
 
-zombie_1: Number of queries received for UIDs that we see in memory, more than 30 seconds after first query.
+The next 7 columns are looking at "repeated" A queries, tabulated by type of source.
+We count here all the A queries received from that source less than 30 seconds
+after the advertisement time stamp. The count includes the first query as well
+as the following ones.
 
-zombie_2: Number of queries received more than 30 seconds after the advertisement time stamp 
+nb_A_ISP: Number of A queries received from the ISP, always greater or equal
+          than A_ISP_only + A_ISP_PDNS + A_ISP_others + A_all3
+nb_A_PDNS: Number of A queries received from PDNS, always greater or equal
+          than A_PDNS_only + A_ISP_PDNS + A_PDNS_others + A_all3
+nb_A_others: Number of A queries received from others, always greater or equal
+          than A_others_only + A_ISP_others + A_PDNS_others + A_all3
 
-z_ISP: Number of zombie_2 received from the ISP
+Then we count the "zombies", i.e., the number of queries received
+more than 30s after the advertisement time stamp, for query RR types
+A, AAAA or HTTPS.
 
-z_PDNS: Number of zombie_2 received from a PDNS
+zombies: Number of queries received more than 30 seconds after the advertisement time stamp 
 
-z_others: Number of zombie_2 received from others
+z_ISP: Number of zombies received from the ISP
+
+z_PDNS: Number of zombies received from a PDNS
+
+z_others: Number of zombies received from others
+
+And then we tabulate the arrival time of the queries, based on the AD time stamps
 
 first_3s: Number of UIDs for which the first query arrived between 3 and 10 seconds after the AD time stamps
 
 first_10s: Number of UIDs for which the first query arrived between 10 and 30 seconds after the AD time stamps
 
-max_delay: Maximum delay between AS time stamp andfirst query, for all UIDs in the slice.
+max_delay: Maximum delay between AD time stamp and first query, for all UIDs in the slice.
 
-average_delay: Average delay between AS time stamp andfirst query, for all UIDs in the slice.
+average_delay: Average delay between AD time stamp andfirst query, for all UIDs in the slice.
