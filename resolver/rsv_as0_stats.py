@@ -124,19 +124,20 @@ class rsv_as0_log:
             if parsed:
                 if x.filter(rr_types=['A', 'AAAA', 'HTTPS'], experiment=['0du'], query_delay=30):
                     x.set_resolver_AS(self.ip2a4, self.ip2a6, self.as_names)
-                    as0_subnet = get_subnet(x.resolver_IP)
-                    self.last_time = x.query_time
-                    self.add_query(x.query_cc, x.query_AS, as0_subnet, x.query_user_id, x.query_ad_time)
-                    nb_events += 1
-                    if (nb_events%lth) == 0:
-                        ad_time = int(self.last_time) - 30
-                        self.flush_queries(ad_time)
-                        new_time = int(time.time() - time_start)
-                        print(log_file + ": loaded " + str(nb_events) +  " events, " + 
-                              str(len(self.as0_subnets)) + " subnets at " + str(new_time) + "s.")
-                        sys.stdout.flush()
-                        if lth < 1000000:
-                            lth *= 2
+                    if x.resolver_AS == 'AS0':
+                        as0_subnet = get_subnet(x.resolver_IP)
+                        self.last_time = x.query_time
+                        self.add_query(x.query_cc, x.query_AS, as0_subnet, x.query_user_id, x.query_ad_time)
+                        nb_events += 1
+                        if (nb_events%lth) == 0:
+                            ad_time = int(self.last_time) - 30
+                            self.flush_queries(ad_time)
+                            new_time = int(time.time() - time_start)
+                            print(log_file + ": loaded " + str(nb_events) +  " events, " + 
+                                  str(len(self.as0_subnets)) + " subnets at " + str(new_time) + "s.")
+                            sys.stdout.flush()
+                            if lth < 1000000:
+                                lth *= 2
         self.flush_queries(0)
         return nb_events
 
