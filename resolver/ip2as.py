@@ -65,7 +65,7 @@ class ip2as_table:
         print("Loaded " + str(len(self.table)) + " address ranges from " + file_name)
         return ret
     
-    def get_asn(self, s):
+    def get_asn(self, s, dbg=False):
         asn = 0
         i_med = 0
         i_first = 0
@@ -73,6 +73,9 @@ class ip2as_table:
         if i_last > 0:
             try:
                 addr = ipaddress.ip_address(s)
+                if dbg:
+                    print("First: " + str(self.table[i_first].ip_first) + ", " + str(self.table[i_first].as_number))
+                    print("Last: " + str(self.table[i_last].ip_first) + ", " + str(self.table[i_last].as_number))
                 if addr >= self.table[i_first].ip_first:
                     if addr >= self.table[i_last].ip_first:
                         i_first = i_last
@@ -83,6 +86,9 @@ class ip2as_table:
                                 i_first = i_med
                             else:
                                 i_last = i_med
+                            if dbg:
+                                print("First: " + str(self.table[i_first].ip_first) + ", " + str(self.table[i_first].as_number))
+                                print("Last: " + str(self.table[i_last].ip_first) + ", " + str(self.table[i_last].as_number))
                     if addr <= self.table[i_first].ip_last:
                         asn = self.table[i_first].as_number
             except Exception as e:

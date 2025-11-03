@@ -299,8 +299,9 @@ class rsv_log_line:
     # to ASes (ip2a4), IPv6 addresses to (ip2a6) and the AS number
     # to a CC (as_table)
     def set_resolver_AS(self, ip2a4, ip2a6, as_table):
-        parts6 = self.resolver_IP.split(":")
-        if len(parts6) > 1:
+        # parts6 = self.resolver_IP.split(":")
+        # if len(parts6) > 1:
+        if ":" in self.resolver_IP:
             asn = ip2a6.get_asn(self.resolver_IP)
         else:
             asn = ip2a4.get_asn(self.resolver_IP)
