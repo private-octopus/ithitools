@@ -2,47 +2,62 @@
 # Check that addresses can be correctly resolver.
 
 import sys
-import os
+import os 
 from pathlib import Path
 import ip2as
 import ipaddress
 import time
+import pandas as pd
 
+def usage():
+    print("Usage: ip2as_test outdir test_ip42as test_ip62as 1*as0")
+
+def try_map(ip_text, dbg=False):
+    if ":" in ip_text:
+        asn = ip2a6.get_asn(ip_text, dbg=dbg)
+    else:
+        asn = ip2a4.get_asn(ip_text, dbg=dbg)
+    return asn
+
+def try_row(x, totals, F):
+    subnet = x['subnet']
+    sub_part = subnet.split('/')
+    ip_text = sub_part[0]
+    ix = 0
+    if ":" in ip_text:
+        ix = 2
+    totals[ix] += 1
+    asn = try_map(ip_text)
+    if asn == 0 :
+        totals[ix+1] += 1
+        F.write(ip_text + "," + str(asn) + "," + str(x['uids']) + "\n")
 
 # main
 if __name__ == "__main__":
     time_start = time.time()
-    if len(sys.argv) < 2:
+    if len(sys.argv) < 4:
         usage()
         exit(-1)
 
-    test_ip = sys.argv[1:]
+    outdir = sys.argv[1]
+    test_ip42as = sys.argv[2]
+    test_ip62as = sys.argv[3]
+    as0_reports = sys.argv[4:]
 
-    # get the as name tables
-    source_path = Path(__file__).resolve()
-    resolver_dir = source_path.parent
-    auto_source_dir = resolver_dir.parent
-    print("Auto source path is: " + str(auto_source_dir) + " (source: " + str(source_path) + ")")
-    source_dir = os.path.join(auto_source_dir, "data") 
-    ip2a4_file = os.path.join(source_dir, "ip2as.csv") 
-    ip2a6_file = os.path.join(source_dir, "ip2asv6.csv")
-    as_names_file = os.path.join(source_dir, "as_names.csv")   
+    # get the as to ip tables
     ip2a4 = ip2as.ip2as_table()
-    ip2a4.load(ip2a4_file)
+    ip2a4.load(test_ip42as)
     ip2a6 = ip2as.ip2as_table()
-    ip2a6.load(ip2a6_file)
-    as_names = ip2as.asname()
-    as_names.load(as_names_file)
+    ip2a6.load(test_ip62as)
     time_loaded = time.time()
 
     # try to resolve test IP
-
-    for ip_text in test_ip:
-        if ":" in ip_text:
-            print("Try v6")
-            asn = ip2a6.get_asn(ip_text, dbg=True)
-        else:
-            print("Try v4")
-            asn = ip2a4.get_asn(ip_text, dbg=True)
-        print(ip_text + ": " + str(asn))
-
+    fail_file = os.path.join(outdir, "failing.csv")
+    with open(fail_file,"w") as F:
+        F.write("IP, ASN, oids\n")
+        totals = [ 0, 0, 0, 0 ]
+        for as0_report in as0_reports:
+            df = pd.read_csv(as0_report)
+            df.apply(lambda row: try_row(row, totals, F),axis=1)
+    print("Tried(v4): " + str(totals[0]) + ", as0: " + str(totals[1]))
+    print("Tried(v6): " + str(totals[2]) + ", as0: " + str(totals[3]))
