@@ -22,7 +22,8 @@ test_lines = [
     "1730423099.989316 client 141.101.75.101#62737: query: valid.starnxdomain.net. IN A -ED () 1914810962 0",
     "1730423099.989316 client 141.101.75.101#62737: query: invalid4.starnxdomain.net. IN A -ED () 1914810962 0",
     "1730423099.989316 client 141.101.75.101#62737: query: invalid6.starnxdomain.net. IN A -ED () 1914810962 0",
-    "1738055179.971480 client 20.36.146.56#52164: query: root-key-sentinel-is-ta-20326.0ds-uec321a73-c233-s1536509491-icff1e56f-2.am.dotnxdomain.net. IN MX -ED () 0 875"
+    "1738055179.971480 client 20.36.146.56#52164: query: root-key-sentinel-is-ta-20326.0ds-uec321a73-c233-s1536509491-icff1e56f-2.am.dotnxdomain.net. IN MX -ED () 0 875",
+    "1738055179.991480 client 20.36.146.56#52164: query: root-key-sentinel-is-ta-20326.0ds-uec321a73-c233-s1536509491-icff1e56f-2.am.dotnxdomain.net. IN MX -ED () 0 875 FR 23456"
 ]
 
 test_results = [
@@ -41,6 +42,7 @@ test_results = [
     "1730423099.989316, 141.101.75.101, 62737, , , , , 0, , IN, A, invalid4.starnxdomain.net, , , , S, \"-ED () 1914810962 0\", ",
     "1730423099.989316, 141.101.75.101, 62737, , , , , 0, , IN, A, invalid6.starnxdomain.net, , , , S, \"-ED () 1914810962 0\", ",
     "1738055179.97148, 20.36.146.56, 52164, root-key-sentinel, , , , 0, , IN, MX, am.dotnxdomain.net, , , C, , \"-ED () 0 875\", ",
+    "1738055179.99148, 20.36.146.56, 52164, root-key-sentinel, , , , 0, , IN, MX, am.dotnxdomain.net, , , C, , \"-ED () 0 875\", ",
 ]
 
 def parse_test():
@@ -55,7 +57,7 @@ def parse_test():
                 break;
             else:
                 s = x.pretty_string()
-                print(s)
+                # print(s)
                 if not s == test_results[i]:
                     print("Expected:\n"+test_results[i])
                     print("for:\n" + line)
@@ -63,6 +65,7 @@ def parse_test():
                     if len(s) != len(test_results[i]):
                         print("Got " + str(len(s)) + " chars instead of " + str(len(test_results[i])))
                         print("S:\n" + s)
+                        print("vs.:\n" + test_results[i])
                     else:
                         t = test_results[i]
                         for j in range(0, len(s)):

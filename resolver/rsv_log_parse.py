@@ -243,9 +243,21 @@ class rsv_log_line:
                 # parse the query class and type
                 self.rr_class = parts[5]
                 self.rr_type = parts[6]
+                #check whether resolver_cc and resolver_AS are present
+                q_edns = parts[7:]
+                if len(parts) >= 10 and \
+                   len(parts[-2]) == 2:
+                       try:
+                           asn = int(parts[-1])
+                           self.resolver_cc = parts[-2]
+                           self.resolver_AS = "AS" + str(asn)
+                           q_edns = q_edns[:-2]
+                       except:
+                           pass
                 # parse the EDNS data
                 delimiter = " "
-                self.query_edns = delimiter.join(parts[7:])
+                self.query_edns = delimiter.join(q_edns)
+                # set the resoler AS if present
                 # parse the query name
                 is_valid = self.parse_query_name(parts[4])
             except Exception as exc:
