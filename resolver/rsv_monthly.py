@@ -89,9 +89,9 @@ class summaries:
         self.has_sum_delays = False
         self.monthly_per_isp = dict()
         self.monthly_per_day = dict()
-        print(str(summary_columns))
+        #print(str(summary_columns))
         self.get_columns(summary_columns)
-        print(str(self.summed_columns))
+        #print(str(self.summed_columns))
 
 
     def get_columns(self, summary_columns):
@@ -134,9 +134,9 @@ class summaries:
         df = pd.read_csv(file_path)
         df.apply(lambda row: self.add_cc_as(row),axis=1)
         df.apply(lambda row: self.add_daily(row, year, month, day),axis=1)
-        print("After loading " + file_path + ":")
-        print("ISP: " + str(len(self.monthly_per_isp)))
-        print("Days: " + str(len(self.monthly_per_day)))
+        #print("After loading " + file_path + ":")
+        #print("ISP: " + str(len(self.monthly_per_isp)))
+        #print("Days: " + str(len(self.monthly_per_day)))
 
     def load_day(self, month_dir, file_name, year, month):
         day_dir = ""
@@ -178,8 +178,8 @@ class summaries:
         if self.has_max_delay:
             isp_columns.append('max_delay')
             day_columns.append('max_delay')
-        print("ISP-columns: " + str(isp_columns))
-        print("Day-columns: " + str(day_columns))
+        #print("ISP-columns: " + str(isp_columns))
+        #print("Day-columns: " + str(day_columns))
 
         isp_t = []
         for key in self.monthly_per_isp:
@@ -187,6 +187,7 @@ class summaries:
             row = [ year, month, p[0], p[1] ] + self.monthly_per_isp[key].get_row()
             isp_t.append(row)
         isp_df = pd.DataFrame(isp_t,columns=isp_columns)
+        isp_df.sort_values(['year', 'month', 'uids'], ascending=[True, True, False])
         isp_df.to_csv(isp_path)
 
         day_t = []
@@ -194,6 +195,7 @@ class summaries:
             row = [ year, month, key[-2:] ] + self.monthly_per_day[key].get_row()
             day_t.append(row)
         day_df = pd.DataFrame(day_t,columns=day_columns)
+        day_df.sort_values(['year', 'month', 'day'], ascending=[True, True, True])
         day_df.to_csv(day_path)
 
 
