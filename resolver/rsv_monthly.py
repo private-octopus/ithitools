@@ -111,8 +111,13 @@ class summaries:
 
     def add_cc_as(self, row):
         cc = row['CC']
+        if not isinstance(cc, str) or len(cc) != 2:
+            cc = '  '
         asn = row['AS']
+        if not isinstance(asn, str) or not asn.startswith('AS'):
+            asn = 'AS0'
         key = cc + '-' + asn
+
         if not key in self.monthly_per_isp:
             self.monthly_per_isp[key] = per_key_sum(row, self.summed_columns, self.has_max_delay, self.has_average_delay, self.has_sum_delays)
         else:
