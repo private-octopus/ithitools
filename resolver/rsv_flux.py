@@ -89,6 +89,7 @@ class flux_cc_as_rr:
     def __init__(self):
         self.per_prov = [ 0, 0, 0 ]
         self.total = 0
+        self.isp_reps = 0
 
 class flux_cc_as:
     def __init__(self, query_cc, query_AS, slice_start, slice_duration, flux_file, is_first=False):
@@ -121,6 +122,8 @@ class flux_cc_as:
         for i_rr in range(0,3):
             self.previous_slice.per_rr[i_rr].total = \
                 self.per_rr[i_rr].total
+            self.previous_slice.per_rr[i_rr].isp_reps = \
+                self.per_rr[i_rr].isp_reps
             for i_prov in range(0,3):
                 self.previous_slice.per_rr[i_rr].per_prov[i_prov] = \
                     self.per_rr[i_rr].per_prov[i_prov]
@@ -134,6 +137,7 @@ class flux_cc_as:
             self.per_prov[i_prov] = 0
         for i_rr in range(0,3):
             self.per_rr[i_rr].total = 0
+            self.per_rr[i_rr].isp_reps = 0
             for i_prov in range(0,3):
                 self.per_rr[i_rr].per_prov[i_prov] = 0
         self.uids = dict()
@@ -148,6 +152,7 @@ class flux_cc_as:
             prefix = "nb_" + rr_names[i_rr]
             s += ',' + prefix
             prefix += '_'
+            s += ',' + prefix + "isp_reps"
             for i_prov in range(0,3):
                 s += ',' + prefix + prov_names[i_prov] 
         s += "\n"
@@ -163,6 +168,7 @@ class flux_cc_as:
             s += ',' + str(self.per_prov[i_prov])
         for i_rr in range(0,3):
             s += ',' + str(self.per_rr[i_rr].total)
+            s += ',' + str(self.per_rr[i_rr].isp_reps)
             for i_prov in range(0,3):
                 s += ',' + str(self.per_rr[i_rr].per_prov[i_prov])
         s += "\n"
@@ -192,6 +198,8 @@ class flux_cc_as:
             self.per_prov[i_prov] += 1
         if is_new_rr:
             self.per_rr[i_rr].total += 1
+        if i_prov == 0:
+            self.per_rr[i_rr].isp_reps += 1
         if is_new_prov_rr:
             self.per_rr[i_rr].per_prov[i_prov] += 1
 
@@ -279,9 +287,9 @@ class flux_log:
 
 flux_columns = [
     "CC", "AS", "start", "uids", "nb_isp", "nb_pdns", "nb_others",
-    "nb_A", "nb_A_isp", "nb_A_pdns", "nb_A_others",
-    "nb_AAAA", "nb_AAAA_isp", "nb_AAAA_pdns", "nb_AAAA_others",
-    "nb_HTTPS", "nb_HTTPS_isp", "nb_HTTPS_pdns", "nb_HTTPS_others",
+    "nb_A", "nb_A_isp_reps", "nb_A_isp", "nb_A_pdns", "nb_A_others",
+    "nb_AAAA", "nb_AAAA_isp_reps", "nb_AAAA_isp", "nb_AAAA_pdns", "nb_AAAA_others",
+    "nb_HTTPS", "nb_HTTPS_isp_reps", "nb_HTTPS_isp", "nb_HTTPS_pdns", "nb_HTTPS_others",
 ]
 
 class flux_row:
@@ -294,14 +302,17 @@ class flux_row:
         self.nb_pdns = row['nb_pdns']
         self.nb_others = row['nb_others']
         self.nb_A = row['nb_A']
+        self.nb_A_isp_reps = row['nb_A_isp_reps']
         self.nb_A_isp = row['nb_A_isp']
         self.nb_A_pdns = row['nb_A_pdns']
         self.nb_A_others = row['nb_A_others']
         self.nb_AAAA = row['nb_AAAA']
+        self.nb_AAAA_isp_reps = row['nb_AAAA_isp_reps']
         self.nb_AAAA_isp = row['nb_AAAA_isp']
         self.nb_AAAA_pdns = row['nb_AAAA_pdns']
         self.nb_AAAA_others = row['nb_AAAA_others']
         self.nb_HTTPS = row['nb_HTTPS']
+        self.nb_HTTPS_isp_reps = row['nb_HTTPS_isp_reps']
         self.nb_HTTPS_isp = row['nb_HTTPS_isp']
         self.nb_HTTPS_pdns = row['nb_HTTPS_pdns']
         self.nb_HTTPS_others = row['nb_HTTPS_others']
@@ -312,14 +323,17 @@ class flux_row:
         self.nb_pdns += row['nb_pdns']
         self.nb_others += row['nb_others']
         self.nb_A += row['nb_A']
+        self.nb_A_isp_reps += row['nb_A_isp_reps']
         self.nb_A_isp += row['nb_A_isp']
         self.nb_A_pdns += row['nb_A_pdns']
         self.nb_A_others += row['nb_A_others']
         self.nb_AAAA += row['nb_AAAA']
+        self.nb_AAAA_isp_reps += row['nb_AAAA_isp_reps']
         self.nb_AAAA_isp += row['nb_AAAA_isp']
         self.nb_AAAA_pdns += row['nb_AAAA_pdns']
         self.nb_AAAA_others += row['nb_AAAA_others']
         self.nb_HTTPS += row['nb_HTTPS']
+        self.nb_HTTPS_isp_reps += row['nb_HTTPS_isp_reps']
         self.nb_HTTPS_isp += row['nb_HTTPS_isp']
         self.nb_HTTPS_pdns += row['nb_HTTPS_pdns']
         self.nb_HTTPS_others += row['nb_HTTPS_others']
@@ -363,14 +377,17 @@ class flux_cc_as2:
                 s += str(r_row.nb_pdns) + ","
                 s += str(r_row.nb_others) + ","
                 s += str(r_row.nb_A) + ","
+                s += str(r_row.nb_A_isp_reps) + ","
                 s += str(r_row.nb_A_isp) + ","
                 s += str(r_row.nb_A_pdns) + ","
                 s += str(r_row.nb_A_others) + ","
                 s += str(r_row.nb_AAAA) + ","
+                s += str(r_row.nb_AAAA_isp_reps) + ","
                 s += str(r_row.nb_AAAA_isp) + ","
                 s += str(r_row.nb_AAAA_pdns) + ","
                 s += str(r_row.nb_AAAA_others) + ","
                 s += str(r_row.nb_HTTPS) + ","
+                s += str(r_row.nb_HTTPS_isp_reps) + ","
                 s += str(r_row.nb_HTTPS_isp) + ","
                 s += str(r_row.nb_HTTPS_pdns) + ","
                 s += str(r_row.nb_HTTPS_others) + ","
@@ -384,14 +401,17 @@ class flux_cc_as2:
         nb_pdns = 0
         nb_others = 0
         nb_A = 0
+        nb_A_isp_reps = 0
         nb_A_isp = 0
         nb_A_pdns = 0
         nb_A_others = 0
         nb_AAAA = 0
+        nb_AAAA_isp_reps = 0
         nb_AAAA_isp = 0
         nb_AAAA_pdns = 0
         nb_AAAA_others = 0
         nb_HTTPS = 0
+        nb_HTTPS_isp_reps = 0
         nb_HTTPS_isp = 0
         nb_HTTPS_pdns = 0
         nb_HTTPS_others = 0
@@ -405,14 +425,17 @@ class flux_cc_as2:
             nb_pdns += r_row.nb_pdns
             nb_others += r_row.nb_others
             nb_A += r_row.nb_A
+            nb_A_isp_reps += r_row.nb_A_isp_reps
             nb_A_isp += r_row.nb_A_isp
             nb_A_pdns += r_row.nb_A_pdns
             nb_A_others += r_row.nb_A_others
             nb_AAAA += r_row.nb_AAAA
+            nb_AAAA_isp_reps += r_row.nb_AAAA_isp_reps
             nb_AAAA_isp += r_row.nb_AAAA_isp
             nb_AAAA_pdns += r_row.nb_AAAA_pdns
             nb_AAAA_others += r_row.nb_AAAA_others
             nb_HTTPS += r_row.nb_HTTPS
+            nb_HTTPS_isp_reps += r_row.nb_HTTPS_isp_reps
             nb_HTTPS_isp += r_row.nb_HTTPS_isp
             nb_HTTPS_pdns += r_row.nb_HTTPS_pdns
             nb_HTTPS_others += r_row.nb_HTTPS_others
@@ -426,14 +449,17 @@ class flux_cc_as2:
             nb_pdns,
             nb_others,
             nb_A,
+            nb_A_isp_reps,
             nb_A_isp,
             nb_A_pdns,
             nb_A_others,
             nb_AAAA,
+            nb_AAAA_isp_reps,
             nb_AAAA_isp,
             nb_AAAA_pdns,
             nb_AAAA_others,
             nb_HTTPS,
+            nb_HTTPS_isp_reps,
             nb_HTTPS_isp,
             nb_HTTPS_pdns,
             nb_HTTPS_others
