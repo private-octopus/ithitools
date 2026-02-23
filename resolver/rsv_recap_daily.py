@@ -103,7 +103,7 @@ if __name__ == "__main__":
         item = item[:-4]
         if item.startswith("queries"):
             item = item[7:]
-        output_file = os.path.join(temp_dir, "recap-daily" + item + ".csv")
+        output_file = os.path.join(temp_dir, "recap2-daily" + item + ".csv")
         bucket = file_bucket(ip2a4, ip2a6, as_names, output_file, source_file, bucket_id, time_loaded)
         bucket_list.append(bucket)
         bucket_id += 1
@@ -132,7 +132,7 @@ if __name__ == "__main__":
     nb_files = 0
     for key in rcl.cc_as_list:
         if rcl.cc_as_list[key].total_uids > 10000:
-            as_file = os.path.join(output_dir, "recap-" + 
+            as_file = os.path.join(output_dir, "recap2-" + 
                                    rcl.cc_as_list[key].query_cc + "-" + 
                                    rcl.cc_as_list[key].query_AS + ".csv")
             rcl.cc_as_list[key].save_file(as_file)
@@ -140,7 +140,7 @@ if __name__ == "__main__":
             nb_files += 1
     print("Saved " + str(nb_files) + " CC/AS files.")
     
-    summary_file = os.path.join(output_dir, "recap-summary.csv")
+    summary_file = os.path.join(output_dir, "recap2-summary.csv")
     df = rcl.summary_df()
     df.to_csv(summary_file)
     print("Saved " + str(df.shape[0]) + " CC/AS summaries in " + summary_file)
