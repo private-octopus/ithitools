@@ -456,9 +456,11 @@ class recap_row:
         self.nb_A_ISP = row['nb_A_ISP']
         self.nb_A_PDNS = row['nb_A_PDNS']
         self.nb_A_others = row['nb_A_others']
+        self.nb_A_under = [
+            [ 0, 0, 0], [ 0, 0, 0], [ 0, 0, 0], [ 0, 0, 0], [ 0, 0, 0]]
         for i in range(0,5):
             for prov_index in range(0,3):
-                self.nb_A_under[1][prov_index] = row[recap_row.under_names[i][prov_index]]
+                self.nb_A_under[i][prov_index] = row[recap_row.under_names[i][prov_index]]
         self.zombies = row['zombies']
         self.z_ISP = row['z_ISP']
         self.z_PDNS = row['z_PDNS']
