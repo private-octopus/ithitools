@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
 
     # All the buckets have been processed. Now, create the tables.
-    rcape_prefix="recap2-"
+    recap_prefix="recap2-"
     rcl = recap_lines()
     flist =  os.listdir(output_dir)
     recap_files = [f for f in flist if f.startswith(recap_prefix)]
