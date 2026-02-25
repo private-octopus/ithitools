@@ -159,6 +159,7 @@ class summaries:
                         print ("Found " + str(len(summary_files)) + " summaries in " + day_dir)
                     else:
                         file_path = os.path.join(day_dir, summary_files[0])
+                        print("Adding: " + file_path)
                         self.add_file(year, month, day, file_path)
 
     def save(self, year, month, month_dir, table_name):
