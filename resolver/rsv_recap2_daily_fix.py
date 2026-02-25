@@ -20,7 +20,7 @@ import concurrent.futures
 
 def usage():
     print("Usage: python rsv_recap2_daily_fix.py <output_dir>\n")
-    print("This script will parse the per log summaries, \")
+    print("This script will parse the per log summaries, ")
     print("find all slices for a given CC/AS combination, and then create")
     print("in the output directory a file for each CC/AS that has > 10,000")
     print("events")
