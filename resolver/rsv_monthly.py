@@ -131,6 +131,7 @@ class summaries:
             self.monthly_per_day[key].add(row)
 
     def add_file(self, year, month, day, file_path):
+        print("Reading: " + file_path)
         df = pd.read_csv(file_path)
         df.apply(lambda row: self.add_cc_as(row),axis=1)
         df.apply(lambda row: self.add_daily(row, year, month, day),axis=1)
@@ -158,8 +159,8 @@ class summaries:
                     if len(summary_files) != 1:
                         print ("Found " + str(len(summary_files)) + " summaries in " + day_dir)
                     else:
+                        print("Adding: " + summary_files[0])
                         file_path = os.path.join(day_dir, summary_files[0])
-                        print("Adding: " + file_path)
                         self.add_file(year, month, day, file_path)
 
     def save(self, year, month, month_dir, table_name):
