@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
     for rcf in recap_files:
         rcp = os.path.join(output_dir,rcf)
-        rcl.load_recap(bucket.output_file)
+        rcl.load_recap(rcp)
 
     #nb_files = 0
     #for key in rcl.cc_as_list:
