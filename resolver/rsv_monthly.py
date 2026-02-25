@@ -139,15 +139,16 @@ class summaries:
         #print("Days: " + str(len(self.monthly_per_day)))
 
     def load_day(self, month_dir, file_name, year, month, prefix):
+        print("Try: " + file_name)
         day_dir = ""
-        if file_name[-3] == '-' and file_name.startswith(prefix):
+        if file_name[-3] == '-':
             day = file_name[-2:]
             try:
                 day_num = int(day)
             except:
                 day_num = -1
             if day_num < 0 or day_num > 31:
-                print("Bad day file name: " + day + " (" + file_name + ")")
+                print("Bad day dir name: " + day + " (" + file_name + ")")
             else:
                 day_dir = os.path.join(month_dir, file_name)
                 if not os.path.isdir(day_dir):
@@ -227,6 +228,7 @@ recap_dirs = [f for f in m_list if f.startswith(recap_prefix)]
 flux_dirs = [f for f in m_list if f.startswith(flux_prefix)]
 
 for dir_name in recap_dirs:
+    print(dir_name)
     recap_summaries.load_day(month_dir, dir_name, year, month, "recap2-")
 recap_summaries.save(year, month, month_dir, 'recap')
 
