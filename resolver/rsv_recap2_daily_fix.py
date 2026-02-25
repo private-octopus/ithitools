@@ -47,21 +47,21 @@ if __name__ == "__main__":
     recap_files = [f for f in flist if f.startswith(recap_prefix)]
 
     print(recap_files)
-    exit()
 
-    for bucket in bucket_list:
+    for rcf in recap_files:
+        rcp = os.path.join(output_dir,rcf)
         rcl.load_recap(bucket.output_file)
 
-    nb_files = 0
-    for key in rcl.cc_as_list:
-        if rcl.cc_as_list[key].total_uids > 10000:
-            as_file = os.path.join(output_dir, "recap2-" + 
-                                   rcl.cc_as_list[key].query_cc + "-" + 
-                                   rcl.cc_as_list[key].query_AS + ".csv")
-            rcl.cc_as_list[key].save_file(as_file)
-            print("Saved: " + str(len(rcl.cc_as_list[key].slices)) + " slice in " + as_file)
-            nb_files += 1
-    print("Saved " + str(nb_files) + " CC/AS files.")
+    #nb_files = 0
+    #for key in rcl.cc_as_list:
+    #    if rcl.cc_as_list[key].total_uids > 10000:
+    #        as_file = os.path.join(output_dir, "recap-" + 
+    #                               rcl.cc_as_list[key].query_cc + "-" + 
+    #                               rcl.cc_as_list[key].query_AS + ".csv")
+    #        rcl.cc_as_list[key].save_file(as_file)
+    #        print("Saved: " + str(len(rcl.cc_as_list[key].slices)) + " slice in " + as_file)
+    #        nb_files += 1
+    #print("Saved " + str(nb_files) + " CC/AS files.")
     
     summary_file = os.path.join(output_dir, "recap2-summary.csv")
     df = rcl.summary_df()
