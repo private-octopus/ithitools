@@ -138,9 +138,9 @@ class summaries:
         #print("ISP: " + str(len(self.monthly_per_isp)))
         #print("Days: " + str(len(self.monthly_per_day)))
 
-    def load_day(self, month_dir, file_name, year, month):
+    def load_day(self, month_dir, file_name, year, month, prefix):
         day_dir = ""
-        if file_name[-3] == '-':
+        if file_name[-3] == '-' and file_name.startswith(prefix):
             day = file_name[-2:]
             try:
                 day_num = int(day)
@@ -227,10 +227,10 @@ recap_dirs = [f for f in m_list if f.startswith(recap_prefix)]
 flux_dirs = [f for f in m_list if f.startswith(flux_prefix)]
 
 for dir_name in recap_dirs:
-    recap_summaries.load_day(month_dir, dir_name, year, month)
+    recap_summaries.load_day(month_dir, dir_name, year, month, "recap2-")
 recap_summaries.save(year, month, month_dir, 'recap')
 
 for dir_name in flux_dirs:
-    flux_summaries.load_day(month_dir, dir_name, year, month)
+    flux_summaries.load_day(month_dir, dir_name, year, month, "flux-")
 flux_summaries.save(year, month, month_dir, 'flux')
 
