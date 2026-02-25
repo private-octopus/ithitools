@@ -46,7 +46,7 @@ if __name__ == "__main__":
     flist =  os.listdir(output_dir)
     recap_files = [f for f in flist if f.startswith(recap_prefix)]
 
-    print recap_files
+    print(recap_files)
     exit()
 
     for bucket in bucket_list:
