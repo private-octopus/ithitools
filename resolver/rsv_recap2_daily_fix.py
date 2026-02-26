@@ -51,6 +51,7 @@ if __name__ == "__main__":
 
     for rcf in recap_files:
         if rcf.startswith(recap_summa_prefix):
+            print("Skipping: " + rcf)
             continue
         rcp = os.path.join(output_dir,rcf)
         rcl.load_recap(rcp)
