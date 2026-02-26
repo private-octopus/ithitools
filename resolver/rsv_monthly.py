@@ -155,7 +155,7 @@ class summaries:
                 if not os.path.isdir(day_dir):
                     print("Not a directory: " + day_dir)
                 else:
-                    summary_files = [ f for f in os.listdir(day_dir) if f.endswith("-summary.csv") ]
+                    summary_files = [ f for f in os.listdir(day_dir) if f.endswith("-summary.csv") and f.startswith(prefix) ]
                     if len(summary_files) != 1:
                         print ("Found " + str(len(summary_files)) + " summaries in " + day_dir)
                     else:
