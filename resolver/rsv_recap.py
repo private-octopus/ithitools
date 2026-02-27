@@ -133,7 +133,7 @@ class recap_cc_as:
             self.previous_slice.nb_A_prov[i] = self.nb_A_prov[i]
         for i in range(0,5):
             for j in range(0,3):
-                self.previous_slice.nb_A_under[i][j] += self.nb_A_under[i][j]
+                self.previous_slice.nb_A_under[i][j] = self.nb_A_under[i][j]
         for i in range(0,4):
             self.previous_slice.zombie[i] = self.zombie[i]
         self.previous_slice.first_3s = self.first_3s
@@ -209,12 +209,12 @@ class recap_cc_as:
                 prov_index = 1
             else:
                 prov_index = 2
-            r_uid.nb_A_prov[prov_index] += 1
             if delta_t <= cutoff_delay:
                 r_uid.has_A_prov[prov_index] = True
             for i in range(0, len(delta_range)):
                 if delta_t <= delta_range[i]:
                     r_uid.nb_A_under[i][prov_index] += 1
+                    r_uid.nb_A_prov[prov_index] += 1
                     break
 
     def get_header():
@@ -298,7 +298,7 @@ class recap_cc_as:
                 self.zombie[2] += 1
             else:
                 self.zombie[3] += 1
-        elif delta_first < 30:
+        else:
             if uid in self.previous_slice.uids:
                 self.previous_slice.update_uid(self.previous_slice.uids[uid], query_time, rr_type, resolver_tag)
             else:
@@ -517,6 +517,7 @@ class recap_cc_as2:
         self.total_pdns = [ 0, 0, 0, 0, 0, 0, 0 ]
         self.top_pdns = [ 0, 1, 2 ]
         self.skipped_pdns = [ ]
+        self.nb_A_under = [[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ]]
 
     def add_row(self, row):
         self.total_uids += row['uids']
@@ -558,7 +559,7 @@ class recap_cc_as2:
 
     def save_file(self, file_name):
         self.evaluate()
-
+        print("Saving " + file_name)
         with open(file_name, "wt") as F:
             headers = self.get_columns()
             s = ""
