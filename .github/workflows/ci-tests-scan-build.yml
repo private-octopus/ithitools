@@ -28,6 +28,7 @@ jobs:
 
       - name: Run cmake and scan
         run: |
+            sudo apt-get update
             sudo apt-get install clangd
             sudo apt-get install -y clang-tools
             echo $CC
