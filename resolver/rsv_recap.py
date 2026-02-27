@@ -66,7 +66,7 @@ pdns_names = [
     'he'
 ]
 
-cutoff_delay = 0.25
+cutoff_delay = 0.3
 
 class recap_uid:
     def __init__(self, query_time, rr_type, resolver_tag):
@@ -76,6 +76,7 @@ class recap_uid:
         self.has_A = False
         self.has_A_prov = [False, False, False]
         self.nb_A_prov = [0, 0, 0]
+        self.nb_A_under = [[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ]]
         self.first_time_A = 0
 
 class recap_cc_as:
@@ -184,9 +185,14 @@ class recap_cc_as:
                         pattern_id += (1<<i);
                     self.nb_A_prov[i] += r_uid.nb_A_prov[i]
                 #print("Summarize pattern: " + str(pattern_id))
-                self.nb_A_pattern[pattern_id-1] += 1
+                if pattern_id > 0:
+                    self.nb_A_pattern[pattern_id-1] += 1
+                for i in range(0, 5):
+                    for j in range(0,3):
+                        self.nb_A_under[i][j] += r_uid.nb_A_under[i][j]
 
     def update_uid(self, r_uid, query_time, rr_type, resolver_tag):
+        #update_uid is only called if the delat to time stamp is less than 30s.
         delta_range = [ 0.3, 1, 3, 10, 30 ]
         if rr_type == 'HTTPS':
             r_uid.has_https = True
@@ -208,7 +214,7 @@ class recap_cc_as:
                 r_uid.has_A_prov[prov_index] = True
             for i in range(0, len(delta_range)):
                 if delta_t <= delta_range[i]:
-                    self.nb_A_under[i][prov_index] += 1
+                    r_uid.nb_A_under[i][prov_index] += 1
                     break
 
     def get_header():
@@ -216,13 +222,13 @@ class recap_cc_as:
         for pdns_name in pdns_names:
             s += pdns_name  + ','
         s += 'first_others,nb_https,nb_AAAA,nb_A,'
-        s += 'A_ISP_only, A_PDNS_only, A_ISP_PDNS, A_others_only, A_ISP_others, A_PDNS_others, A_all3,'
-        s += 'nb_A_ISP, nb_A_PDNS, nb_A_others,'
-        s += 'nb_A_u300ms_ISP, nb_A_u300ms_PDNS, nb_A_u300ms_others,'
-        s += 'nb_A_u1s_ISP, nb_A_u1s_PDNS, nb_A_u1s_others,'
-        s += 'nb_A_u3s_ISP, nb_A_u3s_PDNS, nb_A_u3s_others,'
-        s += 'nb_A_u10s_ISP, nb_A_u10s_PDNS, nb_A_u10s_others,'
-        s += 'nb_A_u30s_ISP, nb_A_u30s_PDNS, nb_A_u30s_others,'
+        s += 'A_ISP_only,A_PDNS_only,A_ISP_PDNS,A_others_only,A_ISP_others,A_PDNS_others,A_all3,'
+        s += 'nb_A_ISP,nb_A_PDNS,nb_A_others,'
+        s += 'nb_A_u300ms_ISP,nb_A_u300ms_PDNS,nb_A_u300ms_others,'
+        s += 'nb_A_u1s_ISP,nb_A_u1s_PDNS,nb_A_u1s_others,'
+        s += 'nb_A_u3s_ISP,nb_A_u3s_PDNS,nb_A_u3s_others,'
+        s += 'nb_A_u10s_ISP,nb_A_u10s_PDNS,nb_A_u10s_others,'
+        s += 'nb_A_u30s_ISP,nb_A_u30s_PDNS,nb_A_u30s_others,'
         s += 'zombies,z_ISP,z_PDNS,z_others,first_3s,first_10s,sum_delay,max_delay' + '\n'
         return s
 
@@ -397,8 +403,8 @@ recap_columns = [
     'CC', 'AS', 'start', 'uids', 'first_isp',
     'googlepdns', 'cloudflare', 'opendns', 'quad9', 'level3', 'neustar', 'he',
     'first_others', 'nb_https', 'nb_AAAA', 'nb_A',
-    'A_ISP_only', ' A_PDNS_only', ' A_ISP_PDNS', ' A_others_only', ' A_ISP_others', ' A_PDNS_others', ' A_all3',
-    'nb_A_ISP', ' nb_A_PDNS', ' nb_A_others',
+    'A_ISP_only', 'A_PDNS_only', 'A_ISP_PDNS', 'A_others_only', 'A_ISP_others', 'A_PDNS_others', 'A_all3',
+    'nb_A_ISP', 'nb_A_PDNS', 'nb_A_others',
     'nb_A_u300ms_ISP', 'nb_A_u300ms_PDNS', 'nb_A_u300ms_others',
     'nb_A_u1s_ISP', 'nb_A_u1s_PDNS', 'nb_A_u1s_others',
     'nb_A_u3s_ISP', 'nb_A_u3s_PDNS', 'nb_A_u3s_others',
@@ -612,8 +618,8 @@ class recap_cc_as2:
         columns = [ "CC", "AS", 'start', 'uids', 'first_isp',
             'googlepdns', 'cloudflare', 'opendns', 'quad9', 'level3', 'neustar', 'he',
             'first_others', 'nb_https', 'nb_AAAA', 'nb_A',
-            'A_ISP_only', ' A_PDNS_only', ' A_ISP_PDNS', ' A_others_only', ' A_ISP_others', ' A_PDNS_others', ' A_all3',
-            'nb_A_ISP', ' nb_A_PDNS', ' nb_A_others',
+            'A_ISP_only', 'A_PDNS_only', 'A_ISP_PDNS', 'A_others_only', 'A_ISP_others', 'A_PDNS_others', 'A_all3',
+            'nb_A_ISP', 'nb_A_PDNS', 'nb_A_others',
             'nb_A_u300ms_ISP', 'nb_A_u300ms_PDNS', 'nb_A_u300ms_others',
             'nb_A_u1s_ISP', 'nb_A_u1s_PDNS', 'nb_A_u1s_others',
             'nb_A_u3s_ISP', 'nb_A_u3s_PDNS', 'nb_A_u3s_others',
