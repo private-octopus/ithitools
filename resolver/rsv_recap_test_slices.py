@@ -23,8 +23,8 @@ def check_row(r):
         exit()
     for key in isp_A_uids:
         sum_uids += r[key]
-    if sum_uids > r['nb_A_u300ms_ISP']:
-        print("r[nb_A_u300ms_ISP] = " + str(r['nb_A_u300ms_ISP']) + " < sum of uids " + str(sum_uids))
+    if sum_uids > sum_slices:
+        print("sum of slices = " + str(r['sum_slices']) + " < sum of A uids " + str(sum_uids))
         print(r)
         exit()
 

@@ -465,8 +465,8 @@ class recap_row:
         self.nb_A_under = [
             [ 0, 0, 0], [ 0, 0, 0], [ 0, 0, 0], [ 0, 0, 0], [ 0, 0, 0]]
         for i in range(0,5):
-            for prov_index in range(0,3):
-                self.nb_A_under[i][prov_index] = row[recap_row.under_names[i][prov_index]]
+            for j in range(0,3):
+                self.nb_A_under[i][j] = row[recap_row.under_names[i][j]]
         self.zombies = row['zombies']
         self.z_ISP = row['z_ISP']
         self.z_PDNS = row['z_PDNS']
@@ -496,8 +496,8 @@ class recap_row:
         self.nb_A_PDNS += row['nb_A_PDNS']
         self.nb_A_others += row['nb_A_others']
         for i in range(0,5):
-            for prov_index in range(0,3):
-                self.nb_A_under[1][prov_index] += row[recap_row.under_names[i][prov_index]]
+            for j in range(0,3):
+                self.nb_A_under[i][j] += row[recap_row.under_names[i][j]]
         self.zombies += row['zombies']
         self.z_ISP += row['z_ISP']
         self.z_PDNS += row['z_PDNS']
@@ -559,7 +559,7 @@ class recap_cc_as2:
 
     def save_file(self, file_name):
         self.evaluate()
-        print("Saving " + file_name)
+        print("Saving cc as2" + file_name)
         with open(file_name, "wt") as F:
             headers = self.get_columns()
             s = ""
@@ -597,8 +597,8 @@ class recap_cc_as2:
                 s += str(r_row.nb_A_PDNS) + ","
                 s += str(r_row.nb_A_others) + ","           
                 for i in range(0,5):
-                    for prov_index in range(0,3):
-                        s += str(self.nb_A_under[1][prov_index])
+                    for j in range(0,3):
+                        s += str(r_row.nb_A_under[i][j]) + ","
                 s += str(r_row.zombies) + ","
                 s += str(r_row.z_ISP) + ","
                 s += str(r_row.z_PDNS) + ","
