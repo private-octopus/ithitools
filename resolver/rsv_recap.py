@@ -66,7 +66,7 @@ pdns_names = [
     'he'
 ]
 
-cutoff_delay = 0.25
+cutoff_delay = 0.3
 
 class recap_uid:
     def __init__(self, query_time, rr_type, resolver_tag):
@@ -76,6 +76,7 @@ class recap_uid:
         self.has_A = False
         self.has_A_prov = [False, False, False]
         self.nb_A_prov = [0, 0, 0]
+        self.nb_A_under = [[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ]]
         self.first_time_A = 0
 
 class recap_cc_as:
@@ -95,6 +96,8 @@ class recap_cc_as:
         self.nb_A_pattern = [ 0, 0, 0, 0, 0, 0, 0 ]
         # vector of duplicates (ISP, PDNS, Other)
         self.nb_A_prov = [ 0, 0, 0 ]
+        # vector of count (ISP, PDNS, Others) by time slices (0-300ms-1s-3s-10s-30s)
+        self.nb_A_under = [[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ]]
         self.zombie = [ 0, 0, 0, 0]
         self.first_3s = 0
         self.first_10s = 0
@@ -128,6 +131,9 @@ class recap_cc_as:
             self.previous_slice.nb_A_pattern[i] = self.nb_A_pattern[i]
         for i in range(0,3):
             self.previous_slice.nb_A_prov[i] = self.nb_A_prov[i]
+        for i in range(0,5):
+            for j in range(0,3):
+                self.previous_slice.nb_A_under[i][j] = self.nb_A_under[i][j]
         for i in range(0,4):
             self.previous_slice.zombie[i] = self.zombie[i]
         self.previous_slice.first_3s = self.first_3s
@@ -150,6 +156,9 @@ class recap_cc_as:
             self.nb_A_pattern[i] = 0
         for i in range(0,3):
             self.nb_A_prov[i] = 0
+        for i in range(0,5):
+            for j in range(0,3):
+                self.nb_A_under[i][j] = 0
         self.zombie = [ 0, 0, 0, 0]
         self.first_3s = 0
         self.first_10s = 0
@@ -176,9 +185,15 @@ class recap_cc_as:
                         pattern_id += (1<<i);
                     self.nb_A_prov[i] += r_uid.nb_A_prov[i]
                 #print("Summarize pattern: " + str(pattern_id))
-                self.nb_A_pattern[pattern_id-1] += 1
+                if pattern_id > 0:
+                    self.nb_A_pattern[pattern_id-1] += 1
+                for i in range(0, 5):
+                    for j in range(0,3):
+                        self.nb_A_under[i][j] += r_uid.nb_A_under[i][j]
 
     def update_uid(self, r_uid, query_time, rr_type, resolver_tag):
+        #update_uid is only called if the delat to time stamp is less than 30s.
+        delta_range = [ 0.3, 1, 3, 10, 30 ]
         if rr_type == 'HTTPS':
             r_uid.has_https = True
         elif rr_type == 'AAAA':
@@ -194,17 +209,26 @@ class recap_cc_as:
                 prov_index = 1
             else:
                 prov_index = 2
-            r_uid.nb_A_prov[prov_index] += 1
             if delta_t <= cutoff_delay:
                 r_uid.has_A_prov[prov_index] = True
+            for i in range(0, len(delta_range)):
+                if delta_t <= delta_range[i]:
+                    r_uid.nb_A_under[i][prov_index] += 1
+                    r_uid.nb_A_prov[prov_index] += 1
+                    break
 
     def get_header():
         s = "CC,AS,start,uids,first_isp,"
         for pdns_name in pdns_names:
             s += pdns_name  + ','
         s += 'first_others,nb_https,nb_AAAA,nb_A,'
-        s += 'A_ISP_only, A_PDNS_only, A_ISP_PDNS, A_others_only, A_ISP_others, A_PDNS_others, A_all3,'
-        s += 'nb_A_ISP, nb_A_PDNS, nb_A_others,'
+        s += 'A_ISP_only,A_PDNS_only,A_ISP_PDNS,A_others_only,A_ISP_others,A_PDNS_others,A_all3,'
+        s += 'nb_A_ISP,nb_A_PDNS,nb_A_others,'
+        s += 'nb_A_u300ms_ISP,nb_A_u300ms_PDNS,nb_A_u300ms_others,'
+        s += 'nb_A_u1s_ISP,nb_A_u1s_PDNS,nb_A_u1s_others,'
+        s += 'nb_A_u3s_ISP,nb_A_u3s_PDNS,nb_A_u3s_others,'
+        s += 'nb_A_u10s_ISP,nb_A_u10s_PDNS,nb_A_u10s_others,'
+        s += 'nb_A_u30s_ISP,nb_A_u30s_PDNS,nb_A_u30s_others,'
         s += 'zombies,z_ISP,z_PDNS,z_others,first_3s,first_10s,sum_delay,max_delay' + '\n'
         return s
 
@@ -225,6 +249,9 @@ class recap_cc_as:
             s += str(pattern_total) + ','
         for dups_total in self.nb_A_prov:
             s += str(dups_total) + ','
+        for i in range(0,5):
+            for prov_index in range(0,3):
+                s += str(self.nb_A_under[i][prov_index]) + ','
         for z in self.zombie:
             s += str(z) + ','
         s += str(self.first_3s) + ',' + str(self.first_10s) + ','
@@ -271,7 +298,7 @@ class recap_cc_as:
                 self.zombie[2] += 1
             else:
                 self.zombie[3] += 1
-        elif delta_first < 30:
+        else:
             if uid in self.previous_slice.uids:
                 self.previous_slice.update_uid(self.previous_slice.uids[uid], query_time, rr_type, resolver_tag)
             else:
@@ -376,8 +403,13 @@ recap_columns = [
     'CC', 'AS', 'start', 'uids', 'first_isp',
     'googlepdns', 'cloudflare', 'opendns', 'quad9', 'level3', 'neustar', 'he',
     'first_others', 'nb_https', 'nb_AAAA', 'nb_A',
-    'A_ISP_only', ' A_PDNS_only', ' A_ISP_PDNS', ' A_others_only', ' A_ISP_others', ' A_PDNS_others', ' A_all3',
-    'nb_A_ISP', ' nb_A_PDNS', ' nb_A_others',
+    'A_ISP_only', 'A_PDNS_only', 'A_ISP_PDNS', 'A_others_only', 'A_ISP_others', 'A_PDNS_others', 'A_all3',
+    'nb_A_ISP', 'nb_A_PDNS', 'nb_A_others',
+    'nb_A_u300ms_ISP', 'nb_A_u300ms_PDNS', 'nb_A_u300ms_others',
+    'nb_A_u1s_ISP', 'nb_A_u1s_PDNS', 'nb_A_u1s_others',
+    'nb_A_u3s_ISP', 'nb_A_u3s_PDNS', 'nb_A_u3s_others',
+    'nb_A_u10s_ISP', 'nb_A_u10s_PDNS', 'nb_A_u10s_others',
+    'nb_A_u30s_ISP', 'nb_A_u30s_PDNS', 'nb_A_u30s_others',
     'zombies', 'z_ISP', 'z_PDNS', 'z_others',
     'first_3s', 'first_10s', 'sum_delay', 'max_delay'
 ]
@@ -388,6 +420,11 @@ recap_first_columns =  [
 recap_final_columns = [ 'nb_https', 'nb_AAAA', 'nb_A',
     'A_ISP_only', 'A_PDNS_only', 'A_ISP_PDNS', 'A_others_only', 'A_ISP_others', 'A_PDNS_others', 'A_all3',
     'nb_A_ISP', 'nb_A_PDNS', 'nb_A_others',
+    'nb_A_u300ms_ISP', 'nb_A_u300ms_PDNS', 'nb_A_u300ms_others',
+    'nb_A_u1s_ISP', 'nb_A_u1s_PDNS', 'nb_A_u1s_others',
+    'nb_A_u3s_ISP', 'nb_A_u3s_PDNS', 'nb_A_u3s_others',
+    'nb_A_u10s_ISP', 'nb_A_u10s_PDNS', 'nb_A_u10s_others',
+    'nb_A_u30s_ISP', 'nb_A_u30s_PDNS', 'nb_A_u30s_others',
     'zombies', 'z_ISP', 'z_PDNS', 'z_others',
     'first_3s', 'first_10s', 'sum_delay'
 ]
@@ -396,6 +433,12 @@ recap_pdns = [
     'googlepdns', 'cloudflare', 'opendns', 'quad9', 'level3', 'neustar', 'he' ]
 
 class recap_row:
+    under_names = [ 
+        ['nb_A_u300ms_ISP', 'nb_A_u300ms_PDNS', 'nb_A_u300ms_others'],
+        ['nb_A_u1s_ISP', 'nb_A_u1s_PDNS', 'nb_A_u1s_others'],
+        ['nb_A_u3s_ISP', 'nb_A_u3s_PDNS', 'nb_A_u3s_others'],
+        ['nb_A_u10s_ISP', 'nb_A_u10s_PDNS', 'nb_A_u10s_others'],
+        ['nb_A_u30s_ISP', 'nb_A_u30s_PDNS', 'nb_A_u30s_others']]
     def __init__(self, row):
         self.query_cc = row['CC']
         self.query_AS = row['AS']
@@ -419,6 +462,11 @@ class recap_row:
         self.nb_A_ISP = row['nb_A_ISP']
         self.nb_A_PDNS = row['nb_A_PDNS']
         self.nb_A_others = row['nb_A_others']
+        self.nb_A_under = [
+            [ 0, 0, 0], [ 0, 0, 0], [ 0, 0, 0], [ 0, 0, 0], [ 0, 0, 0]]
+        for i in range(0,5):
+            for j in range(0,3):
+                self.nb_A_under[i][j] = row[recap_row.under_names[i][j]]
         self.zombies = row['zombies']
         self.z_ISP = row['z_ISP']
         self.z_PDNS = row['z_PDNS']
@@ -447,6 +495,9 @@ class recap_row:
         self.nb_A_ISP += row['nb_A_ISP']
         self.nb_A_PDNS += row['nb_A_PDNS']
         self.nb_A_others += row['nb_A_others']
+        for i in range(0,5):
+            for j in range(0,3):
+                self.nb_A_under[i][j] += row[recap_row.under_names[i][j]]
         self.zombies += row['zombies']
         self.z_ISP += row['z_ISP']
         self.z_PDNS += row['z_PDNS']
@@ -466,6 +517,7 @@ class recap_cc_as2:
         self.total_pdns = [ 0, 0, 0, 0, 0, 0, 0 ]
         self.top_pdns = [ 0, 1, 2 ]
         self.skipped_pdns = [ ]
+        self.nb_A_under = [[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ]]
 
     def add_row(self, row):
         self.total_uids += row['uids']
@@ -507,7 +559,7 @@ class recap_cc_as2:
 
     def save_file(self, file_name):
         self.evaluate()
-
+        print("Saving cc as2" + file_name)
         with open(file_name, "wt") as F:
             headers = self.get_columns()
             s = ""
@@ -543,7 +595,10 @@ class recap_cc_as2:
                 s += str(r_row.A_all3) + ","
                 s += str(r_row.nb_A_ISP) + ","
                 s += str(r_row.nb_A_PDNS) + ","
-                s += str(r_row.nb_A_others) + ","
+                s += str(r_row.nb_A_others) + ","           
+                for i in range(0,5):
+                    for j in range(0,3):
+                        s += str(r_row.nb_A_under[i][j]) + ","
                 s += str(r_row.zombies) + ","
                 s += str(r_row.z_ISP) + ","
                 s += str(r_row.z_PDNS) + ","
@@ -564,8 +619,13 @@ class recap_cc_as2:
         columns = [ "CC", "AS", 'start', 'uids', 'first_isp',
             'googlepdns', 'cloudflare', 'opendns', 'quad9', 'level3', 'neustar', 'he',
             'first_others', 'nb_https', 'nb_AAAA', 'nb_A',
-            'A_ISP_only', ' A_PDNS_only', ' A_ISP_PDNS', ' A_others_only', ' A_ISP_others', ' A_PDNS_others', ' A_all3',
-            'nb_A_ISP', ' nb_A_PDNS', ' nb_A_others',
+            'A_ISP_only', 'A_PDNS_only', 'A_ISP_PDNS', 'A_others_only', 'A_ISP_others', 'A_PDNS_others', 'A_all3',
+            'nb_A_ISP', 'nb_A_PDNS', 'nb_A_others',
+            'nb_A_u300ms_ISP', 'nb_A_u300ms_PDNS', 'nb_A_u300ms_others',
+            'nb_A_u1s_ISP', 'nb_A_u1s_PDNS', 'nb_A_u1s_others',
+            'nb_A_u3s_ISP', 'nb_A_u3s_PDNS', 'nb_A_u3s_others',
+            'nb_A_u10s_ISP', 'nb_A_u10s_PDNS', 'nb_A_u10s_others',
+            'nb_A_u30s_ISP', 'nb_A_u30s_PDNS', 'nb_A_u30s_others',
             'zombies', 'z_ISP', 'z_PDNS', 'z_others',
             'first_3s', 'first_10s', 'average_delay', 'max_delay' ]
         return columns
@@ -590,6 +650,8 @@ class recap_cc_as2:
         nb_A_ISP = 0
         nb_A_PDNS = 0
         nb_A_others = 0
+        nb_A_under = [
+            [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
         zombies = 0
         z_ISP = 0
         z_PDNS = 0
@@ -623,7 +685,10 @@ class recap_cc_as2:
             nb_A_others += r_row.nb_A_others
             zombies += r_row.zombies
             z_ISP += r_row.z_ISP
-            z_PDNS += r_row.z_PDNS
+            z_PDNS += r_row.z_PDNS           
+            for i in range(0,5):
+                for j in range(0,3):
+                    nb_A_under[i][j] += r_row.nb_A_under[i][j]
             z_others += r_row.z_others
             first_3s += r_row.first_3s
             first_10s += r_row.first_10s
@@ -662,6 +727,21 @@ class recap_cc_as2:
             nb_A_ISP,
             nb_A_PDNS,
             nb_A_others,
+            nb_A_under[0][0],
+            nb_A_under[0][1],
+            nb_A_under[0][2],
+            nb_A_under[1][0],
+            nb_A_under[1][1],
+            nb_A_under[1][2],
+            nb_A_under[2][0],
+            nb_A_under[2][1],
+            nb_A_under[2][2],
+            nb_A_under[3][0],
+            nb_A_under[3][1],
+            nb_A_under[3][2],
+            nb_A_under[4][0],
+            nb_A_under[4][1],
+            nb_A_under[4][2],
             zombies,
             z_ISP,
             z_PDNS,

@@ -131,6 +131,7 @@ class summaries:
             self.monthly_per_day[key].add(row)
 
     def add_file(self, year, month, day, file_path):
+        print("Reading: " + file_path)
         df = pd.read_csv(file_path)
         df.apply(lambda row: self.add_cc_as(row),axis=1)
         df.apply(lambda row: self.add_daily(row, year, month, day),axis=1)
@@ -138,7 +139,8 @@ class summaries:
         #print("ISP: " + str(len(self.monthly_per_isp)))
         #print("Days: " + str(len(self.monthly_per_day)))
 
-    def load_day(self, month_dir, file_name, year, month):
+    def load_day(self, month_dir, file_name, year, month, prefix):
+        print("Try: " + file_name)
         day_dir = ""
         if file_name[-3] == '-':
             day = file_name[-2:]
@@ -147,16 +149,17 @@ class summaries:
             except:
                 day_num = -1
             if day_num < 0 or day_num > 31:
-                print("Bad day file name: " + day + " (" + file_name + ")")
+                print("Bad day dir name: " + day + " (" + file_name + ")")
             else:
                 day_dir = os.path.join(month_dir, file_name)
                 if not os.path.isdir(day_dir):
                     print("Not a directory: " + day_dir)
                 else:
-                    summary_files = [ f for f in os.listdir(day_dir) if f.endswith("-summary.csv") ]
+                    summary_files = [ f for f in os.listdir(day_dir) if f.endswith("-summary.csv") and f.startswith(prefix) ]
                     if len(summary_files) != 1:
                         print ("Found " + str(len(summary_files)) + " summaries in " + day_dir)
                     else:
+                        print("Adding: " + summary_files[0])
                         file_path = os.path.join(day_dir, summary_files[0])
                         self.add_file(year, month, day, file_path)
 
@@ -227,10 +230,11 @@ recap_dirs = [f for f in m_list if f.startswith(recap_prefix)]
 flux_dirs = [f for f in m_list if f.startswith(flux_prefix)]
 
 for dir_name in recap_dirs:
-    recap_summaries.load_day(month_dir, dir_name, year, month)
-recap_summaries.save(year, month, month_dir, 'recap')
+    print(dir_name)
+    recap_summaries.load_day(month_dir, dir_name, year, month, "recap2-")
+recap_summaries.save(year, month, month_dir, 'recap2')
 
 for dir_name in flux_dirs:
-    flux_summaries.load_day(month_dir, dir_name, year, month)
+    flux_summaries.load_day(month_dir, dir_name, year, month, "flux-")
 flux_summaries.save(year, month, month_dir, 'flux')
 

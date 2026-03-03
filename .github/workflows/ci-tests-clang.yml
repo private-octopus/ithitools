@@ -28,10 +28,12 @@ jobs:
           
       - name: Install xz
         run: |
-          sudo apt-get install -y xz-utils
+            sudo apt-get update
+            sudo apt-get install -y xz-utils
 
       - name: Run cmake
         run: |
+            sudo apt-get update
             sudo apt-get install clangd
             echo $CC
             echo $CXX
