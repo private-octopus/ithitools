@@ -220,21 +220,14 @@ if not os.path.isdir(month_dir):
     exit(1)
 
 recap_summaries = summaries(rsv_recap.recap_cc_as2.summary_columns())
-flux_summaries = summaries(rsv_flux.flux_cc_as2.get_columns())
 
 
 recap_prefix = "recap-" + year + "-" + month + "-"
-flux_prefix = "flux-" + year + "-" + month + "-"
 m_list = os.listdir(month_dir)
 recap_dirs = [f for f in m_list if f.startswith(recap_prefix)]
-flux_dirs = [f for f in m_list if f.startswith(flux_prefix)]
 
 for dir_name in recap_dirs:
     print(dir_name)
     recap_summaries.load_day(month_dir, dir_name, year, month, "recap2-")
 recap_summaries.save(year, month, month_dir, 'recap2')
-
-for dir_name in flux_dirs:
-    flux_summaries.load_day(month_dir, dir_name, year, month, "flux-")
-flux_summaries.save(year, month, month_dir, 'flux')
 
