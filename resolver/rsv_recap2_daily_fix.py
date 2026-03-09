@@ -81,7 +81,7 @@ if __name__ == "__main__":
             nb_files += 1
     print("Saved " + str(nb_files) + " CC/AS files.")
     
-    # summary_file = os.path.join(output_dir, "recap2-summary.csv")
-    # df = rcl.summary_df()
-    # df.to_csv(summary_file)
-    # print("Saved " + str(df.shape[0]) + " CC/AS summaries in " + summary_file)
+    summary_file = os.path.join(output_dir, "recap2-summary.csv")
+    df = rcl.summary_df()
+    df.to_csv(summary_file)
+    print("Saved " + str(df.shape[0]) + " CC/AS summaries in " + summary_file)

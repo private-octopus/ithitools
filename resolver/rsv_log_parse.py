@@ -273,7 +273,7 @@ class rsv_log_line:
     # - rr_types = [ "A", "AAAA" ]
     # - is_results = False
     # - query_ASes = [] (could be a specific set of ASes)
-    def filter(self, query_delay=10, experiment=["0du"], rr_types=["A", "AAAA"], is_results=[False], query_ASes={}):
+    def filter(self, query_delay=10, experiment=["0du"], rr_types=["A", "AAAA"], is_results=[False], check_dotnxdomain=False, query_ASes={}):
         filter_OK = True
         if query_delay > 0:
             qd = int(self.query_time) - self.query_ad_time
@@ -299,6 +299,8 @@ class rsv_log_line:
                     break
         if filter_OK and len(query_ASes) > 0:
             filter_OK = self.query_AS in query_ASes
+        if filter_OK and check_dotnxdomain:
+            filter_OK = self.server.endswith(".dotnxdomain.net");
         return filter_OK
     
     # set_resolver_AS checks the AS number associated with the source address
