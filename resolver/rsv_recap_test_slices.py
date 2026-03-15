@@ -10,7 +10,7 @@ import pandas as pd
 #import rsv_both_graphs
 import pandas as pd
 isp_A_slices = [
-            'nb_A_0ms_ISP', 
+            'nb_A_0ms_ISP',
             'nb_A_u10ms_ISP',
             'nb_A_u30ms_ISP',
             'nb_A_u100ms_ISP',
@@ -20,6 +20,42 @@ isp_A_uids =  ['A_ISP_only', 'A_ISP_PDNS', 'A_ISP_others', 'A_all3']
 
 nb_A_0ms = [ 'nb_A_0ms_ISP', 'nb_A_0ms_PDNS', 'nb_A_0ms_others']
 
+
+
+delay_columns = [
+    ['sum_deltas_A_PDNS_ISP', 'uids_A_PDNS_ISP', 'average_A_PDNS_ISP'],
+    ['sum_deltas_A_others_ISP', 'uids_A_others_ISP', 'average_A_others_ISP'],
+    ['sum_deltas_AAAA_PDNS_ISP', 'uids_AAAA_PDNS_ISP', 'average_AAAA_PDNS_ISP'],
+    ['sum_deltas_AAAA_others_ISP', 'uids_AAAA_others_ISP', 'average_AAAA_others_ISP'],
+    ['sum_deltas_HTTPS_PDNS_ISP', 'uids_HTTPS_PDNS_ISP', 'average_HTTPS_PDNS_ISP'],
+    ['sum_deltas_HTTPS_others_ISP', 'uids_HTTPS_others_ISP', 'average_HTTPS_others_ISP']]
+
+uids_columns = [
+    [ 'A_ISP_PDNS', 'A_all3', 'uids_A_PDNS_ISP' ],
+    [ 'A_ISP_others', 'A_all3', 'uids_A_others_ISP' ]]
+
+def check_average(r, headers):
+    if r[headers[1]] > 0:
+        average = r[headers[0]] / r[headers[1]]
+        if abs(average - r[headers[2]]) > 0.000001:
+            print("average " + headers[2] + " = " + str(r[headers[2]]) +
+                  " != sum_deltas/uids = " + str(average))
+            print(r)
+            exit()
+    elif r[headers[2]] != 0:
+        print("average " + headers[2] + " = " + str(r[headers[2]]) +
+              " != 0 when uids is 0.")
+        print(r)
+        exit()
+
+def check_uids(r, headers):
+    uids = r[headers[0]] + r[headers[1]]
+    if uids != r[headers[2]]:
+        print("uids " + headers[2] + " = " + str(r[headers[2]]) +
+              " != sum of columns " + headers[0] + " and " + headers[1] +
+              " = " + str(uids))
+        print(r)
+        exit()
 
 def check_row(r):
     sum_slices = 0
@@ -43,6 +79,10 @@ def check_row(r):
         print("nb_A = " + str(r['nb_A']) + " != sum of 0ms slices " + str(sum_0ms))
         print(r)
         exit()
+    for headers in uids_columns:
+        check_uids(r, headers)
+    for headers in delay_columns:
+        check_average(r, headers)
 
 
 #
@@ -51,6 +91,3 @@ df = pd.read_csv(sys.argv[1],skipinitialspace=True)
 #print(df.columns)
 df.apply(lambda row: check_row(row),axis=1)
 print("test pass.")
-
-
-

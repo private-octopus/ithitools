@@ -86,7 +86,9 @@ class recap_uid:
         self.has_A_prov = [False, False, False]
         self.nb_A_prov = [0, 0, 0]
         self.nb_A_under = [[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ]]
-        self.first_time_A = 0
+        self.first_time_A = [ 0, 0, 0 ]
+        self.first_time_AAAA = [ 0, 0, 0 ]
+        self.first_time_HTTPS = [ 0, 0, 0 ]
         self.per_RR = [ flux_uid_rr(), flux_uid_rr(), flux_uid_rr() ]
         self.has_prov = [ False, False, False ]
 
@@ -114,6 +116,89 @@ class flux_cc_as_rr:
     def __init__(self):
         self.per_prov = [ 0, 0, 0 ]
         #self.total = 0
+
+class first_delay_cc_as:
+    def __init__(self):
+        self.sum_delta_PDNS_ISP = 0
+        self.sum_delta_others_ISP = 0
+        self.uids_PDNS_ISP = 0
+        self.uids_others_ISP = 0
+        self.average_PDNS_ISP = 0
+        self.average_others_ISP = 0
+
+    def update(self, first_delays):
+        if first_delays[0] > 0:
+            if first_delays[1] > 0:
+                self.sum_delta_PDNS_ISP += first_delays[1] - first_delays[0]
+                self.uids_PDNS_ISP += 1
+            if first_delays[2] > 0:
+                self.sum_delta_others_ISP += first_delays[2] - first_delays[0]
+                self.uids_others_ISP += 1
+
+    def average(self):
+        if (self.uids_PDNS_ISP > 0):
+            self.average_PDNS_ISP = self.sum_delta_PDNS_ISP/self.uids_PDNS_ISP
+        else:
+            self.average_PDNS_ISP = 0
+        if self.uids_others_ISP > 0:
+            self.average_others_ISP = self.sum_delta_others_ISP/self.uids_others_ISP
+        else:
+            self.average_others_ISP = 0
+
+    def copy(self,other):
+        self.sum_delta_PDNS_ISP = other.sum_delta_PDNS_ISP
+        self.sum_delta_others_ISP = other.sum_delta_others_ISP
+        self.uids_PDNS_ISP = other.uids_PDNS_ISP
+        self.uids_others_ISP = other.uids_others_ISP
+        self.average_PDNS_ISP = other.average_PDNS_ISP
+        self.average_others_ISP = other.average_others_ISP
+
+    def add_delays(self, other):
+        self.sum_delta_PDNS_ISP += other.sum_delta_PDNS_ISP
+        self.sum_delta_others_ISP += other.sum_delta_others_ISP
+        self.uids_PDNS_ISP += other.uids_PDNS_ISP
+        self.uids_others_ISP += other.uids_others_ISP
+        self.average()
+
+    def to_list(self):
+        return [
+            self.sum_delta_PDNS_ISP, self.uids_PDNS_ISP, self.average_PDNS_ISP,
+            self.sum_delta_others_ISP, self.uids_others_ISP, self.average_others_ISP
+        ]
+
+    def reset(self):
+        self.sum_delta_PDNS_ISP = 0
+        self.sum_delta_others_ISP = 0
+        self.uids_PDNS_ISP = 0
+        self.uids_others_ISP = 0
+        self.average_PDNS_ISP = 0
+        self.average_others_ISP = 0
+
+    def to_str(self):
+        s = str(self.sum_delta_PDNS_ISP) + ','
+        s += str(self.uids_PDNS_ISP) + ','
+        s += str(self.average_PDNS_ISP) + ','
+        s += str(self.sum_delta_others_ISP) + ','
+        s += str(self.uids_others_ISP) + ','
+        s += str(self.average_others_ISP)
+        return(s)
+
+    def add_row(self, row, delay_name):
+        self.sum_delta_PDNS_ISP += row[delay_name[0]]
+        self.uids_PDNS_ISP += row[delay_name[1]]
+        self.sum_delta_others_ISP += row[delay_name[2]]
+        self.uids_others_ISP += row[delay_name[3]]
+        self.average()
+
+    def set_from_row(self, row, delay_name):
+        self.sum_delta_PDNS_ISP = row[delay_name[0]]
+        self.uids_PDNS_ISP = row[delay_name[1]]
+        self.sum_delta_others_ISP = row[delay_name[2]]
+        self.uids_others_ISP = row[delay_name[3]]
+        self.average()
+
+
+
 
 class recap_cc_as:
     def __init__(self, query_cc, query_AS, slice_start, slice_duration, recap_file, is_first=False):
@@ -154,6 +239,12 @@ class recap_cc_as:
 
         self.per_prov = [ 0, 0, 0 ]
         self.per_rr = [ flux_cc_as_rr(), flux_cc_as_rr(), flux_cc_as_rr() ]
+        self.delays = [
+            first_delay_cc_as(),
+            first_delay_cc_as(),
+            first_delay_cc_as()
+        ]
+
 
     def init_next_slice(self):
         # Copy the values in the previous slice,
@@ -189,6 +280,9 @@ class recap_cc_as:
                 self.previous_slice.per_rr[i_rr].per_prov[i_prov] = \
                     self.per_rr[i_rr].per_prov[i_prov]
 
+        for i_prov in range(0, 3):
+            self.previous_slice.delays[i_prov].copy( self.delays[i_prov])
+
         self.previous_slice.uids = self.uids
         self.previous_slice.slice_number = self.slice_number
         self.previous_slice.should_save = True
@@ -217,9 +311,11 @@ class recap_cc_as:
         for i_prov in range(0,3):
             self.per_prov[i_prov] = 0
         for i_rr in range(0,3):
-            #self.per_rr[i_rr].total = 0
             for i_prov in range(0,3):
                 self.per_rr[i_rr].per_prov[i_prov] = 0
+
+        for i_prov in range(0, 3):
+            self.delays[i_prov].reset()
 
         self.uids = dict()
         self.should_save = True
@@ -248,28 +344,39 @@ class recap_cc_as:
                 for i in range(0, len(delta_range)):
                     for j in range(0,3):
                         self.nb_A_under[i][j] += r_uid.nb_A_under[i][j]
+            self.delays[0].update(r_uid.first_time_A)
+            self.delays[1].update(r_uid.first_time_AAAA)
+            self.delays[2].update(r_uid.first_time_HTTPS)
+        for i in range(0,3):
+            self.delays[i].average()
 
     def update_uid(self, r_uid, query_time, rr_type, resolver_tag):
         #update_uid is only called if the delay to time stamp is less than 30s.
+        if resolver_tag in rsv_log_parse.tag_isp_set:
+            prov_index = 0
+        elif resolver_tag in rsv_log_parse.tag_public_set:
+            prov_index = 1
+        else:
+            prov_index = 2
         if rr_type == 'HTTPS':
             r_uid.has_https = True
+            if r_uid.first_time_HTTPS[prov_index] == 0:
+                r_uid.first_time_HTTPS[prov_index] = query_time
         elif rr_type == 'AAAA':
             r_uid.has_AAAA = True
+            if r_uid.first_time_AAAA[prov_index] == 0:
+                r_uid.first_time_AAAA[prov_index] = query_time
         elif rr_type == 'A':
-            if not r_uid.has_A:
-                r_uid.first_time_A = query_time
-            delta_t = query_time - r_uid.first_time_A
             r_uid.has_A = True
-            if resolver_tag in rsv_log_parse.tag_isp_set:
-                prov_index = 0
-            elif resolver_tag in rsv_log_parse.tag_public_set:
-                prov_index = 1
-            else:
-                prov_index = 2
+            is_new_A_prov = False
+            if r_uid.first_time_A[prov_index] == 0:
+                r_uid.first_time_A[prov_index] = query_time
+                is_new_A_prov = True
+            delta_t = query_time - r_uid.first_time_A[prov_index]
             if delta_t <= cutoff_delay:
                 r_uid.has_A_prov[prov_index] = True
             for i in range(0, len(delta_range)):
-                if delta_t <= delta_range[i]:
+                if delta_t <= delta_range[i] and (i > 0 or is_new_A_prov):
                     r_uid.nb_A_under[i][prov_index] += 1
                     r_uid.nb_A_prov[prov_index] += 1
                     break
@@ -298,7 +405,6 @@ class recap_cc_as:
         s += 'nb_A_u10s_ISP,nb_A_u10s_PDNS,nb_A_u10s_others,'
         s += 'nb_A_u30s_ISP,nb_A_u30s_PDNS,nb_A_u30s_others,'
         s += 'zombies,z_ISP,z_PDNS,z_others,first_3s,first_10s,'
-
         for i_prov in range(0,3):
             s += "uids_" + prov_names[i_prov] + ','
         for i_rr in range(0,3):
@@ -307,7 +413,15 @@ class recap_cc_as:
             prefix += '_'
             for i_prov in range(0,3):
                 s += prefix + prov_names[i_prov] + ','
-        s += 'sum_delay,max_delay\n'
+        s_i_x = ["_PDNS_ISP", "_others_ISP"]
+        for rr_name in rr_names:
+            for i_x in range(0, 2):
+                s += "sum_deltas_" + rr_name + s_i_x[i_x] + ','
+                s += "uids_" + rr_name + s_i_x[i_x] + ','
+                s += "average_" + rr_name + s_i_x[i_x] + ','
+        s += 'sum_delay,max_delay'
+        s += '\n'
+
         return s
 
     def save_to_file(self):
@@ -341,9 +455,11 @@ class recap_cc_as:
             for i_prov in range(0,3):
                 s += str(self.per_rr[i_rr].per_prov[i_prov]) + ','
 
+        for i_rr in range(0,3):
+            self.delays[i_rr].average()
+            s += self.delays[i_rr].to_str() + ','
+
         s += str(self.sum_first_delay) + ',' + str(self.max_first_delay) + '\n'
-
-
 
         self.recap_file.write(s)
 
@@ -509,7 +625,13 @@ recap_columns = [
     'uids_A_ISP', 'uids_A_PDNS', 'uids_A_others',
     'uids_AAAA_ISP', 'uids_AAAA_PDNS', 'uids_AAAA_others',
     'uids_HTTPS_ISP', 'uids_HTTPS_PDNS', 'uids_HTTPS_others',
-   'sum_delay', 'max_delay'
+    'sum_deltas_A_PDNS_ISP', 'uids_A_PDNS_ISP', 'average_A_PDNS_ISP',
+    'sum_deltas_A_others_ISP', 'uids_A_others_ISP', 'average_A_others_ISP',
+    'sum_deltas_AAAA_PDNS_ISP', 'uids_AAAA_PDNS_ISP',  'average_AAAA_PDNS_ISP',
+    'sum_deltas_AAAA_others_ISP', 'uids_AAAA_others_ISP', 'average_AAAA_others_ISP',
+    'sum_deltas_HTTPS_PDNS_ISP', 'uids_HTTPS_PDNS_ISP', 'average_HTTPS_PDNS_ISP',
+    'sum_deltas_HTTPS_others_ISP', 'uids_HTTPS_others_ISP', 'average_HTTPS_others_ISP',
+    'sum_delay', 'max_delay'
 ]
 
 recap_first_columns =  [
@@ -533,7 +655,13 @@ recap_final_columns = [ 'nb_https', 'nb_AAAA', 'nb_A',
     'uids_A_ISP', 'uids_A_PDNS', 'uids_A_others',
     'uids_AAAA_ISP', 'uids_AAAA_PDNS', 'uids_AAAA_others',
     'uids_HTTPS_ISP', 'uids_HTTPS_PDNS', 'uids_HTTPS_others',
-    'sum_delay' 
+    'sum_deltas_A_PDNS_ISP', 'uids_A_PDNS_ISP', 'average_A_PDNS_ISP',
+    'sum_deltas_A_others_ISP', 'uids_A_others_ISP', 'average_A_others_ISP',
+    'sum_deltas_AAAA_PDNS_ISP', 'uids_AAAA_PDNS_ISP', 'average_AAAA_PDNS_ISP',
+    'sum_deltas_AAAA_others_ISP', 'uids_AAAA_others_ISP', 'average_AAAA_others_ISP',
+    'sum_deltas_HTTPS_PDNS_ISP', 'uids_HTTPS_PDNS_ISP', 'average_HTTPS_PDNS_ISP',
+    'sum_deltas_HTTPS_others_ISP', 'uids_HTTPS_others_ISP', 'average_HTTPS_others_ISP',
+    'sum_delay'
 ]
 
 recap_PDNS = [
@@ -555,6 +683,12 @@ class recap_row:
         'uids_A_ISP', 'uids_A_PDNS', 'uids_A_others',
         'uids_AAAA_ISP', 'uids_AAAA_PDNS', 'uids_AAAA_others',
         'uids_HTTPS_ISP', 'uids_HTTPS_PDNS', 'uids_HTTPS_others' ]
+    delay_name = [['sum_deltas_A_PDNS_ISP', 'uids_A_PDNS_ISP',
+                   'sum_deltas_A_others_ISP', 'uids_A_others_ISP'],
+                  ['sum_deltas_AAAA_PDNS_ISP', 'uids_AAAA_PDNS_ISP',
+                   'sum_deltas_AAAA_others_ISP', 'uids_AAAA_others_ISP'],
+                  ['sum_deltas_HTTPS_PDNS_ISP', 'uids_HTTPS_PDNS_ISP',
+                   'sum_deltas_HTTPS_others_ISP', 'uids_HTTPS_others_ISP']]
     def __init__(self, row):
         self.query_cc = row['CC']
         self.query_AS = row['AS']
@@ -591,10 +725,10 @@ class recap_row:
         self.first_10s = row['first_10s']
         self.sum_delay = row['sum_delay']
         self.max_delay = row['max_delay']
-
         self.uids_ISP = row['uids_ISP']
         self.uids_PDNS = row['uids_PDNS']
         self.uids_others = row['uids_others']
+
         self.uids_A_ISP = row['uids_A_ISP']
         self.uids_A_PDNS = row['uids_A_PDNS']
         self.uids_A_others = row['uids_A_others']
@@ -604,6 +738,14 @@ class recap_row:
         self.uids_HTTPS_ISP = row['uids_HTTPS_ISP']
         self.uids_HTTPS_PDNS = row['uids_HTTPS_PDNS']
         self.uids_HTTPS_others = row['uids_HTTPS_others']
+
+        self.delays = [
+            first_delay_cc_as(),
+            first_delay_cc_as(),
+            first_delay_cc_as()
+        ]
+        for i_rr in range(0, 3):
+            self.delays[i_rr].set_from_row(row, recap_row.delay_name[i_rr])
 
     def add_row(self, row):
         self.total_uids += row['uids']
@@ -650,6 +792,9 @@ class recap_row:
         self.uids_HTTPS_PDNS += row['uids_HTTPS_PDNS']
         self.uids_HTTPS_others += row['uids_HTTPS_others']
 
+        for i_rr in range(0, 3):
+            self.delays[i_rr].add_row(row, recap_row.delay_name[i_rr])
+
 class recap_cc_as2:
     def __init__(self, query_cc, query_AS):
         self.query_cc = query_cc
@@ -662,7 +807,13 @@ class recap_cc_as2:
         self.nb_A_under = [[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ],[ 0, 0, 0 ]]
         self.per_prov = [0, 0, 0]
         self.per_rr = [[0, 0, 0],[0, 0, 0],[0, 0, 0]]
+        self.delays = [
+            first_delay_cc_as(),
+            first_delay_cc_as(),
+            first_delay_cc_as()
+        ]
 
+    # add_row is used to add rows of the same slice.
     def add_row(self, row):
         self.total_uids += row['uids']
         start = row['start']
@@ -670,7 +821,6 @@ class recap_cc_as2:
             self.slices[start] = recap_row(row)
         else:
             self.slices[start].add_row(row)
-
 
     def evaluate(self):
         self.total_PDNS = [ 0, 0, 0, 0, 0, 0, 0 ]
@@ -762,6 +912,10 @@ class recap_cc_as2:
                 s += str(r_row.uids_HTTPS_ISP) + ","
                 s += str(r_row.uids_HTTPS_PDNS) + ","
                 s += str(r_row.uids_HTTPS_others) + ","
+
+                for i_rr in range(0,3):
+                    s += r_row.delays[i_rr].to_str() + ","
+
                 s += str(r_row.max_delay) + ","
 
                 uids = r_row.total_uids
@@ -794,6 +948,12 @@ class recap_cc_as2:
             'uids_A_ISP', 'uids_A_PDNS', 'uids_A_others',
             'uids_AAAA_ISP', 'uids_AAAA_PDNS', 'uids_AAAA_others',
             'uids_HTTPS_ISP', 'uids_HTTPS_PDNS', 'uids_HTTPS_others',
+            'sum_deltas_A_PDNS_ISP', 'uids_A_PDNS_ISP', 'average_A_PDNS_ISP',
+            'sum_deltas_A_others_ISP', 'uids_A_others_ISP', 'average_A_others_ISP',
+            'sum_deltas_AAAA_PDNS_ISP', 'uids_AAAA_PDNS_ISP', 'average_AAAA_PDNS_ISP',
+            'sum_deltas_AAAA_others_ISP', 'uids_AAAA_others_ISP', 'average_AAAA_others_ISP',
+            'sum_deltas_HTTPS_PDNS_ISP', 'uids_HTTPS_PDNS_ISP', 'average_HTTPS_PDNS_ISP',
+            'sum_deltas_HTTPS_others_ISP', 'uids_HTTPS_others_ISP', 'average_HTTPS_others_ISP',
             'average_delay', 'max_delay' ]
         return columns
 
@@ -825,7 +985,7 @@ class recap_cc_as2:
         z_others = 0
         first_3s = 0
         first_10s = 0
-        
+
         uids_ISP = 0
         uids_PDNS = 0
         uids_others = 0
@@ -838,6 +998,12 @@ class recap_cc_as2:
         uids_HTTPS_ISP = 0
         uids_HTTPS_PDNS = 0
         uids_HTTPS_others = 0
+
+        delays = [
+            first_delay_cc_as(),
+            first_delay_cc_as(),
+            first_delay_cc_as()
+        ]
 
         max_delay = 0
         sum_delay = 0
@@ -873,7 +1039,7 @@ class recap_cc_as2:
             z_others += r_row.z_others
             first_3s += r_row.first_3s
             first_10s += r_row.first_10s
-            
+
             uids_ISP += r_row.uids_ISP
             uids_PDNS += r_row.uids_PDNS
             uids_others += r_row.uids_others
@@ -886,6 +1052,9 @@ class recap_cc_as2:
             uids_HTTPS_ISP += r_row.uids_HTTPS_ISP
             uids_HTTPS_PDNS += r_row.uids_HTTPS_PDNS
             uids_HTTPS_others += r_row.uids_HTTPS_others
+
+            for i_rr in range(0,3):
+                delays[i_rr].add_delays(r_row.delays[i_rr])
 
             if max_delay < r_row.max_delay:
                 max_delay = r_row.max_delay
@@ -955,7 +1124,7 @@ class recap_cc_as2:
             z_others,
             first_3s,
             first_10s,
-            
+
             uids_ISP,
             uids_PDNS,
             uids_others,
@@ -967,10 +1136,12 @@ class recap_cc_as2:
             uids_AAAA_others,
             uids_HTTPS_ISP,
             uids_HTTPS_PDNS,
-            uids_HTTPS_others,
+            uids_HTTPS_others]
 
-            average_delay,
-            max_delay ]
+        for i_rr in range(0,3):
+            row += delays[i_rr].to_list()
+
+        row += [average_delay, max_delay]
 
         return row
 

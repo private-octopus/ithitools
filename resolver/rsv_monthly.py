@@ -1,7 +1,7 @@
 # Summary of the monthly files.
 #
 # This is specialized for the organization of data on the compute server.
-# It assumes that for a given month, we will have a set of folders 
+# It assumes that for a given month, we will have a set of folders
 # named flux-yyyy-mm-dd and recap-yyyy-mm-dd. In these folders,
 # we find summary files flux-summary.csv or recap-summary.csv.
 # There is one line per ISP, with different columns for the two files:
@@ -42,8 +42,16 @@ import rsv_flux
 def usage():
     print("Usage: python monthly.py results_dir year month")
 
+
+delay_name = [['sum_deltas_A_PDNS_ISP', 'uids_A_PDNS_ISP', 'average_A_PDNS_ISP'],
+                ['sum_deltas_A_others_ISP', 'uids_A_others_ISP', 'average_A_others_ISP'],
+                ['sum_deltas_AAAA_PDNS_ISP', 'uids_AAAA_PDNS_ISP', 'average_AAAA_PDNS_ISP'],
+                ['sum_deltas_AAAA_others_ISP', 'uids_AAAA_others_ISP', 'average_AAAA_others_ISP'],
+                ['sum_deltas_HTTPS_PDNS_ISP', 'uids_HTTPS_PDNS_ISP', 'average_HTTPS_PDNS_ISP'],
+                ['sum_deltas_HTTPS_others_ISP', 'uids_HTTPS_others_ISP', 'average_HTTPS_others_ISP']]
+
 class per_key_sum:
-    def __init__(self, x, summed_columns, has_max_delay, has_average_delay, has_sum_delays):
+    def __init__(self, x, summed_columns, has_max_delay, has_average_delay, has_sum_delays, has_deltas):
         self.x = dict()
 
         self.summed_columns = summed_columns
@@ -54,23 +62,30 @@ class per_key_sum:
             self.x[name] = x[name]
         if self.has_max_delay:
             self.x['max_delay'] = x['max_delay']
+        self.has_deltas = has_deltas
+        if self.has_deltas:
+            for delay in delay_name:
+                if (delay[1] in self.x) and (self.x[delay[1]] > 0):
+                    self.x[delay[2]] = self.x[delay[0]] / self.x[delay[1]]
         if self.has_average_delay:
             self.x['average_delay'] = x['average_delay']
             if not self.has_sum_delays:
                 self.x['sum_delays'] = self.x['uids']*self.x['average_delay']
-                # if (self.x['uids'] > 0):
-                #    print("Sum delays: " + str(self.x['sum_delays']) + " (" + str(self.x['uids']) + ", " + str(self.x['average_delay']))
 
     def add(self,x):
         for name in self.summed_columns:
             self.x[name] += x[name]
         if self.has_max_delay and x['max_delay'] > self.x['max_delay']:
             self.x['max_delay'] = x['max_delay']
+        if self.has_deltas:
+            for delay in delay_name:
+                if (delay[1] in self.x) and (self.x[delay[1]] > 0):
+                    self.x[delay[2]] = self.x[delay[0]] / self.x[delay[1]]
         if self.has_average_delay and self.x['uids'] > 0:
             if not self.has_sum_delays:
                 self.x['sum_delays'] += x['uids']*x['average_delay']
             self.x['average_delay'] = self.x['sum_delays'] / self.x['uids']
-        
+
     def get_row(self):
         row = []
         for name in self.summed_columns:
@@ -87,6 +102,7 @@ class summaries:
         self.has_max_delay = False
         self.has_average_delay = False
         self.has_sum_delays = False
+        self.has_deltas = False
         self.monthly_per_isp = dict()
         self.monthly_per_day = dict()
         #print(str(summary_columns))
@@ -96,18 +112,21 @@ class summaries:
 
     def get_columns(self, summary_columns):
         header_set = set(["CC", "AS", 'start'])
-    
+        #print("headers: " + str(summary_columns))
         for c in summary_columns:
             if not c in header_set:
                 if c == 'max_delay':
                     self.has_max_delay=True
                 elif c == 'average_delay':
                     self.has_average_delay=True
+                elif c == delay_name[0][0]:
+                    self.has_deltas = True
+                    self.summed_columns.append(c)
                 else:
                     self.summed_columns.append(c)
                     if c == 'sum_delays':
                         self.has_sum_delays = True
-        
+
 
     def add_cc_as(self, row):
         cc = row['CC']
@@ -119,14 +138,14 @@ class summaries:
         key = cc + '-' + asn
 
         if not key in self.monthly_per_isp:
-            self.monthly_per_isp[key] = per_key_sum(row, self.summed_columns, self.has_max_delay, self.has_average_delay, self.has_sum_delays)
+            self.monthly_per_isp[key] = per_key_sum(row, self.summed_columns, self.has_max_delay, self.has_average_delay, self.has_sum_delays, self.has_deltas)
         else:
             self.monthly_per_isp[key].add(row)
 
     def add_daily(self, row, year, month, day):
         key = str(year) + '-' + str(month) + '-' + str(day)
         if not key in self.monthly_per_day:
-            self.monthly_per_day[key] = per_key_sum(row, self.summed_columns, self.has_max_delay, self.has_average_delay, self.has_sum_delays)
+            self.monthly_per_day[key] = per_key_sum(row, self.summed_columns, self.has_max_delay, self.has_average_delay, self.has_sum_delays, self.has_deltas)
         else:
             self.monthly_per_day[key].add(row)
 
@@ -135,9 +154,6 @@ class summaries:
         df = pd.read_csv(file_path)
         df.apply(lambda row: self.add_cc_as(row),axis=1)
         df.apply(lambda row: self.add_daily(row, year, month, day),axis=1)
-        #print("After loading " + file_path + ":")
-        #print("ISP: " + str(len(self.monthly_per_isp)))
-        #print("Days: " + str(len(self.monthly_per_day)))
 
     def load_day(self, month_dir, file_name, year, month, prefix):
         print("Try: " + file_name)
@@ -227,7 +243,6 @@ m_list = os.listdir(month_dir)
 recap_dirs = [f for f in m_list if f.startswith(recap_prefix)]
 
 for dir_name in recap_dirs:
-    print(dir_name)
+    #print(dir_name)
     recap_summaries.load_day(month_dir, dir_name, year, month, "recap2-")
 recap_summaries.save(year, month, month_dir, 'recap2')
-
