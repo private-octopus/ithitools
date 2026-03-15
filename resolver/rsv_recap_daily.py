@@ -1,6 +1,6 @@
 # Recapitulate the tables per CC/AS.
 # Produce one file for all CC/AS that have more that 1000 commands per day
-# 
+#
 
 import sys
 import os
@@ -14,7 +14,7 @@ import top_as
 import time
 import bz2
 from rsv_delay_class import delay_query_as
-import rsv_arguments 
+import rsv_arguments
 from rsv_recap import recap_log, recap_lines
 import concurrent.futures
 
@@ -27,7 +27,7 @@ def usage():
     print("in the output directory a file for each CC/AS that has > 10,000")
     print("events")
 
-    
+
 class file_bucket:
     def __init__(self, ip2a4, ip2a6, as_names, output_file, source_file, bucket_id, time_start):
         self.ip2a4 = ip2a4
@@ -74,23 +74,23 @@ if __name__ == "__main__":
         print("Invalid list of input files.")
         usage()
         exit(-1)
-    
+
     # load the IP mapping tables
     source_path = Path(__file__).resolve()
     resolver_dir = source_path.parent
     auto_source_dir = resolver_dir.parent
     print("Auto source path is: " + str(auto_source_dir) + " (source: " + str(source_path) + ")")
-    source_dir = os.path.join(auto_source_dir, "data") 
-    ip2a4_file = os.path.join(source_dir, "ip2as.csv") 
+    source_dir = os.path.join(auto_source_dir, "data")
+    ip2a4_file = os.path.join(source_dir, "ip2as.csv")
     ip2a6_file = os.path.join(source_dir, "ip2asv6.csv")
-    as_names_file = os.path.join(source_dir, "as_names.csv")   
+    as_names_file = os.path.join(source_dir, "as_names.csv")
     ip2a4 = ip2as.ip2as_table()
     ip2a4.load(ip2a4_file)
     ip2a6 = ip2as.ip2as_table()
     ip2a6.load(ip2a6_file)
     as_names = ip2as.asname()
     as_names.load(as_names_file)
-    time_loaded = time.time()   
+    time_loaded = time.time()
 
     print("Tables loaded at " + str(time_loaded - time_start) + " seconds.")
 
@@ -124,7 +124,7 @@ if __name__ == "__main__":
     bucket_time = time.time()
 
     # All the buckets have been processed. Now, create the tables.
-    
+
     rcl = recap_lines()
     for bucket in bucket_list:
         rcl.load_recap(bucket.output_file)
@@ -132,14 +132,14 @@ if __name__ == "__main__":
     nb_files = 0
     for key in rcl.cc_as_list:
         if rcl.cc_as_list[key].total_uids > 10000:
-            as_file = os.path.join(output_dir, "recap2-" + 
-                                   rcl.cc_as_list[key].query_cc + "-" + 
+            as_file = os.path.join(output_dir, "recap2-" +
+                                   rcl.cc_as_list[key].query_cc + "-" +
                                    rcl.cc_as_list[key].query_AS + ".csv")
             rcl.cc_as_list[key].save_file(as_file)
             print("Saved: " + str(len(rcl.cc_as_list[key].slices)) + " slice in " + as_file)
             nb_files += 1
     print("Saved " + str(nb_files) + " CC/AS files.")
-    
+
     summary_file = os.path.join(output_dir, "recap2-summary.csv")
     df = rcl.summary_df()
     df.to_csv(summary_file)
