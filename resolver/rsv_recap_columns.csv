@@ -1,0 +1,93 @@
+columns recap summaries, explanation
+year,year of the capture
+month,month of the capture
+CC,Country of ISP
+AS,AS of ISP
+uids,Number unique queries
+first_isp,Number unique queries seen first by ISP
+googlepdns,Number unique queries seen first by googlepdns
+cloudflare,Number unique queries seen first by cloudflare
+opendns,Number unique queries seen first by opendns
+quad9,Number unique queries seen first by quad9
+level3,Number unique queries seen first by level3
+neustar,Number unique queries seen first by neustar
+he,Number unique queries seen first by he
+first_others,Number unique queries seen first by others
+nb_https,Number unique HTTPS queries
+nb_AAAA,Number unique AAAA queries
+nb_A,Number unique A queries
+A_ISP_only,Number unique A queries only seen by ISP
+A_PDNS_only,Number unique A queries only seen by PDNS
+A_ISP_PDNS,"Number unique A queries seen by Isp and PDNS, but not others"
+A_others_only,Number unique A queries only seen by others
+A_ISP_others,"Number unique A queries seen by ISP and others, but not PDNS"
+A_PDNS_others,"Number unique A queries seen by PDNS and others, but not ISP"
+A_all3,"Number unique A queries seen by all 3 of ISP, PDNS and Others"
+nb_A_ISP,Total number of A queries received by ISP
+ nb_A_PDNS,Total number of A queries received by PDNS
+ nb_A_others,Total number of A queries received by Others
+nb_A_0ms_ISP,Total number of A queries received by ISP as first ISP query for that UID
+nb_A_0ms_PDNS,Total number of A queries received by PDNS as first PDNS query for that UID
+nb_A_0ms_others,Total number of A queries received by Others as first others query for that UID
+nb_A_u10ms_ISP,Total number of A queries received by ISP within10ms of first ISP query for that UID
+nb_A_u10ms_PDNS,Total number of A queries received by PDNS within 10ms of first PDNS query for that UID
+nb_A_u10ms_others,Total number of A queries received by Others within 10ms of first others query for that UID
+nb_A_u30ms_ISP,Total number of A queries received by ISP within 30ms of first ISP query for that UID
+nb_A_u30ms_PDNS,Total number of A queries received by PDNS within 30ms of first PDNS query for that UID
+nb_A_u30ms_others,Total number of A queries received by Others within 30ms of first others query for that UID
+nb_A_u100ms_ISP,Total number of A queries received by ISP within 100ms of first ISP query for that UID
+nb_A_u100ms_PDNS,Total number of A queries received by PDNS within 100ms of first PDNS query for that UID
+nb_A_u100ms_others,Total number of A queries received by others within 100ms of first query by others for that UID
+nb_A_u300ms_ISP,Total number of A queries received by ISP within 300ms of first ISP query for that UID
+nb_A_u300ms_PDNS,Total number of A queries received by PDNS within 300ms of first PDNS query for that UID
+nb_A_u300ms_others,Total number of A queries received by others within 300ms of first others query for that UID
+nb_A_u1s_ISP,Total number of A queries received by ISP within 1s of first ISP query for that UID
+nb_A_u1s_PDNS,Total number of A queries received by PDNS within 1s of first PDNS query for that UID
+nb_A_u1s_others,Total number of A queries received by others within 1s of first others query for that UID
+nb_A_u3s_ISP,Total number of A queries received by ISP within 3s of first ISP query for that UID
+nb_A_u3s_PDNS,Total number of A queries received by PDNS within 3s of first PDNS query for that UID
+nb_A_u3s_others,Total number of A queries received by others within 3s of first others query for that UID
+nb_A_u10s_ISP,Total number of A queries received by ISP within 10s of first ISP query for that UID
+nb_A_u10s_PDNS,Total number of A queries received by PDNS within 10s of first PDNS query for that UID
+nb_A_u10s_others,Total number of A queries received by others  within 10s of first others query for that UID
+nb_A_u30s_ISP,Total number of A queries received by ISP within 30s of first query ISP for that UID
+nb_A_u30s_PDNS,Total number of A queries received by PDNS within 30s of first PDNS query for that UID
+nb_A_u30s_others,Total number of A queries received by others within 300ms of first others query for that UID
+zombies,Total number queries received more than 30s after ad-time.
+z_ISP,Total number queries received from ISP more than 30s after ad-time.
+z_PDNS,Total number queries received from PDNS more than 30s after ad-time.
+z_others,Total number queries received from others more than 30s after ad-time.
+first_3s,Total number of queries received more than 3s (and less than 10s) after first query for that UID
+first_10s,Total number of queries received more than 10s (and less than 30s) after first query for that UID
+uids_ISP,Number of unique queries received by ISP
+uids_PDNS,Number of unique queries received by PDNS
+uids_others,Number of unique queries received by others
+uids_A_ISP,Number of unique A queries received by ISP
+uids_A_PDNS,Number of unique A queries received by PDNS
+uids_A_others,Number of unique A queries received by others 
+uids_AAAA_ISP,Number of unique AAAA queries received by ISP
+uids_AAAA_PDNS,Number of unique AAAA queries received by PDNS
+uids_AAAA_others,Number of unique AAAA queries received by others 
+uids_HTTPS_ISP,Number of unique HTTPS queries received by ISP
+uids_HTTPS_PDNS,Number of unique HTTPS queries received by PDNS
+uids_HTTPS_others,Number of unique HTTPS queries received by others 
+sum_deltas_A_PDNS_ISP,Sum of delta between first A query from PDNS and first A query from ISP for the same UID
+uids_A_PDNS_ISP,Number of uniques A queries seen by both ISP and PDNS
+average_A_PDNS_ISP,Average of delta between first A query from PDNS and first A query from ISP for the same UID
+sum_deltas_A_others_ISP,Sum of delta between first A query from others and first A query from ISP for the same UID
+uids_A_others_ISP,Number of uniques A queries seen by both others and PDNS
+average_A_others_ISP,Average of delta between first A query from others and first A query from ISP for the same UID
+sum_deltas_AAAA_PDNS_ISP,Sum of delta between first AAAA query from PDNS and first AAAA query from ISP for the same UID
+uids_AAAA_PDNS_ISP,Number of uniques AAAA queries seen by both ISP and PDNS
+average_AAAA_PDNS_ISP,Average of delta between first AAAA query from PDNS and first AAAA query from ISP for the same UID
+sum_deltas_AAAA_others_ISP,Sum of delta between first AAAA query from others and first AAAA query from ISP for the same UID
+uids_AAAA_others_ISP,Number of uniques AAAA queries seen by both others and PDNS
+average_AAAA_others_ISP,Average of delta between first AAAA query from others and first AAAA query from ISP for the same UID
+sum_deltas_HTTPS_PDNS_ISP,Sum of delta between first HTTPS query from PDNS and first HTTPS query from ISP for the same UID
+uids_HTTPS_PDNS_ISP,Number of uniques A queries seen by both ISP and PDNS
+average_HTTPS_PDNS_ISP,Average of delta between first HTTPS query from PDNS and first HTTPS query from ISP for the same UID
+sum_deltas_HTTPS_others_ISP,Sum of delta between first HTTPS query from others and first HTTPS query from ISP for the same UID
+uids_HTTPS_others_ISP,Number of uniques HTTPS queries seen by both others and PDNS
+average_HTTPS_others_ISP,Average of delta between first HTTPS query from others and first HTTPS query from ISP for the same UID
+average_delay,Average delta between time of first query for an UID and ad time
+max_delay,Max delta between time of first query for an UID and ad time
