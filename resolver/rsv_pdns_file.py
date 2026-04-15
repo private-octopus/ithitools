@@ -100,7 +100,7 @@ if __name__ == "__main__":
         item = item[:-4]
         if item.startswith("queries"):
             item = item[7:]
-        output_file = os.path.join(temp_dir, "prov-" + item + ".csv")
+        output_file = os.path.join(temp_dir, "prov-" + item + "." + str(bucket_id) + ".csv")
         bucket = file_bucket(ip2a4, ip2a6, as_names, output_file, source_file, bucket_id, time_loaded)
         bucket_list.append(bucket)
         bucket_id += 1
@@ -132,3 +132,8 @@ if __name__ == "__main__":
     df = prov_total.get_df()
     df.to_csv(summary_file)
     print("Saved " + str(df.shape[0]) + " CC/AS summaries in " + summary_file)
+
+    summary_flat_file = os.path.join(output_dir, "prov-flat-summary.csv")
+    flat_df = prov_total.get_flat_df()
+    flat_df.to_csv(summary_flat_file)
+    print("Saved " + str(flat_df.shape[0]) + " CC/AS flat summaries in " + summary_flat_file)

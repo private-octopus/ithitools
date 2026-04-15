@@ -180,11 +180,15 @@ class prov_cc_as_rr_prov_slice:
         for ads in addr_stats:
             h.append(ads)
         return h
+    
+    def get_flat_headers(h, rr_prov_prefix):
+        for rgn in range_names:
+            h.append(rr_prov_prefix + "_" + rgn)
+        for ads in addr_stats:
+            h.append(rr_prov_prefix + "_" + ads)
+        return h
 
-    def get_row(self, row_prefix):
-        r = []
-        for x in row_prefix:
-            r.append(x)
+    def get_flat_row(self, r):
         for sl in self.time_slices:
             r.append(sl)
         if self.time_slices[0] == 0:
@@ -203,6 +207,21 @@ class prov_cc_as_rr_prov_slice:
         
         return r
     
+    def get_null_row(r):
+        for sl in range(0, len(range_names)):
+            r.append(0)
+        for ast in range(0, len(addr_stats)):
+            r.append(0)
+        return r
+
+    def get_row(self, row_prefix):
+        r = []
+        for x in row_prefix:
+            r.append(x)
+        r = self.get_flat_row(r)
+        return r
+
+    
     def load_row(self, x):
         self.time_slices[0] = x['nb_0ms']
         self.time_slices[1] = x['nb_u10ms']
@@ -220,6 +239,7 @@ class prov_cc_as_rr_prov_slice:
         self.max_v6 = x['max_v6']
         self.average_v6 = x['average_v6']
         self.max_v4_v6 = x['max_v4v6']
+     
 
 
 
@@ -239,7 +259,7 @@ class prov_cc_as_rr_slice:
         if prov in Prov_index:
             p_index = Prov_index[prov]
         else:
-            print("Folding " + prov + " into others.")
+            #print("Folding " + prov + " into others.")
             p_index = Prov_index_others
         if self.prov[p_index] == None:
             self.prov[p_index] = prov_cc_as_rr_prov_slice()
@@ -257,6 +277,13 @@ class prov_cc_as_rr_slice:
         h.append("uids_rr")
         h.append("prov")
         return prov_cc_as_rr_prov_slice.get_headers(h)
+     
+    def get_flat_headers(h, rr_prefix):
+        h.append(rr_prefix + "_uids")
+        for p_x in range(0, len(Prov_names)):
+            p_prefix = rr_prefix + "_" + Prov_names[p_x]
+            h = prov_cc_as_rr_prov_slice.get_flat_headers(h, p_prefix)
+        return h
 
     def get_rows(self, row_prefix):
         t = []
@@ -270,6 +297,20 @@ class prov_cc_as_rr_slice:
                 t.append(self.prov[p_x].get_row(rp))
         return t
 
+    def get_flat_row(self, r):
+        r.append(self.nb_uids)
+        for p_x in range(0, len(Prov_names)):
+            if self.prov[p_x] != None:
+                r = self.prov[p_x].get_flat_row(r)
+            else:
+                r = prov_cc_as_rr_prov_slice.get_null_row(r)
+        return r
+    
+    def get_null_row(r):
+        for p_x in range(0, len(Prov_names)):
+            r = prov_cc_as_rr_prov_slice.get_null_row(r)
+        return r
+
     def load_row(self, x):
         self.nb_uids = x['uids_rr']
         prov = x['prov']
@@ -281,6 +322,7 @@ class prov_cc_as_rr_slice:
         else:
             self.prov[p_x] = prov_cc_as_rr_prov_slice()
             self.prov[p_x].load_row(x)
+           
 
 # PROV_CC_AS_SLICE
 #   One record per CC-AS in a time slice.
@@ -316,6 +358,22 @@ class prov_cc_as_slice:
         h.append("uids")
         h.append("rr_type")
         return prov_cc_as_rr_slice.get_headers(h)
+
+    def get_flat_headers():
+        h = [ 'CC', 'AS', 'uids' ]
+        for rt in rr_names:
+            name_prefix = rt
+            h = prov_cc_as_rr_slice.get_flat_headers(h, name_prefix)
+        return h
+
+    def get_flat_row(self):
+        r = [ self.query_cc, self.query_AS, self.nb_uids ]
+        for r_x in range(0, len(rr_names)):
+            if self.rr[r_x] != None:
+                r = self.rr[r_x].get_flat_row(r)
+            else:
+                r = prov_cc_as_rr_slice.get_null_row(r)
+        return r
 
     def get_rows(self, row_prefix):
         t = []
@@ -378,7 +436,20 @@ class prov_slice:
         df = pd.DataFrame(t, columns = prov_slice.get_headers())
 
         return df
+    
+    # Produce a file with a group of columns per rr_type and provider, one row per AS
+    def get_flat_headers():
+        return prov_cc_as_slice.get_flat_headers()
 
+    def get_flat_df(self):
+        flat_t = []
+        for key in self.cc_as:
+            r = self.cc_as[key].get_flat_row()
+            flat_t.append(r)
+        df = pd.DataFrame(flat_t, columns = prov_slice.get_flat_headers())
+        return df
+
+    # load a value from a file
     def load_row(self, x):
         query_cc = x['CC']
         query_AS = x['AS']
@@ -387,7 +458,7 @@ class prov_slice:
             self.cc_as[key] = prov_cc_as_slice(query_cc, query_AS)
             self.cc_as[key].nb_uids = x['uids']
         self.cc_as[key].load_row(x)
-
+       
     def load_file(self, csv_file):
         df = pd.read_csv(csv_file)
         for index, row in df.iterrows():
