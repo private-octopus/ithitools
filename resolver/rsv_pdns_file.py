@@ -38,7 +38,7 @@ class file_bucket:
 
     def load(self):
 
-        if not os.file.exists(self.output_file):
+        if not os.path.exists(self.output_file):
             pp = prov_parse(self.ip2a4, self.ip2a6, self.as_names)
             nb_events = pp.load_prov_log(self.source_file, time_start=self.time_start)
             print(self.source_file + ": loaded " + str(nb_events) + " events at " + str(time.time() - self.time_start))
