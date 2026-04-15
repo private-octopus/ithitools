@@ -37,11 +37,16 @@ class file_bucket:
         self.time_start = time_start
 
     def load(self):
-        pp = prov_parse(self.ip2a4, self.ip2a6, self.as_names)
-        nb_events = pp.load_prov_log(self.source_file, time_start=self.time_start)
-        print(self.source_file + ": loaded " + str(nb_events) + " events at " + str(time.time() - self.time_start))
-        sys.stdout.flush()
-        pp.save_and_close(self.output_file)
+
+        if not os.file.exists(self.output_file):
+            pp = prov_parse(self.ip2a4, self.ip2a6, self.as_names)
+            nb_events = pp.load_prov_log(self.source_file, time_start=self.time_start)
+            print(self.source_file + ": loaded " + str(nb_events) + " events at " + str(time.time() - self.time_start))
+            sys.stdout.flush()
+            pp.save_and_close(self.output_file)
+        else:
+            print(self.output_file + ": already exists.")
+            sys.stdout.flush()
 
 def load_bucket(bucket):
     bucket.load()
@@ -100,7 +105,7 @@ if __name__ == "__main__":
         item = item[:-4]
         if item.startswith("queries"):
             item = item[7:]
-        output_file = os.path.join(temp_dir, "prov-" + item + "." + str(bucket_id) + ".csv")
+        output_file = os.path.join(temp_dir, "prov-" + item + ".csv")
         bucket = file_bucket(ip2a4, ip2a6, as_names, output_file, source_file, bucket_id, time_loaded)
         bucket_list.append(bucket)
         bucket_id += 1
