@@ -27,6 +27,9 @@ import rsv_arguments
 import open_rsv
 import time
 
+
+delta_first_max = 0
+
 PDNS_names = [
     'googlePDNS',
     'cloudflare',
@@ -45,6 +48,8 @@ Prov_names = [ 'ISP',
     'level3',
     'neustar',
     'he',
+    'other_pdns',
+    'same_CC',
    'others' ]
 
 Prov_index = {
@@ -56,12 +61,14 @@ Prov_index = {
     'level3':5,
     'neustar':6,
     'he':7,
-    'others':8,
+    'other_pdns':8,
+    'others':10,
     'Same_AS':0,
     'Same_group':0,
-    'Same_CC':8,
-    'Cloud':8,
-    'Other_cc':8
+    'Same_CC':9,
+    'same_CC':9,
+    'Cloud':10,
+    'Other_cc':10
 }
 
 Prov_index_others = 8
@@ -128,6 +135,7 @@ class prov_cc_as_rr_prov_slice:
     def __init__(self):
         self.uids = dict()
         self.time_slices = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+        self.zombies = 0
         self.sum_v4 = 0
         self.max_v4 = 0
         self.average_v4 = 0
@@ -135,23 +143,37 @@ class prov_cc_as_rr_prov_slice:
         self.max_v6 = 0
         self.average_v6 = 0
         self.max_v4_v6 = 0
+        self.abs_slices = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
 
-
-    def add_query(self, uid, query_time, resolver_IP):
+    def add_query(self, uid, query_time, resolver_IP, uid_first_time):
+        if uid_first_time > query_time:
+            print("Error, uid_first_time - query_time = " + str(uid_first_time - query_time))
+            exit(-1)
         if not uid in self.uids:
             self.time_slices[0] += 1
             self.uids[uid] = prov_cc_as_rr_prov_uid(query_time, resolver_IP)
         else:
             self.uids[uid].add(query_time, resolver_IP)
+            # todo: add series of delays with absolute time
             delta_time = query_time - self.uids[uid].first_time
             for i in range(1, len(delta_range)):
                 if delta_time <= delta_range[i]:
                     self.time_slices[i] += 1
                     break
+        # add computation of absolute slices.
+        abs_time = query_time - uid_first_time
+        for i in range(0, len(delta_range)):
+            if abs_time <= delta_range[i]:
+                self.abs_slices[i] += 1
+                break
+
 
     def add_slice(self, other):
         for i_x in range(0, len(delta_range)):
             self.time_slices[i_x] += other.time_slices[i_x]
+            self.abs_slices[i_x] += other.abs_slices[i_x]
+                
+        self.zombies += other.zombies
         if len(other.uids) == 0:
             self.sum_v4 += other.sum_v4
             if other.max_v4 > self.max_v4:
@@ -177,6 +199,9 @@ class prov_cc_as_rr_prov_slice:
     def get_headers(h):
         for rgn in range_names:
             h.append(rgn)
+        for rgn in range_names:
+            h.append(rgn + '_abs')
+        h.append('zombies')
         for ads in addr_stats:
             h.append(ads)
         return h
@@ -184,6 +209,9 @@ class prov_cc_as_rr_prov_slice:
     def get_flat_headers(h, rr_prov_prefix):
         for rgn in range_names:
             h.append(rr_prov_prefix + "_" + rgn)
+        for rgn in range_names:
+            h.append(rr_prov_prefix + "_" + rgn + '_abs')
+        h.append(rr_prov_prefix + "_" + 'zombies')
         for ads in addr_stats:
             h.append(rr_prov_prefix + "_" + ads)
         return h
@@ -191,6 +219,9 @@ class prov_cc_as_rr_prov_slice:
     def get_flat_row(self, r):
         for sl in self.time_slices:
             r.append(sl)
+        for asl in self.abs_slices:
+            r.append(asl)
+        r.append(self.zombies)
         if self.time_slices[0] == 0:
             av4 = 0
             av6 = 0
@@ -210,6 +241,9 @@ class prov_cc_as_rr_prov_slice:
     def get_null_row(r):
         for sl in range(0, len(range_names)):
             r.append(0)
+        for sl in range(0, len(range_names)):
+            r.append(0)
+        r.append(0) # zombies
         for ast in range(0, len(addr_stats)):
             r.append(0)
         return r
@@ -221,7 +255,6 @@ class prov_cc_as_rr_prov_slice:
         r = self.get_flat_row(r)
         return r
 
-    
     def load_row(self, x):
         self.time_slices[0] = x['nb_0ms']
         self.time_slices[1] = x['nb_u10ms']
@@ -232,6 +265,16 @@ class prov_cc_as_rr_prov_slice:
         self.time_slices[6] = x['nb_u3s']
         self.time_slices[7] = x['nb_u10s']
         self.time_slices[8] = x['nb_u30s']
+        self.abs_slices[0] = x['nb_0ms_abs']
+        self.abs_slices[1] = x['nb_u10ms_abs']
+        self.abs_slices[2] = x['nb_u30ms_abs']
+        self.abs_slices[3] = x['nb_u100ms_abs']
+        self.abs_slices[4] = x['nb_u300ms_abs']
+        self.abs_slices[5] = x['nb_u1s_abs']
+        self.abs_slices[6] = x['nb_u3s_abs']
+        self.abs_slices[7] = x['nb_u10s_abs']
+        self.abs_slices[8] = x['nb_u30s_abs']
+        self.zombies = x['zombies']
         self.sum_v4 = x['sum_v4']
         self.max_v4 = x['max_v4']
         self.average_v4 = x['average_v4']
@@ -249,13 +292,13 @@ class prov_cc_as_rr_prov_slice:
 # 
 class prov_cc_as_rr_slice:
     def __init__(self):
-        self.prov = [ None, None, None, None, None, None, None, None, None ]
-        self.uids = set()
+        self.prov = [ None, None, None, None, None, None, None, None, None, None, None ]
+        self.uids = dict()
         self.nb_uids = 0
+        self.delta_first_max = 0
 
-    def add_query(self, uid, query_time, prov, resolver_IP):
-        if not uid in self.uids:
-            self.uids.add(uid)
+    def add_query(self, uid, query_time, query_ad_time, prov, resolver_IP):
+        global delta_first_max
         if prov in Prov_index:
             p_index = Prov_index[prov]
         else:
@@ -263,7 +306,21 @@ class prov_cc_as_rr_slice:
             p_index = Prov_index_others
         if self.prov[p_index] == None:
             self.prov[p_index] = prov_cc_as_rr_prov_slice()
-        self.prov[p_index].add_query(uid, query_time, resolver_IP)
+        if query_time > query_ad_time + 30:
+            self.prov[p_index].zombies += 1
+            #print("Zombies + 1 for prov " + str(p_index))
+        else:
+            is_first = False
+            if not uid in self.uids:
+                self.uids[uid] = query_time
+                is_first = True
+            if self.uids[uid] > query_time:
+                delta_t = self.uids[uid] - query_time
+                query_time = self.uids[uid]
+                if delta_t > delta_first_max:
+                    delta_first_max = delta_t
+                    print("delta_first_max; " + str(delta_first_max))
+            self.prov[p_index].add_query(uid, query_time, resolver_IP, self.uids[uid])
 
     def add_slice(self, other):
         self.nb_uids += other.nb_uids + len(other.uids)
@@ -337,14 +394,14 @@ class prov_cc_as_slice:
         self.uids = set()
         self.nb_uids = 0
 
-    def add_query(self, uid, query_time, query_rr, prov, resolver_IP):
-        if not uid in self.uids:
+    def add_query(self, uid, query_time, query_ad_time, query_rr, prov, resolver_IP):
+        if query_time <= query_ad_time + 30 and not uid in self.uids:
             self.uids.add(uid)
         nb_uids = 0
         r_x = rr_index[query_rr]
         if self.rr[r_x] == None:
             self.rr[r_x] = prov_cc_as_rr_slice()
-        self.rr[r_x].add_query(uid, query_time, prov, resolver_IP)
+        self.rr[r_x].add_query(uid, query_time, query_ad_time, prov, resolver_IP)
 
     def add_slice(self, other):
         self.nb_uids += other.nb_uids + len(other.uids)
@@ -406,11 +463,11 @@ class prov_slice:
         self.uids = dict()
         self.query_time = 0
 
-    def add_query(self, uid, query_cc, query_AS, query_time, query_rr, prov, resolver_IP):
+    def add_query(self, uid, query_cc, query_AS, query_time, query_ad_time, query_rr, prov, resolver_IP):
         key = str(query_cc) + "-" + str(query_AS)
         if not key in self.cc_as:
             self.cc_as[key] = prov_cc_as_slice(query_cc, query_AS)
-        self.cc_as[key].add_query(uid, query_time, query_rr, prov, resolver_IP)
+        self.cc_as[key].add_query(uid, query_time, query_ad_time, query_rr, prov, resolver_IP)
 
     def add_slice(self, other):
         if self.query_time == 0:
@@ -472,20 +529,25 @@ class prov_parse:
         self.previous = prov_slice(0)
         self.current = prov_slice(0)
         self.summary = prov_slice(0)
+        self.zombie_max = 30
 
     def summarize(self, query_time):
         self.summary.add_slice(self.previous)
         self.previous = self.current
         self.current = prov_slice(query_time)
 
-    def add_query(self, uid, query_cc, query_AS, query_time, query_rr, prov, resolver_IP):
+    def add_query(self, uid, query_cc, query_AS, query_time, query_ad_time, query_rr, prov, resolver_IP):
         if self.current.query_time == 0:
             self.current.query_time = query_time
 
+        #if query_time > query_ad_time + self.zombie_max:
+        #    self.zombie_max = query_time - query_ad_time
+        #    print("Zombie: " + str(self.zombie_max))
+
         if uid in self.previous.uids:
-            self.previous.add_query(uid, query_cc, query_AS, query_time, query_rr, prov, resolver_IP)
+            self.previous.add_query(uid, query_cc, query_AS, query_time, query_ad_time, query_rr, prov, resolver_IP)
         else:
-            self.current.add_query(uid, query_cc, query_AS, query_time, query_rr, prov, resolver_IP)
+            self.current.add_query(uid, query_cc, query_AS, query_time, query_ad_time, query_rr, prov, resolver_IP)
         
         if query_time > (self.current.query_time + 60):
             self.summarize(query_time)
@@ -511,11 +573,11 @@ class prov_parse:
                 print("Cannot parse:\n" + line + "\n")
                 parsed = False
             if parsed:
-                if x.filter(rr_types=['A', 'AAAA', 'HTTPS'], experiment=['0du'], query_delay=30000, check_dotnxdomain=True):
+                if x.filter(rr_types=['A', 'AAAA', 'HTTPS'], experiment=['0du'], query_delay=1000000000, check_dotnxdomain=True):
                     if x.resolver_AS == "" or x.resolver_cc == "":
                         x.set_resolver_AS(self.ip2a4, self.ip2a6, self.as_names)
-                    if x.resolver_AS != 'AS0' and (x.query_time - x.query_ad_time) < 30:
-                        self.add_query(x.query_user_id, x.query_cc, x.query_AS, x.query_time, x.rr_type, x.resolver_tag, x.resolver_IP)
+                    if x.resolver_AS != 'AS0':
+                        self.add_query(x.query_user_id, x.query_cc, x.query_AS, x.query_time, x.query_ad_time, x.rr_type, x.resolver_tag, x.resolver_IP)
 
                     nb_events += 1
                     if (nb_events%lth) == 0:
