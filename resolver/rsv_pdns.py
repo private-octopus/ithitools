@@ -11,7 +11,7 @@
 #   - sum: sum of number of IP per specific UID for all UIDs
 #   - average: average number
 #   - max number.
-# 
+#
 import sys
 import os
 from pathlib import Path
@@ -40,7 +40,7 @@ PDNS_names = [
     'he'
 ]
 
-Prov_names = [ 'ISP', 
+Prov_names = [ 'ISP',
     'googlepdns',
     'cloudflare',
     'opendns',
@@ -94,11 +94,12 @@ range_names = [
 
 addr_stats = [
     "sum_v4",
-    "max_v4",
     "average_v4",
+    "max_v4",
     "sum_v6",
-    "max_v6",
     "average_v6",
+    "max_v6",
+    "average_v4v6",
     "max_v4v6"]
 
 # OBJECTS USED FOR CAPTURE.
@@ -106,7 +107,7 @@ addr_stats = [
 # PROV_CC_AS_RR_PROV_SLICE
 #   One record per UID per Prov per RR per CC-AS in a time slice.
 #   contains a set of pdns_uid_rr present in the AS for that time slice.
-# 
+#
 class prov_cc_as_rr_prov_uid:
     def __init__(self, query_time, resolver_IP):
         self.first_time = query_time
@@ -130,7 +131,7 @@ class prov_cc_as_rr_prov_uid:
 # PROV_CC_AS_RR_PROV_SLICE
 #   One record per Prov per RR per CC-AS in a time slice.
 #   contains a set of pdns_uid_rr present in the AS for that time slice.
-# 
+#
 class prov_cc_as_rr_prov_slice:
     def __init__(self):
         self.uids = dict()
@@ -142,15 +143,19 @@ class prov_cc_as_rr_prov_slice:
         self.sum_v6 = 0
         self.max_v6 = 0
         self.average_v6 = 0
-        self.max_v4_v6 = 0
+        self.max_v4v6 = 0
+        self.average_v4v6 = 0
         self.abs_slices = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+        self.rep_slices = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
 
     def add_query(self, uid, query_time, resolver_IP, uid_first_time):
         if uid_first_time > query_time:
             print("Error, uid_first_time - query_time = " + str(uid_first_time - query_time))
             exit(-1)
+        is_first = False
         if not uid in self.uids:
             self.time_slices[0] += 1
+            is_first = True
             self.uids[uid] = prov_cc_as_rr_prov_uid(query_time, resolver_IP)
         else:
             self.uids[uid].add(query_time, resolver_IP)
@@ -164,15 +169,20 @@ class prov_cc_as_rr_prov_slice:
         abs_time = query_time - uid_first_time
         for i in range(0, len(delta_range)):
             if abs_time <= delta_range[i]:
-                self.abs_slices[i] += 1
+                if is_first:
+                    self.abs_slices[i] += 1
+                else:
+                    self.rep_slices[i] += 1
                 break
+        return is_first
 
 
     def add_slice(self, other):
         for i_x in range(0, len(delta_range)):
             self.time_slices[i_x] += other.time_slices[i_x]
             self.abs_slices[i_x] += other.abs_slices[i_x]
-                
+            self.rep_slices[i_x] += other.rep_slices[i_x]
+
         self.zombies += other.zombies
         if len(other.uids) == 0:
             self.sum_v4 += other.sum_v4
@@ -181,8 +191,8 @@ class prov_cc_as_rr_prov_slice:
             self.sum_v6 += other.sum_v6
             if other.max_v6 > self.max_v6:
                 self.max_v6 = other.max_v6
-            if other.max_v4_v6 > self.max_v4_v6:
-                self.max_v4_v6 = other.max_v4_v6
+            if other.max_v4v6 > self.max_v4v6:
+                self.max_v4v6 = other.max_v4v6
         else:
             for uid in other.uids:
                 n4, n6 = other.uids[uid].address_count()
@@ -193,24 +203,28 @@ class prov_cc_as_rr_prov_slice:
                 if n6 > self.max_v6:
                     self.max_v6 = n6
                 n_tot = n4 + n6
-                if n_tot > self.max_v4_v6:
-                    self.max_v4_v6 = n_tot
-    
+                if n_tot > self.max_v4v6:
+                    self.max_v4v6 = n_tot
+
     def get_headers(h):
         for rgn in range_names:
             h.append(rgn)
         for rgn in range_names:
             h.append(rgn + '_abs')
+        for rgn in range_names:
+            h.append(rgn + '_rep')
         h.append('zombies')
         for ads in addr_stats:
             h.append(ads)
         return h
-    
+
     def get_flat_headers(h, rr_prov_prefix):
         for rgn in range_names:
             h.append(rr_prov_prefix + "_" + rgn)
         for rgn in range_names:
             h.append(rr_prov_prefix + "_" + rgn + '_abs')
+        for rgn in range_names:
+            h.append(rr_prov_prefix + "_" + rgn + '_rep')
         h.append(rr_prov_prefix + "_" + 'zombies')
         for ads in addr_stats:
             h.append(rr_prov_prefix + "_" + ads)
@@ -221,6 +235,8 @@ class prov_cc_as_rr_prov_slice:
             r.append(sl)
         for asl in self.abs_slices:
             r.append(asl)
+        for rep in self.rep_slices:
+            r.append(rep)
         r.append(self.zombies)
         if self.time_slices[0] == 0:
             av4 = 0
@@ -229,16 +245,19 @@ class prov_cc_as_rr_prov_slice:
             av4 = self.sum_v4/self.time_slices[0]
             av6 = self.sum_v6/self.time_slices[0]
         r.append(self.sum_v4)
-        r.append(self.max_v4)
         r.append(av4)
+        r.append(self.max_v4)
         r.append(self.sum_v6)
-        r.append(self.max_v6)
         r.append(av6)
-        r.append(self.max_v4_v6)
-        
+        r.append(self.max_v6)
+        r.append(av4 + av6)
+        r.append(self.max_v4v6)
+
         return r
-    
+
     def get_null_row(r):
+        for sl in range(0, len(range_names)):
+            r.append(0)
         for sl in range(0, len(range_names)):
             r.append(0)
         for sl in range(0, len(range_names)):
@@ -274,6 +293,15 @@ class prov_cc_as_rr_prov_slice:
         self.abs_slices[6] = x['nb_u3s_abs']
         self.abs_slices[7] = x['nb_u10s_abs']
         self.abs_slices[8] = x['nb_u30s_abs']
+        self.rep_slices[0] = x['nb_0ms_rep']
+        self.rep_slices[1] = x['nb_u10ms_rep']
+        self.rep_slices[2] = x['nb_u30ms_rep']
+        self.rep_slices[3] = x['nb_u100ms_rep']
+        self.rep_slices[4] = x['nb_u300ms_rep']
+        self.rep_slices[5] = x['nb_u1s_rep']
+        self.rep_slices[6] = x['nb_u3s_rep']
+        self.rep_slices[7] = x['nb_u10s_rep']
+        self.rep_slices[8] = x['nb_u30s_rep']
         self.zombies = x['zombies']
         self.sum_v4 = x['sum_v4']
         self.max_v4 = x['max_v4']
@@ -281,21 +309,24 @@ class prov_cc_as_rr_prov_slice:
         self.sum_v6 = x['sum_v6']
         self.max_v6 = x['max_v6']
         self.average_v6 = x['average_v6']
-        self.max_v4_v6 = x['max_v4v6']
-     
+        self.average_v4v6 = x['average_v4v6']
+        self.max_v4v6 = x['max_v4v6']
+
 
 
 
 # PROV_CC_AS_RR_SLICE
 #   One record per RR per CC-AS in a time slice.
 #   contains a set of pdns_uid_rr present in the AS for that time slice.
-# 
+#
 class prov_cc_as_rr_slice:
     def __init__(self):
         self.prov = [ None, None, None, None, None, None, None, None, None, None, None ]
         self.uids = dict()
         self.nb_uids = 0
         self.delta_first_max = 0
+        self.sum_prov = 0
+        self.average_prov = 0
 
     def add_query(self, uid, query_time, query_ad_time, prov, resolver_IP):
         global delta_first_max
@@ -320,23 +351,30 @@ class prov_cc_as_rr_slice:
                 if delta_t > delta_first_max:
                     delta_first_max = delta_t
                     print("delta_first_max; " + str(delta_first_max))
-            self.prov[p_index].add_query(uid, query_time, resolver_IP, self.uids[uid])
-
+            if self.prov[p_index].add_query(uid, query_time, resolver_IP, self.uids[uid]):
+                self.sum_prov += 1
     def add_slice(self, other):
         self.nb_uids += other.nb_uids + len(other.uids)
+        self.sum_prov += other.sum_prov
+        if self.nb_uids > 0:
+            self.average_prov = self.sum_prov / self.nb_uids
         for p_x in range(0, len(Prov_names)):
             if other.prov[p_x] != None:
                 if self.prov[p_x] == None:
-                    self.prov[p_x] = prov_cc_as_rr_prov_slice() 
+                    self.prov[p_x] = prov_cc_as_rr_prov_slice()
                 self.prov[p_x].add_slice(other.prov[p_x])
-        
+
     def get_headers(h):
         h.append("uids_rr")
+        h.append("sum_prov")
+        h.append("average_prov")
         h.append("prov")
         return prov_cc_as_rr_prov_slice.get_headers(h)
-     
+
     def get_flat_headers(h, rr_prefix):
         h.append(rr_prefix + "_uids")
+        h.append(rr_prefix + "_sum_prov")
+        h.append(rr_prefix + "_average_prov")
         for p_x in range(0, len(Prov_names)):
             p_prefix = rr_prefix + "_" + Prov_names[p_x]
             h = prov_cc_as_rr_prov_slice.get_flat_headers(h, p_prefix)
@@ -350,19 +388,23 @@ class prov_cc_as_rr_slice:
                 for x in row_prefix:
                     rp.append(x)
                 rp.append(self.nb_uids)
+                rp.append(self.sum_prov)
+                rp.append(self.average_prov)
                 rp.append(Prov_names[p_x])
                 t.append(self.prov[p_x].get_row(rp))
         return t
 
     def get_flat_row(self, r):
         r.append(self.nb_uids)
+        r.append(self.sum_prov)
+        r.append(self.average_prov)
         for p_x in range(0, len(Prov_names)):
             if self.prov[p_x] != None:
                 r = self.prov[p_x].get_flat_row(r)
             else:
                 r = prov_cc_as_rr_prov_slice.get_null_row(r)
         return r
-    
+
     def get_null_row(r):
         for p_x in range(0, len(Prov_names)):
             r = prov_cc_as_rr_prov_slice.get_null_row(r)
@@ -370,6 +412,8 @@ class prov_cc_as_rr_slice:
 
     def load_row(self, x):
         self.nb_uids = x['uids_rr']
+        self.sum_prov = x['sum_prov']
+        self.average_prov = x['average_prov']
         prov = x['prov']
         p_x = Prov_index[prov]
         if self.prov[p_x] != None:
@@ -379,13 +423,13 @@ class prov_cc_as_rr_slice:
         else:
             self.prov[p_x] = prov_cc_as_rr_prov_slice()
             self.prov[p_x].load_row(x)
-           
+
 
 # PROV_CC_AS_SLICE
 #   One record per CC-AS in a time slice.
 #   contains a set of pdns_uid_rr present in the AS for that time slice.
-#   also contains 
-# 
+#   also contains
+#
 class prov_cc_as_slice:
     def __init__(self, query_cc, query_AS):
         self.query_cc = query_cc
@@ -408,7 +452,7 @@ class prov_cc_as_slice:
         for r_x in range(0, len(rr_names)):
             if other.rr[r_x] != None:
                 if self.rr[r_x] == None:
-                    self.rr[r_x] = prov_cc_as_rr_slice() 
+                    self.rr[r_x] = prov_cc_as_rr_slice()
                 self.rr[r_x].add_slice(other.rr[r_x])
 
     def get_headers(h):
@@ -493,7 +537,7 @@ class prov_slice:
         df = pd.DataFrame(t, columns = prov_slice.get_headers())
 
         return df
-    
+
     # Produce a file with a group of columns per rr_type and provider, one row per AS
     def get_flat_headers():
         return prov_cc_as_slice.get_flat_headers()
@@ -515,7 +559,7 @@ class prov_slice:
             self.cc_as[key] = prov_cc_as_slice(query_cc, query_AS)
             self.cc_as[key].nb_uids = x['uids']
         self.cc_as[key].load_row(x)
-       
+
     def load_file(self, csv_file):
         df = pd.read_csv(csv_file)
         for index, row in df.iterrows():
@@ -523,7 +567,7 @@ class prov_slice:
 
 class prov_parse:
     def __init__(self, ip2a4, ip2a6, as_names):
-        self.ip2a4 = ip2a4 
+        self.ip2a4 = ip2a4
         self.ip2a6 = ip2a6
         self.as_names = as_names
         self.previous = prov_slice(0)
@@ -548,7 +592,7 @@ class prov_parse:
             self.previous.add_query(uid, query_cc, query_AS, query_time, query_ad_time, query_rr, prov, resolver_IP)
         else:
             self.current.add_query(uid, query_cc, query_AS, query_time, query_ad_time, query_rr, prov, resolver_IP)
-        
+
         if query_time > (self.current.query_time + 60):
             self.summarize(query_time)
 
@@ -577,7 +621,14 @@ class prov_parse:
                     if x.resolver_AS == "" or x.resolver_cc == "":
                         x.set_resolver_AS(self.ip2a4, self.ip2a6, self.as_names)
                     if x.resolver_AS != 'AS0':
-                        self.add_query(x.query_user_id, x.query_cc, x.query_AS, x.query_time, x.query_ad_time, x.rr_type, x.resolver_tag, x.resolver_IP)
+                        seconds_in_day = int(x.query_ad_time) % (24*3600)
+                        if seconds_in_day < 30 or \
+                            seconds_in_day >= (24*3600) - 30:
+                            # TODO: add another output file containing the transactions that are dropped here,
+                            # so they can be processed in a second pass.
+                            pass
+                        else:
+                            self.add_query(x.query_user_id, x.query_cc, x.query_AS, x.query_time, x.query_ad_time, x.rr_type, x.resolver_tag, x.resolver_IP)
 
                     nb_events += 1
                     if (nb_events%lth) == 0:
@@ -596,4 +647,3 @@ class prov_parse:
     def save_and_close(self, output_file):
         df = self.get_df()
         df.to_csv(output_file)
-
