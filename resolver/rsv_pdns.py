@@ -114,10 +114,12 @@ class prov_cc_as_rr_prov_uid:
         self.addr = set()
         self.addr.add(resolver_IP)
         self.query_times = [ query_time ]
+        self.n_first = 0
 
     def add(self, query_time, resolver_IP):
         if query_time < self.first_time:
             first_time = query_time;
+            self.n_first = len(self.query_times)
         self.query_times.append(query_time)
         if not resolver_IP in self.addr:
             self.addr.add(resolver_IP)
@@ -133,21 +135,24 @@ class prov_cc_as_rr_prov_uid:
         return n4, n6
 
     def add_delays(self, prov_slice, rr_query_time):
-        for query_time in self.query_times:
-            # first, compute the relative deltime
+        for q in range(0, len(self.query_times)):
+            query_time = self.query_times[q]
+            # first, compute the relative delta_time
             delta_time = query_time - self.first_time
-            for i in range(1, len(delta_range)):
-                if delta_time <= delta_range[i]:
+            for i in range(0, len(delta_range)):
+                if delta_time <= delta_range[i] and \
+                    (i > 0 or q == self.n_first):
                     prov_slice.time_slices[i] += 1
                     break
-        # add computation of absolute slices.
-        abs_time = query_time - rr_query_time
-        for i in range(0, len(delta_range)):
-            if abs_time <= delta_range[i]:
-                prov_slice.abs_slices[i] += 1
-            else:
-                prov_slice.rep_slices[i] += 1
-            break
+            # add computation of absolute slices.
+            abs_time = query_time - rr_query_time
+            for i in range(0, len(delta_range)):
+                if abs_time <= delta_range[i]:
+                    if q == self.n_first:
+                        prov_slice.abs_slices[i] += 1
+                    else:
+                        prov_slice.rep_slices[i] += 1
+                    break
 
 # PROV_CC_AS_RR_PROV_SLICE
 #   One record per Prov per RR per CC-AS in a time slice.
@@ -175,7 +180,6 @@ class prov_cc_as_rr_prov_slice:
             exit(-1)
         is_first = False
         if not uid in self.uids:
-            self.time_slices[0] += 1
             is_first = True
             self.uids[uid] = prov_cc_as_rr_prov_uid(query_time, resolver_IP)
         else:
