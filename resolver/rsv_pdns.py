@@ -113,8 +113,14 @@ class prov_cc_as_rr_prov_uid:
         self.first_time = query_time
         self.addr = set()
         self.addr.add(resolver_IP)
+        self.query_times = [ query_time ]
+        self.n_first = 0
 
     def add(self, query_time, resolver_IP):
+        if query_time < self.first_time:
+            first_time = query_time;
+            self.n_first = len(self.query_times)
+        self.query_times.append(query_time)
         if not resolver_IP in self.addr:
             self.addr.add(resolver_IP)
 
@@ -127,6 +133,26 @@ class prov_cc_as_rr_prov_uid:
             else:
                 n4 += 1
         return n4, n6
+
+    def add_delays(self, prov_slice, rr_query_time):
+        for q in range(0, len(self.query_times)):
+            query_time = self.query_times[q]
+            # first, compute the relative delta_time
+            delta_time = query_time - self.first_time
+            for i in range(0, len(delta_range)):
+                if delta_time <= delta_range[i] and \
+                    (i > 0 or q == self.n_first):
+                    prov_slice.time_slices[i] += 1
+                    break
+            # add computation of absolute slices.
+            abs_time = query_time - rr_query_time
+            for i in range(0, len(delta_range)):
+                if abs_time <= delta_range[i]:
+                    if q == self.n_first:
+                        prov_slice.abs_slices[i] += 1
+                    else:
+                        prov_slice.rep_slices[i] += 1
+                    break
 
 # PROV_CC_AS_RR_PROV_SLICE
 #   One record per Prov per RR per CC-AS in a time slice.
@@ -154,28 +180,11 @@ class prov_cc_as_rr_prov_slice:
             exit(-1)
         is_first = False
         if not uid in self.uids:
-            self.time_slices[0] += 1
             is_first = True
             self.uids[uid] = prov_cc_as_rr_prov_uid(query_time, resolver_IP)
         else:
             self.uids[uid].add(query_time, resolver_IP)
-            # todo: add series of delays with absolute time
-            delta_time = query_time - self.uids[uid].first_time
-            for i in range(1, len(delta_range)):
-                if delta_time <= delta_range[i]:
-                    self.time_slices[i] += 1
-                    break
-        # add computation of absolute slices.
-        abs_time = query_time - uid_first_time
-        for i in range(0, len(delta_range)):
-            if abs_time <= delta_range[i]:
-                if is_first:
-                    self.abs_slices[i] += 1
-                else:
-                    self.rep_slices[i] += 1
-                break
         return is_first
-
 
     def add_slice(self, other):
         for i_x in range(0, len(delta_range)):
@@ -329,7 +338,6 @@ class prov_cc_as_rr_slice:
         self.average_prov = 0
 
     def add_query(self, uid, query_time, query_ad_time, prov, resolver_IP):
-        global delta_first_max
         if prov in Prov_index:
             p_index = Prov_index[prov]
         else:
@@ -341,19 +349,23 @@ class prov_cc_as_rr_slice:
             self.prov[p_index].zombies += 1
             #print("Zombies + 1 for prov " + str(p_index))
         else:
-            is_first = False
             if not uid in self.uids:
                 self.uids[uid] = query_time
-                is_first = True
-            if self.uids[uid] > query_time:
-                delta_t = self.uids[uid] - query_time
-                query_time = self.uids[uid]
-                if delta_t > delta_first_max:
-                    delta_first_max = delta_t
-                    print("delta_first_max; " + str(delta_first_max))
+            elif self.uids[uid] > query_time:
+                self.uids[uid] = query_time
             if self.prov[p_index].add_query(uid, query_time, resolver_IP, self.uids[uid]):
                 self.sum_prov += 1
+
+    def summarize_delays(self):
+        for uid in self.uids:
+            query_time = self.uids[uid]
+            for p_x in range(0, len(Prov_names)):
+                if self.prov[p_x] != None:
+                    if uid in self.prov[p_x].uids:
+                        self.prov[p_x].uids[uid].add_delays(self.prov[p_x], query_time)
+
     def add_slice(self, other):
+        other.summarize_delays()
         self.nb_uids += other.nb_uids + len(other.uids)
         self.sum_prov += other.sum_prov
         if self.nb_uids > 0:
