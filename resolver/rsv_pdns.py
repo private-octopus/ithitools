@@ -40,7 +40,9 @@ PDNS_names = [
     'he'
 ]
 
-Prov_names = [ 'ISP',
+Prov_names = [
+    'ISP4',
+    'ISP6',
     'googlepdns',
     'cloudflare',
     'opendns',
@@ -54,24 +56,26 @@ Prov_names = [ 'ISP',
 
 Prov_index = {
     'ISP':0,
-    'googlepdns':1,
-    'cloudflare':2,
-    'opendns':3,
-    'quad9':4,
-    'level3':5,
-    'neustar':6,
-    'he':7,
-    'other_pdns':8,
-    'others':10,
+    'ISP4':0,
+    'ISP6':1,
+    'googlepdns':2,
+    'cloudflare':3,
+    'opendns':4,
+    'quad9':5,
+    'level3':6,
+    'neustar':7,
+    'he':8,
+    'other_pdns':9,
+    'others':11,
     'Same_AS':0,
     'Same_group':0,
-    'Same_CC':9,
-    'same_CC':9,
-    'Cloud':10,
-    'Other_cc':10
+    'Same_CC':10,
+    'same_CC':10,
+    'Cloud':11,
+    'Other_cc':11
 }
 
-Prov_index_others = 8
+Prov_index_others = 11
 
 rr_names = [ 'A', 'AAAA', 'HTTPS' ]
 
@@ -330,9 +334,11 @@ class prov_cc_as_rr_prov_slice:
 #
 class prov_cc_as_rr_slice:
     def __init__(self):
-        self.prov = [ None, None, None, None, None, None, None, None, None, None, None ]
+        self.prov = [ None, None, None, None, None, None, None, None, None, None, None, None ]
         self.uids = dict()
         self.nb_uids = 0
+        self.uids_isp = set()
+        self.nb_uids_isp = 0
         self.delta_first_max = 0
         self.sum_prov = 0
         self.average_prov = 0
@@ -340,6 +346,12 @@ class prov_cc_as_rr_slice:
     def add_query(self, uid, query_time, query_ad_time, prov, resolver_IP):
         if prov in Prov_index:
             p_index = Prov_index[prov]
+            if p_index == 0:
+                if ":" in resolver_IP:
+                    p_index = 1;
+                if not uid in self.uids_isp and \
+                    query_time <= query_ad_time + 30:
+                    self.uids_isp.add(uid)
         else:
             #print("Folding " + prov + " into others.")
             p_index = Prov_index_others
@@ -367,6 +379,7 @@ class prov_cc_as_rr_slice:
     def add_slice(self, other):
         other.summarize_delays()
         self.nb_uids += other.nb_uids + len(other.uids)
+        self.nb_uids_isp += other.nb_uids_isp + len(other.uids_isp)
         self.sum_prov += other.sum_prov
         if self.nb_uids > 0:
             self.average_prov = self.sum_prov / self.nb_uids
@@ -380,6 +393,7 @@ class prov_cc_as_rr_slice:
         h.append("uids_rr")
         h.append("sum_prov")
         h.append("average_prov")
+        h.append("uids_isp")
         h.append("prov")
         return prov_cc_as_rr_prov_slice.get_headers(h)
 
@@ -387,6 +401,8 @@ class prov_cc_as_rr_slice:
         h.append(rr_prefix + "_uids")
         h.append(rr_prefix + "_sum_prov")
         h.append(rr_prefix + "_average_prov")
+        h.append(rr_prefix + "_uids_isp")
+
         for p_x in range(0, len(Prov_names)):
             p_prefix = rr_prefix + "_" + Prov_names[p_x]
             h = prov_cc_as_rr_prov_slice.get_flat_headers(h, p_prefix)
@@ -402,6 +418,7 @@ class prov_cc_as_rr_slice:
                 rp.append(self.nb_uids)
                 rp.append(self.sum_prov)
                 rp.append(self.average_prov)
+                rp.append(self.nb_uids_isp)
                 rp.append(Prov_names[p_x])
                 t.append(self.prov[p_x].get_row(rp))
         return t
@@ -410,6 +427,7 @@ class prov_cc_as_rr_slice:
         r.append(self.nb_uids)
         r.append(self.sum_prov)
         r.append(self.average_prov)
+        r.append(self.nb_uids_isp)
         for p_x in range(0, len(Prov_names)):
             if self.prov[p_x] != None:
                 r = self.prov[p_x].get_flat_row(r)
@@ -426,6 +444,7 @@ class prov_cc_as_rr_slice:
         self.nb_uids = x['uids_rr']
         self.sum_prov = x['sum_prov']
         self.average_prov = x['average_prov']
+        self.nb_uids_isp = x['uids_isp']
         prov = x['prov']
         p_x = Prov_index[prov]
         if self.prov[p_x] != None:
