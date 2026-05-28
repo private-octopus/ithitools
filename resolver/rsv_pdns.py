@@ -268,6 +268,68 @@ class prov_cc_as_rr_prov_slice:
 
         return r
 
+    null_time_slices = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+    def get_slice_json(t_slice, compact, F):
+        jrange_names = [ "0ms", "u10ms", "u30ms",
+                "u100ms", "u300ms", "u1s",
+                "u3s", "u10s", "u30s" ]
+        F.write("{")
+        is_first = True
+        for i in range(0, len(jrange_names)):
+            if t_slice[i] != 0 or not compact:
+                if not is_first:
+                    F.write(",")
+                is_first = False
+                F.write("\"" + jrange_names[i] + "\":" + 
+                        str(t_slice[i]))
+        F.write("}");
+
+    def get_json(self, compact, F):
+        F.write("{\n\"rel\":")
+        prov_cc_as_rr_prov_slice.get_slice_json(self.time_slices, compact, F)
+        F.write(",\n\"abs\":")
+        prov_cc_as_rr_prov_slice.get_slice_json(self.abs_slices, compact, F)
+        F.write(",\n\"rep\":")
+        prov_cc_as_rr_prov_slice.get_slice_json(self.rep_slices, compact, F)
+        F.write(",\n\"zombies\":" + str(self.zombies))
+        F.write(",\n\"stats\":{")
+        if self.time_slices[0] == 0:
+            av4 = 0
+            av6 = 0
+        else:
+            av4 = self.sum_v4/self.time_slices[0]
+            av6 = self.sum_v6/self.time_slices[0]
+        F.write("\"sum_v4\":" + str(self.sum_v4))
+        F.write(",\"max_v4\":" + str(self.max_v4))
+        F.write(",\"average_v4\":" + str(av4))
+        F.write(",\"sum_v6\":" + str(self.sum_v6))
+        F.write(",\"max_v6\":" + str(self.max_v6))
+        F.write(",\"average_v6\":" + str(av6))
+        F.write(",\"max_v4v6\":" + str(self.max_v4v6))
+        F.write(",\"average_v4v6\":" + str(av4 + av6) + "}}")
+
+    def get_null_json(F):
+        F.write("{\n\"rel\":")
+        prov_cc_as_rr_prov_slice.get_slice_json(
+            prov_cc_as_rr_prov_slice.null_time_slices, False, F)
+        F.write(",\n\"abs\":")
+        prov_cc_as_rr_prov_slice.get_slice_json(
+            prov_cc_as_rr_prov_slice.null_time_slices, False, F)
+        F.write(",\n\"rep\":")
+        prov_cc_as_rr_prov_slice.get_slice_json(
+            prov_cc_as_rr_prov_slice.null_time_slices, False, F)
+        F.write(",\n\"zombies\":" + str(0))
+        F.write(",\n\"stats\":{")
+        F.write("\"sum_v4\":" + str(0))
+        F.write(",\"max_v4\":" + str(0))
+        F.write(",\"average_v4\":" + str(0))
+        F.write(",\"sum_v6\":" + str(0))
+        F.write(",\"max_v6\":" + str(0))
+        F.write(",\"average_v6\":" + str(0))
+        F.write(",\"max_v4v6\":" + str(0))
+        F.write(",\"average_v4v6\":" + str(0) + "}}")
+
+
     def get_null_row(r):
         for sl in range(0, len(range_names)):
             r.append(0)
@@ -324,9 +386,6 @@ class prov_cc_as_rr_prov_slice:
         self.average_v6 = x['average_v6']
         self.average_v4v6 = x['average_v4v6']
         self.max_v4v6 = x['max_v4v6']
-
-
-
 
 # PROV_CC_AS_RR_SLICE
 #   One record per RR per CC-AS in a time slice.
@@ -402,6 +461,7 @@ class prov_cc_as_rr_slice:
         h.append(rr_prefix + "_sum_prov")
         h.append(rr_prefix + "_average_prov")
         h.append(rr_prefix + "_uids_isp")
+        h.append(rr_prefix + "_average_v4v6_isp")
 
         for p_x in range(0, len(Prov_names)):
             p_prefix = rr_prefix + "_" + Prov_names[p_x]
@@ -423,17 +483,73 @@ class prov_cc_as_rr_slice:
                 t.append(self.prov[p_x].get_row(rp))
         return t
 
+    def get_average_v4v6(self):
+        average_v4v6 = 0
+        if self.nb_uids_isp > 0:
+            sum_v4v6 = 0
+            if self.prov[0] != None:
+                # prov[0] corresponds to ISP4
+                sum_v4v6 += self.prov[0].sum_v4
+            if self.prov[1] != None:
+                # prov[1] corresponds to ISP6
+                sum_v4v6 += self.prov[1].sum_v6
+            average_v4v6 = sum_v4v6/self.nb_uids_isp
+        return average_v4v6
+
     def get_flat_row(self, r):
         r.append(self.nb_uids)
         r.append(self.sum_prov)
         r.append(self.average_prov)
         r.append(self.nb_uids_isp)
+        r.append(self.get_average_v4v6())
+
         for p_x in range(0, len(Prov_names)):
             if self.prov[p_x] != None:
                 r = self.prov[p_x].get_flat_row(r)
             else:
                 r = prov_cc_as_rr_prov_slice.get_null_row(r)
         return r
+       
+    def get_json(self, compact, F):
+        F.write("{" + \
+            "\"uids\":" + str(self.nb_uids) + "," + \
+            "\"sum_prov\":" + str(self.sum_prov) + "," + \
+            "\"average_prov\":" + str(self.average_prov) + "," + \
+            "\"uids_isp\":" + str(self.nb_uids_isp) + "," + \
+            "\"average_v4v6\":" + str(self.get_average_v4v6()) + "," + \
+            "\"providers\":{")
+        is_first_prov = True
+        for p_x in range(0, len(Prov_names)):
+            if self.prov[p_x] != None:
+                if not is_first_prov:
+                    F.write(",")
+                is_first_prov = False
+                F.write("\n\"" + Prov_names[p_x] + "\":")
+                self.prov[p_x].get_json(compact, F)
+            elif not compact:
+                if not is_first_prov:
+                    F.write(",")
+                is_first_prov = False
+                prov_cc_as_rr_prov_slice.get_null_json(F)
+        F.write("}}")
+
+    def get_null_json(F):
+        F.write("{" + \
+            "\"uids\":" + str(0) + "," + \
+            "\"sum_prov\":" + str(0) + "," + \
+            "\"average_prov\":" + str(0) + "," + \
+            "\"uids_isp\":" + str(0) + "," + \
+            "\"average_v4v6\":" + str(0) + "," + \
+            "\"providers\":{")
+        is_first_prov = True
+        for p_x in range(0, len(Prov_names)):
+            if not is_first_prov:
+                F.write(",")
+            is_first_prov = False
+            prov_cc_as_rr_prov_slice.get_null_json(F)
+        F.write("}}")
+
+
 
     def get_null_row(r):
         for p_x in range(0, len(Prov_names)):
@@ -506,6 +622,28 @@ class prov_cc_as_slice:
             else:
                 r = prov_cc_as_rr_slice.get_null_row(r)
         return r
+    
+    def get_json(self, compact, F):
+        F.write("\n{\"cc\":\"" + self.query_cc + "\"," + \
+            "\"as\":\"" + self.query_AS + "\"," +  \
+            "\"uids\":" + str(self.nb_uids) + "," + \
+            "\"rr\":{")
+        first_rr = True
+        for r_x in range(0, len(rr_names)):
+            if self.rr[r_x] != None:
+                if not first_rr:
+                    F.write(",")
+                first_rr = False
+                F.write("\"" + rr_names[r_x] + "\":")
+                first_rr = False
+                self.rr[r_x].get_json(compact, F)
+            elif not compact:
+                if not first_rr:
+                    F.write(",")
+                first_rr = False
+                prov_cc_as_rr_slice.get_null_json(F)
+
+        F.write("}}")
 
     def get_rows(self, row_prefix):
         t = []
@@ -527,6 +665,7 @@ class prov_cc_as_slice:
         if self.rr[r_x] == None:
             self.rr[r_x] = prov_cc_as_rr_slice()
         self.rr[r_x].load_row(x)
+        
 
 # PROV_SLICE
 #   Contains the dict of CC_AS present in the time slice
@@ -580,6 +719,16 @@ class prov_slice:
             flat_t.append(r)
         df = pd.DataFrame(flat_t, columns = prov_slice.get_flat_headers())
         return df
+
+    def get_json(self, F, compact=True):
+        F.write("{\"asns\": [")
+        first_as = True
+        for key in self.cc_as:
+            if not first_as:
+                F.write(",")
+            first_as = False
+            r = self.cc_as[key].get_json(compact, F)
+        F.write("]}\n")
 
     # load a value from a file
     def load_row(self, x):

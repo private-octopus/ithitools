@@ -46,7 +46,7 @@ Prov_names = [ 'ISP',
     'he',
     'other_pdns',
     'same_CC',
-   'others' ]
+    'others' ]
 
 Prov_index = {
     'ISP':0,
@@ -65,6 +65,16 @@ Prov_index = {
     'same_CC':9,
     'Cloud':10,
     'Other_cc':10
+}
+
+Pdns_index = {
+    'googlepdns':1,
+    'cloudflare':2,
+    'opendns':3,
+    'quad9':4,
+    'level3':5,
+    'neustar':6,
+    'he':7
 }
 
 Prov_index_others = 10
@@ -102,6 +112,54 @@ delta_set = [ 0, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 30 ]
 delta_names = [ "uids_0", "uids_1ms", "uids_3ms", "uids_10ms", "uids_30ms",
               "uids_100ms", "uids_300ms", "uids_larger" ]
 
+def get_prov(resolver_cc, resolver_AS, resolver_tag):
+    if resolver_tag in Pdns_index:
+        prov = resolver_tag
+    else:
+        prov = resolver_cc + '-' + resolver_AS
+    return prov
+
+class zombie_cc_as_rr_prov:
+    def __init__(self, resolver_cc, resolver_AS, resolver_tag):
+        self.resolver_cc = resolver_cc
+        self.resolver_AS = resolver_AS
+        self.resolver_tag = resolver_tag
+        self.nb = 0
+
+class zombie_cc_as_rr:
+    def __init__(self):
+        self.total = 0
+        self.prov = dict()
+        self.nb = 0
+
+    def add(self, resolver_cc, resolver_AS, resolver_tag, nb):
+        self.nb += nb
+        if len(resolver_cc) != 2:
+            resolver_cc = 'ZZ'
+        prov = resolver_cc + '-' + resolver_AS + '-' + resolver_tag
+        if not prov in self.prov:
+            self.prov[prov] = zombie_cc_as_rr_prov(resolver_cc, resolver_AS, resolver_tag)
+        self.prov[prov].nb += nb
+
+class zombie_cc_as:
+    def __init__(self, query_cc, query_AS):
+        self.total = 0
+        self.query_cc = query_cc
+        self.query_AS = query_AS
+        self.nb = 0
+        self.rr = dict()
+
+    def add(self, rr_type, resolver_cc, resolver_AS, resolver_tag, nb):
+        self.nb += nb
+        if not rr_type in self.rr:
+            self.rr[rr_type] = zombie_cc_as_rr()
+        self.rr[rr_type].add(resolver_cc, resolver_AS, resolver_tag, nb)
+
+    # add all the lines for the rr_types to the table
+    def get_df(self, query_cc, query_as):
+        pass
+
+
 class zombie_parse:
     def __init__(self, ip2a4, ip2a6, as_names):
         self.ip2a4 = ip2a4
@@ -110,17 +168,17 @@ class zombie_parse:
         self.zombie_AS = dict()
         self.zombie_max = 30
 
-    def add_zombie(self, resolver_cc, resolver_AS, nb):
-        if len(str(resolver_cc)) != 2:
-            resolver_cc = 'ZZ'
-        key = str(resolver_cc) + '-' + resolver_AS
+    def add(self, query_cc, query_AS, rr_type, resolver_cc, resolver_AS, resolver_tag, nb):
+        if len(str(query_cc)) != 2:
+            query_cc = 'ZZ'
+        key = str(query_cc) + '-' + query_AS
         if not key in self.zombie_AS:
-            self.zombie_AS[key] = nb
-        else:
-            self.zombie_AS[key] += nb
+            self.zombie_AS[key] = zombie_cc_as(query_cc, query_AS)
+        self.zombie_AS[key].add(rr_type, resolver_cc, resolver_AS, resolver_tag, nb)
 
     def load_log(self, log_file, log_threshold=15625, time_start=0):
         nb_events = 0
+        nb_zombies = 0
         lth = log_threshold;
         t = []
         old_time = 0
@@ -141,7 +199,9 @@ class zombie_parse:
                 parsed = False
             if parsed:
                 if x.filter(rr_types=['A', 'AAAA', 'HTTPS'], experiment=['0du'], query_delay=1000000000, check_dotnxdomain=True):
-                    x.set_resolver_AS(self.ip2a4, self.ip2a6, self.as_names) 
+                    x.set_resolver_AS(self.ip2a4, self.ip2a6, self.as_names)
+                    if x.resolver_AS == "" or x.resolver_cc == "":
+                        x.set_resolver_AS(self.ip2a4, self.ip2a6, self.as_names)
                     if x.resolver_AS != 'AS0':
                         seconds_in_day = int(x.query_ad_time) % (24*3600)
                         if seconds_in_day < 30 or \
@@ -150,14 +210,8 @@ class zombie_parse:
                             # so they can be processed in a second pass.
                             pass
                         elif x.query_time - x.query_ad_time >= self.zombie_max:
-                            p_index = 0
-                            if x.resolver_tag in Prov_index:
-                                p_index = Prov_index[x.resolver_tag]
-                            else:
-                                p_index = Prov_index_others
-                            if p_index == Prov_index_others or p_index == Prov_index_same_cc:
-                                self.add_zombie(x.resolver_cc, x.resolver_AS, 1)
-
+                            self.add(x.query_cc, x.query_AS, x.rr_type, x.resolver_cc, x.resolver_AS, x.resolver_tag, 1)
+                            nb_zombies += 1
                     nb_events += 1
                     if (nb_events%lth) == 0:
                         new_time = time.time() - time_start
@@ -165,17 +219,24 @@ class zombie_parse:
                         sys.stdout.flush()
                         if lth < 1000000:
                             lth *= 2
+        print(log_file + ": found " + str(nb_zombies) + " zombies in " + str(nb_events) + " events.");
+        sys.stdout.flush()
         return nb_events
 
     def get_df(self):
         t = []
         for key in self.zombie_AS:
-            p_cc = key[:2]
-            p_as = key[3:]
-            r = [ p_cc, p_as, self.zombie_AS[key]]
-            t.append(r)
-        print("Found " + str(len(t)) + " zombie ASes.")
-        df = pd.DataFrame(t, columns=['CC', 'AS', 'zombies' ])
+            for rr_type in self.zombie_AS[key].rr:
+                for prov in self.zombie_AS[key].rr[rr_type].prov:
+                    r = [ self.zombie_AS[key].query_cc, self.zombie_AS[key].query_AS, rr_type,
+                          self.zombie_AS[key].rr[rr_type].prov[prov].resolver_cc,
+                          self.zombie_AS[key].rr[rr_type].prov[prov].resolver_AS,
+                          self.zombie_AS[key].rr[rr_type].prov[prov].resolver_tag,
+                          self.zombie_AS[key].rr[rr_type].prov[prov].nb ]
+                    t.append(r)
+
+        print("Found " + str(len(t)) + " zombie ASes/rr/prov.")
+        df = pd.DataFrame(t, columns=['CC', 'AS', 'rr_type', 'resolver_cc', 'resolver_AS', 'resolver_tag', 'count' ])
         return df
 
     def save_and_close(self, output_file):
@@ -183,13 +244,46 @@ class zombie_parse:
         df.to_csv(output_file)
 
     def add_row(self, row):
-        self.add_zombie(row['CC'], row['AS'], row['zombies'])
+        self.add(row['CC'], row['AS'], row['rr_type'], row['resolver_cc'], row['resolver_AS'], row['resolver_tag'], row['count'])
 
     def add_summary(self, csv_file):
         df = pd.read_csv(csv_file, sep=",", skipinitialspace=True)
         print(csv_file + ": " + str(df.shape[0]) + " lines.")
         df.apply(lambda row: self.add_row(row),axis=1)
         print("After loading: " + str(len(self.zombie_AS)) + " CC/AS.")
+
+    def to_json(self, F):
+        F.write("[")
+        is_first_key = True
+        for key in self.zombie_AS:
+            if not is_first_key:
+                F.write(",")
+            is_first_key = False
+            F.write("\n    { \"CC\": \"" + self.zombie_AS[key].query_cc +
+                    "\", \"AS\": \"" + self.zombie_AS[key].query_AS +
+                    "\", \"nb\": " + str(self.zombie_AS[key].nb) +  ", \"rrs\": [")
+            is_first_rr = True
+            for rr_type in self.zombie_AS[key].rr:
+                if not is_first_rr:
+                    F.write(",")
+                is_first_rr = False
+                F.write("\n        { \"RR\": \"" + rr_type + 
+                        "\", \"nb\": " + str(self.zombie_AS[key].rr[rr_type].nb) + ",\"provs\":[")
+                is_first_prov = True
+                for prov in self.zombie_AS[key].rr[rr_type].prov:
+                    if not is_first_prov:
+                        F.write(",")
+                    is_first_prov = False
+                    F.write("{" +
+                            "\"CC\":\"" + self.zombie_AS[key].rr[rr_type].prov[prov].resolver_cc + "\"," +
+                            "\"AS\":\"" + self.zombie_AS[key].rr[rr_type].prov[prov].resolver_AS + "\"," +
+                            "\"tag\":\"" + self.zombie_AS[key].rr[rr_type].prov[prov].resolver_tag + "\"," +
+                            "\"nb\":" + str(self.zombie_AS[key].rr[rr_type].prov[prov].nb) + "}")
+                F.write("]}")
+            F.write("]}")
+        F.write("]")
+
+
 
 
 
@@ -220,6 +314,12 @@ class file_bucket:
 def load_bucket(bucket):
     bucket.load()
     return True
+
+# usage
+
+def usage():
+    print("Usage: rsv_zombie_p output_dir temp_dir <input_files>")
+
 
 
 # main
@@ -275,7 +375,7 @@ if __name__ == "__main__":
         item = item[:-4]
         if item.startswith("queries"):
             item = item[7:]
-        output_file = os.path.join(temp_dir, "zombie-p-" + item + ".csv")
+        output_file = os.path.join(temp_dir, "zombies-" + item + ".csv")
         bucket = file_bucket(ip2a4, ip2a6, as_names, output_file, source_file, bucket_id, time_loaded)
         bucket_list.append(bucket)
         bucket_id += 1
@@ -301,6 +401,10 @@ if __name__ == "__main__":
     for bucket in bucket_list:
         zombie_p_total.add_summary(bucket.output_file)
 
-    zombie_p_file = os.path.join(output_dir, "zombie_p.csv")
-    df = zombie_p_total.get_df()
-    df.to_csv(zombie_p_file)
+    # zombie_p_file = os.path.join(output_dir, "zombies.csv")
+    # df = zombie_p_total.get_df()
+    # df.to_csv(zombie_p_file)
+
+    zombies_json_file = os.path.join(output_dir, "zombies.json.bz2")
+    with bz2.open(zombies_json_file, "wt") as F:
+        zombie_p_total.to_json(F)

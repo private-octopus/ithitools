@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "prov-flat-summary",
+  "description": "DNS resolver provider-level measurement data, one entry per ASN+country pair.",
+  "type": "object",
+  "required": [ "asns" ],
+  "additionalProperties": false,
+  "properties": {
+    "asns": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/asn_entry" }
+    }
+  },
+  "$defs": {
+    "asn_entry": {
+      "type": "object",
+      "required": [ "cc", "as", "uids", "rr" ],
+      "additionalProperties": false,
+      "properties": {
+        "cc": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$",
+          "description": "ISO 3166-1 alpha-2 country code"
+        },
+        "as": {
+          "type": "string",
+          "pattern": "^AS\\d+$",
+          "description": "Autonomous system number (e.g. AS23473)"
+        },
+        "uids": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Total unique query IDs across all RR types"
+        },
+        "rr": {
+          "type": "object",
+          "required": [ "A", "AAAA", "HTTPS" ],
+          "additionalProperties": false,
+          "properties": {
+            "A": { "$ref": "#/$defs/rr_data" },
+            "AAAA": { "$ref": "#/$defs/rr_data" },
+            "HTTPS": { "$ref": "#/$defs/rr_data" }
+          }
+        }
+      }
+    },
+    "rr_data": {
+      "type": "object",
+      "required": [ "uids", "sum_prov", "average_prov", "uids_isp", "average_v4v6", "providers" ],
+      "additionalProperties": false,
+      "properties": {
+        "uids": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Unique query IDs for this RR type"
+        },
+        "sum_prov": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Sum of provider counts across all queries"
+        },
+        "average_prov": {
+          "type": "number",
+          "description": "Average number of distinct providers per query"
+        },
+        "uids_isp": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Unique query IDs seen by ISP resolvers"
+        },
+        "average_v4_v6_isp": {
+          "type": "number",
+          "description": "Average number of distinct IPv4 or IPv6 addresses per query for ISP servers"
+        },
+        "providers": {
+          "type": "object",
+          "required": [ "ISP4", "ISP6", "googlepdns", "cloudflare", "opendns", "quad9", "level3", "neustar", "he", "other_pdns", "others", "same_CC" ],
+          "additionalProperties": false,
+          "properties": {
+            "ISP4": { "$ref": "#/$defs/provider_data" },
+            "ISP6": { "$ref": "#/$defs/provider_data" },
+            "googlepdns": { "$ref": "#/$defs/provider_data" },
+            "cloudflare": { "$ref": "#/$defs/provider_data" },
+            "opendns": { "$ref": "#/$defs/provider_data" },
+            "quad9": { "$ref": "#/$defs/provider_data" },
+            "level3": { "$ref": "#/$defs/provider_data" },
+            "neustar": { "$ref": "#/$defs/provider_data" },
+            "he": { "$ref": "#/$defs/provider_data" },
+            "other_pdns": { "$ref": "#/$defs/provider_data" },
+            "others": { "$ref": "#/$defs/provider_data" },
+            "same_CC": { "$ref": "#/$defs/provider_data" }
+          }
+        }
+      }
+    },
+    "provider_data": {
+      "type": "object",
+      "required": [ "rel", "abs", "rep", "zombies", "stats" ],
+      "additionalProperties": false,
+      "properties": {
+        "rel": {
+          "$ref": "#/$defs/buckets_int",
+          "description": "Relative time bucket counts"
+        },
+        "abs": {
+          "$ref": "#/$defs/buckets_int",
+          "description": "Absolute time bucket counts"
+        },
+        "rep": {
+          "$ref": "#/$defs/buckets_int",
+          "description": "Duplicate (rep) time bucket counts"
+        },
+        "zombies": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Zombie response count"
+        },
+        "stats": { "$ref": "#/$defs/ip_stats" }
+      }
+    },
+    "buckets_int": {
+      "type": "object",
+      "required": [ "0ms", "u10ms", "u30ms", "u100ms", "u300ms", "u1s", "u3s", "u10s", "u30s" ],
+      "additionalProperties": false,
+      "properties": {
+        "0ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "0 ms latency bucket"
+        },
+        "u10ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "< 10 ms latency bucket"
+        },
+        "u30ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "< 30 ms latency bucket"
+        },
+        "u100ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "< 100 ms latency bucket"
+        },
+        "u300ms": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "< 300 ms latency bucket"
+        },
+        "u1s": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "< 1 s latency bucket"
+        },
+        "u3s": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "< 3 s latency bucket"
+        },
+        "u10s": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "< 10 s latency bucket"
+        },
+        "u30s": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "< 30 s latency bucket"
+        }
+      }
+    },
+    "ip_stats": {
+      "type": "object",
+      "required": [ "sum_v4", "max_v4", "average_v4", "sum_v6", "max_v6", "average_v6", "max_v4v6", "average_v4v6" ],
+      "additionalProperties": false,
+      "properties": {
+        "sum_v4": {
+          "type": "number",
+          "description": "Sum of unique IPv4 addresses"
+        },
+        "max_v4": {
+          "type": "number",
+          "description": "Max unique IPv4 addresses in a single query"
+        },
+        "average_v4": {
+          "type": "number",
+          "description": "Average unique IPv4 addresses per query"
+        },
+        "sum_v6": {
+          "type": "number",
+          "description": "Sum of unique IPv6 addresses"
+        },
+        "max_v6": {
+          "type": "number",
+          "description": "Max unique IPv6 addresses in a single query"
+        },
+        "average_v6": {
+          "type": "number",
+          "description": "Average unique IPv6 addresses per query"
+        },
+        "max_v4v6": {
+          "type": "number",
+          "description": "Max unique IPv4+IPv6 addresses in a single query"
+        },
+        "average_v4v6": {
+          "type": "number",
+          "description": "Average unique IPv4+IPv6 addresses per query"
+        }
+      }
+    }
+  }
+}
