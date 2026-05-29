@@ -137,6 +137,7 @@ class zombie_cc_as_rr:
 
     def add(self, resolver_cc, resolver_AS, resolver_tag, nb):
         self.nb += nb
+        resolver_cc = str(resolver_cc)
         if len(resolver_cc) != 2:
             resolver_cc = 'ZZ'
         prov = resolver_cc + '-' + resolver_AS + '-' + resolver_tag
