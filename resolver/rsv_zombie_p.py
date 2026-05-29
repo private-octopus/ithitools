@@ -116,6 +116,9 @@ def get_prov(resolver_cc, resolver_AS, resolver_tag):
     if resolver_tag in Pdns_index:
         prov = resolver_tag
     else:
+        resolver_cc = str(resolver_cc)
+        if len(resolver_cc) > 2:
+            resolver_cc = 'ZZ'
         prov = resolver_cc + '-' + resolver_AS
     return prov
 
@@ -171,6 +174,9 @@ class zombie_parse:
     def add(self, query_cc, query_AS, rr_type, resolver_cc, resolver_AS, resolver_tag, nb):
         if len(str(query_cc)) != 2:
             query_cc = 'ZZ'
+        else:
+            query_cc = str(query_cc);
+
         key = str(query_cc) + '-' + query_AS
         if not key in self.zombie_AS:
             self.zombie_AS[key] = zombie_cc_as(query_cc, query_AS)
