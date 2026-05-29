@@ -764,6 +764,10 @@ class prov_parse:
         if self.current.query_time == 0:
             self.current.query_time = query_time
 
+        query_cc = str(query_cc)
+        if len(query_cc) != 2:
+            query_cc = 'ZZ'
+
         #if query_time > query_ad_time + self.zombie_max:
         #    self.zombie_max = query_time - query_ad_time
         #    print("Zombie: " + str(self.zombie_max))
