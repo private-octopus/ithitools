@@ -771,7 +771,7 @@ def country_code_from_number(number):
     return alpha_code
 
 def country_code_from_c999(c999):
-    alpha_code = c999
+    alpha_code = 'ZZ'
     if c999.startswith("c"):
         try:
             number = int(c999[1:])

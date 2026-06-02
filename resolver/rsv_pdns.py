@@ -530,6 +530,7 @@ class prov_cc_as_rr_slice:
                 if not is_first_prov:
                     F.write(",")
                 is_first_prov = False
+                F.write("\n\"" + Prov_names[p_x] + "\":")
                 prov_cc_as_rr_prov_slice.get_null_json(F)
         F.write("}}")
 
@@ -546,6 +547,7 @@ class prov_cc_as_rr_slice:
             if not is_first_prov:
                 F.write(",")
             is_first_prov = False
+            F.write("\n\"" + Prov_names[p_x] + "\":")
             prov_cc_as_rr_prov_slice.get_null_json(F)
         F.write("}}")
 
@@ -641,6 +643,7 @@ class prov_cc_as_slice:
                 if not first_rr:
                     F.write(",")
                 first_rr = False
+                F.write("\"" + rr_names[r_x] + "\":")
                 prov_cc_as_rr_slice.get_null_json(F)
 
         F.write("}}")
