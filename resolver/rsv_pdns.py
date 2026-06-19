@@ -258,28 +258,6 @@ class prov_cc_as_rr_prov_slice:
         F.write(",\"max_v4v6\":" + str(self.max_v4v6))
         F.write(",\"average_v4v6\":" + str(av4 + av6) + "}}")
 
-    def get_null_json(F):
-        F.write("{\n\"rel\":")
-        prov_cc_as_rr_prov_slice.get_slice_json(
-            prov_cc_as_rr_prov_slice.null_time_slices, False, F)
-        F.write(",\n\"abs\":")
-        prov_cc_as_rr_prov_slice.get_slice_json(
-            prov_cc_as_rr_prov_slice.null_time_slices, False, F)
-        F.write(",\n\"rep\":")
-        prov_cc_as_rr_prov_slice.get_slice_json(
-            prov_cc_as_rr_prov_slice.null_time_slices, False, F)
-        F.write(",\n\"zombies\":" + str(0))
-        F.write(",\n\"stats\":{")
-        F.write("\"sum_v4\":" + str(0))
-        F.write(",\"max_v4\":" + str(0))
-        F.write(",\"average_v4\":" + str(0))
-        F.write(",\"sum_v6\":" + str(0))
-        F.write(",\"max_v6\":" + str(0))
-        F.write(",\"average_v6\":" + str(0))
-        F.write(",\"max_v4v6\":" + str(0))
-        F.write(",\"average_v4v6\":" + str(0) + "}}")
-
-
     def load_json(self, j):
         jrange_names = ["0ms", "u10ms", "u30ms", "u100ms", "u300ms", "u1s", "u3s", "u10s", "u30s"]
         for i, name in enumerate(jrange_names):
@@ -387,30 +365,8 @@ class prov_cc_as_rr_slice:
                 is_first_prov = False
                 F.write("\n\"" + Prov_names[p_x] + "\":")
                 self.prov[p_x].get_json(compact, F)
-            elif not compact:
-                if not is_first_prov:
-                    F.write(",")
-                is_first_prov = False
-                F.write("\n\"" + Prov_names[p_x] + "\":")
-                prov_cc_as_rr_prov_slice.get_null_json(F)
         F.write("}}")
 
-    def get_null_json(F):
-        F.write("{" + \
-            "\"uids\":" + str(0) + "," + \
-            "\"sum_prov\":" + str(0) + "," + \
-            "\"average_prov\":" + str(0) + "," + \
-            "\"uids_isp\":" + str(0) + "," + \
-            "\"average_v4v6\":" + str(0) + "," + \
-            "\"providers\":{")
-        is_first_prov = True
-        for p_x in range(0, len(Prov_names)):
-            if not is_first_prov:
-                F.write(",")
-            is_first_prov = False
-            F.write("\n\"" + Prov_names[p_x] + "\":")
-            prov_cc_as_rr_prov_slice.get_null_json(F)
-        F.write("}}")
 
 
 
@@ -469,13 +425,6 @@ class prov_cc_as_slice:
                 F.write("\"" + rr_names[r_x] + "\":")
                 first_rr = False
                 self.rr[r_x].get_json(compact, F)
-            elif not compact:
-                if not first_rr:
-                    F.write(",")
-                first_rr = False
-                F.write("\"" + rr_names[r_x] + "\":")
-                prov_cc_as_rr_slice.get_null_json(F)
-
         F.write("}}")
 
     def load_json(self, j):
