@@ -43,7 +43,9 @@ class file_bucket:
             nb_events = pp.load_prov_log(self.source_file, time_start=self.time_start)
             print(self.source_file + ": loaded " + str(nb_events) + " events at " + str(time.time() - self.time_start))
             sys.stdout.flush()
-            pp.save_and_close(self.output_file)
+            ps = pp.get_summary_slice()
+            with bz2.open(self.output_file, "wt") as F:
+                ps.get_json(F, compact=False)
         else:
             print(self.output_file + ": already exists.")
             sys.stdout.flush()
@@ -105,7 +107,7 @@ if __name__ == "__main__":
         item = item[:-4]
         if item.startswith("queries"):
             item = item[7:]
-        output_file = os.path.join(temp_dir, "prov-" + item + ".csv")
+        output_file = os.path.join(temp_dir, "prov-" + item + ".json.bz2")
         bucket = file_bucket(ip2a4, ip2a6, as_names, output_file, source_file, bucket_id, time_loaded)
         bucket_list.append(bucket)
         bucket_id += 1
@@ -130,7 +132,7 @@ if __name__ == "__main__":
     prov_total = prov_slice(0)
     for bucket in bucket_list:
         prov_bucket = prov_slice(0)
-        prov_bucket.load_file(bucket.output_file)
+        prov_bucket.load_json_file(bucket.output_file)
         prov_total.add_slice(prov_bucket)
 
     summary_file = os.path.join(output_dir, "prov-summary.csv")
