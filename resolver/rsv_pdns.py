@@ -387,6 +387,23 @@ class prov_cc_as_rr_prov_slice:
         self.average_v4v6 = x['average_v4v6']
         self.max_v4v6 = x['max_v4v6']
 
+    def load_json(self, j):
+        jrange_names = ["0ms", "u10ms", "u30ms", "u100ms", "u300ms", "u1s", "u3s", "u10s", "u30s"]
+        for i, name in enumerate(jrange_names):
+            self.time_slices[i] = j["rel"].get(name, 0)
+            self.abs_slices[i]  = j["abs"].get(name, 0)
+            self.rep_slices[i]  = j["rep"].get(name, 0)
+        self.zombies      = j.get("zombies", 0)
+        stats             = j.get("stats", {})
+        self.sum_v4       = stats.get("sum_v4", 0)
+        self.max_v4       = stats.get("max_v4", 0)
+        self.average_v4   = stats.get("average_v4", 0)
+        self.sum_v6       = stats.get("sum_v6", 0)
+        self.max_v6       = stats.get("max_v6", 0)
+        self.average_v6   = stats.get("average_v6", 0)
+        self.max_v4v6     = stats.get("max_v4v6", 0)
+        self.average_v4v6 = stats.get("average_v4v6", 0)
+
 # PROV_CC_AS_RR_SLICE
 #   One record per RR per CC-AS in a time slice.
 #   contains a set of pdns_uid_rr present in the AS for that time slice.
@@ -530,6 +547,7 @@ class prov_cc_as_rr_slice:
                 if not is_first_prov:
                     F.write(",")
                 is_first_prov = False
+                F.write("\n\"" + Prov_names[p_x] + "\":")
                 prov_cc_as_rr_prov_slice.get_null_json(F)
         F.write("}}")
 
@@ -546,6 +564,7 @@ class prov_cc_as_rr_slice:
             if not is_first_prov:
                 F.write(",")
             is_first_prov = False
+            F.write("\n\"" + Prov_names[p_x] + "\":")
             prov_cc_as_rr_prov_slice.get_null_json(F)
         F.write("}}")
 
@@ -571,6 +590,16 @@ class prov_cc_as_rr_slice:
             self.prov[p_x] = prov_cc_as_rr_prov_slice()
             self.prov[p_x].load_row(x)
 
+    def load_json(self, j):
+        self.nb_uids      = j.get("uids", 0)
+        self.sum_prov     = j.get("sum_prov", 0)
+        self.average_prov = j.get("average_prov", 0)
+        self.nb_uids_isp  = j.get("uids_isp", 0)
+        for prov_name, prov_j in j.get("providers", {}).items():
+            if prov_name in Prov_index:
+                p_x = Prov_index[prov_name]
+                self.prov[p_x] = prov_cc_as_rr_prov_slice()
+                self.prov[p_x].load_json(prov_j)
 
 # PROV_CC_AS_SLICE
 #   One record per CC-AS in a time slice.
@@ -641,6 +670,7 @@ class prov_cc_as_slice:
                 if not first_rr:
                     F.write(",")
                 first_rr = False
+                F.write("\"" + rr_names[r_x] + "\":")
                 prov_cc_as_rr_slice.get_null_json(F)
 
         F.write("}}")
@@ -665,7 +695,14 @@ class prov_cc_as_slice:
         if self.rr[r_x] == None:
             self.rr[r_x] = prov_cc_as_rr_slice()
         self.rr[r_x].load_row(x)
-        
+
+    def load_json(self, j):
+        self.nb_uids = j.get("uids", 0)
+        for rr_name, rr_j in j.get("rr", {}).items():
+            if rr_name in rr_index:
+                r_x = rr_index[rr_name]
+                self.rr[r_x] = prov_cc_as_rr_slice()
+                self.rr[r_x].load_json(rr_j)
 
 # PROV_SLICE
 #   Contains the dict of CC_AS present in the time slice
@@ -745,6 +782,22 @@ class prov_slice:
         for index, row in df.iterrows():
             self.load_row(row)
 
+    def load_json_file(self, json_file):
+        import json
+        if json_file.endswith(".bz2"):
+            F = bz2.open(json_file, "rt")
+        else:
+            F = open(json_file, "r")
+        with F:
+            data = json.load(F)
+        for asn_j in data.get("asns", []):
+            query_cc = asn_j.get("cc", "ZZ")
+            query_AS = asn_j.get("as", "AS0")
+            key = str(query_cc) + "-" + str(query_AS)
+            if key not in self.cc_as:
+                self.cc_as[key] = prov_cc_as_slice(query_cc, query_AS)
+            self.cc_as[key].load_json(asn_j)
+
 class prov_parse:
     def __init__(self, ip2a4, ip2a6, as_names):
         self.ip2a4 = ip2a4
@@ -823,10 +876,13 @@ class prov_parse:
                             lth *= 2
         return nb_events
 
+    def get_summary_slice(self):
+        self.summarize(0)
+        self.summarize(0)
+        return self.summary
+
     def get_df(self):
-        self.summarize(0)
-        self.summarize(0)
-        return self.summary.get_df()
+        return self.get_summary_slice().get_df()
 
     def save_and_close(self, output_file):
         df = self.get_df()
