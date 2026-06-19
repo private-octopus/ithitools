@@ -8,7 +8,6 @@ from pathlib import Path
 import ip2as
 import rsv_log_parse
 #import rsv_both_graphs
-import pandas as pd
 import traceback
 import top_as
 import time
@@ -134,16 +133,6 @@ if __name__ == "__main__":
         prov_bucket = prov_slice(0)
         prov_bucket.load_json_file(bucket.output_file)
         prov_total.add_slice(prov_bucket)
-
-    summary_file = os.path.join(output_dir, "prov-summary.csv")
-    df = prov_total.get_df()
-    df.to_csv(summary_file)
-    print("Saved " + str(df.shape[0]) + " CC/AS summaries in " + summary_file)
-
-    # summary_flat_file = os.path.join(output_dir, "prov-flat-summary.csv")
-    # flat_df = prov_total.get_flat_df()
-    # flat_df.to_csv(summary_flat_file)
-    # print("Saved " + str(flat_df.shape[0]) + " CC/AS flat summaries in " + summary_flat_file)
 
     summary_json_file = os.path.join(output_dir, "prov-flat-summary.json.bz2")
     with bz2.open(summary_json_file,"wt") as F:
