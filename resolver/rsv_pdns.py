@@ -17,7 +17,6 @@ import os
 from pathlib import Path
 import ip2as
 import rsv_log_parse
-import pandas as pd
 import traceback
 import top_as
 import time
@@ -219,55 +218,6 @@ class prov_cc_as_rr_prov_slice:
                 if n_tot > self.max_v4v6:
                     self.max_v4v6 = n_tot
 
-    def get_headers(h):
-        for rgn in range_names:
-            h.append(rgn)
-        for rgn in range_names:
-            h.append(rgn + '_abs')
-        for rgn in range_names:
-            h.append(rgn + '_rep')
-        h.append('zombies')
-        for ads in addr_stats:
-            h.append(ads)
-        return h
-
-    def get_flat_headers(h, rr_prov_prefix):
-        for rgn in range_names:
-            h.append(rr_prov_prefix + "_" + rgn)
-        for rgn in range_names:
-            h.append(rr_prov_prefix + "_" + rgn + '_abs')
-        for rgn in range_names:
-            h.append(rr_prov_prefix + "_" + rgn + '_rep')
-        h.append(rr_prov_prefix + "_" + 'zombies')
-        for ads in addr_stats:
-            h.append(rr_prov_prefix + "_" + ads)
-        return h
-
-    def get_flat_row(self, r):
-        for sl in self.time_slices:
-            r.append(sl)
-        for asl in self.abs_slices:
-            r.append(asl)
-        for rep in self.rep_slices:
-            r.append(rep)
-        r.append(self.zombies)
-        if self.time_slices[0] == 0:
-            av4 = 0
-            av6 = 0
-        else:
-            av4 = self.sum_v4/self.time_slices[0]
-            av6 = self.sum_v6/self.time_slices[0]
-        r.append(self.sum_v4)
-        r.append(av4)
-        r.append(self.max_v4)
-        r.append(self.sum_v6)
-        r.append(av6)
-        r.append(self.max_v6)
-        r.append(av4 + av6)
-        r.append(self.max_v4v6)
-
-        return r
-
     null_time_slices = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
     def get_slice_json(t_slice, compact, F):
         jrange_names = [ "0ms", "u10ms", "u30ms",
@@ -329,63 +279,6 @@ class prov_cc_as_rr_prov_slice:
         F.write(",\"max_v4v6\":" + str(0))
         F.write(",\"average_v4v6\":" + str(0) + "}}")
 
-
-    def get_null_row(r):
-        for sl in range(0, len(range_names)):
-            r.append(0)
-        for sl in range(0, len(range_names)):
-            r.append(0)
-        for sl in range(0, len(range_names)):
-            r.append(0)
-        r.append(0) # zombies
-        for ast in range(0, len(addr_stats)):
-            r.append(0)
-        return r
-
-    def get_row(self, row_prefix):
-        r = []
-        for x in row_prefix:
-            r.append(x)
-        r = self.get_flat_row(r)
-        return r
-
-    def load_row(self, x):
-        self.time_slices[0] = x['nb_0ms']
-        self.time_slices[1] = x['nb_u10ms']
-        self.time_slices[2] = x['nb_u30ms']
-        self.time_slices[3] = x['nb_u100ms']
-        self.time_slices[4] = x['nb_u300ms']
-        self.time_slices[5] = x['nb_u1s']
-        self.time_slices[6] = x['nb_u3s']
-        self.time_slices[7] = x['nb_u10s']
-        self.time_slices[8] = x['nb_u30s']
-        self.abs_slices[0] = x['nb_0ms_abs']
-        self.abs_slices[1] = x['nb_u10ms_abs']
-        self.abs_slices[2] = x['nb_u30ms_abs']
-        self.abs_slices[3] = x['nb_u100ms_abs']
-        self.abs_slices[4] = x['nb_u300ms_abs']
-        self.abs_slices[5] = x['nb_u1s_abs']
-        self.abs_slices[6] = x['nb_u3s_abs']
-        self.abs_slices[7] = x['nb_u10s_abs']
-        self.abs_slices[8] = x['nb_u30s_abs']
-        self.rep_slices[0] = x['nb_0ms_rep']
-        self.rep_slices[1] = x['nb_u10ms_rep']
-        self.rep_slices[2] = x['nb_u30ms_rep']
-        self.rep_slices[3] = x['nb_u100ms_rep']
-        self.rep_slices[4] = x['nb_u300ms_rep']
-        self.rep_slices[5] = x['nb_u1s_rep']
-        self.rep_slices[6] = x['nb_u3s_rep']
-        self.rep_slices[7] = x['nb_u10s_rep']
-        self.rep_slices[8] = x['nb_u30s_rep']
-        self.zombies = x['zombies']
-        self.sum_v4 = x['sum_v4']
-        self.max_v4 = x['max_v4']
-        self.average_v4 = x['average_v4']
-        self.sum_v6 = x['sum_v6']
-        self.max_v6 = x['max_v6']
-        self.average_v6 = x['average_v6']
-        self.average_v4v6 = x['average_v4v6']
-        self.max_v4v6 = x['max_v4v6']
 
     def load_json(self, j):
         jrange_names = ["0ms", "u10ms", "u30ms", "u100ms", "u300ms", "u1s", "u3s", "u10s", "u30s"]
@@ -465,41 +358,6 @@ class prov_cc_as_rr_slice:
                     self.prov[p_x] = prov_cc_as_rr_prov_slice()
                 self.prov[p_x].add_slice(other.prov[p_x])
 
-    def get_headers(h):
-        h.append("uids_rr")
-        h.append("sum_prov")
-        h.append("average_prov")
-        h.append("uids_isp")
-        h.append("prov")
-        return prov_cc_as_rr_prov_slice.get_headers(h)
-
-    def get_flat_headers(h, rr_prefix):
-        h.append(rr_prefix + "_uids")
-        h.append(rr_prefix + "_sum_prov")
-        h.append(rr_prefix + "_average_prov")
-        h.append(rr_prefix + "_uids_isp")
-        h.append(rr_prefix + "_average_v4v6_isp")
-
-        for p_x in range(0, len(Prov_names)):
-            p_prefix = rr_prefix + "_" + Prov_names[p_x]
-            h = prov_cc_as_rr_prov_slice.get_flat_headers(h, p_prefix)
-        return h
-
-    def get_rows(self, row_prefix):
-        t = []
-        for p_x in range(0, len(Prov_names)):
-            if self.prov[p_x] != None:
-                rp = []
-                for x in row_prefix:
-                    rp.append(x)
-                rp.append(self.nb_uids)
-                rp.append(self.sum_prov)
-                rp.append(self.average_prov)
-                rp.append(self.nb_uids_isp)
-                rp.append(Prov_names[p_x])
-                t.append(self.prov[p_x].get_row(rp))
-        return t
-
     def get_average_v4v6(self):
         average_v4v6 = 0
         if self.nb_uids_isp > 0:
@@ -513,20 +371,6 @@ class prov_cc_as_rr_slice:
             average_v4v6 = sum_v4v6/self.nb_uids_isp
         return average_v4v6
 
-    def get_flat_row(self, r):
-        r.append(self.nb_uids)
-        r.append(self.sum_prov)
-        r.append(self.average_prov)
-        r.append(self.nb_uids_isp)
-        r.append(self.get_average_v4v6())
-
-        for p_x in range(0, len(Prov_names)):
-            if self.prov[p_x] != None:
-                r = self.prov[p_x].get_flat_row(r)
-            else:
-                r = prov_cc_as_rr_prov_slice.get_null_row(r)
-        return r
-       
     def get_json(self, compact, F):
         F.write("{" + \
             "\"uids\":" + str(self.nb_uids) + "," + \
@@ -570,26 +414,6 @@ class prov_cc_as_rr_slice:
 
 
 
-    def get_null_row(r):
-        for p_x in range(0, len(Prov_names)):
-            r = prov_cc_as_rr_prov_slice.get_null_row(r)
-        return r
-
-    def load_row(self, x):
-        self.nb_uids = x['uids_rr']
-        self.sum_prov = x['sum_prov']
-        self.average_prov = x['average_prov']
-        self.nb_uids_isp = x['uids_isp']
-        prov = x['prov']
-        p_x = Prov_index[prov]
-        if self.prov[p_x] != None:
-            print("Duplicate provider " + prov + " for " + x['CC'] +
-               '-' + x['AS'] + '-' + x['rr_type'])
-            exit(-1)
-        else:
-            self.prov[p_x] = prov_cc_as_rr_prov_slice()
-            self.prov[p_x].load_row(x)
-
     def load_json(self, j):
         self.nb_uids      = j.get("uids", 0)
         self.sum_prov     = j.get("sum_prov", 0)
@@ -631,27 +455,6 @@ class prov_cc_as_slice:
                     self.rr[r_x] = prov_cc_as_rr_slice()
                 self.rr[r_x].add_slice(other.rr[r_x])
 
-    def get_headers(h):
-        h.append("uids")
-        h.append("rr_type")
-        return prov_cc_as_rr_slice.get_headers(h)
-
-    def get_flat_headers():
-        h = [ 'CC', 'AS', 'uids' ]
-        for rt in rr_names:
-            name_prefix = rt
-            h = prov_cc_as_rr_slice.get_flat_headers(h, name_prefix)
-        return h
-
-    def get_flat_row(self):
-        r = [ self.query_cc, self.query_AS, self.nb_uids ]
-        for r_x in range(0, len(rr_names)):
-            if self.rr[r_x] != None:
-                r = self.rr[r_x].get_flat_row(r)
-            else:
-                r = prov_cc_as_rr_slice.get_null_row(r)
-        return r
-    
     def get_json(self, compact, F):
         F.write("\n{\"cc\":\"" + self.query_cc + "\"," + \
             "\"as\":\"" + self.query_AS + "\"," +  \
@@ -674,27 +477,6 @@ class prov_cc_as_slice:
                 prov_cc_as_rr_slice.get_null_json(F)
 
         F.write("}}")
-
-    def get_rows(self, row_prefix):
-        t = []
-        for r_x in range(0, len(rr_names)):
-            if self.rr[r_x] != None:
-                rp = []
-                for x in row_prefix:
-                    rp.append(x)
-                rp.append(self.nb_uids)
-                rp.append(rr_names[r_x])
-                rows = self.rr[r_x].get_rows(rp)
-                for row in rows:
-                    t.append(row)
-        return t
-
-    def load_row(self, x):
-        query_rr = x['rr_type']
-        r_x = rr_index[query_rr]
-        if self.rr[r_x] == None:
-            self.rr[r_x] = prov_cc_as_rr_slice()
-        self.rr[r_x].load_row(x)
 
     def load_json(self, j):
         self.nb_uids = j.get("uids", 0)
@@ -729,34 +511,6 @@ class prov_slice:
                     other.cc_as[key].query_cc, other.cc_as[key].query_AS)
             self.cc_as[key].add_slice(other.cc_as[key])
 
-    def get_headers():
-        h = [ "CC", "AS" ]
-        return prov_cc_as_slice.get_headers(h)
-
-    def get_df(self):
-        t = []
-
-        for key in self.cc_as:
-            row_prefix = [ self.cc_as[key].query_cc, self.cc_as[key].query_AS]
-            t_as = self.cc_as[key].get_rows(row_prefix)
-            for row in t_as:
-                t.append(row)
-        df = pd.DataFrame(t, columns = prov_slice.get_headers())
-
-        return df
-
-    # Produce a file with a group of columns per rr_type and provider, one row per AS
-    def get_flat_headers():
-        return prov_cc_as_slice.get_flat_headers()
-
-    def get_flat_df(self):
-        flat_t = []
-        for key in self.cc_as:
-            r = self.cc_as[key].get_flat_row()
-            flat_t.append(r)
-        df = pd.DataFrame(flat_t, columns = prov_slice.get_flat_headers())
-        return df
-
     def get_json(self, F, compact=True):
         F.write("{\"asns\": [")
         first_as = True
@@ -766,21 +520,6 @@ class prov_slice:
             first_as = False
             r = self.cc_as[key].get_json(compact, F)
         F.write("]}\n")
-
-    # load a value from a file
-    def load_row(self, x):
-        query_cc = x['CC']
-        query_AS = x['AS']
-        key = str(query_cc) + "-" + str(query_AS)
-        if not key in self.cc_as:
-            self.cc_as[key] = prov_cc_as_slice(query_cc, query_AS)
-            self.cc_as[key].nb_uids = x['uids']
-        self.cc_as[key].load_row(x)
-
-    def load_file(self, csv_file):
-        df = pd.read_csv(csv_file)
-        for index, row in df.iterrows():
-            self.load_row(row)
 
     def load_json_file(self, json_file):
         import json
@@ -881,9 +620,3 @@ class prov_parse:
         self.summarize(0)
         return self.summary
 
-    def get_df(self):
-        return self.get_summary_slice().get_df()
-
-    def save_and_close(self, output_file):
-        df = self.get_df()
-        df.to_csv(output_file)
