@@ -75,6 +75,7 @@ Prov_index = {
 }
 
 Prov_index_others = 11
+Prov_index_same_cc = 10
 
 rr_names = [ 'A', 'AAAA', 'HTTPS' ]
 
@@ -176,6 +177,10 @@ class prov_cc_as_rr_prov_slice:
         self.average_v4v6 = 0
         self.abs_slices = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
         self.rep_slices = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+        self.origins = {}
+
+    def add_origin(self, resolver_key):
+        self.origins[resolver_key] = self.origins.get(resolver_key, 0) + 1
 
     def add_query(self, uid, query_time, resolver_IP, uid_first_time):
         if uid_first_time > query_time:
@@ -196,6 +201,8 @@ class prov_cc_as_rr_prov_slice:
             self.rep_slices[i_x] += other.rep_slices[i_x]
 
         self.zombies += other.zombies
+        for key, count in other.origins.items():
+            self.origins[key] = self.origins.get(key, 0) + count
         if len(other.uids) == 0:
             self.sum_v4 += other.sum_v4
             if other.max_v4 > self.max_v4:
@@ -256,7 +263,19 @@ class prov_cc_as_rr_prov_slice:
         F.write(",\"max_v6\":" + str(self.max_v6))
         F.write(",\"average_v6\":" + str(av6))
         F.write(",\"max_v4v6\":" + str(self.max_v4v6))
-        F.write(",\"average_v4v6\":" + str(av4 + av6) + "}}")
+        F.write(",\"average_v4v6\":" + str(av4 + av6) + "}")
+        if self.origins:
+            top = sorted(self.origins.items(), key=lambda x: -x[1])[:5]
+            F.write(",\n\"origins\":[")
+            first_o = True
+            for key, count in top:
+                if not first_o:
+                    F.write(",")
+                first_o = False
+                cc, asn = key.split("-", 1)
+                F.write("{\"cc\":\"" + cc + "\",\"as\":\"" + asn + "\",\"count\":" + str(count) + "}")
+            F.write("]")
+        F.write("}")
 
     def load_json(self, j):
         jrange_names = ["0ms", "u10ms", "u30ms", "u100ms", "u300ms", "u1s", "u3s", "u10s", "u30s"]
@@ -274,6 +293,11 @@ class prov_cc_as_rr_prov_slice:
         self.average_v6   = stats.get("average_v6", 0)
         self.max_v4v6     = stats.get("max_v4v6", 0)
         self.average_v4v6 = stats.get("average_v4v6", 0)
+        for origin in j.get("origins", []):
+            cc  = origin.get("cc", "")
+            asn = origin.get("as", "")
+            if cc and asn:
+                self.origins[cc + "-" + asn] = self.origins.get(cc + "-" + asn, 0) + origin.get("count", 0)
 
 # PROV_CC_AS_RR_SLICE
 #   One record per RR per CC-AS in a time slice.
@@ -290,7 +314,7 @@ class prov_cc_as_rr_slice:
         self.sum_prov = 0
         self.average_prov = 0
 
-    def add_query(self, uid, query_time, query_ad_time, prov, resolver_IP):
+    def add_query(self, uid, query_time, query_ad_time, prov, resolver_IP, resolver_key=""):
         if prov in Prov_index:
             p_index = Prov_index[prov]
             if p_index == 0:
@@ -314,6 +338,8 @@ class prov_cc_as_rr_slice:
                 self.uids[uid] = query_time
             if self.prov[p_index].add_query(uid, query_time, resolver_IP, self.uids[uid]):
                 self.sum_prov += 1
+            if resolver_key and p_index in (Prov_index_same_cc, Prov_index_others):
+                self.prov[p_index].add_origin(resolver_key)
 
     def summarize_delays(self):
         for uid in self.uids:
@@ -393,18 +419,26 @@ class prov_cc_as_slice:
         self.rr = [None, None, None]
         self.uids = set()
         self.nb_uids = 0
+        self.zombie_count = 0
+        self.zombie_origins = {}
 
-    def add_query(self, uid, query_time, query_ad_time, query_rr, prov, resolver_IP):
+    def add_query(self, uid, query_time, query_ad_time, query_rr, prov, resolver_IP, resolver_key=""):
         if query_time <= query_ad_time + 30 and not uid in self.uids:
             self.uids.add(uid)
-        nb_uids = 0
+        if query_time > query_ad_time + 30:
+            self.zombie_count += 1
+            if resolver_key:
+                self.zombie_origins[resolver_key] = self.zombie_origins.get(resolver_key, 0) + 1
         r_x = rr_index[query_rr]
         if self.rr[r_x] == None:
             self.rr[r_x] = prov_cc_as_rr_slice()
-        self.rr[r_x].add_query(uid, query_time, query_ad_time, prov, resolver_IP)
+        self.rr[r_x].add_query(uid, query_time, query_ad_time, prov, resolver_IP, resolver_key)
 
     def add_slice(self, other):
         self.nb_uids += other.nb_uids + len(other.uids)
+        self.zombie_count += other.zombie_count
+        for key, count in other.zombie_origins.items():
+            self.zombie_origins[key] = self.zombie_origins.get(key, 0) + count
         for r_x in range(0, len(rr_names)):
             if other.rr[r_x] != None:
                 if self.rr[r_x] == None:
@@ -414,21 +448,40 @@ class prov_cc_as_slice:
     def get_json(self, compact, F):
         F.write("\n{\"cc\":\"" + self.query_cc + "\"," + \
             "\"as\":\"" + self.query_AS + "\"," +  \
-            "\"uids\":" + str(self.nb_uids) + "," + \
-            "\"rr\":{")
+            "\"uids\":" + str(self.nb_uids))
+        if self.zombie_count > 0:
+            F.write(",\n\"zombies\":{\"count\":" + str(self.zombie_count) + ",\"origins\":[")
+            top = sorted(self.zombie_origins.items(), key=lambda x: -x[1])[:5]
+            first_o = True
+            for key, count in top:
+                if not first_o:
+                    F.write(",")
+                first_o = False
+                cc, asn = key.split("-", 1)
+                F.write("{\"cc\":\"" + cc + "\",\"as\":\"" + asn + "\",\"count\":" + str(count) + "}")
+            F.write("]}")
+        F.write(",\n\"rr\":{")
         first_rr = True
         for r_x in range(0, len(rr_names)):
             if self.rr[r_x] != None:
                 if not first_rr:
                     F.write(",")
                 first_rr = False
-                F.write("\"" + rr_names[r_x] + "\":")
+                F.write("\n\"" + rr_names[r_x] + "\":")
                 first_rr = False
                 self.rr[r_x].get_json(compact, F)
         F.write("}}")
 
     def load_json(self, j):
         self.nb_uids = j.get("uids", 0)
+        zombie_j = j.get("zombies", {})
+        self.zombie_count = zombie_j.get("count", 0)
+        for origin in zombie_j.get("origins", []):
+            cc  = origin.get("cc", "")
+            asn = origin.get("as", "")
+            if cc and asn:
+                key = cc + "-" + asn
+                self.zombie_origins[key] = self.zombie_origins.get(key, 0) + origin.get("count", 0)
         for rr_name, rr_j in j.get("rr", {}).items():
             if rr_name in rr_index:
                 r_x = rr_index[rr_name]
@@ -445,11 +498,11 @@ class prov_slice:
         self.uids = dict()
         self.query_time = 0
 
-    def add_query(self, uid, query_cc, query_AS, query_time, query_ad_time, query_rr, prov, resolver_IP):
+    def add_query(self, uid, query_cc, query_AS, query_time, query_ad_time, query_rr, prov, resolver_IP, resolver_key=""):
         key = str(query_cc) + "-" + str(query_AS)
         if not key in self.cc_as:
             self.cc_as[key] = prov_cc_as_slice(query_cc, query_AS)
-        self.cc_as[key].add_query(uid, query_time, query_ad_time, query_rr, prov, resolver_IP)
+        self.cc_as[key].add_query(uid, query_time, query_ad_time, query_rr, prov, resolver_IP, resolver_key)
 
     def add_slice(self, other):
         if self.query_time == 0:
@@ -501,7 +554,7 @@ class prov_parse:
         self.previous = self.current
         self.current = prov_slice(query_time)
 
-    def add_query(self, uid, query_cc, query_AS, query_time, query_ad_time, query_rr, prov, resolver_IP):
+    def add_query(self, uid, query_cc, query_AS, query_time, query_ad_time, query_rr, prov, resolver_IP, resolver_key=""):
         if self.current.query_time == 0:
             self.current.query_time = query_time
 
@@ -514,9 +567,9 @@ class prov_parse:
         #    print("Zombie: " + str(self.zombie_max))
 
         if uid in self.previous.uids:
-            self.previous.add_query(uid, query_cc, query_AS, query_time, query_ad_time, query_rr, prov, resolver_IP)
+            self.previous.add_query(uid, query_cc, query_AS, query_time, query_ad_time, query_rr, prov, resolver_IP, resolver_key)
         else:
-            self.current.add_query(uid, query_cc, query_AS, query_time, query_ad_time, query_rr, prov, resolver_IP)
+            self.current.add_query(uid, query_cc, query_AS, query_time, query_ad_time, query_rr, prov, resolver_IP, resolver_key)
 
         if query_time > (self.current.query_time + 60):
             self.summarize(query_time)
@@ -553,7 +606,8 @@ class prov_parse:
                             # so they can be processed in a second pass.
                             pass
                         else:
-                            self.add_query(x.query_user_id, x.query_cc, x.query_AS, x.query_time, x.query_ad_time, x.rr_type, x.resolver_tag, x.resolver_IP)
+                            resolver_key = x.resolver_cc + "-" + x.resolver_AS
+                            self.add_query(x.query_user_id, x.query_cc, x.query_AS, x.query_time, x.query_ad_time, x.rr_type, x.resolver_tag, x.resolver_IP, resolver_key)
 
                     nb_events += 1
                     if (nb_events%lth) == 0:
