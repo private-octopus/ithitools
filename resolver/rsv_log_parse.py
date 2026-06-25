@@ -105,6 +105,7 @@ class rsv_log_line:
         self.query_cc = country.country_code_from_c999(query_parts[2])
 
         query_AS_str = query_parts[3]
+
         if query_AS_str.startswith("a"):
             try:
                 as_num = int(query_AS_str[1:], 16)
@@ -220,6 +221,9 @@ class rsv_log_line:
             else:
                 self.is_cretinous = True
                 self.invalid_query = query_string
+        elif query_parts[1].startswith("uxxxxxx"):
+            # TODO: refine this when actually parsing the caching experiment
+            is_valid = False
         else:
             is_valid = self.parse_query_name_params(query_parts, query_name)
         return is_valid
