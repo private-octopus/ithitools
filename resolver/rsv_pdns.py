@@ -498,7 +498,7 @@ class prov_cc_as_slice:
         if not prov in Prov_index:
             old_prov = prov
             if resolver_key.startswith(self.query_cc):
-                prov = "same_cc"
+                prov = "same_CC"
             else:
                 prov = "others"
             print("Folding " + old_prov + " into " + prov + " (cc: " + self.query_cc + ")")
