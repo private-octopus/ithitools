@@ -18,7 +18,7 @@ from rsv_pdns import prov_parse, prov_slice
 import concurrent.futures
 
 def usage():
-    print("Usage: python rsv_prov_files.py <output_dir> <temp_dir> <log_files>\n")
+    print("Usage: python rsv_prov_files.py <output_dir> <temp_dir> <name_tag> <log_files>\n")
     print("This script will parse the log files and create for each of them a ")
     print("pdns_summary file in the temporary folder.\n")
     print("This script will parse these files,")
@@ -56,7 +56,7 @@ def load_bucket(bucket):
 # Main program -- we will start by parsing the input files.
 if __name__ == "__main__":
     time_start = time.time()
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 5:
         usage()
         exit(-1)
 
@@ -72,7 +72,9 @@ if __name__ == "__main__":
         usage()
         exit(-1)
 
-    source_files, has_error = rsv_arguments.parse_file_list(sys.argv[3:], [ ".bz2", ".log", ".txt"])
+    name_tag = sys.argv[3]
+
+    source_files, has_error = rsv_arguments.parse_file_list(sys.argv[4:], [ ".bz2", ".log", ".txt"])
     if has_error:
         print("Invalid list of input files.")
         usage()
@@ -134,7 +136,7 @@ if __name__ == "__main__":
         prov_bucket.load_json_file(bucket.output_file)
         prov_total.add_slice(prov_bucket)
 
-    summary_json_file = os.path.join(output_dir, "prov-flat-summary.json.bz2")
+    summary_json_file = os.path.join(output_dir, "prov-summary-" + name_tag + ".json.bz2")
     with bz2.open(summary_json_file,"wt") as F:
          prov_total.get_json(F, compact=False)
     print("Saved long summary in " + summary_json_file)

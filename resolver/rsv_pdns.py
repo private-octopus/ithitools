@@ -44,6 +44,10 @@ PDNS_names = [
     'cnnic',
     'twnic',
     'quad101',
+    'greenteamdns',
+    'freenom',
+    'uncensoreddns',
+    'vrsgn'
 ]
 
 Prov_names = [
@@ -63,8 +67,12 @@ Prov_names = [
     'cnnic',
     'twnic',
     'quad101',
+    'greenteamdns',
+    'freenom',
+    'uncensoreddns',
+    'vrsgn',
     'same_CC',
-   'others' ]
+    'others' ]
 
 Prov_index = {
     'ISP':0,
@@ -84,18 +92,22 @@ Prov_index = {
     'cnnic':13,
     'twnic':14,
     'quad101':15,
-    'others':16,
+    'greenteamdns':16,
+    'freenom':17,
+    'uncensoreddns':18,
+    'vrsgn':19,
+    'others':21,
     'Same_AS':0,
     'Same_group':0,
-    'Same_CC':17,
-    'same_CC':17,
-    'same_cc':17,
-    'Cloud':16,
-    'Other_cc':16
+    'Same_CC':20,
+    'same_CC':20,
+    'same_cc':20,
+    'Cloud':21,
+    'Other_cc':21
 }
 
-Prov_index_others = 16
-Prov_index_same_cc = 17
+Prov_index_others = 21
+Prov_index_same_cc = 20
 
 rr_names = [ 'A', 'AAAA', 'HTTPS' ]
 
@@ -199,6 +211,7 @@ class prov_cc_as_rr_prov_slice:
         self.uids = dict()
         self.time_slices = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
         self.zombies = 0
+        self.zombie_origins = {}
         self.sum_v4 = 0
         self.max_v4 = 0
         self.average_v4 = 0
@@ -232,6 +245,8 @@ class prov_cc_as_rr_prov_slice:
             self.rep_slices[i_x] += other.rep_slices[i_x]
 
         self.zombies += other.zombies
+        for key, count in other.zombie_origins.items():
+            self.zombie_origins[key] = self.zombie_origins.get(key, 0) + count
         for i in range(9):
             for key, count in other.time_slice_origins[i].items():
                 self.time_slice_origins[i][key] = self.time_slice_origins[i].get(key, 0) + count
@@ -296,7 +311,19 @@ class prov_cc_as_rr_prov_slice:
         prov_cc_as_rr_prov_slice.get_slice_json(self.abs_slices, self.abs_slice_origins, compact, F)
         F.write(",\n\"rep\":")
         prov_cc_as_rr_prov_slice.get_slice_json(self.rep_slices, self.rep_slice_origins, compact, F)
-        F.write(",\n\"zombies\":" + str(self.zombies))
+        if self.zombie_origins:
+            top = sorted(self.zombie_origins.items(), key=lambda x: -x[1])[:5]
+            F.write(",\n\"zombies\":{\"count\":" + str(self.zombies) + ",\"origins\":[")
+            first_o = True
+            for key, count in top:
+                if not first_o:
+                    F.write(",")
+                first_o = False
+                cc, asn = key.split("-", 1)
+                F.write("{\"cc\":\"" + cc + "\",\"as\":\"" + asn + "\",\"count\":" + str(count) + "}")
+            F.write("]}")
+        else:
+            F.write(",\n\"zombies\":" + str(self.zombies))
         F.write(",\n\"stats\":{")
         if self.time_slices[0] == 0:
             av4 = 0
@@ -333,7 +360,17 @@ class prov_cc_as_rr_prov_slice:
                             slice_origins[i][key] = slice_origins[i].get(key, 0) + origin.get("count", 0)
                 else:
                     t_slice[i] = val
-        self.zombies      = j.get("zombies", 0)
+        zombie_j = j.get("zombies", 0)
+        if isinstance(zombie_j, dict):
+            self.zombies = zombie_j.get("count", 0)
+            for origin in zombie_j.get("origins", []):
+                cc  = origin.get("cc", "")
+                asn = origin.get("as", "")
+                if cc and asn:
+                    key = cc + "-" + asn
+                    self.zombie_origins[key] = self.zombie_origins.get(key, 0) + origin.get("count", 0)
+        else:
+            self.zombies = zombie_j
         stats             = j.get("stats", {})
         self.sum_v4       = stats.get("sum_v4", 0)
         self.max_v4       = stats.get("max_v4", 0)
@@ -360,8 +397,6 @@ class prov_cc_as_rr_slice:
         self.delta_first_max = 0
         self.sum_prov = 0
         self.average_prov = 0
-        self.zombie_count = 0
-        self.zombie_origins = {}
 
     def add_query(self, uid, query_time, query_ad_time, prov, resolver_IP, resolver_key=""):
         if prov in Prov_index:
@@ -379,9 +414,8 @@ class prov_cc_as_rr_slice:
             self.prov[p_index] = prov_cc_as_rr_prov_slice()
         if query_time > query_ad_time + 30:
             self.prov[p_index].zombies += 1
-            self.zombie_count += 1
             if resolver_key:
-                self.zombie_origins[resolver_key] = self.zombie_origins.get(resolver_key, 0) + 1
+                self.prov[p_index].zombie_origins[resolver_key] = self.prov[p_index].zombie_origins.get(resolver_key, 0) + 1
             #print("Zombies + 1 for prov " + str(p_index))
         else:
             if not uid in self.uids:
@@ -407,9 +441,6 @@ class prov_cc_as_rr_slice:
         self.sum_prov += other.sum_prov
         if self.nb_uids > 0:
             self.average_prov = self.sum_prov / self.nb_uids
-        self.zombie_count += other.zombie_count
-        for key, count in other.zombie_origins.items():
-            self.zombie_origins[key] = self.zombie_origins.get(key, 0) + count
         for p_x in range(0, len(Prov_names)):
             if other.prov[p_x] != None:
                 if self.prov[p_x] == None:
@@ -436,17 +467,6 @@ class prov_cc_as_rr_slice:
             "\"average_prov\":" + str(self.average_prov) + "," + \
             "\"uids_isp\":" + str(self.nb_uids_isp) + "," + \
             "\"average_v4v6\":" + str(self.get_average_v4v6()))
-        if self.zombie_count > 0:
-            F.write(",\n\"zombies\":{\"count\":" + str(self.zombie_count) + ",\"origins\":[")
-            top = sorted(self.zombie_origins.items(), key=lambda x: -x[1])[:5]
-            first_o = True
-            for key, count in top:
-                if not first_o:
-                    F.write(",")
-                first_o = False
-                cc, asn = key.split("-", 1)
-                F.write("{\"cc\":\"" + cc + "\",\"as\":\"" + asn + "\",\"count\":" + str(count) + "}")
-            F.write("]}")
         F.write(",\n\"providers\":{")
         is_first_prov = True
         for p_x in range(0, len(Prov_names)):
@@ -463,14 +483,6 @@ class prov_cc_as_rr_slice:
         self.sum_prov     = j.get("sum_prov", 0)
         self.average_prov = j.get("average_prov", 0)
         self.nb_uids_isp  = j.get("uids_isp", 0)
-        zombie_j = j.get("zombies", {})
-        self.zombie_count = zombie_j.get("count", 0)
-        for origin in zombie_j.get("origins", []):
-            cc  = origin.get("cc", "")
-            asn = origin.get("as", "")
-            if cc and asn:
-                key = cc + "-" + asn
-                self.zombie_origins[key] = self.zombie_origins.get(key, 0) + origin.get("count", 0)
         for prov_name, prov_j in j.get("providers", {}).items():
             if prov_name in Prov_index:
                 p_x = Prov_index[prov_name]
