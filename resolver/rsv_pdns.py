@@ -89,6 +89,7 @@ Prov_index = {
     'Same_group':0,
     'Same_CC':17,
     'same_CC':17,
+    'same_cc':17,
     'Cloud':16,
     'Other_cc':16
 }
@@ -372,7 +373,7 @@ class prov_cc_as_rr_slice:
                     query_time <= query_ad_time + 30:
                     self.uids_isp.add(uid)
         else:
-            print("Folding " + prov + " into others.")
+            #print("Folding " + prov + " into others.")
             p_index = Prov_index_others
         if self.prov[p_index] == None:
             self.prov[p_index] = prov_cc_as_rr_prov_slice()
@@ -481,6 +482,9 @@ class prov_cc_as_rr_slice:
 #   contains a set of pdns_uid_rr present in the AS for that time slice.
 #   also contains
 #
+
+was_folded = set()
+
 class prov_cc_as_slice:
     def __init__(self, query_cc, query_AS):
         self.query_cc = query_cc
@@ -501,7 +505,9 @@ class prov_cc_as_slice:
                 prov = "same_CC"
             else:
                 prov = "others"
-            print("Folding " + old_prov + " into " + prov + " (cc: " + self.query_cc + ")")
+            if not old_prov in was_folded:
+                was_folded.add(old_prov)
+                print("Folding " + old_prov + " into " + prov + " (cc: " + self.query_cc + ")")
 
         self.rr[r_x].add_query(uid, query_time, query_ad_time, prov, resolver_IP, resolver_key)
 
