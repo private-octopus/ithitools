@@ -102,30 +102,38 @@ if __name__ == "__main__":
     # Prepare the parallel buckets
     nb_process = len(source_files)
     bucket_list = []
+    already_there = []
     bucket_id = 0
     for source_file in source_files:
+        if not os.path.isfile(source_file):
+            print("Invalid source file: " + source_file)
+            continue
         item = os.path.basename(source_file)
         item = item[:-4]
         if item.startswith("queries"):
             item = item[7:]
         output_file = os.path.join(temp_dir, "prov-" + item + ".json.bz2")
-        bucket = file_bucket(ip2a4, ip2a6, as_names, output_file, source_file, bucket_id, time_loaded)
-        bucket_list.append(bucket)
-        bucket_id += 1
+        if os.path.isfile(output_file):
+            already_there.append(output_file)
+        else:
+            bucket = file_bucket(ip2a4, ip2a6, as_names, output_file, source_file, bucket_id, time_loaded)
+            bucket_list.append(bucket)
+            bucket_id += 1
 
     nb_process = len(bucket_list)
     print("Will use " + str(nb_process) + " processes.")
 
-    with concurrent.futures.ProcessPoolExecutor(max_workers = nb_process) as executor:
-        future_to_bucket = {executor.submit(load_bucket, bucket):bucket for bucket in bucket_list }
-        for future in concurrent.futures.as_completed(future_to_bucket):
-            bucket = future_to_bucket[future]
-            try:
-                data = future.result()
-                print('Bucket %d complete' % (bucket.bucket_id))
-            except Exception as exc:
-                traceback.print_exc()
-                print('Bucket %d generated an exception: %s' % (bucket.bucket_id, exc))
+    if nb_process > 0:
+        with concurrent.futures.ProcessPoolExecutor(max_workers = nb_process) as executor:
+            future_to_bucket = {executor.submit(load_bucket, bucket):bucket for bucket in bucket_list }
+            for future in concurrent.futures.as_completed(future_to_bucket):
+                bucket = future_to_bucket[future]
+                try:
+                    data = future.result()
+                    print('Bucket %d complete' % (bucket.bucket_id))
+                except Exception as exc:
+                    traceback.print_exc()
+                    print('Bucket %d generated an exception: %s' % (bucket.bucket_id, exc))
     bucket_time = time.time()
 
     # All the buckets have been processed. Now, create the tables.
@@ -135,8 +143,12 @@ if __name__ == "__main__":
         prov_bucket = prov_slice(0)
         prov_bucket.load_json_file(bucket.output_file)
         prov_total.add_slice(prov_bucket)
+    for output_file in already_there:
+        prov_bucket = prov_slice(0)
+        prov_bucket.load_json_file(output_file)
+        prov_total.add_slice(prov_bucket)
 
     summary_json_file = os.path.join(output_dir, "prov-summary-" + name_tag + ".json.bz2")
     with bz2.open(summary_json_file,"wt") as F:
-         prov_total.get_json(F, compact=False)
+        prov_total.get_json(F, compact=False)
     print("Saved long summary in " + summary_json_file)
