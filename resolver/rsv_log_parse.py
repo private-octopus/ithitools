@@ -70,29 +70,64 @@ import time
 import top_as
 import csv
 
-class rsv_log_line:
+class query_name_class:
     def __init__(self):
-        self.query_time = 0.0
-        self.resolver_IP = "0.0.0.0"
-        self.resolver_port = 0
-        self.resolver_AS = ""
-        self.resolver_cc = ""
-        self.resolver_tag = ""
-        self.query_experiment = ""
-        self.query_user_id = ""
-        self.query_cc = ""
-        self.query_AS = ""
-        self.query_ad_time = 0
-        self.query_ip = ""
-        self.rr_class = ""
-        self.rr_type = ""
-        self.query_edns = ""
-        self.is_results = False
+        self.server = ""
         self.is_anomalous = False
         self.is_cretinous = False
         self.is_starquery = False
         self.invalid_query = ""
-        self.server = ""
+        self.query_experiment = ""
+        self.query_user_id = ""
+        self.query_cc = "ZZ"
+        self.query_AS = "AS0"
+        self.query_ad_time = 0
+        self.query_ip = "0.0.0.0"
+
+    def parse_query_name_anomalous(self, query_parts):
+        #query: 000-000-000a-0000-0006-e7b5bab7-233-a55A8-1736378116-ac380eb6-0
+        # query: 04u-uf8c0aa51-c185-a40625-s1730422799-iaa54ac12-0
+        is_valid = True
+        if len(query_parts) < 10:
+            return False
+        delimiter = "-"
+        self.query_experiment = delimiter.join(query_parts[:5])
+        self.query_user_id = query_parts[5]
+        self.query_cc = country.country_code_from_c999("c" + query_parts[6])
+        query_AS_str = query_parts[7]
+        if query_AS_str.startswith("a"):
+            try:
+                as_num = int(query_AS_str[1:], 16)
+                self.query_AS = "AS" + str(as_num)
+                as_parsed = 1
+            except:
+                if is_valid:
+                    print("Bad AS:" + query_AS_str)
+                is_valid = False
+        else:
+            print("Bad AS:" + query_AS_str )
+            is_valid = False
+        try:
+            self.query_ad_time = int(query_parts[8])
+        except:
+            if is_valid:
+                print("Bad AD Time:" + query_AS_str)
+            is_valid = False
+        try:
+            ip_num = int(query_parts[9], 16)
+            self.query_ip = str(ip_num>>24)+ "." + \
+                str((ip_num>>16)&255)+ "." + \
+                str((ip_num>>8)&255)+ "." + \
+                str(ip_num&255)
+        except:
+            if is_valid:
+                print("Bad IP:" + query_parts[9])
+            is_valid = False
+        return is_valid
+
+    def parse_query_name_sentinel(self, query_parts):
+        #query: root-key-sentinel-is-ta-20326.0ds-uec321a73-c233-s1536509491-icff1e56f-2
+        pass
 
     def parse_query_name_params(self, query_parts, query_name):
         is_valid = True
@@ -150,51 +185,6 @@ class rsv_log_line:
             is_valid = False
         return is_valid
 
-    def parse_query_name_anomalous(self, query_parts):
-        #query: 000-000-000a-0000-0006-e7b5bab7-233-a55A8-1736378116-ac380eb6-0
-        # query: 04u-uf8c0aa51-c185-a40625-s1730422799-iaa54ac12-0
-        is_valid = True
-        if len(query_parts) < 10:
-            return False
-        delimiter = "-"
-        self.query_experiment = delimiter.join(query_parts[:5])
-        self.query_user_id = query_parts[5]
-        self.query_cc = country.country_code_from_c999("c" + query_parts[6])
-        query_AS_str = query_parts[7]
-        if query_AS_str.startswith("a"):
-            try:
-                as_num = int(query_AS_str[1:], 16)
-                self.query_AS = "AS" + str(as_num)
-                as_parsed = 1
-            except:
-                if is_valid:
-                    print("Bad AS:" + query_AS_str)
-                is_valid = False
-        else:
-            print("Bad AS:" + query_AS_str )
-            is_valid = False
-        try:
-            self.query_ad_time = int(query_parts[8])
-        except:
-            if is_valid:
-                print("Bad AD Time:" + query_AS_str)
-            is_valid = False
-        try:
-            ip_num = int(query_parts[9], 16)
-            self.query_ip = str(ip_num>>24)+ "." + \
-                str((ip_num>>16)&255)+ "." + \
-                str((ip_num>>8)&255)+ "." + \
-                str(ip_num&255)
-        except:
-            if is_valid:
-                print("Bad IP:" + query_parts[9])
-            is_valid = False
-        return is_valid
-
-    def parse_query_name_sentinel(self, query_parts):
-        #query: root-key-sentinel-is-ta-20326.0ds-uec321a73-c233-s1536509491-icff1e56f-2
-        pass
-        
     def parse_query_name(self, query_name):
         is_valid = True
         query_name = query_name.strip()
@@ -226,6 +216,49 @@ class rsv_log_line:
             is_valid = False
         else:
             is_valid = self.parse_query_name_params(query_parts, query_name)
+        return is_valid
+
+
+class rsv_log_line:
+    def __init__(self):
+        self.query_time = 0.0
+        self.resolver_IP = "0.0.0.0"
+        self.resolver_port = 0
+        self.resolver_AS = ""
+        self.resolver_cc = ""
+        self.resolver_tag = ""
+        self.rr_class = ""
+        self.rr_type = ""
+        self.query_edns = ""
+        self.is_results = False
+
+        # copied from query name 
+        self.server = ""
+        self.is_anomalous = False
+        self.is_cretinous = False
+        self.is_starquery = False
+        self.query_experiment = ""
+        self.query_user_id = ""
+        self.invalid_query = ""
+        self.query_cc = "ZZ"
+        self.query_AS = "AS0"
+        self.query_ad_time = 0
+        self.query_ip = "0.0.0.0"
+
+    def parse_query_name(self, q_name):
+        qn = query_name_class()
+        is_valid = qn.parse_query_name(q_name)
+        self.server = qn.server
+        self.is_anomalous = qn.is_anomalous
+        self.is_cretinous = qn.is_cretinous
+        self.is_starquery = qn.is_starquery
+        self.query_experiment = qn.query_experiment
+        self.query_user_id = qn.query_user_id
+        self.invalid_query = qn.invalid_query
+        self.query_cc = qn.query_cc
+        self.query_AS = qn.query_AS
+        self.query_ad_time = qn.query_ad_time
+        self.query_ip = qn.query_ip
         return is_valid
 
     def parse_line(self, s):
