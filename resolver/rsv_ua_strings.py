@@ -140,7 +140,7 @@ class ua_string_log:
             qn = rsv_log_parse.query_name_class()
             is_valid = qn.parse_query_name(parts[14])
             if not is_valid:
-                if nb_invalid < 5:
+                if self.nb_invalid < 5:
                     print("Invalid query name in:\n" + line)
                 self.nb_invalid += 1
             elif qn.query_experiment == "0du":
