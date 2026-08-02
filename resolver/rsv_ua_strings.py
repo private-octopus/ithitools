@@ -285,6 +285,7 @@ if __name__ == "__main__":
     time_start=time.time()
     bucket_list=[]
     bucket_months = set()
+    bucket_months.add(year + "-" + month)
     bucket_id = 0
     for dd in d15:
         s_dir = rsv_candidates.day_folder(indir, dd)
@@ -361,7 +362,7 @@ if __name__ == "__main__":
                 try:
                     with bz2.open(daily_file, "rt") as F:
                         raw_text = F.read()
-                        json_text = raw_text.replace("\\x22", "\"")
+                        json_text = raw_text.replace("\\x22", "")
                         json_obj = json.loads(json_text)
                         uasl_total.from_json_obj(json_obj)
                 except Exception as exc:
