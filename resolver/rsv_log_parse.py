@@ -120,7 +120,7 @@ class query_name_class:
                 str((ip_num>>8)&255)+ "." + \
                 str(ip_num&255)
         except:
-            if is_valid:
+            if is_valid and self.query_experiment == "0du":
                 print("Bad IP:" + query_parts[9])
             is_valid = False
         return is_valid
