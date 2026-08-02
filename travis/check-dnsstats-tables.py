@@ -21,7 +21,7 @@ except ImportError:
 if __name__ == '__main__':
     fail = False
     dnsstats = open('lib/DnsStats.cpp').read()
-    cpp_comments = re.compile("(/*.*?*/|//.*$)",re.DOTALL)
+    cpp_comments = re.compile("(/\*.*?\*/|//.*$)",re.DOTALL)
 
     tlds_part         = re.sub(cpp_comments, "", dnsstats.split(
            'RegisteredTldName[] = {')[1].split('\n};')[0])
