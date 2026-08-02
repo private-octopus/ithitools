@@ -357,15 +357,17 @@ if __name__ == "__main__":
         uasl_total = ua_string_log()
         for daily_file in daily_files:
             if os.path.isfile(daily_file):
+                json_obj = None
                 try:
                     with bz2.open(daily_file, "rt") as F:
-                        json_obj = json.load(F)
+                        raw_text = F.read()
+                        json_text = raw_text.replace("\\x22", "\"")
+                        json_obj = json.loads(json_text)
                         uasl_total.from_json_obj(json_obj)
                 except Exception as exc:
                     traceback.print_exc()
-                    print("Cannot read: " + daily_file + " Exception: " +
+                    print("Read exception in " + daily_file + ": " +
                           str(exc))
-                    usage()
             else:
                 print("Cannot access daily file: " + daily_file)
         try:
