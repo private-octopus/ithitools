@@ -308,7 +308,7 @@ if __name__ == "__main__":
                         o_dir = rsv_candidates.month_folder(outdir, dd)
 
                         output_path = output_file_path_from_srv(
-                            o_dir, srv, year, month, day)
+                            o_dir, srv, year, month, "{:02d}".format(dd.day))
                         if not os.path.exists(output_path):
                             lfb = log_file_bucket(output_path, source_path, bucket_id, time_start)
                             bucket_list.append(lfb)
