@@ -129,7 +129,7 @@ class ua_string_log:
         self.ln += 1
         line = s.strip()
         parts = parse_with_quotes(line)
-        if len(parts) != 15:
+        if len(parts) != 15 or not parts[14].startswith("0du-"):
             if self.nb_ignored < 5:
                 if parts[4].startswith("GET "):
                     print("Ignoring: " + parts[4])
