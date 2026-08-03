@@ -363,6 +363,7 @@ if __name__ == "__main__":
                     with bz2.open(daily_file, "rt") as F:
                         raw_text = F.read()
                         json_text = raw_text.replace("\\x22", "")
+                        json_text = json_text.replace("\\x5C", "")
                         json_obj = json.loads(json_text)
                         uasl_total.from_json_obj(json_obj)
                 except Exception as exc:
