@@ -154,12 +154,12 @@ class ua_string_log:
         F.write("{\"log\": [")
         sep = "\n"
         for ua_string in self.uas:
-            F.write(sep + "{\"ua\": \"" +  ua_string + "\", \"n\":" + str(self.uas[ua_string].n) + ", \"cc_as\": [")
+            F.write(sep + "{\"ua\": " + json.dumps(ua_string) + ", \"n\":" + str(self.uas[ua_string].n) + ", \"cc_as\": [")
             sep_cc_as = ""
             for key in self.uas[ua_string].as_0du:
                 query_cc = key[:2]
                 query_AS = key[3:]
-                F.write(sep_cc_as + "{ \"cc\": \"" + query_cc + "\",\"AS\": \"" + query_AS + "\", \"n\": " +
+                F.write(sep_cc_as + "{ \"cc\": " + json.dumps(query_cc) + ",\"AS\": " + json.dumps(query_AS) + ", \"n\": " +
                         str(self.uas[ua_string].as_0du[key]) + "}")
                 sep_cc_as = ","
             F.write("]}")
