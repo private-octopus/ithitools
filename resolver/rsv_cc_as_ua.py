@@ -215,12 +215,30 @@ class group_stats:
         return obj
 
 
-def compute_latest_major_by_family(global_stats):
+def compute_latest_major_by_family(global_stats, min_count=20, min_share=0.001):
+    """Pick, per OS family, the highest major version with meaningful adoption.
+
+    A plain max() over observed major versions is not robust: a handful of
+    mis-parsed UA strings (e.g. Android reporting major version "1024") or
+    legacy naming quirks (Windows 2000's major token is the literal string
+    "2000", which sorts above "10") can dominate a true max and make every
+    currency computation downstream meaningless. We require a version to
+    carry at least `min_count` samples AND at least `min_share` of that OS
+    family's total traffic before it can be considered "latest". If nothing
+    clears the bar (small/sparse family), we fall back to the unfiltered max
+    so small families still get an answer.
+    """
     latest = dict()
     for os_family, versions in global_stats.os_versions.items():
-        numeric_majors = [v for v in versions if v.isdigit()]
-        if numeric_majors:
-            latest[os_family] = max(numeric_majors, key=int)
+        numeric_majors = {v: n for v, n in versions.items() if v.isdigit()}
+        if not numeric_majors:
+            continue
+        family_total = sum(numeric_majors.values())
+        threshold = max(min_count, min_share * family_total)
+        candidates = [v for v, n in numeric_majors.items() if n >= threshold]
+        if not candidates:
+            candidates = list(numeric_majors.keys())
+        latest[os_family] = max(candidates, key=int)
     return latest
 
 
