@@ -252,7 +252,7 @@ char const * RegisteredTldName[] = {
     "IPIRANGA", "IQ", "IR", "IRISH", "IS", "ISMAILI", "IST", "ISTANBUL", "IT",
     "ITAU", "ITV", "JAGUAR", "JAVA", "JCB", "JE", "JEEP", "JETZT",
     "JEWELRY", "JIO", "JLL", "JM", "JMP", "JNJ", "JO", "JOBS", "JOBURG", "JOT", "JOY",
-    "JP", "JPMORGAN", "JPRS", "JUEGOS", "JUNIPER", "KAUFEN", "KDDI", "KE", "KERRYHOTELS",
+    "JP", "JPMORGAN", "JPRS", "JUEGOS", "KAUFEN", "KDDI", "KE", "KERRYHOTELS",
     "KERRYPROPERTIES", "KFH", "KG", "KH", "KI", "KIA",
     "KIDS", "KIM",
     "KINDLE", "KITCHEN", "KIWI", "KM", "KN", "KOELN", "KOMATSU", "KOSHER", "KP", "KPMG",
